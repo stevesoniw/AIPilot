@@ -44,7 +44,7 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
 app = FastAPI()
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 ##############################################          공통          ################################################
 
@@ -343,7 +343,7 @@ async def fetch_bond_news(category: str):
     extracted_data = json.loads(extract_news_data(filtered_news_json))
     return extracted_data
 
-# 채권뉴스 GPT 이용해서 번역해보기 
+# 채권뉴스 GPT 이용해서 번역해보기 //메뉴3 일반뉴스 번역에서도 씀
 def translate_gpt(text):
     try:
         SYSTEM_PROMPT = "다음 내용을 한국어로 번역해줘. url이나 링크 부분만 번역하지마" 
@@ -509,15 +509,26 @@ asyncio.run(gpttest()) '''
 
 class ImageData(BaseModel):
     image: str  # Base64 인코딩된 이미지 데이터
-'''
+
+
 @app.post("/perform_ocr")
 async def perform_ocr(data: ImageData):
     # Base64 인코딩된 이미지 데이터를 디코딩
+    print(data)
     image_data = base64.b64decode(data.image.split(',')[1])
-    image = vision.Image(content=image_data)
 
-    # Google Cloud Vision 클라이언트 초기화
-    client = vision.ImageAnnotatorClient()
+    logging.debug(image_data)
+
+    # 서비스 계정 키 파일 경로
+    key_path = "sonvision-36a28cdac666.json"
+
+    # 서비스 계정 키 파일을 사용하여 인증 정보 생성
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+
+    # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
+    client = vision.ImageAnnotatorClient(credentials=credentials)
+
+    image = vision.Image(content=image_data)
 
     # OCR 처리
     response = client.text_detection(image=image)
@@ -527,9 +538,18 @@ async def perform_ocr(data: ImageData):
         raise HTTPException(status_code=500, detail=response.error.message)
 
     # OCR 결과 반환
-    return {"texts": [text.description for text in texts]}'''
+    return {"texts": [text.description for text in texts]}
 
-@app.post("/perform_ocr")
+def process_ocr_texts(texts):
+    processed_texts = []
+    for text in texts:
+        description = text.description
+        processed_texts.append(description)
+    
+    return processed_texts
+
+
+@app.post("/ocrGptTest")
 async def perform_ocr(data: ImageData):
     # Base64 인코딩된 이미지 데이터를 디코딩
     image_data = base64.b64decode(data.image.split(',')[1])
@@ -552,8 +572,30 @@ async def perform_ocr(data: ImageData):
     if response.error.message:
         raise HTTPException(status_code=500, detail=response.error.message)
 
-    # OCR 결과 반환
-    return {"texts": [text.description for text in texts]}
+    structured_ocr_data = process_ocr_texts(texts)
+    # OCR 결과를 GPT-4 분석 함수에 전달
+    analysis_result = await gpt4_pdf_talk(structured_ocr_data)
+
+    # 분석 결과 반환
+    return {"texts": analysis_result}
+
+async def gpt4_pdf_talk(response_data):
+    try:
+        SYSTEM_PROMPT = "You are a financial data analyst with outstanding data recognition skills. The following is table data on market data interest rates and exchange rates. This data is not structured because it was read using OCR. However, knowing that this is data read from a table using OCR, please explain this data systematically. Provide as detailed and accurate a response as possible."
+        prompt = f"The following is OCR extracted table data. Analyze it as the system prompt has described. The response should be in Korean. Extracted data: {response_data}"
+        response = client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print("An error occurred in gpt4_chart_talk:", str(e))
+        return None
+
+
 
 ######################################## 마켓 PDF 분석 Ends  ##############################################            
 ################################### FIN GPT 구현 부분 Starts (본부장님소스) ################################

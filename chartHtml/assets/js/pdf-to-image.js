@@ -31,16 +31,30 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
                 };
                 page.render(renderContext).promise.then(function() {
                     console.log('Page rendered');
-                    // 버튼 생성 및 설정
-                    var ocrButton = document.createElement("button");
-                    ocrButton.textContent = "OCR Data Read";
-                    ocrButton.className = "ocrButton"; // 여기에서 클래스 이름을 지정
-                    ocrButton.onclick = function() {
-                        // OCR 처리 함수 호출
-                        performOCR(canvas);
-                    };
-                    // 'ocrArea' 내에 버튼 추가
-                    document.getElementById('ocrArea').appendChild(ocrButton);
+                    // 버튼 공통 설정 함수
+                    function createButton(id, text, onClickFunction) {
+                        var button = document.createElement("button");
+                        button.id = id;
+                        button.textContent = text;
+                        button.className = "ocrButton"; // 모든 버튼에 같은 클래스 적용
+                        button.onclick = onClickFunction;
+                        return button;
+                    }
+
+                    // OCR Data Read 버튼
+                    var ocrButton = createButton("ocrButton", "OCR Data Read", function() { performOCR(canvas); });
+
+                    // OCR GPT 버튼
+                    var ocrGptButton = createButton("ocrGptButton", "OCR GPT Read", function() { ocrGptTest(canvas); });
+
+                    // Interest Data 버튼
+                    var interestButton = createButton("interestButton", "Interest Data", function() { interestData(canvas); });
+
+                    // buttonsContainer 내에 버튼 추가
+                    var container = document.getElementById('buttonsContainer');
+                    container.appendChild(ocrButton);
+                    container.appendChild(ocrGptButton);
+                    container.appendChild(interestButton);
                 });
             });
         });

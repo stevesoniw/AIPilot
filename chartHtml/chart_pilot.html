@@ -34,6 +34,7 @@
             document.getElementById('loading_bar_bondsNews').style.display = 'none';  //2번 -채권뉴스
             document.getElementById('loading_bar_news').style.display = 'none';       //3번     
             document.getElementById('loading_bar_gpt').style.display = 'none';        //3번-설명
+            document.getElementById('loading_bar_ocr').style.display = 'none';        //4번-OCR   
                                
             document.getElementById('loading_bar_calendar').style.display = 'none';   //5번
             
@@ -489,16 +490,48 @@
                             <div>
                                 <div class="news-title">${item.title}</div>
                                 <p class="news-body">${item.content}</p>
-                                <div class="publish-date">Published on: ${item.publishOn}</div> <!-- publishOn 데이터 추가 -->
+                                <div class="publish-date">Published on: ${item.publishOn}</div>
                             </div>
                         </div>
                     `;
+                    const translateButton = document.createElement('button');
+                    translateButton.className = 'newstrans-button';
+                    translateButton.textContent = '한국어 번역하기';
+                    newsItem.querySelector('.news-content > div').appendChild(translateButton); // 버튼을 뉴스 컨텐츠 div에 추가
+
+                    translateButton.addEventListener('click', async function() {
+                        const loadingBar = document.createElement('div');
+                        loadingBar.className = 'loading-bar';
+                        loadingBar.innerHTML = '<img src="/static/assets/images/LoadingBar_C.gif" alt="Loading" />';
+                        newsItem.appendChild(loadingBar);
+
+                        try {
+                            const response = await fetch('/translate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ title: item.title, content: item.content })
+                            });
+                            if (!response.ok) throw new Error('Network response was not ok.');
+                            const translatedData = await response.json();
+
+                            newsItem.querySelector('.news-title').textContent = translatedData.title;
+                            newsItem.querySelector('.news-body').innerHTML = translatedData.content;
+                        } catch (error) {
+                            console.error('Error:', error);
+                        } finally {
+                            loadingBar.remove();
+                        }
+                    });
+
                     newsContainer.appendChild(newsItem);
                 });
             } else {
                 console.error('Received data is not an array:', seekingNewsData);
             }
-        }  
+        }
+
 
         async function gptRequest(action) {
             if (g_news.length === 0) {
@@ -544,15 +577,17 @@
                 console.error('Error:', error);
             }
         }
+        
 //************************************** 뉴스요청 함수 Ends ******************************************//        
 //**************************************** 마켓PDF분석  Starts ******************************************//
 
 function performOCR(canvas) {
     // Canvas에서 이미지 데이터를 Base64 인코딩된 문자열로 변환
     const imageDataUrl = canvas.toDataURL('image/png');
-
     // 서버로 전송할 데이터 구성
     const data = { image: imageDataUrl };
+    document.getElementById('ocrResultArea').innerText = "";
+    document.getElementById('loading_bar_ocr').style.display = 'block';   
 
     // Fetch API를 사용하여 서버로 POST 요청 보내기
     fetch('/perform_ocr', {
@@ -566,13 +601,48 @@ function performOCR(canvas) {
     .then(data => {
         console.log('OCR 결과:', data);
         // OCR 결과 처리 (예: 화면에 표시)
-        document.getElementById('ocrResultArea').innerText = data.texts.join('\n');
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+        document.getElementById('ocrResultArea').innerText = data.texts;
     })
     .catch(error => {
         console.error('OCR 처리 중 오류 발생:', error);
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
     });
 }
 
+function ocrGptTest(canvas) {
+    // Canvas에서 이미지 데이터를 Base64 인코딩된 문자열로 변환
+    const imageDataUrl = canvas.toDataURL('image/png');
+
+    // 서버로 전송할 데이터 구성
+    const data = { image: imageDataUrl };
+
+    document.getElementById('ocrResultArea').innerText = "";
+    document.getElementById('loading_bar_ocr').style.display = 'block';   
+    // Fetch API를 사용하여 서버로 POST 요청 보내기
+    fetch('/ocrGptTest', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('OCR 결과:', data);
+        // OCR 결과 처리 (예: 화면에 표시)
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+        document.getElementById('ocrResultArea').innerText = data.texts;
+    })
+    .catch(error => {
+        console.error('OCR 처리 중 오류 발생:', error);
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+    });
+}
+
+function interestData(){
+    alert("금리 설명하기- 준비중입니다.")
+}
 
 //**************************************** 마켓PDF분석 Ends** ******************************************//
 //************************************** 증시캘린더 함수 Starts ******************************************//
@@ -902,7 +972,7 @@ async function goCalendar() {
                         </div>                            
                     </div>
                      <div class="buttons-container">
-                        <button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>
+                        <!--<button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>-->
                         <button class="btn" onclick="javascript:gptRequest('opinions')">AI 의견보기</button>
                         <button class="btn" onclick="javascript:gptRequest('summarize')">내용 요약하기</button>
                     </div>
@@ -949,6 +1019,11 @@ async function goCalendar() {
                         <canvas id="pdfCanvas" hidden></canvas>
                     </div>
                     <div id="ocrArea"></div>
+                    <div id="buttonsContainer" style="text-align: center;"></div> 
+                    <div id="loading_bar_ocr" class="loading_bar_translate">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">데이터 로딩중입니다.</p>
+                    </div>
                     <div class="box-instruction">
                         <ul class="list-dep">
                             <div id="ocrResultArea"></div>

@@ -146,6 +146,7 @@ label:hover {color: #fa7508;}
 .btn {background: linear-gradient(90deg, rgba(180, 180, 180, 1) 0%, rgba(150, 150, 150, 1) 100%);color: #000; border: none; padding: 8px 16px; margin: 0 10px; border-radius: 5px;
     cursor: pointer; font-size: 14px; transition: background 0.3s ease;}
 .btn:hover {background: linear-gradient(90deg, rgba(150, 150, 150, 1) 0%, rgba(180, 180, 180, 1) 100%);}
+.newstrans-button {background-color: #FF4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 10px; cursor: pointer; display: inline-block;}
 /* 뉴스 AI 답변 */
 .ai-box {background-color: #ffffe0; border:1px solid #ccc; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 0;}
 .list-dep {list-style-type: none; padding: 0;}
@@ -162,5 +163,5 @@ label:hover {color: #fa7508;}
 .file-label {display: inline-block; padding: 10px 30px; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;}
 .file-label:hover {background-color: #0056b3;}
 .file-name {display: block; margin-top: 10px; color: #666;}
-.ocrButton { display: block; margin: 20px auto; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-.ocrButton:hover { background-color: #00BFFF; }
+.ocrButton {display: inline-block; margin: 20px 10px; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;}
+.ocrButton:hover {background-color: #00BFFF;}
