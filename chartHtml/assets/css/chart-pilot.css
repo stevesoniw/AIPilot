@@ -1,0 +1,166 @@
+#chartPilot.wrap {width: 100%; height: 100%; position: relative; color: #111;}
+#chartPilot .header{position:relative;width:100%;padding:3px 20px 19px;border-bottom:1px solid #e1e1e1;}
+#chartPilot .header h1{width:147px;height:52px;}
+#chartPilot .header nav.menu{position:absolute;top:0;left:162px;right:0px;margin:18px 140px 0 215px;}
+#chartPilot .header nav.menu .s-menu{float:right;margin-top:13px;}
+#chartPilot .header nav.menu .s-menu ul{overflow:hidden;font-size:14px;color:#333;line-height:13px;}
+#chartPilot .header nav.menu ul li{float:left;margin-left:10px;}
+#chartPilot .header nav.menu ul li:first-child{margin-left:0px;}
+
+#chartPilot main{display:flex;height:100%;}
+
+/* left 메뉴 */
+/* PROMPT */
+.left-area{overflow-y:scroll;position:relative;width:300px;height:100%;background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
+.left-area::before{content:'';position:absolute;top:0;left:0;width:300px;height:286px;background:url('/static/assets/images/left_bg.png') no-repeat center;opacity:.5;}
+.left-area::-webkit-scrollbar{width:0px;}
+.left-area .title-wrap{overflow:hidden;position:relative;padding:40px 20px;font-size:22px;color:#fff;}
+.left-area span{color:#ffc045;font-weight:500;}
+
+.left-area .menu-wrap{position:relative;padding:0px 20px 0;}
+.left-area .menu-wrap .menu-list li.page-menu{margin-top:20px;}
+.left-area .menu-wrap .menu-list li.page-menu:first-child{margin-top:0;}
+.left-area .menu-wrap .menu-list li.page-menu a{color:#fff;}
+.left-area .menu-wrap .menu-list li.page-menu.on a{color:#fad58c;}
+
+
+/* 우측 영역 */
+#chartPilot .right-area{position: relative;overflow-y:auto;width:calc(100% - 280px);height:100%;padding:0 50px;}
+#chartPilot .right-area::-webkit-scrollbar{width:0px;}
+#chartPilot .right-area div[id^=menu]{margin:40px 0;}
+#chartPilot .menu-cont{display:none;}
+#chartPilot .menu-cont.on{display:block;}
+#chartPilot h2.s-tit{position:relative;display:inline-block;margin-bottom:24px;font-size:24px;line-height:24px;}
+#chartPilot h2.s-tit::before{content:'';position:absolute;bottom:0px;left:0;width:100%;height:7px;background:#fad58c;z-index:-1;}
+#chartPilot h3.s-tit{margin-bottom:30px;color:#333;font-weight:400;}
+#chartPilot .chart-area{width:100%;height:550px;border:1px solid #ccc;}
+#chartPilot .box-instruction{margin-top:50px;padding:15px;border:1px solid #ccc;}
+#chartPilot .list-dep li{position:relative;margin-top:7px;padding-left:12px;}
+#chartPilot .list-dep li:first-child{margin-top:0;}
+#chartPilot .list-dep li::before{content:'';position:absolute;left:0;top:9px;width:4px;height:4px;background:#313daa;border-radius:50%;}
+
+/* FinGPT 영역 */
+.input-container {display: flex; flex-direction: column; align-items: center; margin-top: 10px;}
+.input-ticker {padding: 5px 10px; height: 30px; font-size: 14px; border: 2px solid #ddd; border-radius: 4px; outline: none; margin-bottom: 10px;}
+.buttons-container {margin-top: 10px;}
+.chartBtn {padding: 5px 20px; font-size: 14px; background-color: #6ea6e2; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.chartBtn:hover {background-color: #4452d8;}
+.gpt-chart-area{width:100%; height:auto; border:1px solid #ccc;}
+.gpt-chart-area img {width: 60%; height: auto; display: block; margin: 10px auto;}
+.gpt-message-area {max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
+.result-box {margin-top: 20px; padding: 15px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px; font-size: 15px;}
+.result-box:nth-child(odd) {background-color: #f0f0f0}
+.info-header {margin-bottom: 10px; font-weight: bold;}
+.highlight {color: #ff6600;}
+#tickerInput {width: calc(100% - 90px); padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;}
+
+/* 글로벌 주요 경제지표 1.[핵심지표] 영역 */
+.form-container {background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px auto; width: 80%; max-width: 960px;}
+.form-header {margin-bottom: 20px; font-weight: bold; color: #0056b3; text-align: center;}
+.form-actions {display: flex; justify-content: space-between; align-items: center; margin-top: 20px;}
+.checkbox-row {display: flex; justify-content: center; flex-wrap: wrap;}
+.checkbox-group {flex: 0 1 30%; display: flex; align-items: center; margin: 5px; min-width: 250px;}
+.checkbox-group label {white-space: nowrap;}
+.checkbox-group input[type="checkbox"] {margin-right: 10px;}
+.indicatorButton {display: block; margin: 20px auto; background-color: #74a6e7; border: none; color: white; padding: 10px 20px; font-size: 15px; cursor: pointer; border-radius: 5px;}
+.indicatorButton:hover {background-color: #5476e9;}
+#loading_bar_economics {text-align: center; margin-top: 20px;}
+#myEconomicChart {display: block; margin: 20px auto; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); border-radius: 5px; width: 1200px; height: 700px;}
+#clearButton {background-color: white; border: 1px solid #ccc; color: #333; padding: 5px 10px; font-size: 12px; margin-top: 10px; cursor: pointer; border-radius: 5px;}
+#clearButton:hover {background-color: #f9f9f9;}
+#chartAnalysis{margin-top: 20px; margin-bottom: 20px; padding: 10px; background-color: #f1f1f1; border-radius: 5px;}
+.chart-analysis-title {color: #003366; font-weight: bold; margin-bottom: 10px; font-size: 16px;}
+.ai-opinion-checkbox {display: flex; align-items: center;}
+.ai-opinion-label {margin-left: -20px; color: #0a06e7 !important; font-size: 13px; width:100px;}
+.ai-opinion-warning {color: #000; font-size: 13px; margin-top: 10px; text-align: left; width: 100%;}
+#h3.nth-menu{margin-bottom:30px; margin-top:30px; color:#333;font-weight:400;} 
+
+/* 글로벌 주요 경제지표 2.[채권데이터 분석] 및 [뉴스] 영역 */
+
+.bond-chart-area {width:100%; height:auto; border:1px solid #ccc;}
+.bond-area {background-color: #f7f7f7;padding:20px;margin:20px 0;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;align-items:center;}
+.bondNews-container {display:flex;flex-direction:column;align-items:center;text-align:center;background-color: #fff;margin-bottom: 20px;padding: 15px;border-radius: 8px;box-shadow: 0 2px 4px rgba(0,0,0,0.12);}
+.bondNews-image { max-width: 230px; max-height: 170px; width: auto; height: auto; border-radius: 8px; margin-bottom: 15px; }
+.bondNews-title { font-weight: bold; color: #333; margin-bottom: 10px; }
+.bondNews-content { color: #666; font-size: 14px; line-height: 1.6; }
+.news-link { color: #f06; text-decoration: underline; }
+.bondNews-instruction { width: 100%; }
+.news-dep { padding: 0; list-style: none; }
+.translate-button { background-color: #666; color: #fff; border: none; padding: 12px 12px; font-size: 13px; cursor: pointer; border-radius: 4px; margin-top: 10px; margin-bottom: 15px; }
+.translate-button:hover { background-color: #555; }
+.no-news-message { color: #666; font-size: 16px; text-align: center; padding: 20px; }
+#loading_bar_bondsNews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
+.loading_bar_translate { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
+.loading_bar_translate > img {max-width: 100px; max-height: 100px;}
+
+/* 캘린더 영역 */
+#chartPilot .event {border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9;}
+#chartPilot .event .title { color: #333; font-weight: bold; }
+#chartPilot .event .details {font-size: 14px;}
+#chartPilot .event[style*="F50B01"] { border-left-color: #F50B01; }
+#chartPilot .event[style*="f80909"] { border-left-color: #f80909; }
+#chartPilot .event[style*="fd0303"] { border-left-color: #fd0303; }
+#chartPilot .event[style*="d4085e"] { border-left-color: #d4085e; }
+.fc-header-toolbar {padding-top: 1em; padding-left: 1em; padding-right: 1em;}
+.fc-event-title, .fc-event-extended-description {white-space: normal;}
+.fc-day-sun a {color: red; text-decoration: none;}
+.fc-day-sat a {color: blue; text-decoration: none;}
+.fc-col-header-cell-cushion {color: #000;}
+.fc-col-header-cell-cushion:hover {text-decoration: none; color:#000;}
+.fc-daygrid-day-number{color: #000; font-size:1em;}
+.fc-daygrid-more-link.fc-more-link{color: #000;}
+.fc-daygrid-event {font-size:10px; white-space:normal !important;}
+.fc-daygrid-event > .fc-event-time{color:#000; }
+.fc-day-grid-event > .fc-content {white-space: normal;}
+.fc-daygrid-dot-event > .fc-event-title{color:#000 !important;}
+.fc-button-active{border-color: #ffc107 !important; background-color: #ffc107 !important; color: #000 !important; font-weight: bold !important;}
+.fc-today-button{border-color: #ffc107 !important; background-color: #ffc107 !important; color: #000 !important; font-weight: bold !important;} 
+.fc-event-desc,.fc-event-title {white-space: break-spaces;}
+.btn-warning{font-weight: bold;}
+.modal-footer{display:inline-block;}
+
+/* 뉴스 영역 */
+/* 뉴스 체크박스 */
+.category-selection {max-width: 1200px;margin: 20px auto;background: #f1efef;padding: 20px;border-radius: 10px;box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.category-form {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 15px;}
+.category {display: flex; align-items: center; background: #ffffff; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);transition: transform 0.2s ease-in-out;}
+.category:hover { transform: translateY(-2px);}
+input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}
+label {font-size: 16px; cursor: pointer;}
+label:hover {color: #fa7508;}
+#all + label {color: red;}
+.form-action {grid-column: span 4; display: flex; justify-content: center; padding: 20px;  margin-top: 20px;  margin-left: auto; margin-right: auto;}
+.load-news-btn {background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 18px; transition: background-color 0.3s ease;}
+.load-news-btn:hover {background-color: #0056b3;}
+/* 뉴스 데이터 */
+.news-board {display: flex; flex-direction: column; margin: 20px;}
+.news-item {border: 1px solid #ddd; margin-bottom: 10px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.news-item img {max-width: 100px; margin-right: 10px; border: 1px solid #ccc;}
+.news-content {display: flex; align-items: flex-start;}
+.news-title {font-size: 18px; margin: 0 0 10px 0; color: orange;}
+.news-body {font-size: 15px;}
+.publish-date {font-size: 14px; color: white; background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px; display: inline-block;}
+
+/* 뉴스 버튼 스타일 */
+.buttons-container {display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;}
+.btn {background: linear-gradient(90deg, rgba(180, 180, 180, 1) 0%, rgba(150, 150, 150, 1) 100%);color: #000; border: none; padding: 8px 16px; margin: 0 10px; border-radius: 5px;
+    cursor: pointer; font-size: 14px; transition: background 0.3s ease;}
+.btn:hover {background: linear-gradient(90deg, rgba(150, 150, 150, 1) 0%, rgba(180, 180, 180, 1) 100%);}
+/* 뉴스 AI 답변 */
+.ai-box {background-color: #ffffe0; border:1px solid #ccc; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 0;}
+.list-dep {list-style-type: none; padding: 0;}
+.list-dep li {margin-bottom: 10px;}
+.gpt_t {margin-bottom: 10px;}
+
+/* 로딩 바 */
+.loading_bar {position: absolute; top: 80%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 99; text-align: center;}
+.loading_bar > img {max-width: 100px; max-height: 100px;}
+.loading-text {background-color: white;}
+
+/*마켓 PDF 분석*/
+.upload-container { text-align: center; padding: 40px 40px 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+.file-label {display: inline-block; padding: 10px 30px; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;}
+.file-label:hover {background-color: #0056b3;}
+.file-name {display: block; margin-top: 10px; color: #666;}
+.ocrButton { display: block; margin: 20px auto; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+.ocrButton:hover { background-color: #00BFFF; }

@@ -1,0 +1,833 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">
+<head>
+    <title>Chart-Pilot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <meta http-equiv="Cache-Control" content="no-cache" />
+
+    <link href="/static/assets/css/jquery-ui.min.css" rel="stylesheet" type="text/css">
+    <link href="/static/assets/css/newFont.css" rel="stylesheet" type="text/css">
+    <link href="/static/assets/css/common.css" rel="stylesheet" type="text/css">
+    <link href="/static/assets/css/chart-pilot.css" rel="stylesheet" type="text/css" />
+    <!-- fullcalendar CDN -->  
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' /> 
+</head>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>  
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>    
+    <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+    <script>
+        var g_news;
+        window.onload = function() {
+            document.getElementById('loading_bar_fingpt').style.display = 'none';     //1번
+            document.getElementById('loading_bar_economics').style.display = 'none';  //2번           
+            document.getElementById('loading_bar_news').style.display = 'none';       //3번     
+            document.getElementById('loading_bar_gpt').style.display = 'none';        //3번-설명
+            document.getElementById('loading_bar_fred').style.display = 'none';                        
+            document.getElementById('loading_bar_calendar').style.display = 'none';   //5번
+        };   
+//************************************** FIN GPT 함수 Starts ********************************************//
+
+        //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
+        async function loadChartData() {
+            const ticker = document.getElementById('ticker').value;             
+            try {
+                document.getElementById('loading_bar_fingpt').style.top = '50%';                 
+                document.getElementById('loading_bar_fingpt').style.display = 'block';                    
+                document.getElementById('fingptChartArea').style.display = 'none';                
+                document.getElementById('gpt-message-area').style.display = 'none';
+
+                if (!ticker) {
+                    alert('Please enter a ticker symbol.');
+                    document.getElementById('loading_bar_fingpt').style.display = 'none';  
+                    return;
+                }
+                const response = await fetch(`/api/charts/both/${ticker}`);
+                const data = await response.json();
+
+                // Base64 인코딩된 이미지 데이터를 이미지 태그의 src 속성에 할당
+                document.getElementById('earningsChart').src = 'data:image/png;base64,' + data.earnings_chart;
+                document.getElementById('recommendationsChart').src = 'data:image/png;base64,' + data.recommendations_chart;
+
+                // 차트 영역을 보이게 설정
+                document.getElementById('fingptChartArea').style.display = 'block';
+                document.getElementById('loading_bar_fingpt').style.display = 'none';  
+                gptAnalysis(ticker);
+
+            } catch (error) {
+                console.error('Error loading chart data:', error);
+                gptAnalysis(ticker);
+                document.getElementById('fingptChartArea').style.display = 'none';
+                document.getElementById('loading_bar_fingpt').style.display = 'none'; 
+            }
+        }
+        //FinGPT 실적발표 전후 반응 + 근거 문서 갖고와서 보여주기 
+        async function gptAnalysis(ticker) {
+            try {   
+                //데이터 일단 클리어
+                document.getElementById('analysisResult').innerHTML = "";    
+                document.getElementById('newsAnalysis').innerHTML = "";                     
+                document.getElementById('gpt-message-area').style.display = 'block';
+                document.getElementById('loading_bar_fingpt').style.top = '130%';  
+                document.getElementById('loading_bar_fingpt').style.display = 'block';  
+
+
+                const response = await fetch(`/api/analysis/${ticker}`);
+                const data = await response.json();
+                if(data){
+                    const formattedCompletion = data.completion.replace(/\n/g, '<br>');
+                    const formattedPrompt = data.prompt_news.replace(/\n/g, '<br>');
+                    document.getElementById('analysisResult').innerHTML = formattedCompletion;
+                    document.getElementById('newsAnalysis').innerHTML = formattedPrompt;
+                    document.getElementById('loading_bar_fingpt').style.display = 'none';   
+                    gptStockWave(ticker)                      
+                }
+
+            }catch (error) {
+                console.error('Error loading Stock Analysis:', error);
+                document.getElementById('gpt-message-area').style.display = 'none';
+                document.getElementById('loading_bar_fingpt').style.display = 'none'; 
+            }                
+        }
+        //FinGPT 최근 1년 주가 흐름과 거래량 추이 보여주기 (이미지 호출)
+        async function gptStockWave(ticker) {
+            try {
+                document.getElementById('loading_bar_fingpt').style.bottom = '10%';
+                document.getElementById('loading_bar_fingpt').style.display = 'block';  
+                document.getElementById('gpt-stockwave-area').style.display = 'none';                
+
+                const response = await fetch(`/api/stockwave/${ticker}`);
+                const data = await response.json();
+
+                // Base64 인코딩된 이미지 데이터를 이미지 태그의 src 속성에 할당
+                document.getElementById('stockwaveChart').src = 'data:image/png;base64,' + data.stockwave_data;
+                // 주가흐름 영역을 보이게 설정
+                document.getElementById('gpt-stockwave-area').style.display = 'block';   
+                document.getElementById('loading_bar_fingpt').style.display = 'none';  
+
+            } catch (error) {
+                console.error('Error loading stockwave data:', error);
+                document.getElementById('gpt-stockwave-area').style.display = 'none';                
+                document.getElementById('loading_bar_fingpt').style.display = 'none'; 
+            }         
+        }
+
+//************************************** FIN GPT 함수 Ends ********************************************// 
+//******************************** 글로벌 주요경제지표 함수 Starts **************************************// 
+
+        function goRate(){
+            document.getElementById('loading_bar_fred').style.display = 'block';            
+            document.getElementById('rateForm').submit();           
+        }
+        /** 서버에서 이미지 만들어서 base64로 받아오는 형태 [차트가 안예뻐서 일단 보류]
+        async function loadEconomicIndicators() {
+            try {
+                document.getElementById('loading_bar_economics').style.display = 'block';
+
+                const response = await fetch('/api/economic-indicators');
+                const data = await response.json();
+
+                document.getElementById('economicChartArea').style.display = 'block';
+                document.getElementById('economicIndicators').src = 'data:image/png;base64,' + data.economic_indicators_chart;
+                document.getElementById('loading_bar_economics').style.display = 'none';
+
+            } catch (error) {
+                console.error('Error loading loadEconomicIndicators data:', error);
+                document.getElementById('loading_bar_economics').style.display = 'none';                 
+                document.getElementById('economicChartArea').style.display = 'none';             
+            }     
+        }**/
+
+        async function fetchAndDisplayIndicators() {
+            try {
+                const form = document.getElementById('indicatorForm');
+                const formData = new FormData(form);
+                const selectedIndicators = formData.getAll('indicators');
+                const aiOpinionCheck = document.getElementById('aiOpinionCheck').checked;
+
+                document.getElementById('loading_bar_economics').style.display = 'block';
+        
+                const url = `/api/economic-indicators?indicators=${selectedIndicators.join(',')}&aiOpinion=${aiOpinionCheck}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                //로딩바 없애고..
+                document.getElementById('loading_bar_economics').style.display = 'none';
+                console.log(data.chart_talk);
+
+                if (data && data.datasets.length > 0) {
+                    // 차트 데이터가 있을 경우에만 차트와 분석 부분을 표시
+                    document.getElementById('chartContainer').style.display = 'block';
+                    document.getElementById('chart-anal-area').style.display = 'block';
+                } else {
+                    // 차트 데이터가 없을 경우 차트와 분석 부분을 숨김
+                    document.getElementById('chartContainer').style.display = 'none';
+                    document.getElementById('chart-anal-area').style.display = 'none';
+                }               
+
+
+                if(data.chart_talk){
+                    document.getElementById('chartAnalysis').innerText = data.chart_talk;                
+                }
+        
+                // 데이터셋에서 각 항목에 대해 더 진한 색상과 더 두꺼운 선을 설정
+                const backgroundColors = [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ];
+                const borderColors = [
+                    'rgba(255,99,132,1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ];
+        
+                const indicatorLabels = {
+                    "CPIAUCSL": "소비자물가지수 (CPI)",
+                    "PCEPI": "개인소비지출 (PCE)",
+                    "PPIFID": "생산자물가지수 (PPI)",
+                    "DFEDTARU": "연방기금금리",
+                    "CSUSHPISA": "주택가격지수",
+                    "A191RL1Q225SBEA": "실질 국내총생산 (GDP)"
+                };
+
+                data.datasets.forEach((dataset, i) => {
+                    dataset.backgroundColor = backgroundColors[i % backgroundColors.length];
+                    dataset.borderColor = borderColors[i % borderColors.length];
+                    dataset.borderWidth = 3; // 선 두께 증가
+                    dataset.pointBackgroundColor = borderColors[i % borderColors.length];
+                    dataset.pointBorderColor = "#fff";
+                    dataset.pointHoverBackgroundColor = "#fff";
+                    dataset.pointHoverBorderColor = borderColors[i % borderColors.length];
+                    dataset.pointRadius = 5;
+                    dataset.pointHoverRadius = 7;
+                    dataset.label = indicatorLabels[dataset.label] || dataset.label; 
+                });
+        
+                const ctx = document.getElementById('myEconomicChart').getContext('2d');
+                if (window.myEconomicChart instanceof Chart) {
+                    window.myEconomicChart.destroy();
+                }
+                window.myEconomicChart = new Chart(ctx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        title: {
+                            display: true,
+                            text: 'Economic Indicators Over Time'
+                        },
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: false
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Value'
+                                }
+                            }],
+                            xAxes: [{
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Date'
+                                }
+                            }]
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        hover: {
+                            mode: 'nearest',
+                            intersect: true
+                        }
+                    },
+                    datasets: [{
+                        label: 'My Dataset',
+                        data: data,
+                        fill: false,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        spanGaps: true,  // 결측치가 있는 부분에서도 선을 연결
+                    }]
+                });
+            } catch (error) {
+                console.error('Error loading economic indicators data:', error);
+                document.getElementById('loading_bar_economics').style.display = 'none';
+            }
+        }
+        function clearData() {
+            // 모든 체크박스 선택 해제
+            document.querySelectorAll('#indicatorForm input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        
+            // 차트 데이터 클리어 (Chart.js 인스턴스가 있다면)
+            if (window.myEconomicChart) {
+                window.myEconomicChart.destroy(); // 차트 인스턴스를 파괴하여 클리어
+            }
+            document.getElementById('chartContainer').style.display = 'none';
+            document.getElementById('chart-anal-area').style.display = 'none';            
+            document.getElementById('chartAnalysis').innerText = "";            
+        }        
+        
+//*********************************** 글로벌 주요경제지표 함수 Ends *****************************************// 
+//************************************** 증시캘린더 함수 Starts ******************************************//
+
+        async function goCalendar() {
+            document.getElementById('loading_bar_calendar').style.display = 'block';    
+            // AJAX 요청을 통해 서버로부터 데이터 가져오기
+            const response = await fetch('/calendar', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+                // 필요한 경우 body 추가
+            });
+            const calendarData = await response.json(); // JSON 형태로 데이터 받기
+            document.getElementById('loading_bar_calendar').style.display = 'none';    
+
+            console.log(calendarData);
+
+            // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
+            const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
+
+            // FullCalendar 초기화 및 데이터 표시
+            var calendarEl = document.getElementById('calendar');
+            if (!calendarEl) {
+                // 달력 컨테이너가 아직 페이지에 없는 경우
+                alert('Calendar element not found on the page.');
+                return;
+            }
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
+                timeZone: 'UTC',
+                expandRows: true, 
+                locale : "KO",
+                firstDay: 1,
+                navLinks: true, 
+                ihandleWindowResize : true,
+                windowResizeDelay : 100,
+                nowIndicator: true,
+                dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
+                eventLimit: true, // 더 보기 버튼 활성화              
+                events: filteredData.map(event => ({
+                    id: event.id.toString(),
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                    color: `#${event.hexColor}`, // 이벤트 색상 설정
+                    description: event.shortDesc // 이벤트 설명 추가
+                })),
+
+                eventContent: function(arg) { // 이벤트 내용 커스터마이징
+                    var element = document.createElement('div');
+                    element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
+                    return { domNodes: [element] };
+                }
+            });
+            
+            calendar.render();
+        }
+//************************************** 증시캘린더 함수 Ends ******************************************//
+
+//************************************** 뉴스요청 함수 Starts ******************************************//
+        async function goNews() {
+            const checkboxes = document.querySelectorAll("#categoryForm input[name='categories']");
+            const selectedCategories = Array.from(checkboxes)
+                                         .filter(checkbox => checkbox.checked)
+                                         .map(checkbox => checkbox.value);
+        
+            // 하나도 체크하지 않은 경우 알림을 표시하고 함수를 종료합니다.
+            if (selectedCategories.length === 0) {
+                alert("하나 이상의 카테고리를 선택하세요.");
+                return;
+            }
+
+            document.getElementById('gpt_opinion').innerHTML = ""; 
+            document.getElementById('gpt_summary').innerHTML = "";  
+            document.getElementById('gpt-thoughts-container').style.display = 'none'; 
+            document.getElementById('gpt-summary-container').style.display = 'none';             
+            document.getElementById('loading_bar_news').style.display = 'block';    
+
+            try {
+                const newsContainer = document.getElementById('news');
+                newsContainer.innerHTML = '';                
+                const response = await fetch('/seekingNews', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({categories: selectedCategories})
+                });
+        
+                g_news = await response.json();
+                //g_news = newsResult
+                const seekingNewsData = JSON.parse(g_news);
+        
+                if (seekingNewsData) {
+                    // displayNews 함수를 호출하여 뉴스 데이터를 화면에 표시
+                    document.getElementById('loading_bar_news').style.display = 'none';
+                    displayNews(seekingNewsData);
+                } else {
+                    console.error('could not get the seekingNewsData');
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+            } finally {
+                document.getElementById('loading_bar_news').style.display = 'none';
+            }  
+        }
+        // 뉴스 데이터 갖고와서 HTML로 넣어주는 함수 
+        function displayNews(seekingNewsData) {
+            const newsContainer = document.getElementById('news');
+            newsContainer.innerHTML = '';
+            const defaultImageUrl = "/static/assets/images/nature.jpg";
+            if (Array.isArray(seekingNewsData)) {
+                seekingNewsData.forEach(item => {
+                    const imageUrl = item.gettyImageUrl || defaultImageUrl;
+                    const newsItem = document.createElement('div');
+                    newsItem.className = 'news-item';
+                    newsItem.innerHTML = `
+                        <div class="news-content">
+                            <img src="${imageUrl}" alt="News Image">
+                            <div>
+                                <div class="news-title">${item.title}</div>
+                                <p class="news-body">${item.content}</p>
+                                <div class="publish-date">Published on: ${item.publishOn}</div> <!-- publishOn 데이터 추가 -->
+                            </div>
+                        </div>
+                    `;
+                    newsContainer.appendChild(newsItem);
+                });
+            } else {
+                console.error('Received data is not an array:', seekingNewsData);
+            }
+        }  
+
+        async function gptRequest(action) {
+            if (g_news.length === 0) {
+                alert("뉴스데이터가 조회된 후 클릭해주세요");
+                return;
+            }
+            document.getElementById('gpt_opinion').innerHTML = ""; 
+            document.getElementById('gpt_summary').innerHTML = "";  
+            document.getElementById('gpt-thoughts-container').style.display = 'none'; 
+            document.getElementById('gpt-summary-container').style.display = 'none'; 
+
+            //alert(JSON.stringify({action: action, g_news: g_news}));
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({action: action, g_news: g_news})                
+            };
+        
+            try {
+                document.getElementById('loading_bar_gpt').style.display = 'block';                
+                const response = await fetch('/gptRequest', requestOptions);
+                const data = await response.json();
+                console.log(data);
+        
+                if (action === 'translate') {
+                    document.getElementById('loading_bar_gpt').style.display = 'none';                    
+                    displayNews(JSON.parse(data.result)); 
+                } else if (action === 'opinions') {
+                    const formattedText = data.result.replace(/\n/g, '<br>');
+                    document.getElementById('gpt_opinion').innerHTML = formattedText;                    
+                    document.getElementById('gpt-thoughts-container').style.display = 'block'; 
+                    document.getElementById('loading_bar_gpt').style.display = 'none';
+                }else if (action === 'summarize') {
+                    const formattedText = data.result.replace(/\n/g, '<br>');                    
+                    document.getElementById('gpt_summary').innerHTML = formattedText; 
+                    document.getElementById('gpt-summary-container').style.display = 'block'; 
+                    document.getElementById('loading_bar_gpt').style.display = 'none';
+                }
+        
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+//************************************** 뉴스요청 함수 Ends ******************************************//        
+
+    </script>          
+<body>
+    <form id="rateForm" action="/submit" method="post" style="display:none;">
+    </form>
+    <div class="wrap" id="chartPilot">
+        <main class="clear">
+            <div class="left-area">
+                <div class="title-wrap">
+                    <span>AI</span> Science팀 <span>Pilot</span>
+                </div>
+                <div class="menu-wrap">
+                    <ul class="menu-list">
+                        <li class="page-menu on" data-tab="menua"><a href="#none">1. AI가 말해주는 주식 정보 [해외]</a></li>
+                        <li class="page-menu" data-tab="menub"><a href="#none">2. 글로벌 주요경제지표</a></li>
+                        <li class="page-menu" data-tab="menuc"><a href="#none">3. 뉴스 데이터 분석 [해외] </a></li>
+                        <li class="page-menu" data-tab="menud"><a href="#none">4. 금리 데이터 분석</a></li>
+                        <li class="page-menu" data-tab="menue"><a href="javascript:goCalendar();">5. 증시 캘린더</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <!-- left-nav 끝 -->
+
+            <!-- 우측 영역 시작 -->
+            <div class="right-area">
+                <div id="menua" class="menu-cont on">
+                    <h2 class="s-tit">AI가 말해주는 주식 정보 [해외]</h2>
+                    <h3 class="s-tit">종목코드를 입력해주세요 (*예: AAPL) </h3>
+                    <div class="input-container">
+                        <input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">
+                        <div class="buttons-container">
+                            <button class="chartBtn" id="getStockInfo" onclick="loadChartData();">Get Stock Info</button>
+                        </div>
+                    </div>
+                    <div id="loading_bar_fingpt" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p>데이터 로딩중입니다.</p>
+                    </div>                      
+                    <div class="gpt-chart-area" id="fingptChartArea" style="display: none;">
+                        <div>
+                            <img id="earningsChart" alt="Earnings Chart">
+                            <img id="recommendationsChart" alt="Recommendations Chart">
+                        </div>
+                    </div>
+                    <div class="gpt-message-area" id="gpt-message-area" style="display: none;">
+                        <div id="analysisResultBox" class="result-box">
+                           <p class="info-header" id="message1">최근 실적발표가 있었던 경우에는, <span class="highlight">실적발표 전/후 반응</span>을 나누어 비교 분석합니다. 실적 발표 예정인 경우에는 이전 정보 기준으로만 분석합니다.</p>
+                           <div id="analysisResult"></div>
+                        </div>
+                        <div id="newsAnalysisBox" class="result-box">
+                            <p class="info-header">AI분석의 <span class="highlight">[근거가 되는 정보]</span>는 아래와 같습니다. (<span class="highlight">최신 영문 기사</span> 기반으로 수행되었습니다.)</p>
+                            <div id="newsAnalysis"></div>
+                        </div>
+                    </div>
+
+                    <div class="box-instruction" id="gpt-stockwave-area" style="display:none;">
+                        <div>
+                            <p class="info-header"> <span class="highlight">최근 1년 주가 흐름과 거래량 추이</span>를 참조하세요.</p>
+                            <img id="stockwaveChart" alt="1년 주가 흐름과 거래량">
+                        </div>  
+                    </div>
+                </div>                
+                <div id="menub" class="menu-cont">
+                    <h2 class="s-tit">글로벌 주요 경제지표</h2>
+                    <h3 class="s-tit">1> 핵심지표 분석</h3>
+                    <div class="form-container">
+                        <p class="form-header">분석을 원하는 지표들을 선택해주세요.</p>
+                        <form id="indicatorForm">
+                            <div class="checkbox-row">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="indicators" value="CPIAUCSL" id="CPIAUCSL">
+                                    <label for="CPIAUCSL">소비자물가지수 (CPI)</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="indicators" value="PCEPI" id="PCEPI">
+                                    <label for="PCEPI">개인소비지출 (PCE)</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="indicators" value="PPIFID" id="PPIFID">
+                                    <label for="PPIFID">생산자물가지수 (PPI)</label>
+                                </div>
+                            </div>
+                            <div class="checkbox-row">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="indicators" value="DFEDTARU" id="DFEDTARU">
+                                    <label for="DFEDTARU">연방기금금리</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="indicators" value="CSUSHPISA" id="CSUSHPISA">
+                                    <label for="CSUSHPISA">주택가격지수</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="indicators" value="A191RL1Q225SBEA" id="A191RL1Q225SBEA">
+                                    <label for="A191RL1Q225SBEA">실질 국내총생산(GDP)</label>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <div class="ai-opinion-checkbox">
+                                    <input type="checkbox" id="aiOpinionCheck" name="aiOpinionCheck">
+                                    <label for="aiOpinionCheck" class="ai-opinion-label">AI의견 함께보기</label>
+                                </div>
+                                <div class="center-button">
+                                    <button type="button" id="indicatorButton" onclick="fetchAndDisplayIndicators();">Show Chart</button>
+                                </div>                        
+                                <button type="button" id="clearButton" onclick="clearData();">데이터 클리어</button>
+                            </div> 
+                            <div class="ai-opinion-warning">
+                                *AI의견 함께보기 체크시 응답 속도가 늦어질수 있습니다.
+                            </div>                                                      
+                        </form>
+                    </div>
+
+                    <div id="loading_bar_economics" class="loading_bar" style="display: none;">
+                        <img src="/static/assets/images/LoadingBar_A.gif">
+                        <p>데이터 로딩중입니다.</p>
+                    </div>                   
+                    <div id="chartContainer" style="display: none;">
+                        <canvas id="myEconomicChart" width="1200" height="600"></canvas>
+                    </div>
+                    <!--<div class="economic-chart-area" id="economicChartArea" style="display:none;">
+                        <div>
+                            <img id="economicIndicators" alt="Economic Indicators Chart">
+                        </div>
+                    </div>-->                  
+                    <div class="box-instruction" id="chart-anal-area" style="display: none;">
+                        <p class="chart-analysis-title">차트 데이터 분석</p> 
+                        <ul class="list-dep">
+                            <div id="chartAnalysis"></div>
+                        </ul>
+                    </div>
+                    <h3 class="s-tit">2> 핵심지표 분석</h3>
+                </div>
+
+
+                <div id="menuc" class="menu-cont">
+                    <h2 class="s-tit">뉴스 카테고리</h2>
+                    <h3 class="s-tit">주요 시장뉴스를 확인해보세요!</h3>
+                    <div class="category-selection">
+                        <h3>Choose News Categories</h3>
+                        <form id="categoryForm" class="category-form">
+                            <!-- Example of a category -->
+                            <div class="category" title="주식 시장 전반에 걸친 모든 소식이 여기에 속합니다.">
+                                <input type="checkbox" id="all" name="categories" value="market-news::all" checked>
+                                <label for="all">All Market News</label>
+                            </div>  
+                            <div class="category" title="시장에서 가장 중요하거나 영향력 있는 상위 뉴스를 다룹니다.">
+                                <input type="checkbox" id="top-news" name="categories" value="market-news::top-news">
+                                <label for="top-news">주요 Top News</label>
+                            </div>
+                            <div class="category" title="주목할 만한 주가 변동이나 시장 움직임에 관한 뉴스입니다.">
+                                <input type="checkbox" id="on-the-move" name="categories" value="market-news::on-the-move">
+                                <label for="on-the-move">주가변동</label>
+                            </div>
+                            <div class="category" title="시장의 전반적인 분위기나 트렌드를 반영하는 뉴스입니다.">
+                                <input type="checkbox" id="market-pulse" name="categories" value="market-news::market-pulse">
+                                <label for="market-pulse">시장 전반</label>
+                            </div>
+                            <div class="category" title="애널리스트들의 주목할 만한 의견이나 평가에 관한 뉴스입니다.">
+                                <input type="checkbox" id="notable-calls" name="categories" value="market-news::notable-calls">
+                                <label for="notable-calls">Notable Calls</label>
+                            </div>
+                            <div class="category" title="기업의 자사주 매입에 관한 뉴스입니다.">
+                                <input type="checkbox" id="buybacks" name="categories" value="market-news::buybacks">
+                                <label for="buybacks">자사주 매입</label>
+                            </div>
+                            <div class="category" title="원자재 시장에 관한 뉴스입니다. 금, 석유와 같은 상품의 가격 변동이나 시장 동향을 다룹니다.">
+                                <input type="checkbox" id="commodities" name="categories" value="market-news::commodities">
+                                <label for="commodities">Commodities</label>
+                            </div>
+                            <div class="category" title="새로운 주식 발행이나 채권 발행에 관한 뉴스입니다.">
+                                <input type="checkbox" id="issuance" name="categories" value="market-news::issuance">
+                                <label for="issuance">주식/채권 발행</label>
+                            </div>
+                            <div class="category" title="배당금을 지급하는 주식에 관한 뉴스입니다.">
+                                <input type="checkbox" id="dividend-stocks" name="categories" value="market-news::dividend-stocks">
+                                <label for="dividend-stocks">배당금 주식뉴스</label>
+                            </div>
+                            <div class="category" title="기업의 실적 발표에 관한 뉴스입니다.">
+                                <input type="checkbox" id="earnings" name="categories" value="market-news::earnings">
+                                <label for="earnings">기업 실적발표</label>
+                            </div>
+                            <div class="category" title="전 세계 시장에 관한 뉴스입니다.">
+                                <input type="checkbox" id="global" name="categories" value="market-news::global">
+                                <label for="global">세계시장 뉴스</label>
+                            </div>
+                            <div class="category" title="기업이 제공하는 장래 실적 예측에 관한 뉴스입니다.">
+                                <input type="checkbox" id="guidance" name="categories" value="market-news::guidance">
+                                <label for="guidance">장래실적예측</label>
+                            </div>
+                            <div class="category" title="새로운 기업의 주식시장 상장(IPO)에 관한 뉴스입니다.">
+                                <input type="checkbox" id="ipos" name="categories" value="market-news::ipos">
+                                <label for="ipos">IPO 뉴스</label>
+                            </div>
+                            <div class="category" title="정치적 이슈가 시장에 미치는 영향에 관한 뉴스입니다.">
+                                <input type="checkbox" id="politics" name="categories" value="market-news::politics">
+                                <label for="politics">정치적 뉴스</label>
+                            </div>
+                            <div class="category" title="인수합병(M&A)에 관한 뉴스입니다.">
+                                <input type="checkbox" id="m-a" name="categories" value="market-news::m-a">
+                                <label for="m-a">M&A</label>
+                            </div>
+                            <div class="category" title="미국 경제에 관한 뉴스입니다.">
+                                <input type="checkbox" id="us-economy" name="categories" value="market-news::us-economy">
+                                <label for="us-economy">US Economy</label>
+                            </div>
+                            <div class="category" title="소비자 시장과 관련된 뉴스입니다.">
+                                <input type="checkbox" id="consumer" name="categories" value="market-news::consumer">
+                                <label for="consumer">소비자 시장</label>
+                            </div>
+                            <div class="category" title="에너지 시장에 관한 뉴스입니다.">
+                                <input type="checkbox" id="energy" name="categories" value="market-news::energy">
+                                <label for="energy">에너지 시장</label>
+                            </div>
+                            <div class="category" title="금융 시장에 관한 뉴스입니다.">
+                                <input type="checkbox" id="financials" name="categories" value="market-news::financials">
+                                <label for="financials">금융 전반</label>
+                            </div>
+                            <div class="category" title="건강 관리 및 의료 산업에 관한 뉴스입니다.">
+                                <input type="checkbox" id="healthcare" name="categories" value="market-news::healthcare">
+                                <label for="healthcare">Healthcare</label>
+                            </div>
+                            <div class="category" title="MLP는 주로 에너지 인프라 분야에서 활동하는 투자 구조입니다.">
+                                <input type="checkbox" id="mlps" name="categories" value="market-news::mlps">
+                                <label for="mlps">에너지 인프라</label>
+                            </div>
+                            <div class="category" title="REIT는 부동산에 직접 투자하는 회사입니다.">
+                                <input type="checkbox" id="reits" name="categories" value="market-news::reits">
+                                <label for="reits">REITs</label>
+                            </div>
+                            <div class="category" title="기술 산업에 관한 뉴스입니다.">
+                                <input type="checkbox" id="technology" name="categories" value="market-news::technology">
+                                <label for="technology">Technology</label>
+                            </div>
+                            <div class="category" title="특수목적인수회사(SPAC)와 관련된 뉴스입니다.">
+                                <input type="checkbox" id="spacs" name="categories" value="market-news::spacs">
+                                <label for="spacs">SPACs</label>
+                            </div>     
+                        </form>
+                        <div class="form-action">
+                            <button type="button" class="load-news-btn" onclick="javascript:goNews()">News Call</button>
+                        </div>                            
+                    </div>
+                     <div class="buttons-container">
+                        <button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>
+                        <button class="btn" onclick="javascript:gptRequest('opinions')">AI 의견보기</button>
+                        <button class="btn" onclick="javascript:gptRequest('summarize')">내용 요약하기</button>
+                    </div>
+                    <div id="gpt-thoughts-container" style="display:none;">
+                        <h3 class="gpt_t">GPT Thoughts</h3>
+                        <div class="ai-box">
+                            <ul class="list-dep">
+                                <li><div id="gpt_opinion"></div></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_B.gif">
+                        <p>데이터 로딩중입니다.</p>
+                    </div>                    
+                    <div id="gpt-summary-container" style="display:none;">
+                        <h3 class="gpt_t">GPT Summary</h3>     
+                        <div class="ai-box">
+                            <ul class="list-dep">
+                                <li><div id="gpt_summary"></div></li>
+                            </ul>
+                        </div>
+                    </div>                       
+                    <div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_B.gif">
+                        <p style="color: red;">데이터 로딩중입니다.</p>
+                    </div>                      
+                    <div id="news">
+                    </div>
+                    <div id="loading_bar_news" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p style="color: red;">데이터 로딩중입니다.</p>
+                    </div>                       
+                </div>
+
+                <div id="menud" class="menu-cont">
+                    <h2 class="s-tit">미국증시20년 1</h2>
+                    <h3 class="s-tit">해당 그래프에 대한 추가 설명문구 영역</h3>
+                    <div class="chart-area">
+                        <div id="loading_bar_fred" class="loading_bar" style="margin-left: 0px;">
+                            <img src="/static/assets/images/LoadingBar_C.gif">
+                            <p>데이터 로딩중입니다.</p>
+                        </div>                          
+                        {{ plot_html|safe }}
+                    </div>
+
+                    <div class="box-instruction">
+                        <ul class="list-dep">
+                            <li>2001년: 미국 증시는 도트컴 버블의 붕괴로 인해 급격한 하락세를 보였습니다. 기술주와 인터넷 기업들의 폭망으로 인해 경기 둔화와 불확실성이 발생했습니다.</li>
+                            <li>2002년 - 2007년: 그 이후로 증시는 점진적인 회복을 시작했습니다. 경기 침체의 끝과 함께 회복 신호가 보이면서 주식시장은 점차 상승을 이어갔습니다. 부동산 부문에서의 성장과 함께 경제 상황이 개선되었습니다.</li>
+                            <li>2008년: 금융위기가 발발하면서 증시는 2008년 하락세를 겪게 되었습니다. 서브프라임 모기지 위기로 인한 금융 기관의 파산 우려로 경기 둔화와 대량 해고가 발생했습니다.</li>
+                            <li>2009년 - 2012년: 금융위기 이후 미국 정부의 강력한 경기부양 정책에 의해 증시는 회복을 시작했습니다. 경기 침체를 넘어선 후 점차 상승세를 이어갔으며, QE 정책과 저금리 환경이 이어지면서 주식시장은 안정성을 되찾았습니다.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="menue" class="menu-cont">
+                    <h2 class="s-tit">증시 캘린더</h2>
+                    <h3 class="s-tit">Official Source등을 통해서 생성한 economic calendar 입니다.</h3>
+
+                    <div id="loading_bar_calendar" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p>데이터 로딩중입니다.</p>
+                    </div>     
+                    <div id="calendar"></div>                        
+                    </div>
+                </div>                
+            </div>
+            <!-- 우측 영역 끝 -->
+
+        </main>
+
+    </div>
+    <!-- wrap 끝 -->
+    <script>
+
+        function guideTab(){
+            $('.menu-list li').click(function(){
+                var activeTab = $(this).attr('data-tab');
+                window.location.hash = activeTab; // URL 해시를 변경
+                setActiveTab();
+            });
+        }
+        function setActiveTab() {
+            var activeTab = window.location.hash.replace('#', '');
+            if(activeTab) {
+                $('.menu-list li, .menu-cont').removeClass('on');
+                $('[data-tab="' + activeTab + '"]').addClass('on');
+                $('#' + activeTab).addClass('on');
+            }
+        }
+        $(document).ready(function(){
+            guideTab();
+            setActiveTab(); // 페이지 로딩 시 활성 탭 설정
+        });
+        $(window).on('load', function(){
+            
+        });
+        /**** News 영역 Listener****/
+        // 'All Market News' 체크박스를 클릭할 때 다른 체크박스를 체크 해제하자
+        document.getElementById('all').addEventListener('click', function() {
+            const allCheckbox = this;
+            const otherCheckboxes = document.querySelectorAll("#categoryForm input[name='categories']:not(#all)");
+            otherCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+
+        // 다른 체크박스를 클릭할 때 'All Market News' 체크박스는 해제하자. 
+        document.querySelectorAll("#categoryForm input[name='categories']:not(#all)").forEach(checkbox => {
+            checkbox.addEventListener('click', function() {
+                if (this.checked) {
+                    document.getElementById('all').checked = false; // 'All Market News' 체크박스를 해제합니다.
+                }
+            });
+        });
+
+  </script>
+  </body>
+</html>
