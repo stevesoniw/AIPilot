@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 # 기존 Util 함수들
 from google.cloud import vision
+from google.oauth2 import service_account
 from pydantic import BaseModel
 from pandas import Timestamp
 import pandas as pd
@@ -508,7 +509,7 @@ asyncio.run(gpttest()) '''
 
 class ImageData(BaseModel):
     image: str  # Base64 인코딩된 이미지 데이터
-
+'''
 @app.post("/perform_ocr")
 async def perform_ocr(data: ImageData):
     # Base64 인코딩된 이미지 데이터를 디코딩
@@ -517,6 +518,32 @@ async def perform_ocr(data: ImageData):
 
     # Google Cloud Vision 클라이언트 초기화
     client = vision.ImageAnnotatorClient()
+
+    # OCR 처리
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    if response.error.message:
+        raise HTTPException(status_code=500, detail=response.error.message)
+
+    # OCR 결과 반환
+    return {"texts": [text.description for text in texts]}'''
+
+@app.post("/perform_ocr")
+async def perform_ocr(data: ImageData):
+    # Base64 인코딩된 이미지 데이터를 디코딩
+    image_data = base64.b64decode(data.image.split(',')[1])
+
+    # 서비스 계정 키 파일 경로
+    key_path = "sonvision-36a28cdac666.json"
+
+    # 서비스 계정 키 파일을 사용하여 인증 정보 생성
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+
+    # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
+    client = vision.ImageAnnotatorClient(credentials=credentials)
+
+    image = vision.Image(content=image_data)
 
     # OCR 처리
     response = client.text_detection(image=image)
