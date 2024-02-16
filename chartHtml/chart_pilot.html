@@ -27,18 +27,16 @@
     <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
     <script>
         var g_news;
-        window.onload = function() {
-            document.getElementById('loading_bar_fingpt').style.display = 'none';     //1번
-            document.getElementById('loading_bar_economics').style.display = 'none';  //2번 -지표분석           
-            document.getElementById('loading_bar_bonds').style.display = 'none';      //2번 -채권차트
-            document.getElementById('loading_bar_bondsNews').style.display = 'none';  //2번 -채권뉴스
-            document.getElementById('loading_bar_news').style.display = 'none';       //3번     
-            document.getElementById('loading_bar_gpt').style.display = 'none';        //3번-설명
-            document.getElementById('loading_bar_ocr').style.display = 'none';        //4번-OCR   
-                               
-            document.getElementById('loading_bar_calendar').style.display = 'none';   //5번
-            
-        };   
+        window.onload = function() {  //로딩바들 none 으로 일단 초기화하고 시작
+            hideLoadingBars('loading_bar');
+        };
+
+        function hideLoadingBars(prefix) {
+            var elements = document.querySelectorAll('[id^="' + prefix + '"]');
+            elements.forEach(function(element) {
+                element.style.display = 'none';
+            });
+        }
 //************************************** FIN GPT 함수 Starts ********************************************//
 
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
@@ -279,7 +277,6 @@
 //****************************** 글로벌 주요경제지표 함수 [#2.채권가격] Start ******************************// 
 
     async function fetchBondsData() {
-
         // 'bonds_chart_div'에 이미 차트 데이터가 있으면 요청 중단(=메뉴이동 시에 한번 호출한적 있으면 하지말자)
         const bondsChartDiv = document.getElementById('bonds_chart_div');
         if (Plotly.d3.select(bondsChartDiv).select('.plot-container').node()) {
@@ -710,7 +707,20 @@ async function goCalendar() {
     <form id="rateForm" action="/submit" method="post" style="display:none;">
     </form>
     <div class="wrap" id="chartPilot">
-        <main class="clear">
+        <!-- header 시작 -->
+        <header class="myHeader">
+            <h1 class="title-wrap">
+                <a href="#" onClick="window.location.reload()"><img src="/static/assets/images/logo.png" alt="AI솔루션본부 PILOT" /></a>
+            </h1>
+            <nav class="menux">
+                <ul>
+                    <li><a href="#" class="on">마켓데이터</a></li>
+                    <li><a href="#">트레이딩</a></li>
+                    <li><a href="#">리서치RAG</a></li>
+                </ul>
+            </nav>
+        </header>
+        <mainx class="clear">
              <!-- left-nav 메뉴 시작 -->
             <div class="left-area">
                 <div class="title-wrap">
@@ -718,11 +728,11 @@ async function goCalendar() {
                 </div>
                 <div class="menu-wrap">
                     <ul class="menu-list">
-                        <li class="page-menu on" data-tab="menua"><a href="#none">1. AI가 말해주는 주식 정보 [해외]</a></li>
-                        <li class="page-menu" data-tab="menub"><a href="javascript:fetchBondsData();">2. 글로벌 주요경제지표</a></li>
-                        <li class="page-menu" data-tab="menuc"><a href="#none">3. 뉴스 데이터 분석 [해외] </a></li>
-                        <li class="page-menu" data-tab="menud"><a href="#none">4. 마켓 PDF 분석</a></li>
-                        <li class="page-menu" data-tab="menue"><a href="javascript:goCalendar();">5. 증시 캘린더</a></li>
+                        <li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>
+                        <li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>
+                        <li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외] </a></li>
+                        <li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>
+                        <li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>
                     </ul>
                 </div>
 
@@ -1051,12 +1061,24 @@ async function goCalendar() {
     <!-- wrap 끝 -->
     <script>
         function guideTab(){
-            $('.menu-list li').click(function(){
+            $('.menu-list li').click(function(event){
+                event.preventDefault(); // 기본 동작 방지
                 var activeTab = $(this).attr('data-tab');
                 window.location.hash = activeTab; // URL 해시를 변경
-                setActiveTab();
+
+                // 여기서 추가적인 액션을 호출
+                switch(activeTab) {
+                    case 'menub':
+                        fetchBondsData(); // 글로벌 주요경제지표 데이터 가져오기
+                        break;
+                    case 'menue':
+                        goCalendar(); // 증시 캘린더 보여주기
+                        break;
+                    // 다른 탭에 대한 추가적인 액션을 여기에 추가할 수 있습니다.
+                }
             });
         }
+
         function setActiveTab() {
             var activeTab = window.location.hash.replace('#', '');
             if(activeTab) {
@@ -1064,13 +1086,14 @@ async function goCalendar() {
                 $('[data-tab="' + activeTab + '"]').addClass('on');
                 $('#' + activeTab).addClass('on');
             }
-        }
+        }     
         $(document).ready(function(){
             guideTab();
             setActiveTab(); // 페이지 로딩 시 활성 탭 설정
-        });
-        $(window).on('load', function(){
-            
+            $(window).on('hashchange', function() {
+                // URL의 해시가 변경될 때마다 setActiveTab 함수 호출
+                setActiveTab();
+            });
         });
         /**** News 영역 Listener****/
         // 'All Market News' 체크박스를 클릭할 때 다른 체크박스를 체크 해제하자

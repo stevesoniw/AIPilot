@@ -1,13 +1,21 @@
+/* 헤더 영역 추가 */
+/*기존 스타일 수정*/
+.left-area{overflow-y:auto;position:relative;width:300px;height:calc(100% - 81px);background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
+.left-area .menu-wrap{padding-top:50px;}
+#chartPilot .right-area{overflow-y:auto;width:calc(100% - 280px);height:calc(100% - 81px);padding:0 50px 40px;}
 #chartPilot.wrap {width: 100%; height: 100%; position: relative; color: #111;}
-#chartPilot .header{position:relative;width:100%;padding:3px 20px 19px;border-bottom:1px solid #e1e1e1;}
-#chartPilot .header h1{width:147px;height:52px;}
-#chartPilot .header nav.menu{position:absolute;top:0;left:162px;right:0px;margin:18px 140px 0 215px;}
-#chartPilot .header nav.menu .s-menu{float:right;margin-top:13px;}
-#chartPilot .header nav.menu .s-menu ul{overflow:hidden;font-size:14px;color:#333;line-height:13px;}
-#chartPilot .header nav.menu ul li{float:left;margin-left:10px;}
-#chartPilot .header nav.menu ul li:first-child{margin-left:0px;}
+/*신규 스타일 추가*/
+/*#chartPilot .header{position:relative;display:flex;align-items:center;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #e1e1e1;}*/
+#chartPilot .myHeader{position:fixed;width:100%;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #21e1e1;background:#fff}
+#chartPilot .myHeader h1{position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:25px;}
+#chartPilot .myHeader h1 span{color:#ffc045;font-weight:500;}
+#chartPilot .myHeader .menux{display:flex;align-items:center;height:100%;}
+#chartPilot .myHeader .menux ul li{display:inline-block;padding:0 15px;}
+#chartPilot .myHeader .menux ul li a{display:block;}
+#chartPilot .myHeader .menux ul li a.on{color:#4066ef;}
 
-#chartPilot main{display:flex;height:100%;}
+/*#chartPilot main{display:flex;height:100%;}*/
+#chartPilot mainx, .mainx {display: flex; height: 100%; padding-top: 81px;}
 
 /* left 메뉴 */
 /* PROMPT */
@@ -58,7 +66,7 @@
 .form-container {background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px auto; width: 80%; max-width: 960px;}
 .form-header {margin-bottom: 20px; font-weight: bold; color: #0056b3; text-align: center;}
 .form-actions {display: flex; justify-content: space-between; align-items: center; margin-top: 20px;}
-.checkbox-row {display: flex; justify-content: center; flex-wrap: wrap;}
+.checkbox-row {display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;}
 .checkbox-group {flex: 0 1 30%; display: flex; align-items: center; margin: 5px; min-width: 250px;}
 .checkbox-group label {white-space: nowrap;}
 .checkbox-group input[type="checkbox"] {margin-right: 10px;}
@@ -74,6 +82,13 @@
 .ai-opinion-label {margin-left: -20px; color: #0a06e7 !important; font-size: 13px; width:100px;}
 .ai-opinion-warning {color: #000; font-size: 13px; margin-top: 10px; text-align: left; width: 100%;}
 #h3.nth-menu{margin-bottom:30px; margin-top:30px; color:#333;font-weight:400;} 
+input[type="date"] {appearance: auto;-webkit-appearance: auto;}
+.date-range-container .date {margin-bottom: 20px;}
+.date-range-container {margin-bottom: 20px;display: flex;align-items: center;justify-content: center;}
+.date-range-container label {margin-right: 10px;color: #3366ff;}
+.date-range-container input[type="date"] {padding: 6px 8px;border-radius: 3px;border: 1px solid #ccc;font-size: 14px;outline: none;width: 160px;color: #3366ff; margin-right: 45px;  color: rgba(32, 31, 31, 0.637);}
+.date-range-container input[type="date"]:focus {border-color: #555;box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);}
+
 
 /* 글로벌 주요 경제지표 2.[채권데이터 분석] 및 [뉴스] 영역 */
 
@@ -125,7 +140,7 @@
 .category-form {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 15px;}
 .category {display: flex; align-items: center; background: #ffffff; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);transition: transform 0.2s ease-in-out;}
 .category:hover { transform: translateY(-2px);}
-input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}
+/*input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}*/
 label {font-size: 16px; cursor: pointer;}
 label:hover {color: #fa7508;}
 #all + label {color: red;}
