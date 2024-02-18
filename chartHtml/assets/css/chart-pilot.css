@@ -185,7 +185,7 @@ label:hover {color: #fa7508;}
 .news-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
 .news-btn { width: 100px; height: 30px; padding: 5px; font-size: 13px; text-align: center; line-height: 20px; background-color: #4765ee; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s ease; font-weight: bold}
 .news-btn:hover { background-color: #3521a7; }
-.news-show { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 4px; min-height: 200px; margin-top: 20px; }
+.news-show { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 4px; min-height: 200px; margin-top: 10px; }
 .news-btn.selected { background-color: #f0a30a; color: white; }
 .news-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
 .naver-news-item { display: flex; align-items: flex-start; background: #fff; border: 1px solid #eaeaea; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -203,9 +203,13 @@ label:hover {color: #fa7508;}
 .naver-news-detail-btn { background-color: #666; color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: auto; align-self: center; cursor: pointer; }
 .news-api-btn { width: 150px; height: 30px; padding: 5px; font-size: 13px; text-align: center; line-height: 20px; background-color: #ffffff; border: 1px solid #000000; border-radius: 4px; color: #000000; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; }
 .news-api-btn:hover { background-color: #ffcccc; color: #000000; }
-.news-api-btn.selected { background-color: #e4a52f; color: white; }
+.news-api-btn.selected { background-color: #e2be1f; color: white; }
 #naver-api-search-area {margin: 20px 0; display: flex; align-items: center; gap: 10px;}
 .naver-api-input {flex-grow: 1; border: 2px solid #ee9632; border-radius: 20px; padding: 5px 10px; font-size: 14px; color: #333; outline: none; transition: border-color 0.3s ease;}
 .naver-api-input:focus {border-color: #f0a30a;}
 .naver-api-search-btn {padding: 5px 15px; font-size: 12px; border: none; border-radius: 4px; background-color: #535151; color: white; cursor: pointer; transition: background-color 0.3s ease;}
 .naver-api-search-btn:hover {background-color: #bbb;}
+.ai-summary-button-container { text-align: right; margin-right: 10px; margin-top: 5px; }
+.ai-summary-button { background-color: #e60000; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background-color 0.3s; }
+.ai-summary-button:hover { background-color: #cc0000; }
+

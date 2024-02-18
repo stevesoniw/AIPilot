@@ -709,6 +709,7 @@ function naverScrapingNews(newsType) {
     if (inputBox) {  //'내가검색하기' 쪽 인풋박스 일단 클리어 
         inputBox.value = '';  
     }
+    document.querySelector('.news-api-btn').classList.remove('selected');
     switch (newsType) {
         case 1:
             url = "https://finance.naver.com/news/mainnews.naver";
@@ -795,26 +796,33 @@ function fetchDetaildNews(url, event) {
 }
 // 네이버 키워드 입력란 보이게 하는 함수
 function naverKeyword() {
-    const searchArea = document.createElement('div');
-    searchArea.setAttribute('id', 'naver-api-search-area');
-    searchArea.innerHTML = `
-    <span>검색할 뉴스 키워드를 입력해주세요 :</span>
-    <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
-    <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
-    const newsSelectionArea = document.getElementById('news_selection_area');
-    document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
+    // 'naver-api-search-area' 요소가 이미 있는지 확인
+    let searchArea = document.getElementById('naver-api-search-area');
+    
+    // 요소가 존재하지 않는 경우에만 생성 및 추가
+    if (!searchArea) {
+        searchArea = document.createElement('div');
+        searchArea.setAttribute('id', 'naver-api-search-area');
+        searchArea.innerHTML = `
+        <span>검색할 뉴스 키워드를 입력해주세요 :</span>
+        <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
+        <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
+        
+        const newsSelectionArea = document.getElementById('news_selection_area');
+        // 'news_selection_area'의 바로 다음에 검색 영역을 삽입
+        document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
+    }
 
-    // naver-api-input에 자동으로 focus 설정
+    // naver-api-input에 자동으로 focus 설정 및 엔터키 이벤트 핸들러 설정
     const input = document.querySelector('.naver-api-input');
     if (input) {
         input.focus();
-        // 엔터키 이벤트 핸들러 설정
         input.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 naverSearchAPI();
             }
-        }); 
-    }   
+        });
+    }
 }
 
 // 네이버 검색 API를 활용해서 뉴스까지 가져오자 
@@ -1236,7 +1244,10 @@ function similarSitu(){
                         <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
                         <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">그냥 내가 검색</button>
                     </div>
-            
+                    <!-- AI 요약 버튼 추가 -->
+                    <div class="ai-summary-button-container">
+                        <button class="ai-summary-button">아래 기사들에 대한 AI 요약 및 의견 보기</button>
+                    </div>
                     <div id="news_show_area" class="news-show"></div> 
                 </div>                  
             </div>
@@ -1277,7 +1288,8 @@ function similarSitu(){
         $(document).ready(function() {
             // 메뉴 업데이트와 이벤트 바인딩을 처리하는 함수
             function updateAndBindMenu() {
-                $('.menux ul li').click(function() {
+                $('.menux ul li').click(function(event) {
+                    event.preventDefault(); // 기본 동작 방지                    
                     var menuType = $(this).data('menu');
                     updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
                 });
@@ -1315,13 +1327,14 @@ function similarSitu(){
             //GNB 넣으면서 메뉴구조 바꾸기!! 파일쪼개기는 시간상 버겁다 ㅠㅠ
             function updateMenuList(menuType) {
                 $('.menu-list').empty(); // 기존 메뉴 리스트 비우기
-                
+             
+                var menuItems = [];
                 if(menuType === 'menu1') {
                     // 마켓데이터 해외 메뉴 리스트
                     var menuItems = [
                         '<li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>',
                         '<li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>',
-                        '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 </a></li>',
+                        '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외]</a></li>',
                         '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',
                         '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>'
                     ];
@@ -1330,7 +1343,7 @@ function similarSitu(){
                     // 마켓데이터 국내 메뉴 리스트
                     var menuItems = [
                         '<li class="page-menu on" data-tab="menu_2nd_a"><a href="javascript:void(0);">1. 국내 뉴스 정보</a></li>',
-                        '<li class="page-menu" data-tab="menu_2nd_b"><a href="javascript:void(0);">2. 유사국면 분석(주식)</a></li>'
+                        '<li class="page-menu" data-tab="menu_2nd_b"><a href="javascript:void(0);">2. 유사국면 분석</a></li>'
                     ];
                     $('.menu-list').append(menuItems.join(''));
                 } else if(menuType === 'menu3') {
@@ -1338,10 +1351,17 @@ function similarSitu(){
                     alert("준비중입니다");
                     return;
                 }
+                // GNB 클릭 시 첫 번째 하위 메뉴 활성화
+               /** if(menuType === 'menu2') {
+                    setTimeout(function() { // DOM 업데이트 후 활성화를 위해 setTimeout 사용
+                        $('.menu-list li:first-child').click();
+                    }, 5);
+                } **/               
                 updateAndBindMenu(); // 페이지 로딩 시 메뉴 업데이트와 이벤트 바인딩 실행
             }
         
-            $('.menux ul li').click(function() {
+            $('.menux ul li').click(function(event) {
+                event.preventDefault(); // 기본 동작 방지
                 var menuType = $(this).data('menu');
                 updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
             });
