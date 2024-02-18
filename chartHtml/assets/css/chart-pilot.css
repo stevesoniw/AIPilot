@@ -201,3 +201,11 @@ label:hover {color: #fa7508;}
 .naver-news-detailed a {color: #007bff; text-decoration: none;}
 .naver-news-detailed a:hover {text-decoration: underline;}
 .naver-news-detail-btn { background-color: #666; color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: auto; align-self: center; cursor: pointer; }
+.news-api-btn { width: 150px; height: 30px; padding: 5px; font-size: 13px; text-align: center; line-height: 20px; background-color: #ffffff; border: 1px solid #000000; border-radius: 4px; color: #000000; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; }
+.news-api-btn:hover { background-color: #ffcccc; color: #000000; }
+.news-api-btn.selected { background-color: #e4a52f; color: white; }
+#naver-api-search-area {margin: 20px 0; display: flex; align-items: center; gap: 10px;}
+.naver-api-input {flex-grow: 1; border: 2px solid #ee9632; border-radius: 20px; padding: 5px 10px; font-size: 14px; color: #333; outline: none; transition: border-color 0.3s ease;}
+.naver-api-input:focus {border-color: #f0a30a;}
+.naver-api-search-btn {padding: 5px 15px; font-size: 12px; border: none; border-radius: 4px; background-color: #535151; color: white; cursor: pointer; transition: background-color 0.3s ease;}
+.naver-api-search-btn:hover {background-color: #bbb;}

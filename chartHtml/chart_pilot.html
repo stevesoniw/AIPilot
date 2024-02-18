@@ -701,10 +701,14 @@ async function goCalendar() {
             calendar.render();
         }
 //************************************** 증시캘린더 함수 Ends ******************************************//
-//******************************** 2nd GNB:: 국내 뉴스 함수 Starts *************************************//
+//******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Starts *************************************//
 // NAVER 뉴스 기본 정보 스크래핑해오기
 function naverScrapingNews(newsType) {
     let url;
+    var inputBox = document.querySelector('.naver-api-input');
+    if (inputBox) {  //'내가검색하기' 쪽 인풋박스 일단 클리어 
+        inputBox.value = '';  
+    }
     switch (newsType) {
         case 1:
             url = "https://finance.naver.com/news/mainnews.naver";
@@ -789,7 +793,84 @@ function fetchDetaildNews(url, event) {
         event.target.closest('.naver-news-item').insertAdjacentElement('afterend', errorDiv);
     });
 }
-//********************************** 2nd GNB:: 국내 뉴스 함수 Ends ***************************************//
+// 네이버 키워드 입력란 보이게 하는 함수
+function naverKeyword() {
+    const searchArea = document.createElement('div');
+    searchArea.setAttribute('id', 'naver-api-search-area');
+    searchArea.innerHTML = `
+    <span>검색할 뉴스 키워드를 입력해주세요 :</span>
+    <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
+    <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
+    const newsSelectionArea = document.getElementById('news_selection_area');
+    document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
+
+    // naver-api-input에 자동으로 focus 설정
+    const input = document.querySelector('.naver-api-input');
+    if (input) {
+        input.focus();
+        // 엔터키 이벤트 핸들러 설정
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                naverSearchAPI();
+            }
+        }); 
+    }   
+}
+
+// 네이버 검색 API를 활용해서 뉴스까지 가져오자 
+async function naverSearchAPI() {
+    // 일단 다른 뉴스 버튼들 (news-btn)의 'selected' 클래스 제거
+    document.querySelectorAll('.news-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    // news-api-btn에 'selected' 클래스 추가
+    document.querySelector('.news-api-btn').classList.add('selected');  
+
+    const keywordInput = document.querySelector('.naver-api-input');
+    if (!keywordInput) return; // Exit if no input field found
+    const keyword = keywordInput.value;
+    // Update the apiUrl if necessary to match your FastAPI route
+    const apiUrl = `/api/search-naver?keyword=${encodeURIComponent(keyword)}`;
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const { items } = await response.json(); // Destructure to get the items array
+
+        const newsShowArea = document.getElementById('news_show_area');
+        newsShowArea.innerHTML = ''; // Clear existing content
+
+        items.forEach(item => {
+            // Remove HTML tags from the title and description
+            const title = item.title.replace(/<\/?[^>]+(>|$)/g, "");
+            const description = item.description.replace(/<\/?[^>]+(>|$)/g, "");
+
+            const div = document.createElement('div');
+            div.className = 'naver-news-item';
+            div.innerHTML = `
+                <div class="naver-news-content">
+                    <div class="naver-news-title">${title}</div>
+                    <div class="naver-news-summary">${description}</div>
+                    <div class="naver-news-info">${item.bloggername} | ${new Date(item.postdate).toLocaleDateString()}</div>
+                </div>
+                <a href="${item.link}" target="_blank" class="naver-news-detail-btn">자세히 보기</a>
+            `;
+            newsShowArea.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error fetching news:', error);
+        document.getElementById('news_show_area').innerHTML = '<p>뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+    }
+}
+
+
+//******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Ends *************************************//
+//******************************** 2nd GNB:: 국내 주식 유사국면 분석 Starts*************************************//
+
+function similarSitu(){
+    //alert("준비중입니다");
+}
+
     </script>          
 <body>
     <form id="rateForm" action="/submit" method="post" style="display:none;">
@@ -1153,6 +1234,7 @@ function fetchDetaildNews(url, event) {
                         <button class="news-btn" data-news-type="채권,선물" onclick="naverScrapingNews(4)">채권,선물</button>
                         <button class="news-btn" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</button>
                         <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
+                        <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">그냥 내가 검색</button>
                     </div>
             
                     <div id="news_show_area" class="news-show"></div> 
@@ -1222,6 +1304,12 @@ function fetchDetaildNews(url, event) {
                     case 'menue':
                         goCalendar(); // 증시 캘린더 보여주기
                         break;
+                    case 'menu_2nd_a':
+                        naverScrapingNews(1); // 네이버 주요뉴스 스크래핑한거 보여주기
+                        break;
+                    case 'menu_2nd_b' :
+                        similarSitu(); // 국내주식 유사국면 분석
+                        break;
                 }
             }      
             //GNB 넣으면서 메뉴구조 바꾸기!! 파일쪼개기는 시간상 버겁다 ㅠㅠ
@@ -1245,6 +1333,10 @@ function fetchDetaildNews(url, event) {
                         '<li class="page-menu" data-tab="menu_2nd_b"><a href="javascript:void(0);">2. 유사국면 분석(주식)</a></li>'
                     ];
                     $('.menu-list').append(menuItems.join(''));
+                } else if(menuType === 'menu3') {
+                    // 마켓데이터 국내 메뉴 리스트
+                    alert("준비중입니다");
+                    return;
                 }
                 updateAndBindMenu(); // 페이지 로딩 시 메뉴 업데이트와 이벤트 바인딩 실행
             }

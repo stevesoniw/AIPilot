@@ -4,6 +4,7 @@ import json
 import random
 import requests
 import httpx
+from urllib.parse import quote 
 import asyncio
 from io import BytesIO
 from typing import List, Optional
@@ -878,22 +879,29 @@ queryGPT4()'''
 ############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 ################################
 
 #1. 네이버 검색 API
-def my_naver_api() : 
+@app.get("/api/search-naver")
+async def search_naver(keyword: str = Query(default="금융")):
     client_id = config.NAVER_API_KEY
     client_secret = config.NAVER_SECRET
-    encText = urllib.parse.quote("금융")
-    naver_url = "https://openapi.naver.com/v1/search/blog?query=" + encText # JSON 결과
-    request = urllib.request.Request(naver_url)
-    request.add_header("X-Naver-Client-Id",client_id)
-    request.add_header("X-Naver-Client-Secret",client_secret)
-    response = urllib.request.urlopen(request)
-    rescode = response.getcode()
-    if(rescode==200):
-        response_body = response.read()
-        print(response_body.decode('utf-8'))
-    else:
-        print("Error Code:" + rescode)
+    encText = quote(keyword)
+    naver_url = f"https://openapi.naver.com/v1/search/blog?query={encText}"
 
+    headers = {
+        "X-Naver-Client-Id": client_id,
+        "X-Naver-Client-Secret": client_secret,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(naver_url, headers=headers)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Error from Naver API: {response.status_code}")
+
+    # Process the response to match the expected format
+    data = response.json()
+    return {"items": data.get("items", [])}
+
+        
 #2. 네이버 증권 주요뉴스 스크래핑  :: 기본 타이틀+내용 가져오기
 class NewsItem(BaseModel):
     thumb_url: Optional[str]
@@ -1046,6 +1054,3 @@ def fetch_news_detail(news_url: NewsURL):
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
     
-news_url_instance = NewsURL(url="/news/news_read.naver?article_id=0004301236&office_id=011&mode=mainnews&type=&date=2024-02-18&page=1")
-result = fetch_news_detail(news_url_instance)
-print(result)
