@@ -6,7 +6,7 @@ import requests
 import httpx
 import asyncio
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 import base64
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -14,6 +14,7 @@ from typing import Optional
 from google.cloud import vision
 from google.oauth2 import service_account
 from pydantic import BaseModel
+import urllib.request
 from pandas import Timestamp
 import pandas as pd
 import numpy as np 
@@ -24,6 +25,7 @@ from matplotlib.figure import Figure
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from bs4 import BeautifulSoup, NavigableString
 #금융관련 APIs
 import finnhub
 import fredpy as fp
@@ -251,7 +253,7 @@ def create_interest_rate_chart():
     return {'data': chart_data, 'layout': chart_layout}
 
 def show_base_rate():
-    # 데이터 가져오기 및 변환
+    # 데이터 가져오기 및 변환   #날짜 입력받는 건 나중에 하자
     start_date = '2000-01-01'
     end_date = '2023-02-01'
     data = get_base_rate(start_date, end_date)
@@ -596,7 +598,6 @@ async def gpt4_pdf_talk(response_data):
         return None
 
 
-
 ######################################## 마켓 PDF 분석 Ends  ##############################################            
 ################################### FIN GPT 구현 부분 Starts (본부장님소스) ################################
 
@@ -874,34 +875,177 @@ asyncio.run(cccc())'''
     print(result)
 queryGPT4()'''
 
+############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 ################################
 
-def detect_text(path):
-    """Detects text in the file."""
-    from google.cloud import vision
+#1. 네이버 검색 API
+def my_naver_api() : 
+    client_id = config.NAVER_API_KEY
+    client_secret = config.NAVER_SECRET
+    encText = urllib.parse.quote("금융")
+    naver_url = "https://openapi.naver.com/v1/search/blog?query=" + encText # JSON 결과
+    request = urllib.request.Request(naver_url)
+    request.add_header("X-Naver-Client-Id",client_id)
+    request.add_header("X-Naver-Client-Secret",client_secret)
+    response = urllib.request.urlopen(request)
+    rescode = response.getcode()
+    if(rescode==200):
+        response_body = response.read()
+        print(response_body.decode('utf-8'))
+    else:
+        print("Error Code:" + rescode)
 
-    client = vision.ImageAnnotatorClient()
+#2. 네이버 증권 주요뉴스 스크래핑  :: 기본 타이틀+내용 가져오기
+class NewsItem(BaseModel):
+    thumb_url: Optional[str]
+    article_subject: str
+    article_link: Optional[str]
+    summary: str
+    press: str
+    wdate: str
+    
+@app.get("/naver-scraping-news/", response_model=List[NewsItem])    
+def fetch_naver_finance_news(url: str):
+    try : 
+        response = requests.get(url)
+        # 요청이 성공적일때만
+        if response.status_code == 200:
+            # BeautifulSoup 객체를 생성하여 HTML을 파싱
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items  = []
+            
+            #메인뉴스랑 다른애들이랑 html 이 좀 다름. 분기쳐주자. 
+            if 'mainnews.naver' in url: #메인뉴스 url은 현재 https://finance.naver.com/news/mainnews.naver 임                
+                news_section = soup.find('div', class_='mainNewsList')
+              # 각 뉴스 아이템을 순회
+                for item in news_section.find_all('li', class_='block1'):
+                    # Extract thumbnail image
+                    thumb_element = item.select_one('.thumb img')
+                    thumb_url = thumb_element['src'] if thumb_element else None
+                    # Extract article subject and remark
+                    # 타이틀이랑 링크까지 갖고오기 
+                    article_subject_element = item.select_one('dd.articleSubject a')
+                    if article_subject_element:
+                        article_subject = article_subject_element.get_text(strip=True)
+                        article_link = article_subject_element['href']
+                    else:
+                        article_subject = None
+                        article_link = None
+                    # Extract article summary // press랑 wdate는 포함안되게 하자
+                    article_summary_element = item.select_one('dd.articleSummary')
+                    if article_summary_element:
+                        summary = ''.join([str(child) for child in article_summary_element.contents if type(child) == NavigableString]).strip()
+                    else:
+                        summary = None
+                    # Extract press name
+                    press = item.select_one('.press').get_text(strip=True) if item.select_one('.press') else None
+                    # Extract writing date
+                    wdate = item.select_one('.wdate').get_text(strip=True) if item.select_one('.wdate') else None
 
-    with open(path, "rb") as image_file:
-        content = image_file.read()
+                    news_items.append({
+                        "thumb_url": thumb_url,
+                        "article_subject": article_subject,
+                        "article_link": article_link,
+                        "summary": summary,
+                        "press": press,
+                        "wdate": wdate
+                    })
+                return news_items                
+            else: 
+                news_items = []
 
-    image = vision.Image(content=content)
+                # 'ul class="realtimeNewsList"' 내의 모든 'li' 요소를 찾음 (각 기사 리스트)
+                #  <dl> <dt><dd><dd> 순으로 1개 게시글인데 갑자기 이미지 없어져서 <dt>에 타이틀 들어올때도 있음;; 개하드코딩 필요
+                for li in soup.select('ul.realtimeNewsList > li'):
+                    # 'li' 내의 모든 'dl' 요소 (각 기사) 처리
+                    for dl in li.find_all('dl'):
+                        elements = dl.find_all(['dt', 'dd'])  # 'dt'와 'dd' 요소를 모두 찾음
+                        # 초기화
+                        thumb_url = None
+                        article_subject = ''
+                        article_link = ''
+                        summary = ''
+                        press = ''
+                        wdate = ''
+                        for element in elements:
+                            if element.name == 'dt' and 'thumb' in element.get('class', []):
+                                # 이미지 URL 처리
+                                thumb_url = element.find('img')['src'] if element.find('img') else None
+                            elif element.name == 'dt' and 'articleSubject' in element.get('class', []):
+                                # 이미지 없이 제목만 있는 경우 처리
+                                thumb_url = None  # 이미지가 없으므로 None으로 설정
+                                article_subject = element.find('a').get('title', '')
+                                article_link = "https://news.naver.com" + element.find('a')['href']
+                            elif 'articleSubject' in element.get('class', []):
+                                # 기사 제목 처리
+                                article_subject = element.find('a').get('title', '')
+                                article_link = "https://news.naver.com" + element.find('a')['href']
+                            elif 'articleSummary' in element.get('class', []):
+                                # 기사 요약, 출판사, 작성 날짜 처리
+                                summary = element.contents[0].strip() if element.contents else ''
+                                press = element.find('span', class_='press').text if element.find('span', class_='press') else ''
+                                wdate = element.find('span', class_='wdate').text if element.find('span', class_='wdate') else ''
+                                # 모든 정보가 수집되었으므로 news_items에 추가
+                                news_items.append({
+                                    "thumb_url": thumb_url,
+                                    "article_subject": article_subject,
+                                    "article_link": article_link,
+                                    "summary": summary,
+                                    "press": press,
+                                    "wdate": wdate
+                                })
+                return news_items
+        else:
+            return "Failed to fetch the naverNews with status code: {}".format(response.status_code)
+    except requests.exceptions.RequestException as e:
+      return "An error occurred while fetching the naver news: {}".format(e)        
 
-    response = client.text_detection(image=image)
-    texts = response.text_annotations
-    print("Texts:")
-
-    for text in texts:
-        print(f'\n"{text.description}"')
-
-        vertices = [
-            f"({vertex.x},{vertex.y})" for vertex in text.bounding_poly.vertices
-        ]
-
-        print("bounds: {}".format(",".join(vertices)))
-
-    if response.error.message:
-        raise Exception(
-            "{}\nFor more info on error messages, check: "
-            "https://cloud.google.com/apis/design/errors".format(response.error.message)
-        )
-
+#왜 그런지 모르겠는데, 네이버페이지 상의 호출URL과 소스보기로 보여지는 URL이 다르다. 이거때매 url함수만듬;
+def makeNaverUrl(news_url: str) :
+    article_id = ""
+    office_id = ""
+    # '&'로 분리하여 각 파라미터를 순회
+    for param in news_url.split('&'):
+        # 'article_id' 파라미터인 경우
+        if 'article_id=' in param:
+            article_id = param.split('=')[1]
+        # 'office_id' 파라미터인 경우
+        elif 'office_id=' in param:
+            office_id = param.split('=')[1]
+    return article_id, office_id
+# 문자 치환해서 뉴스 클라이언트로 보내주기
+def clean_html_content(html_content: str) -> str:
+    # \n을 공백으로 치환
+    cleaned_content = html_content.replace('\n', ' ')
+    cleaned_content = cleaned_content.replace('\t', ' ')
+    cleaned_content = ' '.join(cleaned_content.split())
+    return cleaned_content
+# 네이버 상세 Contents 스크래핑
+class NewsURL(BaseModel):
+    url: str
+@app.post("/api/news-detail")
+def fetch_news_detail(news_url: NewsURL):
+    try:
+        article_id, office_id = makeNaverUrl(news_url.url)
+        new_url = f"https://n.news.naver.com/mnews/article/{office_id}/{article_id}"
+        response = requests.get(new_url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')            
+        newsct_article = soup.find('div', id='newsct_article')
+        if newsct_article is not None:
+            dic_area = newsct_article.find('article', id='dic_area')
+            if dic_area is not None:
+                #return dic_area.prettify()  ## prettify 로 예쁘게ㅋ
+                # decode_contents()로 내용을 가져온 후 개행 문자를 공백으로 치환
+                html_content = dic_area.decode_contents()
+                cleaned_html_content = clean_html_content(html_content)
+                return cleaned_html_content
+            else:
+                raise HTTPException(status_code=404, detail="Article content not found")
+        else:
+            raise HTTPException(status_code=404, detail="News content not found")
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
+    
+news_url_instance = NewsURL(url="/news/news_read.naver?article_id=0004301236&office_id=011&mode=mainnews&type=&date=2024-02-18&page=1")
+result = fetch_news_detail(news_url_instance)
+print(result)

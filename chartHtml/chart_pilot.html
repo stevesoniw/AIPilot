@@ -701,7 +701,95 @@ async function goCalendar() {
             calendar.render();
         }
 //************************************** 증시캘린더 함수 Ends ******************************************//
-
+//******************************** 2nd GNB:: 국내 뉴스 함수 Starts *************************************//
+// NAVER 뉴스 기본 정보 스크래핑해오기
+function naverScrapingNews(newsType) {
+    let url;
+    switch (newsType) {
+        case 1:
+            url = "https://finance.naver.com/news/mainnews.naver";
+            break;
+        case 2:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=401";
+            break;
+        case 3:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=402";
+            break;            
+        case 4:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=404";
+            break;                        
+        case 5:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=406";
+            break;            
+        case 6:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=429";
+            break;            
+        default:
+            console.error('Invalid news type');
+            return;
+    }
+    const apiUrl = `/naver-scraping-news?url=${encodeURIComponent(url)}`;
+    fetch(apiUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const newsShowArea = document.getElementById('news_show_area');
+        newsShowArea.innerHTML = '';
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'naver-news-item';
+            div.innerHTML = `
+                <img src="${item.thumb_url ? item.thumb_url : '/static/assets/images/defaultNews.jpg'}" alt="" class="naver-news-thumb">
+                <div class="naver-news-content">
+                    <div class="naver-news-title">${item.article_subject}</div>
+                    <div class="naver-news-summary">${item.summary}</div>
+                    <div class="naver-news-info">${item.press} | ${item.wdate}</div>
+                </div>
+            `;
+            const button = document.createElement('button');
+            button.className = 'naver-news-detail-btn';
+            button.textContent = '자세히 보기';
+            button.addEventListener('click', function(event) {
+                fetchDetaildNews(item.article_link, event);
+            });
+            div.appendChild(button);
+            newsShowArea.appendChild(div);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching news:', error);
+        document.getElementById('news_show_area').innerHTML = '<p>뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+    });
+}
+// NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
+function fetchDetaildNews(url, event) {
+    fetch('/api/news-detail', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.text())
+    .then(html => {
+        const detailedNewsDiv = document.createElement('div');
+        detailedNewsDiv.className = 'naver-news-detailed';
+        detailedNewsDiv.innerHTML = html;
+        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', detailedNewsDiv);
+    })
+    .catch(error => {
+        console.error('Error fetching detailed news:', error);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'naver-news-detailed';
+        errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', errorDiv);
+    });
+}
+//********************************** 2nd GNB:: 국내 뉴스 함수 Ends ***************************************//
     </script>          
 <body>
     <form id="rateForm" action="/submit" method="post" style="display:none;">
@@ -714,9 +802,9 @@ async function goCalendar() {
             </h1>
             <nav class="menux">
                 <ul>
-                    <li><a href="#" class="on">마켓데이터</a></li>
-                    <li><a href="#">트레이딩</a></li>
-                    <li><a href="#">리서치RAG</a></li>
+                    <li data-menu="menu1"><a href="#">[해외]마켓데이터 분석</a></li>
+                    <li data-menu="menu2"><a href="#">[국내]마켓데이터 분석</a></li>
+                    <li data-menu="menu3"><a href="#">리서치 리포트 분석</a></li>
                 </ul>
             </nav>
         </header>
@@ -1050,8 +1138,25 @@ async function goCalendar() {
                         <p>데이터 로딩중입니다.</p>
                     </div>     
                     <div id="calendar"></div>                        
+                </div>     
+<!--------------------------------       [[ GNB 2ND ]]   --------------------------------------------->
+                <!------------ [국내] 마켓데이터 분석 -------------->
+                <div id="menu_2nd_a" class="menu-cont">
+                    <h2 class="s-tit">국내 뉴스 Summary</h2>
+                    <h3 class="s-tit">주요 시장 뉴스를 확인해보세요</h3>
+ 
+   
+                    <div id="news_selection_area" class="news-selection">
+                        <button class="news-btn selected" data-news-type="주요뉴스" onclick="naverScrapingNews(1)">주요뉴스</button>
+                        <button class="news-btn" data-news-type="시황,전망" onclick="naverScrapingNews(2)">시황,전망</button>
+                        <button class="news-btn" data-news-type="기업,종목분석" onclick="naverScrapingNews(3)">기업,종목분석</button>
+                        <button class="news-btn" data-news-type="채권,선물" onclick="naverScrapingNews(4)">채권,선물</button>
+                        <button class="news-btn" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</button>
+                        <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
                     </div>
-                </div>                
+            
+                    <div id="news_show_area" class="news-show"></div> 
+                </div>                  
             </div>
             <!-- 우측 영역 끝 -->
 
@@ -1087,14 +1192,73 @@ async function goCalendar() {
                 $('#' + activeTab).addClass('on');
             }
         }     
-        $(document).ready(function(){
-            guideTab();
-            setActiveTab(); // 페이지 로딩 시 활성 탭 설정
-            $(window).on('hashchange', function() {
-                // URL의 해시가 변경될 때마다 setActiveTab 함수 호출
-                setActiveTab();
+        $(document).ready(function() {
+            // 메뉴 업데이트와 이벤트 바인딩을 처리하는 함수
+            function updateAndBindMenu() {
+                $('.menux ul li').click(function() {
+                    var menuType = $(this).data('menu');
+                    updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
+                });
+        
+                // 메뉴 리스트 항목에 대한 클릭 이벤트 바인딩
+                $('.menu-list').on('click', 'li', function(event) {
+                    event.preventDefault(); // 기본 동작 방지
+                    var activeTab = $(this).data('tab');
+                    window.location.hash = activeTab; // URL 해시를 변경
+        
+                    // 여기서 추가적인 액션을 호출
+                    executeTabAction(activeTab);
+                });
+        
+                setActiveTab(); // 활성 탭 설정
+                $(window).on('hashchange', setActiveTab); // 해시 변경에 따른 탭 설정
+            }
+            // 메뉴에 따른 추가적인 액션을 실행
+            function executeTabAction(activeTab) {
+                switch(activeTab) {
+                    case 'menub':
+                        fetchBondsData(); // 글로벌 주요경제지표 데이터 가져오기
+                        break;
+                    case 'menue':
+                        goCalendar(); // 증시 캘린더 보여주기
+                        break;
+                }
+            }      
+            //GNB 넣으면서 메뉴구조 바꾸기!! 파일쪼개기는 시간상 버겁다 ㅠㅠ
+            function updateMenuList(menuType) {
+                $('.menu-list').empty(); // 기존 메뉴 리스트 비우기
+                
+                if(menuType === 'menu1') {
+                    // 마켓데이터 해외 메뉴 리스트
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>',
+                        '<li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>',
+                        '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 </a></li>',
+                        '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',
+                        '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                } else if(menuType === 'menu2') {
+                    // 마켓데이터 국내 메뉴 리스트
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menu_2nd_a"><a href="javascript:void(0);">1. 국내 뉴스 정보</a></li>',
+                        '<li class="page-menu" data-tab="menu_2nd_b"><a href="javascript:void(0);">2. 유사국면 분석(주식)</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                }
+                updateAndBindMenu(); // 페이지 로딩 시 메뉴 업데이트와 이벤트 바인딩 실행
+            }
+        
+            $('.menux ul li').click(function() {
+                var menuType = $(this).data('menu');
+                updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
             });
+        
+            updateAndBindMenu(); // 초기 이벤트 바인딩
+            setActiveTab(); // 활성 탭 설정
+            $(window).on('hashchange', setActiveTab); // 해시 변경에 따른 탭 설정
         });
+        
         /**** News 영역 Listener****/
         // 'All Market News' 체크박스를 클릭할 때 다른 체크박스를 체크 해제하자
         document.getElementById('all').addEventListener('click', function() {
@@ -1111,6 +1275,16 @@ async function goCalendar() {
                 if (this.checked) {
                     document.getElementById('all').checked = false; // 'All Market News' 체크박스를 해제합니다.
                 }
+            });
+        });
+        // 국내 뉴스 버튼 제어용 (selected 되게)
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.news-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
+                    this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
+                });
             });
         });
 

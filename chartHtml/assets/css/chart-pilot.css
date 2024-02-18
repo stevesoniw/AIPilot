@@ -176,7 +176,28 @@ label:hover {color: #fa7508;}
 /*마켓 PDF 분석*/
 .upload-container { text-align: center; padding: 40px 40px 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
 .file-label {display: inline-block; padding: 10px 30px; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;}
-.file-label:hover {background-color: #0056b3;}
+.file-label:hover {background-color: #00BFFF;}
 .file-name {display: block; margin-top: 10px; color: #666;}
 .ocrButton {display: inline-block; margin: 20px 10px; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;}
-.ocrButton:hover {background-color: #00BFFF;}
+.ocrButton:hover {background-color: #7487f1;}
+
+/*국내 뉴스영역 화면*/
+.news-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.news-btn { width: 100px; height: 30px; padding: 5px; font-size: 13px; text-align: center; line-height: 20px; background-color: #4765ee; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s ease; font-weight: bold}
+.news-btn:hover { background-color: #3521a7; }
+.news-show { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 4px; min-height: 200px; margin-top: 20px; }
+.news-btn.selected { background-color: #f0a30a; color: white; }
+.news-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.naver-news-item { display: flex; align-items: flex-start; background: #fff; border: 1px solid #eaeaea; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.naver-news-thumb { flex: 0 0 auto; width: 100px; height: 100px; border-radius: 4px; margin-right: 15px; }
+.naver-news-content { flex-grow: 1; overflow: hidden; }
+.naver-news-title, .naver-news-summary, .naver-news-info { overflow: hidden; text-overflow: ellipsis; }
+.naver-news-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; }
+.naver-news-summary { font-size: 14px; color: #666; margin-bottom: 10px; }
+.naver-news-info { font-size: 12px; color: #999; }
+.naver-news-detailed {border: 1px solid #ccc; border-radius: 8px; background-color: #fffbe5; padding: 20px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;}
+.naver-news-detailed h1, .naver-news-detailed h2, .naver-news-detailed h3, .naver-news-detailed h4, .naver-news-detailed h5, .naver-news-detailed h6 {color: #333;}
+.naver-news-detailed p {color: #666; margin-bottom: 1em;}
+.naver-news-detailed a {color: #007bff; text-decoration: none;}
+.naver-news-detailed a:hover {text-decoration: underline;}
+.naver-news-detail-btn { background-color: #666; color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: auto; align-self: center; cursor: pointer; }
