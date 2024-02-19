@@ -74,13 +74,14 @@
 .indicatorButton {display: block; margin: 20px auto; background-color: #74a6e7; border: none; color: white; padding: 10px 20px; font-size: 15px; cursor: pointer; border-radius: 5px;}
 .indicatorButton:hover {background-color: #5476e9;}
 #loading_bar_economics {text-align: center; margin-top: 20px;}
+.loading-text-economics {background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
 #myEconomicChart {display: block; margin: 20px auto; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); border-radius: 5px; width: 1200px; height: 700px;}
 #clearButton {background-color: white; border: 1px solid #ccc; color: #333; padding: 5px 10px; font-size: 12px; margin-top: 10px; cursor: pointer; border-radius: 5px;}
 #clearButton:hover {background-color: #f9f9f9;}
 #chartAnalysis{margin-top: 20px; margin-bottom: 20px; padding: 10px; background-color: #f1f1f1; border-radius: 5px;}
 .chart-analysis-title {color: #003366; font-weight: bold; margin-bottom: 10px; font-size: 16px;}
 .ai-opinion-checkbox {display: flex; align-items: center;}
-.ai-opinion-label {margin-left: -20px; color: #0a06e7 !important; font-size: 13px; width:100px;}
+.ai-opinion-label {margin-left: 0px; color: #0a06e7 !important; font-size: 13px; width:100px;}
 .ai-opinion-warning {color: #000; font-size: 13px; margin-top: 10px; text-align: left; width: 100%;}
 #h3.nth-menu{margin-bottom:30px; margin-top:30px; color:#333;font-weight:400;} 
 input[type="date"] {appearance: auto;-webkit-appearance: auto;}
@@ -235,5 +236,5 @@ label:hover {color: #fa7508;}
 #fromDate_2, #toDate_2 {margin: 0 20px; padding: 8px; border-radius: 20px; background-color: #fcfbbb;} 
 .similarity-result {background-color: #ffffe0; border: 1px solid #000; padding: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; display:none;}
 .stockChartContainer2 {text-align: center; margin-top: 20px; margin-bottom: 300px; max-width: 800px; margin: auto;}
-.loading-text-similar {background-color: white; color: rgba(255, 0, 0, 0.829); font-weight: bold;}
-
+.loading-text-similar {background-color: rgb(242, 234, 253); color: rgba(255, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
+.moreToDev {height: 100px;}
