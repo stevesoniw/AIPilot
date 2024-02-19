@@ -219,18 +219,21 @@ label:hover {color: #fa7508;}
 /***** 국내주식 유사국면 분석 *****/
 .stock-search-box {margin: 20px auto; text-align: center; width: 80%; max-width: 600px;}
 .select2-container--default .select2-selection--single {border-radius: 20px; height: 50px; font-size: 16px; background-color: #E0F7FA;}
-.select2-container--default .select2-selection--single .select2-selection__rendered {line-height: 48px;}
+.select2-container--default .select2-selection--single .select2-selection__rendered {line-height: 48px; background-color: #dfe7ff;}
 .select2-container--default .select2-selection--single .select2-selection__arrow {height: 48px;}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {color: black;}
 .date-selection {text-align: center; margin-top: 20px;} 
 .date-instruction {margin-bottom: 10px; font-size: 15px; color: #ee9714;} 
 #fromDate, #toDate {margin: 0 20px; padding: 8px; border-radius: 20px;} 
 .stockChartsearch {padding: 5px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px;} 
 .stockChartsearch:hover {background-color: #5a6268;}
-#stockFirstChartContainer {text-align: center; margin-top: 20px; max-width: 800px; margin: auto;}
+.stockChartContainer {text-align: center; margin-top: 20px; max-width: 800px; margin: auto;}
 .noUi-handle {width: 20px; height: 20px; border-radius: 50%; background-color: #34568B;}
 .noUi-connect { background: #bfeafc;}
-#date-select-2 { margin-top: 25px; margin-bottom: 25px; display: none; position: relative; max-width: 800px; margin: 25px auto;}
-.date-instruction2 {text-align: center; margin-bottom: 20px; color: rgba(11, 13, 160, 0.918);}
+#date-select-2 { margin-top: 25px; margin-bottom: 15px; display: none; position: relative; max-width: 800px; margin: 5px auto;}
+.date-instruction2 {text-align: center; margin-bottom: 20px; color: rgba(11, 13, 160, 0.918); font-weight: bold;}
 #fromDate_2, #toDate_2 {margin: 0 20px; padding: 8px; border-radius: 20px; background-color: #fcfbbb;} 
-
+.similarity-result {background-color: #ffffe0; border: 1px solid #000; padding: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; display:none;}
+.stockChartContainer2 {text-align: center; margin-top: 20px; margin-bottom: 300px; max-width: 800px; margin: auto;}
+.loading-text-similar {background-color: white; color: rgba(255, 0, 0, 0.829); font-weight: bold;}
 

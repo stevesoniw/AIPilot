@@ -36,6 +36,7 @@ from fredapi import Fred
 import yfinance as yf
 from openai import OpenAI
 from fastdtw import fastdtw
+from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
 #config 파일
@@ -1126,7 +1127,7 @@ async def save_to_txt(data, filename="chart_data2.txt"):
     await save_to_txt(chart_data, "chart_data2.txt")
 asyncio.run(rapid())'''
 
-#주식 유사국면 찾기 함수 시작
+#주식 유사국면 찾기 함수 시작. DTW 라이브러리 활용(dtaidistance씀)
 class StockRequest(BaseModel):
     stockCode: str
     fromDate: str
@@ -1136,62 +1137,67 @@ class StockRequest(BaseModel):
 
 @app.post("/find-similar-period")
 async def find_similar_period(request: StockRequest):
-    # Load Yahoo Finance data
+    # Yahoo Finance 데이터 로드
     ticker_symbol = request.stockCode + ".KS"  # For Korean stock codes
     stock = yf.Ticker(ticker_symbol)
     
-    # Fetch historical data for both periods
-    hist1 = stock.history(start=request.fromDate, end=request.toDate)
-    hist2 = stock.history(start=request.fromDate_2, end=request.toDate_2)
+    # 전체 기간에 대한 역사적 데이터 가져오기
+    hist_full = stock.history(start=request.fromDate_2, end=request.toDate_2)
     
-    # Convert to numpy arrays for DTW calculation, focusing on 'Close' prices for simplicity
-    series1 = np.array(hist1['Close'])
-    series2 = np.array(hist2['Close'])
+    # 참조 기간에 대한 역사적 데이터 가져오기
+    hist_ref = stock.history(start=request.fromDate, end=request.toDate)
     
-    # Calculate DTW distance and path
-    distance, path = fastdtw(series1, series2, dist=euclidean)
+    # 'Close' 가격에 초점을 맞춰 NumPy 배열로 변환
+    series_ref = np.array(hist_ref['Close'], dtype=np.double)
+    series_full = np.array(hist_full['Close'], dtype=np.double)
     
-    # Extract similar periods based on refined DTW path analysis
-    similar_periods = extract_similar_periods(path, hist1, hist2)
+    # 참조 기간의 인덱스 찾기
+    ref_start_idx = hist_full.index.get_loc(hist_ref.index[0])
+    ref_end_idx = hist_full.index.get_loc(hist_ref.index[-1])    
+   
+    # 참조 기간의 길이
+    len_ref = len(series_ref)    
+    
+    # 가장 낮은 DTW 거리와 해당 시작 인덱스 초기화
+    lowest_distance = float('inf')
+    best_start_index = -1    
+    
+    # 전체 기간 내에서 참조 기간을 제외한 부분에 대해 DTW 거리 계산
+    for start_index in range(len(series_full)):
+        # 참조 기간과 겹치지 않는 범위를 확인
+        if start_index + len_ref - 1 < ref_start_idx or start_index > ref_end_idx:
+            end_index = start_index + len_ref
+            # 배열 범위 확인
+            if end_index <= len(series_full):
+                current_segment = series_full[start_index:end_index]
+                distance = dtw.distance(series_ref, current_segment)
+                
+                # 가장 낮은 거리 업데이트
+                if distance < lowest_distance:
+                    lowest_distance = distance
+                    best_start_index = start_index
+                    
+    # 유효한 유사 구간이 없는 경우 처리
+    if best_start_index == -1:
+        return {"message": "No similar period found without overlapping the reference period."}
+    
+                    
+    # 가장 유사한 구간의 시작과 끝 날짜 찾기
+    best_period_start_date = hist_full.index[best_start_index].strftime('%Y-%m-%d')
+    best_period_end_date = hist_full.index[best_start_index + len_ref - 1].strftime('%Y-%m-%d')
+    
+    # best_start, best_end, lowest_distance 3개 값 나왔으면, 다시 야후로 해당기간 차트데이터 get ㄱㄱ
+    chart_request = ChartRequest(stockCode=request.stockCode, fromDate=best_period_start_date, toDate=best_period_end_date)
+    chart_data = await get_stock_chart_data(chart_request)
+ 
+    return {"chartData": chart_data, 
+            "dtwDistance": lowest_distance, 
+            "bestPeriodStart": best_period_start_date, 
+            "bestPeriodEnd" : best_period_end_date
+            }
 
-    return {"similarPeriods": similar_periods}
-
-def extract_similar_periods(path, hist1, hist2):
-    # Find continuous or significant segments indicating strong alignment
-    similar_segments = find_similar_segments(path)
-
-    # Translate segments to periods, using actual dates from both hist1 and hist2
-    similar_periods = [
-        {
-            "reference_start_date": hist1.index[segment[0][0]].strftime('%Y-%m-%d'), # Start date in hist1
-            "reference_end_date": hist1.index[segment[-1][0]].strftime('%Y-%m-%d'), # End date in hist1
-            "similar_start_date": hist2.index[segment[0][1]].strftime('%Y-%m-%d'), # Start date in hist2
-            "similar_end_date": hist2.index[segment[-1][1]].strftime('%Y-%m-%d') # End date in hist2
-        }
-        for segment in similar_segments
-    ]
-    
-    return similar_periods
-
-def find_similar_segments(path, threshold=5):
-    segments = []
-    current_segment = [path[0]]
-    
-    for i in range(1, len(path)):
-        if abs(path[i][0] - path[i-1][0]) <= threshold and abs(path[i][1] - path[i-1][1]) <= threshold:
-            current_segment.append(path[i])
-        else:
-            if len(current_segment) > 1:  # Consider only significant segments
-                segments.append(current_segment)
-            current_segment = [path[i]]
-    
-    if len(current_segment) > 1:
-        segments.append(current_segment)
-        
-    return segments
-
-async def rapid():
-    request_data = StockRequest(stockCode="068270", fromDate="2020-01-01", toDate="2020-12-31", fromDate_2="2010-01-01", toDate_2="2019-12-31" )
+'''async def rapid():
+    request_data = StockRequest(stockCode="068270", fromDate="2020-02-01", toDate="2020-06-30", fromDate_2="2016-01-01", toDate_2="2022-12-31" )
     wow = await find_similar_period(request_data)
     await save_to_txt(wow, "wow.txt")
-asyncio.run(rapid())
+asyncio.run(rapid())'''

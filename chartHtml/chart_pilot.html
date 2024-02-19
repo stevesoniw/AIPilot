@@ -960,9 +960,13 @@ async function fetchChartData() {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
     const stockCode = document.getElementById('stockCodeSelect').value;
+    //유사국면 차트 조회 후 다시 처음차트 조회하면 없애버리기 + 유사국면쪽 안보이게 리셋
+    document.getElementById('stockSecondChartContainer').innerHTML = ''; 
     document.getElementById('date-select-2').style.display = 'none';
-    const requestBody = JSON.stringify({ stockCode, fromDate, toDate });
+    document.getElementById('similarityResult').style.display = 'none';
 
+    const requestBody = JSON.stringify({ stockCode, fromDate, toDate });
+    document.getElementById('loading_bar_firstStock').style.display = 'block';
     try {
         const response = await fetch('/stock-chart-data', {
             method: 'POST',
@@ -971,18 +975,20 @@ async function fetchChartData() {
         });
         if (!response.ok) throw new Error('Network response was not ok.');
         const responseData = await response.json();
+        document.getElementById('loading_bar_firstStock').style.display = 'none';
 
 console.log(responseData.chartData);
 
-        drawChart(responseData.chartData); // 차트그리기
+        drawChart(responseData.chartData, 1); // 차트그리기
     } catch (error) {
         document.getElementById('date-select-2').style.display = 'none';
+        document.getElementById('loading_bar_firstStock').style.display = 'none';
         console.error('Error fetching stock chart data:', error);
     }
 }
 
 //3. 처음 요청한 주식차트 그리기 (Feat.HighChart)
-function drawChart(chartData) {
+function drawChart(chartData, num) {
     // 데이터 유효성 검사
     if (!chartData || !chartData.labels || chartData.labels.length === 0 || !chartData.datasets || chartData.datasets.some(dataset => dataset.data.length === 0)) {
         console.error('Invalid or missing chart data');
@@ -990,9 +996,14 @@ function drawChart(chartData) {
         alert('차트 데이터가 유효하지 않습니다.');
         return; // 함수 종료
     }
+    var container;
+    if (num === 1){
+        container = document.getElementById('stockFirstChartContainer');    
+    }else if(num === 2){
+        container = document.getElementById('stockSecondChartContainer');    
+    }
 
     // 차트 컨테이너 존재 여부 검사
-    const container = document.getElementById('stockFirstChartContainer');
     if (!container) {
         console.error('Chart container not found');
         document.getElementById('date-select-2').style.display = 'none';
@@ -1011,7 +1022,7 @@ function drawChart(chartData) {
     document.getElementById('date-select-2').style.display = 'block';
 
     // Highstock 사용하여 차트 생성
-    Highcharts.stockChart('stockFirstChartContainer', {
+    Highcharts.stockChart(container, {
         chart: {
             backgroundColor: 'transparent'
         },
@@ -1032,10 +1043,18 @@ function drawChart(chartData) {
         }],
         events: {
             load: function() {
-                document.getElementById('date-select-2').style.display = 'block';
+                container.style.display = 'block';
+                container.scrollIntoView({behavior: "smooth", block: "end"});
             }
         }
     });
+    container.style.display = 'block';
+    container.scrollIntoView({behavior: "smooth", block: "end"});
+    const spacer = document.createElement('div');
+    spacer.style.height = '200px';
+    document.body.appendChild(spacer);
+
+    window.scrollTo(0, document.body.scrollHeight);;
 }
 //4. 유사국면 데이터 찾기 GOGO 
 async function similarTimeSearch() {
@@ -1044,6 +1063,8 @@ async function similarTimeSearch() {
     const fromDate_2 = document.getElementById('fromDate_2').value;
     const toDate_2 = document.getElementById('toDate_2').value;
     const stockCode = document.getElementById('stockCodeSelect').value;
+    document.getElementById('loading_bar_secondStock').style.display = 'block';
+    document.getElementById('similarityResult').style.display = 'none';
 
     try {
         const response = await fetch('/find-similar-period', {
@@ -1054,10 +1075,24 @@ async function similarTimeSearch() {
         if (!response.ok) throw new Error('Network response was not ok.');
 
         const result = await response.json();
-        console.log(result); // 결과 처리
-        // drawChart(result); 차트 그리기 함수 호출
+        document.getElementById('loading_bar_secondStock').style.display = 'none';
+        document.getElementById('similarityResult').style.display = 'block';
+
+console.log(result); 
+
+        // 결과 표시 
+        const similarityResultDiv = document.getElementById('similarityResult');
+        similarityResultDiv.innerHTML = `
+            <span style="color: red;">[최종 선정 유사국면]   </span> 
+            <span style="color: darkorange;">${result.bestPeriodStart} ~ ${result.bestPeriodEnd}   </span> 
+            <span style="font-size: smaller;">  (*유사도점수 </span>
+            <span style="font-size: smaller; color: darkblue;"> : ${result.dtwDistance} (Feat. DTW알고리즘))</span>
+        `;
+        drawChart(result.chartData.chartData, 2); //차트 그리기 함수 호출
+
     } catch (error) {
-        console.error('Error:', error);
+        document.getElementById('loading_bar_secondStock').style.display = 'none';
+        console.error('Error fetching Similar chart data:', error);
     }
 }
 
@@ -1464,7 +1499,11 @@ async function similarTimeSearch() {
                         <button id="stockChartsearch" class="stockChartsearch" onclick="fetchChartData()">검색</button>
                     </div>   
                     <!-- 처음 차트가 실제 그려지는 영역임-->
-                    <div id="stockFirstChartContainer"></div>
+                    <div id="loading_bar_firstStock" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">차트 로딩중입니다.</p>
+                    </div>
+                    <div id="stockFirstChartContainer" class="stockChartContainer"></div>
                     <div id="date-select-2" class="date-selection">
                         <p class="date-instruction2">"현재 조회된 차트데이터와 유사한 과거 기록을 찾을 구간을 선택해주세요"</p>
                         <label for="fromDate">From</label>
@@ -1473,11 +1512,14 @@ async function similarTimeSearch() {
                         <input type="text" id="toDate_2" name="toDate"><br/>
                         <button id="similarTimeSearch" class="stockChartsearch" onclick="similarTimeSearch()">유사국면 찾기</button>
                     </div> 
-                    <div class="stock-search-box">
-                        <select id="stockCodeSelect_2" style="width: 100%"></select>
-                    </div>                    
+                    <div id="loading_bar_secondStock" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text-similar">유사국면 차트 로딩중입니다.<br/>(유사국면 검색은 시간이 오래 걸릴 수 있습니다)</p>
+                    </div>
+                    <div id="similarityResult" class="similarity-result"></div>
+                    <div id="stockSecondChartContainer" class="stockChartContainer"></div>                 
                 </div> 
-
+<!--********************************* [국내] 유사 국면 분석 Ends *****************************************--> 
             </div>
             <!-- 우측 Main 화면영역 끝 -->
 
@@ -1582,9 +1624,10 @@ async function similarTimeSearch() {
                     ];
                     $('.menu-list').append(menuItems.join(''));
                 } else if(menuType === 'menu3') {
-                    // 마켓데이터 국내 메뉴 리스트
-                    alert("준비중입니다");
-                    return;
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 디지털리서치팀::요건분석중입니다</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
                 }
                 // GNB 클릭 시 첫 번째 하위 메뉴 활성화
                 if(menuType === 'menu2') {
@@ -1661,9 +1704,9 @@ async function similarTimeSearch() {
                 changeMonth: true,
                 changeYear: true
             });            
-            $("#fromDate").datepicker("setDate", "2020-01-01"); // fromDate 기본값 설정
+            $("#fromDate").datepicker("setDate", "2023-02-16"); // fromDate 기본값 설정
             $("#toDate").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정
-            $("#fromDate_2").datepicker("setDate", "2010-01-01"); // fromDate 기본값 설정
+            $("#fromDate_2").datepicker("setDate", "2017-02-24"); // fromDate 기본값 설정
             $("#toDate_2").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정            
             //유사국면에서 슬라이더바쪽 컨트롤
         });
