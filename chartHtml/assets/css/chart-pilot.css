@@ -22,7 +22,7 @@
 .left-area{overflow-y:scroll;position:relative;width:300px;height:100%;background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
 .left-area::before{content:'';position:absolute;top:0;left:0;width:300px;height:286px;background:url('/static/assets/images/left_bg.png') no-repeat center;opacity:.5;}
 .left-area::-webkit-scrollbar{width:0px;}
-.left-area .title-wrap{overflow:hidden;position:relative;padding:40px 20px;font-size:22px;color:#fff;}
+.left-area .title-wrap{overflow:hidden;position:relative;padding:20px 20px;font-size:22px;color:#fff;}
 .left-area span{color:#ffc045;font-weight:500;}
 
 .left-area .menu-wrap{position:relative;padding:0px 20px 0;}
@@ -30,7 +30,8 @@
 .left-area .menu-wrap .menu-list li.page-menu:first-child{margin-top:0;}
 .left-area .menu-wrap .menu-list li.page-menu a{color:#fff;}
 .left-area .menu-wrap .menu-list li.page-menu.on a{color:#fad58c;}
-
+.co-working-info {font-size: 13px; color: #ffffff; margin-bottom: 30px; text-align: center;}
+.highlight {color: orange;font-weight: bold;}
 
 /* 우측 영역 */
 #chartPilot .right-area{position: relative;overflow-y:auto;width:calc(100% - 280px);height:100%;padding:0 50px;}
@@ -212,4 +213,24 @@ label:hover {color: #fa7508;}
 .ai-summary-button-container { text-align: right; margin-right: 10px; margin-top: 5px; }
 .ai-summary-button { background-color: #e60000; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background-color 0.3s; }
 .ai-summary-button:hover { background-color: #cc0000; }
+.ai-summary-result {margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.ai-summary-content {font-size: 16px; line-height: 1.6;}
+
+/***** 국내주식 유사국면 분석 *****/
+.stock-search-box {margin: 20px auto; text-align: center; width: 80%; max-width: 600px;}
+.select2-container--default .select2-selection--single {border-radius: 20px; height: 50px; font-size: 16px; background-color: #E0F7FA;}
+.select2-container--default .select2-selection--single .select2-selection__rendered {line-height: 48px;}
+.select2-container--default .select2-selection--single .select2-selection__arrow {height: 48px;}
+.date-selection {text-align: center; margin-top: 20px;} 
+.date-instruction {margin-bottom: 10px; font-size: 15px; color: #ee9714;} 
+#fromDate, #toDate {margin: 0 20px; padding: 8px; border-radius: 20px;} 
+.stockChartsearch {padding: 5px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px;} 
+.stockChartsearch:hover {background-color: #5a6268;}
+#stockFirstChartContainer {text-align: center; margin-top: 20px; max-width: 800px; margin: auto;}
+.noUi-handle {width: 20px; height: 20px; border-radius: 50%; background-color: #34568B;}
+.noUi-connect { background: #bfeafc;}
+#date-select-2 { margin-top: 25px; margin-bottom: 25px; display: none; position: relative; max-width: 800px; margin: 25px auto;}
+.date-instruction2 {text-align: center; margin-bottom: 20px; color: rgba(11, 13, 160, 0.918);}
+#fromDate_2, #toDate_2 {margin: 0 20px; padding: 8px; border-radius: 20px; background-color: #fcfbbb;} 
+
 

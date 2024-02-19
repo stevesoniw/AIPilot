@@ -27,12 +27,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from bs4 import BeautifulSoup, NavigableString
+from scipy.spatial.distance import euclidean
+import seaborn as sns
 #금융관련 APIs
 import finnhub
 import fredpy as fp
 from fredapi import Fred
 import yfinance as yf
 from openai import OpenAI
+from fastdtw import fastdtw
 #개인 클래스 파일 
 import fredAll
 #config 파일
@@ -455,7 +458,7 @@ def extract_title_and_content(json_str):
 # GPT4 에 뉴스요약을 요청 
 async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 뉴스 데이터 : " + str(newsData)
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 빨간색으로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
         completion = client.chat.completions.create(
             model="gpt-4-0125-preview",
             messages=[
@@ -490,6 +493,12 @@ async def gpt_request(request_data: dict):
         SYSTEM_PROMPT = "You're an expert in data summarization. Given the provided JSON data, please summarize its contents systematically and comprehensively into about 20 sentences, ignoring JSON parameters unrelated to news articles."        
         digest_news = extract_title_and_content(g_news)
         gpt_result = await gpt4_news_sum(digest_news, SYSTEM_PROMPT)
+
+    elif action == "navergpt":
+        # 네이버 뉴스에 대한 GPT 의견 묻기임 
+        SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications."        
+        digest_news = g_news
+        gpt_result = await gpt4_news_sum(digest_news, SYSTEM_PROMPT)        
         
     else:
         gpt_result = {"error": "Invalid action"}
@@ -876,7 +885,7 @@ asyncio.run(cccc())'''
     print(result)
 queryGPT4()'''
 
-############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 ################################
+############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 ################################
 
 #1. 네이버 검색 API
 @app.get("/api/search-naver")
@@ -1054,3 +1063,135 @@ def fetch_news_detail(news_url: NewsURL):
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
     
+############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 끝 ################################
+############################## 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 시작   ################################
+#일단 종목코드 갖고오는것부터 구현하자
+@app.get("/stock-codes/")    
+async def stock_code_fetch():
+    krxurl = 'http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13'
+    try:
+        # 'encoding' 파라미터에 'CP949' 추가
+        code_df = pd.read_html(krxurl, encoding='CP949')[0]
+        code_df.종목코드 = code_df.종목코드.map('{:06d}'.format)
+        code_df = code_df[['회사명', '종목코드']]
+        stock_list = code_df.values.tolist()
+        return stock_list
+    except Exception as e:
+        print(f"Stock Code 데이터를 불러오는 중 오류가 발생했습니다: {e}")
+        return []
+#print(stock_code_fetch())
+
+#주식 차트 데이터 만들어서 돌려주자
+class ChartRequest(BaseModel):
+    stockCode: str
+    fromDate: str
+    toDate: str
+@app.post("/stock-chart-data")
+async def get_stock_chart_data(request: ChartRequest):
+    try:
+        ticker_symbol = request.stockCode + ".KS"
+        stock = yf.Ticker(ticker_symbol)
+        hist = stock.history(start=request.fromDate, end=request.toDate)
+        # pandas DataFrame의 인덱스(날짜)를 'Date' 컬럼으로 변환
+        hist.reset_index(inplace=True)
+        # 'Date' 컬럼을 확인하고 필요한 경우 datetime 타입으로 변환
+        if not pd.api.types.is_datetime64_any_dtype(hist['Date']):
+            hist['Date'] = pd.to_datetime(hist['Date'])
+        # 'Date' 컬럼을 문자열로 변환
+        hist['Date'] = hist['Date'].dt.strftime('%Y-%m-%d')
+        # 차트 데이터 구성
+        chart_data = {
+            'labels': hist['Date'].tolist(),
+            'datasets': [
+                {'label': 'Open', 'data': hist['Open'].tolist()},
+                {'label': 'High', 'data': hist['High'].tolist()},
+                {'label': 'Low', 'data': hist['Low'].tolist()},
+                {'label': 'Close', 'data': hist['Close'].tolist()},
+            ]
+        }
+        #await save_to_txt(chart_data, "chart_data2.txt")
+        return {"chartData": chart_data}
+    except Exception as e:
+        print(f"Error fetching stock chart data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching stock chart data")
+    
+#로컬 테스트용 함수  
+async def save_to_txt(data, filename="chart_data2.txt"):
+    with open(filename, "w") as file:
+        json.dump(data, file)
+     
+'''async def rapid():
+    request_data = ChartRequest(stockCode="068270", fromDate="2020-01-01", toDate="2020-12-31")
+    chart_data = await get_stock_chart_data(request_data)
+    await save_to_txt(chart_data, "chart_data2.txt")
+asyncio.run(rapid())'''
+
+#주식 유사국면 찾기 함수 시작
+class StockRequest(BaseModel):
+    stockCode: str
+    fromDate: str
+    toDate: str
+    fromDate_2: str
+    toDate_2: str
+
+@app.post("/find-similar-period")
+async def find_similar_period(request: StockRequest):
+    # Load Yahoo Finance data
+    ticker_symbol = request.stockCode + ".KS"  # For Korean stock codes
+    stock = yf.Ticker(ticker_symbol)
+    
+    # Fetch historical data for both periods
+    hist1 = stock.history(start=request.fromDate, end=request.toDate)
+    hist2 = stock.history(start=request.fromDate_2, end=request.toDate_2)
+    
+    # Convert to numpy arrays for DTW calculation, focusing on 'Close' prices for simplicity
+    series1 = np.array(hist1['Close'])
+    series2 = np.array(hist2['Close'])
+    
+    # Calculate DTW distance and path
+    distance, path = fastdtw(series1, series2, dist=euclidean)
+    
+    # Extract similar periods based on refined DTW path analysis
+    similar_periods = extract_similar_periods(path, hist1, hist2)
+
+    return {"similarPeriods": similar_periods}
+
+def extract_similar_periods(path, hist1, hist2):
+    # Find continuous or significant segments indicating strong alignment
+    similar_segments = find_similar_segments(path)
+
+    # Translate segments to periods, using actual dates from both hist1 and hist2
+    similar_periods = [
+        {
+            "reference_start_date": hist1.index[segment[0][0]].strftime('%Y-%m-%d'), # Start date in hist1
+            "reference_end_date": hist1.index[segment[-1][0]].strftime('%Y-%m-%d'), # End date in hist1
+            "similar_start_date": hist2.index[segment[0][1]].strftime('%Y-%m-%d'), # Start date in hist2
+            "similar_end_date": hist2.index[segment[-1][1]].strftime('%Y-%m-%d') # End date in hist2
+        }
+        for segment in similar_segments
+    ]
+    
+    return similar_periods
+
+def find_similar_segments(path, threshold=5):
+    segments = []
+    current_segment = [path[0]]
+    
+    for i in range(1, len(path)):
+        if abs(path[i][0] - path[i-1][0]) <= threshold and abs(path[i][1] - path[i-1][1]) <= threshold:
+            current_segment.append(path[i])
+        else:
+            if len(current_segment) > 1:  # Consider only significant segments
+                segments.append(current_segment)
+            current_segment = [path[i]]
+    
+    if len(current_segment) > 1:
+        segments.append(current_segment)
+        
+    return segments
+
+async def rapid():
+    request_data = StockRequest(stockCode="068270", fromDate="2020-01-01", toDate="2020-12-31", fromDate_2="2010-01-01", toDate_2="2019-12-31" )
+    wow = await find_similar_period(request_data)
+    await save_to_txt(wow, "wow.txt")
+asyncio.run(rapid())
