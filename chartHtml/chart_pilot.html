@@ -13,32 +13,42 @@
     <link href="/static/assets/css/newFont.css" rel="stylesheet" type="text/css">
     <link href="/static/assets/css/common.css" rel="stylesheet" type="text/css">
     <link href="/static/assets/css/chart-pilot.css" rel="stylesheet" type="text/css" />
-    <!-- fullcalendar CDN -->  
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' /> 
-</head>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">  
+    <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+    <!-- fullcalendar Lib-->  
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>  
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- Chart.js -->  
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>    
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
-     
-    <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
-    <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+    <!-- Highstock 모듈. 캔드차트를 도저히 그릴수 없어 highchart로 변경 -->
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <!-- Select -->  
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> 
+    <!-- datepicker -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
+</head>
     <script>
         var g_news;
-        window.onload = function() {
-            document.getElementById('loading_bar_fingpt').style.display = 'none';     //1번
-            document.getElementById('loading_bar_economics').style.display = 'none';  //2번 -지표분석           
-            document.getElementById('loading_bar_bonds').style.display = 'none';      //2번 -채권차트
-            document.getElementById('loading_bar_bondsNews').style.display = 'none';  //2번 -채권뉴스
-            document.getElementById('loading_bar_news').style.display = 'none';       //3번     
-            document.getElementById('loading_bar_gpt').style.display = 'none';        //3번-설명
-            document.getElementById('loading_bar_ocr').style.display = 'none';        //4번-OCR   
-                               
-            document.getElementById('loading_bar_calendar').style.display = 'none';   //5번
-            
-        };   
+        window.onload = function() {  //로딩바들 none 으로 일단 초기화하고 시작
+            hideLoadingBars('loading_bar');
+        };
+
+        function hideLoadingBars(prefix) {
+            var elements = document.querySelectorAll('[id^="' + prefix + '"]');
+            elements.forEach(function(element) {
+                element.style.display = 'none';
+            });
+        }
 //************************************** FIN GPT 함수 Starts ********************************************//
 
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
@@ -279,7 +289,6 @@
 //****************************** 글로벌 주요경제지표 함수 [#2.채권가격] Start ******************************// 
 
     async function fetchBondsData() {
-
         // 'bonds_chart_div'에 이미 차트 데이터가 있으면 요청 중단(=메뉴이동 시에 한번 호출한적 있으면 하지말자)
         const bondsChartDiv = document.getElementById('bonds_chart_div');
         if (Plotly.d3.select(bondsChartDiv).select('.plot-container').node()) {
@@ -704,25 +713,429 @@ async function goCalendar() {
             calendar.render();
         }
 //************************************** 증시캘린더 함수 Ends ******************************************//
+//******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Starts *************************************//
+// NAVER 뉴스 기본 정보 스크래핑해오기
+function naverScrapingNews(newsType) {
+    let url;
+    var inputBox = document.querySelector('.naver-api-input');
+    if (inputBox) {  //'내가검색하기' 쪽 인풋박스 일단 클리어 
+        inputBox.value = '';  
+    }
+    document.querySelector('.news-api-btn').classList.remove('selected');
+    switch (newsType) {
+        case 1:
+            url = "https://finance.naver.com/news/mainnews.naver";
+            break;
+        case 2:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=401";
+            break;
+        case 3:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=402";
+            break;            
+        case 4:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=404";
+            break;                        
+        case 5:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=406";
+            break;            
+        case 6:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=429";
+            break;            
+        default:
+            console.error('Invalid news type');
+            return;
+    }
+    const apiUrl = `/naver-scraping-news?url=${encodeURIComponent(url)}`;
+    fetch(apiUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const newsShowArea = document.getElementById('news_show_area');
+        newsShowArea.innerHTML = '';
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'naver-news-item';
+            div.innerHTML = `
+                <img src="${item.thumb_url ? item.thumb_url : '/static/assets/images/defaultNews.jpg'}" alt="" class="naver-news-thumb">
+                <div class="naver-news-content">
+                    <div class="naver-news-title">${item.article_subject}</div>
+                    <div class="naver-news-summary">${item.summary}</div>
+                    <div class="naver-news-info">${item.press} | ${item.wdate}</div>
+                </div>
+            `;
+            const button = document.createElement('button');
+            button.className = 'naver-news-detail-btn';
+            button.textContent = '자세히 보기';
+            button.addEventListener('click', function(event) {
+                fetchDetaildNews(item.article_link, event);
+            });
+            div.appendChild(button);
+            newsShowArea.appendChild(div);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching news:', error);
+        document.getElementById('news_show_area').innerHTML = '<p>뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+    });
+}
+// NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
+function fetchDetaildNews(url, event) {
+    fetch('/api/news-detail', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.text())
+    .then(html => {
+        const detailedNewsDiv = document.createElement('div');
+        detailedNewsDiv.className = 'naver-news-detailed';
+        detailedNewsDiv.innerHTML = html;
+        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', detailedNewsDiv);
+    })
+    .catch(error => {
+        console.error('Error fetching detailed news:', error);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'naver-news-detailed';
+        errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', errorDiv);
+    });
+}
+// 네이버 키워드 입력란 보이게 하는 함수
+function naverKeyword() {
+    // 'naver-api-search-area' 요소가 이미 있는지 확인
+    let searchArea = document.getElementById('naver-api-search-area');
+    
+    // 요소가 존재하지 않는 경우에만 생성 및 추가
+    if (!searchArea) {
+        searchArea = document.createElement('div');
+        searchArea.setAttribute('id', 'naver-api-search-area');
+        searchArea.innerHTML = `
+        <span>검색할 뉴스 키워드를 입력해주세요 :</span>
+        <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
+        <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
+        
+        const newsSelectionArea = document.getElementById('news_selection_area');
+        // 'news_selection_area'의 바로 다음에 검색 영역을 삽입
+        document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
+    }
 
-    </script>          
+    // naver-api-input에 자동으로 focus 설정 및 엔터키 이벤트 핸들러 설정
+    const input = document.querySelector('.naver-api-input');
+    if (input) {
+        input.focus();
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                naverSearchAPI();
+            }
+        });
+    }
+}
+
+// 네이버 검색 API를 활용해서 뉴스까지 가져오자 
+async function naverSearchAPI() {
+    // 일단 다른 뉴스 버튼들 (news-btn)의 'selected' 클래스 제거
+    document.querySelectorAll('.news-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    // news-api-btn에 'selected' 클래스 추가
+    document.querySelector('.news-api-btn').classList.add('selected');  
+
+    const keywordInput = document.querySelector('.naver-api-input');
+    if (!keywordInput) return; // Exit if no input field found
+    const keyword = keywordInput.value;
+    // Update the apiUrl if necessary to match your FastAPI route
+    const apiUrl = `/api/search-naver?keyword=${encodeURIComponent(keyword)}`;
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const { items } = await response.json(); // Destructure to get the items array
+
+        const newsShowArea = document.getElementById('news_show_area');
+        newsShowArea.innerHTML = ''; // Clear existing content
+
+        items.forEach(item => {
+            // Remove HTML tags from the title and description
+            const title = item.title.replace(/<\/?[^>]+(>|$)/g, "");
+            const description = item.description.replace(/<\/?[^>]+(>|$)/g, "");
+
+            const div = document.createElement('div');
+            div.className = 'naver-news-item';
+            div.innerHTML = `
+                <div class="naver-news-content">
+                    <div class="naver-news-title">${title}</div>
+                    <div class="naver-news-summary">${description}</div>
+                    <div class="naver-news-info">${item.bloggername} | ${new Date(item.postdate).toLocaleDateString()}</div>
+                </div>
+                <a href="${item.link}" target="_blank" class="naver-news-detail-btn">자세히 보기</a>
+            `;
+            newsShowArea.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error fetching news:', error);
+        document.getElementById('news_show_area').innerHTML = '<p>뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+    }
+}
+//네이버 뉴스 GPT(AI) 의견보기 함수 ::  요약보여주기
+function displaySummary(summary) {
+    const summaryContainer = document.querySelector('.ai-summary-result');
+    summaryContainer.innerHTML = `<div class="summary-content">${summary}</div>`;
+    summaryContainer.style.display = 'block';
+}
+//네이버 뉴스 GPT(AI) 의견보기 함수 ::  파이썬 호출 
+async function naverGptAsk() {
+    const newsSummaryElements = document.querySelectorAll('.naver-news-summary');
+    let send_news = Array.from(newsSummaryElements).map(elem => elem.textContent.trim()).join('\n');
+    if (!send_news) {
+        alert('분석할 뉴스 데이터가 없습니다.');
+        return;
+    }
+    document.getElementById('loading_bar_navergpt').style.display = 'block';  
+//console.log(send_news);
+    try {
+        const response = await fetch('/gptRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: "navergpt",
+                g_news: send_news
+            }),
+        });
+        if (!response.ok) {
+            throw new Error('서버 오류가 발생했습니다.');
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        }
+        const data = await response.json();
+        if (data.result.error) {
+            throw new Error(data.result.error);
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        } else {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            displaySummary(data.result); 
+        }
+    } catch (error) {
+        console.error('요약 데이터를 가져오는 중 오류가 발생했습니다:', error);
+        document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        alert('데이터를 가져오는 중 오류가 발생했습니다. 오류 메시지: ' + error.message);
+    }
+}
+
+
+//******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Ends *************************************//
+//******************************** 2nd GNB:: 국내 주식 유사국면 분석 Starts*************************************//
+// 1.종목코드 불러오기(from KRX)
+async function fetchStockCodes() {
+    try {
+        const response = await fetch('/stock-codes/');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const stockCodes = await response.json();
+ //console.log(stockCodes); // 데이터 구조 확인을 위해 콘솔에 출력
+        const selectElement = $('#stockCodeSelect'); //['케이씨티', '089150'], ['케이엔에스', '432470'] 이 형태로 반복해서옴
+        selectElement.empty(); //로딩중.. 요거 메시지 제거
+        stockCodes.forEach(stock => {
+            let option = new Option(`${stock[0]} (${stock[1]})`, stock[1]);
+            selectElement.append(option);
+        });
+        selectElement.select2({
+            placeholder: "원하시는 종목을 검색해주세요!",
+            allowClear: true,
+            minimumResultsForSearch: 0 // 검색 활성화
+        }).val(null).trigger("change");
+    } catch (error) {
+        console.error("Failed to fetch stock codes: ", error);
+    }
+}
+// 2. 주식차트 데이터 불러오기(from yFinance)
+async function fetchChartData() {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const stockCode = document.getElementById('stockCodeSelect').value;
+    //유사국면 차트 조회 후 다시 처음차트 조회하면 없애버리기 + 유사국면쪽 안보이게 리셋
+    document.getElementById('stockSecondChartContainer').innerHTML = ''; 
+    document.getElementById('date-select-2').style.display = 'none';
+    document.getElementById('similarityResult').style.display = 'none';
+
+    const requestBody = JSON.stringify({ stockCode, fromDate, toDate });
+    document.getElementById('loading_bar_firstStock').style.display = 'block';
+    try {
+        const response = await fetch('/stock-chart-data', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: requestBody
+        });
+        if (!response.ok) throw new Error('Network response was not ok.');
+        const responseData = await response.json();
+        document.getElementById('loading_bar_firstStock').style.display = 'none';
+
+console.log(responseData.chartData);
+
+        drawChart(responseData.chartData, 1); // 차트그리기
+    } catch (error) {
+        document.getElementById('date-select-2').style.display = 'none';
+        document.getElementById('loading_bar_firstStock').style.display = 'none';
+        console.error('Error fetching stock chart data:', error);
+    }
+}
+
+//3. 처음 요청한 주식차트 그리기 (Feat.HighChart)
+function drawChart(chartData, num) {
+    // 데이터 유효성 검사
+    if (!chartData || !chartData.labels || chartData.labels.length === 0 || !chartData.datasets || chartData.datasets.some(dataset => dataset.data.length === 0)) {
+        console.error('Invalid or missing chart data');
+        document.getElementById('date-select-2').style.display = 'none';
+        alert('차트 데이터가 유효하지 않습니다.');
+        return; // 함수 종료
+    }
+    var container;
+    if (num === 1){
+        container = document.getElementById('stockFirstChartContainer');    
+    }else if(num === 2){
+        container = document.getElementById('stockSecondChartContainer');    
+    }
+
+    // 차트 컨테이너 존재 여부 검사
+    if (!container) {
+        console.error('Chart container not found');
+        document.getElementById('date-select-2').style.display = 'none';
+        alert('차트 컨테이너를 찾을 수 없습니다.');
+        return; // 함수 종료
+    }
+
+    const financialData = chartData.labels.map((label, index) => [
+        Date.parse(label), // x 값: 타임스탬프로 변환
+        chartData.datasets[0].data[index], // open
+        chartData.datasets[1].data[index], // high
+        chartData.datasets[2].data[index], // low
+        chartData.datasets[3].data[index]  // close
+    ]);
+
+    document.getElementById('date-select-2').style.display = 'block';
+
+    // Highstock 사용하여 차트 생성
+    Highcharts.stockChart(container, {
+        chart: {
+            backgroundColor: 'transparent'
+        },
+        rangeSelector: {
+            selected: 1
+        },
+        title: {
+            text: 'Stock Price Data'
+        },
+        series: [{
+            type: 'candlestick',
+            name: 'Stock Price',
+            data: financialData,
+            color: 'blue',
+            lineColor: 'blue',
+            upColor: 'red',
+            upLineColor: 'red',
+        }],
+        events: {
+            load: function() {
+                container.style.display = 'block';
+                container.scrollIntoView({behavior: "smooth", block: "end"});
+            }
+        }
+    });
+    container.style.display = 'block';
+    container.scrollIntoView({behavior: "smooth", block: "end"});
+    const spacer = document.createElement('div');
+    spacer.style.height = '200px';
+    document.body.appendChild(spacer);
+
+    window.scrollTo(0, document.body.scrollHeight);;
+}
+//4. 유사국면 데이터 찾기 GOGO 
+async function similarTimeSearch() {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const fromDate_2 = document.getElementById('fromDate_2').value;
+    const toDate_2 = document.getElementById('toDate_2').value;
+    const stockCode = document.getElementById('stockCodeSelect').value;
+    document.getElementById('loading_bar_secondStock').style.display = 'block';
+    document.getElementById('similarityResult').style.display = 'none';
+
+    try {
+        const response = await fetch('/find-similar-period', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({stockCode, fromDate, toDate, fromDate_2, toDate_2})
+        });
+        if (!response.ok) throw new Error('Network response was not ok.');
+
+        const result = await response.json();
+        document.getElementById('loading_bar_secondStock').style.display = 'none';
+        document.getElementById('similarityResult').style.display = 'block';
+
+console.log(result); 
+
+        // 결과 표시 
+        const similarityResultDiv = document.getElementById('similarityResult');
+        similarityResultDiv.innerHTML = `
+            <span style="color: red;">[최종 선정 유사국면]   </span> 
+            <span style="color: darkorange;">${result.bestPeriodStart} ~ ${result.bestPeriodEnd}   </span> 
+            <span style="font-size: smaller;">  (*유사도점수 </span>
+            <span style="font-size: smaller; color: darkblue;"> : ${result.dtwDistance} (Feat. DTW알고리즘))</span>
+        `;
+        drawChart(result.chartData.chartData, 2); //차트 그리기 함수 호출
+
+    } catch (error) {
+        document.getElementById('loading_bar_secondStock').style.display = 'none';
+        console.error('Error fetching Similar chart data:', error);
+    }
+}
+
+
+
+//******************************** 2nd GNB:: 국내 주식 유사국면 분석 Ends*************************************//
+    </script> 
+    
+ <!--******************************** [[스트립트 종료]]************************************-->
 <body>
     <form id="rateForm" action="/submit" method="post" style="display:none;">
     </form>
     <div class="wrap" id="chartPilot">
-        <main class="clear">
+        <!-- header 시작 -->
+        <header class="myHeader">
+            <h1 class="title-wrap">
+                <a href="#" onClick="window.location.reload()"><img src="/static/assets/images/logo.png" alt="AI솔루션본부 PILOT" /></a>
+            </h1>
+            <nav class="menux">
+                <ul>
+                    <li data-menu="menu1"><a href="#">[해외]마켓데이터 분석</a></li>
+                    <li data-menu="menu2"><a href="#">[국내]마켓데이터 분석</a></li>
+                    <li data-menu="menu3"><a href="#">리서치 리포트 분석</a></li>
+                </ul>
+            </nav>
+        </header>
+        <mainx class="clear">
              <!-- left-nav 메뉴 시작 -->
             <div class="left-area">
                 <div class="title-wrap">
-                    <span>AI</span> Science팀 <span>Pilot</span>
+                    <span>AI</span> Science팀 <span>Work</span>
+                </div>
+                <div class="co-working-info">
+                    <span class="highlight">★co-working :</span><br/>
+                    채권부문, Equity솔루션본부<br/>고객자산배분본부, 디지털리서치팀
                 </div>
                 <div class="menu-wrap">
                     <ul class="menu-list">
-                        <li class="page-menu on" data-tab="menua"><a href="#none">1. AI가 말해주는 주식 정보 [해외]</a></li>
-                        <li class="page-menu" data-tab="menub"><a href="javascript:fetchBondsData();">2. 글로벌 주요경제지표</a></li>
-                        <li class="page-menu" data-tab="menuc"><a href="#none">3. 뉴스 데이터 분석 [해외] </a></li>
-                        <li class="page-menu" data-tab="menud"><a href="#none">4. 마켓 PDF 분석</a></li>
-                        <li class="page-menu" data-tab="menue"><a href="javascript:goCalendar();">5. 증시 캘린더</a></li>
+                        <li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>
+                        <li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>
+                        <li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외] </a></li>
+                        <li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>
+                        <li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>
                     </ul>
                 </div>
 
@@ -820,7 +1233,7 @@ async function goCalendar() {
 
                     <div id="loading_bar_economics" class="loading_bar" style="display: none;">
                         <img src="/static/assets/images/LoadingBar_A.gif">
-                        <p>데이터 로딩중입니다.</p>
+                        <p class="loading-text-economics">핵심지표 분석중입니다.<br/>(AI 분석은 시간이 오래 걸릴 수 있습니다)</p>
                     </div>                   
                     <div id="chartContainer" style="display: none;">
                         <canvas id="myEconomicChart" width="1200" height="600"></canvas>
@@ -1040,10 +1453,76 @@ async function goCalendar() {
                         <p>데이터 로딩중입니다.</p>
                     </div>     
                     <div id="calendar"></div>                        
+                </div>     
+<!--************************************ [[ GNB 2ND ]]  Starts ****************************************-->                 
+<!--******************************* [국내] 마켓데이터 분석 Starts ***************************************-->                 
+                <div id="menu_2nd_a" class="menu-cont">
+                    <h2 class="s-tit">국내 뉴스 Summary</h2>
+                    <h3 class="s-tit">주요 시장 뉴스를 확인해보세요</h3>
+ 
+   
+                    <div id="news_selection_area" class="news-selection">
+                        <button class="news-btn selected" data-news-type="주요뉴스" onclick="naverScrapingNews(1)">주요뉴스</button>
+                        <button class="news-btn" data-news-type="시황,전망" onclick="naverScrapingNews(2)">시황,전망</button>
+                        <button class="news-btn" data-news-type="기업,종목분석" onclick="naverScrapingNews(3)">기업,종목분석</button>
+                        <button class="news-btn" data-news-type="채권,선물" onclick="naverScrapingNews(4)">채권,선물</button>
+                        <button class="news-btn" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</button>
+                        <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
+                        <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">그냥 내가 검색</button>
                     </div>
-                </div>                
+                    <!-- AI 요약 버튼 추가 -->
+                    <div class="ai-summary-button-container">
+                        <button class="ai-summary-button" onclick="naverGptAsk()">아래 기사들에 대한 AI 요약 및 의견 보기</button>
+                    </div>
+                    <div class="ai-summary-result" style="display:none;"></div>
+                    <div id="loading_bar_navergpt" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">데이터 로딩중입니다. AI 의견은 속도가 느릴수 있습니다.</p>
+                    </div>                      
+                    <div id="news_show_area" class="news-show"></div> 
+                </div> 
+<!--******************************* [국내] 마켓데이터 분석 Ends ***************************************-->                                                  
+<!--******************************* [국내] 유사 국면 분석 Starts ***************************************--> 
+                <div id="menu_2nd_b" class="menu-cont">
+                    <h2 class="s-tit">국내 주식 유사국면 찾기</h2>
+                    <h3 class="s-tit">특정 주식을 골라 유사국면을 검색해보세요</h3>
+  
+                    <div class="stock-search-box">
+                        <select id="stockCodeSelect" style="width: 100%"></select>
+                    </div>
+                    <div class="date-selection">
+                        <p class="date-instruction">"해당 종목의 차트데이터 확인을 위해 하단 날짜를 선택해주세요"</p>
+                        <label for="fromDate">From</label>
+                        <input type="text" id="fromDate" name="fromDate">
+                        <label for="toDate">To</label>
+                        <input type="text" id="toDate" name="toDate"><br/>
+                        <button id="stockChartsearch" class="stockChartsearch" onclick="fetchChartData()">검색</button>
+                    </div>   
+                    <!-- 처음 차트가 실제 그려지는 영역임-->
+                    <div id="loading_bar_firstStock" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">차트 로딩중입니다.</p>
+                    </div>
+                    <div id="stockFirstChartContainer" class="stockChartContainer"></div>
+                    <div id="date-select-2" class="date-selection">
+                        <p class="date-instruction2">"현재 조회된 차트데이터와 유사한 과거 기록을 찾을 구간을 선택해주세요"</p>
+                        <label for="fromDate">From</label>
+                        <input type="text" id="fromDate_2" name="fromDate">
+                        <label for="toDate">To</label>
+                        <input type="text" id="toDate_2" name="toDate"><br/>
+                        <button id="similarTimeSearch" class="stockChartsearch" onclick="similarTimeSearch()">유사국면 찾기</button>
+                    </div> 
+                    <div id="loading_bar_secondStock" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text-similar">유사국면 차트 로딩중입니다.<br/>(유사국면 검색은 시간이 오래 걸릴 수 있습니다)</p>
+                    </div>
+                    <div id="similarityResult" class="similarity-result"></div>
+                    <div id="stockSecondChartContainer" class="stockChartContainer"></div>                 
+                    <div id="moreToDev" class="moreToDev"></div>                 
+                </div> 
+<!--********************************* [국내] 유사 국면 분석 Ends *****************************************--> 
             </div>
-            <!-- 우측 영역 끝 -->
+            <!-- 우측 Main 화면영역 끝 -->
 
         </main>
 
@@ -1051,12 +1530,24 @@ async function goCalendar() {
     <!-- wrap 끝 -->
     <script>
         function guideTab(){
-            $('.menu-list li').click(function(){
+            $('.menu-list li').click(function(event){
+                event.preventDefault(); // 기본 동작 방지
                 var activeTab = $(this).attr('data-tab');
                 window.location.hash = activeTab; // URL 해시를 변경
-                setActiveTab();
+
+                // 여기서 추가적인 액션을 호출
+                switch(activeTab) {
+                    case 'menub':
+                        fetchBondsData(); // 글로벌 주요경제지표 데이터 가져오기
+                        break;
+                    case 'menue':
+                        goCalendar(); // 증시 캘린더 보여주기
+                        break;
+                    // 다른 탭에 대한 추가적인 액션을 여기에 추가할 수 있습니다.
+                }
             });
         }
+
         function setActiveTab() {
             var activeTab = window.location.hash.replace('#', '');
             if(activeTab) {
@@ -1064,14 +1555,103 @@ async function goCalendar() {
                 $('[data-tab="' + activeTab + '"]').addClass('on');
                 $('#' + activeTab).addClass('on');
             }
-        }
-        $(document).ready(function(){
-            guideTab();
-            setActiveTab(); // 페이지 로딩 시 활성 탭 설정
+        }   
+     
+        $(document).ready(function() {
+            // 메뉴에 따른 추가적인 액션을 실행
+            function executeTabAction(activeTab) {
+                switch(activeTab) {
+                    case 'menub':
+                        fetchBondsData(); // 글로벌 주요경제지표 데이터 가져오기
+                        break;
+                    case 'menue':
+                        goCalendar(); // 증시 캘린더 보여주기
+                        break;
+                    case 'menu_2nd_a':
+                        naverScrapingNews(1); // 네이버 주요뉴스 스크래핑한거 보여주기
+                        break;
+                 }
+            }                
+            // 메뉴 업데이트와 이벤트 바인딩을 처리하는 함수
+            function updateAndBindMenu() {
+                $('.menux ul li').click(function(event) {
+                    event.preventDefault(); // 기본 동작 방지                    
+                    var menuType = $(this).data('menu');
+                    updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
+                });
+        
+                // 메뉴 리스트 항목에 대한 클릭 이벤트 바인딩
+                $('.menu-list').on('click', 'li', function(event) {
+                    event.preventDefault(); // 기본 동작 방지
+                    var activeTab = $(this).data('tab');
+                    window.location.hash = activeTab; // URL 해시를 변경
+        
+                    // 여기서 추가적인 액션을 호출
+                    executeTabAction(activeTab);
+                });
+        
+                setActiveTab(); // 활성 탭 설정
+                $(window).on('hashchange', setActiveTab); // 해시 변경에 따른 탭 설정
+            }
+            // 직접적으로 탭을 활성화하는 함수. 화면이 자꾸 위로 올라가서 새로만듬..
+            function setActiveTabDirectly(activeTab) {
+                $('.menu-list li, .menu-cont').removeClass('on'); // 모든 탭과 컨텐츠의 활성화 상태를 제거
+                $('li.page-menu[data-tab="' + activeTab + '"]').addClass('on'); // 지정된 탭 활성화
+                $('#' + activeTab).addClass('on'); // 지정된 탭에 해당하는 컨텐츠 활성화
+
+                executeTabAction(activeTab);
+            }                 
+  
+            //GNB 넣으면서 메뉴구조 바꾸기!! 파일쪼개기는 시간상 버겁다 ㅠㅠ
+            function updateMenuList(menuType) {
+                $('.menu-list').empty(); // 기존 메뉴 리스트 비우기
+             
+                var menuItems = [];
+                if(menuType === 'menu1') {
+                    // 마켓데이터 해외 메뉴 리스트
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>',
+                        '<li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>',
+                        '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외]</a></li>',
+                        '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',
+                        '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                } else if(menuType === 'menu2') {
+                    // 마켓데이터 국내 메뉴 리스트
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menu_2nd_a"><a href="javascript:void(0);">1. 국내 뉴스 정보</a></li>',
+                        '<li class="page-menu" data-tab="menu_2nd_b"><a href="javascript:void(0);">2. 유사국면 분석</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                } else if(menuType === 'menu3') {
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 디지털리서치팀::요건분석중입니다</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                }
+                // GNB 클릭 시 첫 번째 하위 메뉴 활성화
+                if(menuType === 'menu2') {
+                    // setTimeout 사용하여 DOM 업데이트가 완료된 후에 실행
+                    setTimeout(function() {
+                        setActiveTabDirectly('menu_2nd_a'); // 직접적으로 탭을 활성화
+                    }, 1);
+                }
+
+                updateAndBindMenu(); // 페이지 로딩 시 메뉴 업데이트와 이벤트 바인딩 실행
+            }
+        
+            $('.menux ul li').click(function(event) {
+                event.preventDefault(); // 기본 동작 방지
+                var menuType = $(this).data('menu');
+                updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
+            });
+        
+            updateAndBindMenu(); // 초기 이벤트 바인딩
+            setActiveTab(); // 활성 탭 설정
+            $(window).on('hashchange', setActiveTab); // 해시 변경에 따른 탭 설정
         });
-        $(window).on('load', function(){
-            
-        });
+        
         /**** News 영역 Listener****/
         // 'All Market News' 체크박스를 클릭할 때 다른 체크박스를 체크 해제하자
         document.getElementById('all').addEventListener('click', function() {
@@ -1089,6 +1669,47 @@ async function goCalendar() {
                     document.getElementById('all').checked = false; // 'All Market News' 체크박스를 해제합니다.
                 }
             });
+        });
+        // 국내 뉴스 버튼 제어용 (selected 되게)
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.news-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
+                    this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
+                });
+            });
+             //유사국면메뉴에서 종목코드 로드
+            fetchStockCodes();
+            $('#stockCodeSelect').select2({
+                placeholder: "Code Loading 중이에요",
+                language: {
+                    noResults: function() {
+                        return "종목을 찾을 수 없습니다.";
+                    },
+                    searching: function() {
+                        return "종목 로딩중..";
+                    }
+                },
+                // 초기 로딩 메시지를 보여주기 위해 임시 disabled 옵션 사용
+                minimumResultsForSearch: Infinity
+            }).val(null).trigger("change");
+            //유사국면에서 데이트피커 컨트롤
+            $("#fromDate, #toDate").datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true
+            });
+            $("#fromDate_2, #toDate_2").datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true
+            });            
+            $("#fromDate").datepicker("setDate", "2023-02-16"); // fromDate 기본값 설정
+            $("#toDate").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정
+            $("#fromDate_2").datepicker("setDate", "2017-02-24"); // fromDate 기본값 설정
+            $("#toDate_2").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정            
+            //유사국면에서 슬라이더바쪽 컨트롤
         });
 
   </script>

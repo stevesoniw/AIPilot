@@ -1,20 +1,28 @@
+/* 헤더 영역 추가 */
+/*기존 스타일 수정*/
+.left-area{overflow-y:auto;position:relative;width:300px;height:calc(100% - 81px);background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
+.left-area .menu-wrap{padding-top:50px;}
+#chartPilot .right-area{overflow-y:auto;width:calc(100% - 280px);height:calc(100% - 81px);padding:0 50px 40px;}
 #chartPilot.wrap {width: 100%; height: 100%; position: relative; color: #111;}
-#chartPilot .header{position:relative;width:100%;padding:3px 20px 19px;border-bottom:1px solid #e1e1e1;}
-#chartPilot .header h1{width:147px;height:52px;}
-#chartPilot .header nav.menu{position:absolute;top:0;left:162px;right:0px;margin:18px 140px 0 215px;}
-#chartPilot .header nav.menu .s-menu{float:right;margin-top:13px;}
-#chartPilot .header nav.menu .s-menu ul{overflow:hidden;font-size:14px;color:#333;line-height:13px;}
-#chartPilot .header nav.menu ul li{float:left;margin-left:10px;}
-#chartPilot .header nav.menu ul li:first-child{margin-left:0px;}
+/*신규 스타일 추가*/
+/*#chartPilot .header{position:relative;display:flex;align-items:center;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #e1e1e1;}*/
+#chartPilot .myHeader{position:fixed;width:100%;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #21e1e1;background:#fff}
+#chartPilot .myHeader h1{position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:25px;}
+#chartPilot .myHeader h1 span{color:#ffc045;font-weight:500;}
+#chartPilot .myHeader .menux{display:flex;align-items:center;height:100%;}
+#chartPilot .myHeader .menux ul li{display:inline-block;padding:0 15px;}
+#chartPilot .myHeader .menux ul li a{display:block;}
+#chartPilot .myHeader .menux ul li a.on{color:#4066ef;}
 
-#chartPilot main{display:flex;height:100%;}
+/*#chartPilot main{display:flex;height:100%;}*/
+#chartPilot mainx, .mainx {display: flex; height: 100%; padding-top: 81px;}
 
 /* left 메뉴 */
 /* PROMPT */
 .left-area{overflow-y:scroll;position:relative;width:300px;height:100%;background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
 .left-area::before{content:'';position:absolute;top:0;left:0;width:300px;height:286px;background:url('/static/assets/images/left_bg.png') no-repeat center;opacity:.5;}
 .left-area::-webkit-scrollbar{width:0px;}
-.left-area .title-wrap{overflow:hidden;position:relative;padding:40px 20px;font-size:22px;color:#fff;}
+.left-area .title-wrap{overflow:hidden;position:relative;padding:20px 20px;font-size:22px;color:#fff;}
 .left-area span{color:#ffc045;font-weight:500;}
 
 .left-area .menu-wrap{position:relative;padding:0px 20px 0;}
@@ -22,7 +30,8 @@
 .left-area .menu-wrap .menu-list li.page-menu:first-child{margin-top:0;}
 .left-area .menu-wrap .menu-list li.page-menu a{color:#fff;}
 .left-area .menu-wrap .menu-list li.page-menu.on a{color:#fad58c;}
-
+.co-working-info {font-size: 13px; color: #ffffff; margin-bottom: 30px; text-align: center;}
+.highlight {color: orange;font-weight: bold;}
 
 /* 우측 영역 */
 #chartPilot .right-area{position: relative;overflow-y:auto;width:calc(100% - 280px);height:100%;padding:0 50px;}
@@ -58,22 +67,30 @@
 .form-container {background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px auto; width: 80%; max-width: 960px;}
 .form-header {margin-bottom: 20px; font-weight: bold; color: #0056b3; text-align: center;}
 .form-actions {display: flex; justify-content: space-between; align-items: center; margin-top: 20px;}
-.checkbox-row {display: flex; justify-content: center; flex-wrap: wrap;}
+.checkbox-row {display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;}
 .checkbox-group {flex: 0 1 30%; display: flex; align-items: center; margin: 5px; min-width: 250px;}
 .checkbox-group label {white-space: nowrap;}
 .checkbox-group input[type="checkbox"] {margin-right: 10px;}
 .indicatorButton {display: block; margin: 20px auto; background-color: #74a6e7; border: none; color: white; padding: 10px 20px; font-size: 15px; cursor: pointer; border-radius: 5px;}
 .indicatorButton:hover {background-color: #5476e9;}
 #loading_bar_economics {text-align: center; margin-top: 20px;}
+.loading-text-economics {background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
 #myEconomicChart {display: block; margin: 20px auto; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); border-radius: 5px; width: 1200px; height: 700px;}
 #clearButton {background-color: white; border: 1px solid #ccc; color: #333; padding: 5px 10px; font-size: 12px; margin-top: 10px; cursor: pointer; border-radius: 5px;}
 #clearButton:hover {background-color: #f9f9f9;}
 #chartAnalysis{margin-top: 20px; margin-bottom: 20px; padding: 10px; background-color: #f1f1f1; border-radius: 5px;}
 .chart-analysis-title {color: #003366; font-weight: bold; margin-bottom: 10px; font-size: 16px;}
 .ai-opinion-checkbox {display: flex; align-items: center;}
-.ai-opinion-label {margin-left: -20px; color: #0a06e7 !important; font-size: 13px; width:100px;}
+.ai-opinion-label {margin-left: 0px; color: #0a06e7 !important; font-size: 13px; width:100px;}
 .ai-opinion-warning {color: #000; font-size: 13px; margin-top: 10px; text-align: left; width: 100%;}
 #h3.nth-menu{margin-bottom:30px; margin-top:30px; color:#333;font-weight:400;} 
+input[type="date"] {appearance: auto;-webkit-appearance: auto;}
+.date-range-container .date {margin-bottom: 20px;}
+.date-range-container {margin-bottom: 20px;display: flex;align-items: center;justify-content: center;}
+.date-range-container label {margin-right: 10px;color: #3366ff;}
+.date-range-container input[type="date"] {padding: 6px 8px;border-radius: 3px;border: 1px solid #ccc;font-size: 14px;outline: none;width: 160px;color: #3366ff; margin-right: 45px;  color: rgba(32, 31, 31, 0.637);}
+.date-range-container input[type="date"]:focus {border-color: #555;box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);}
+
 
 /* 글로벌 주요 경제지표 2.[채권데이터 분석] 및 [뉴스] 영역 */
 
@@ -125,7 +142,7 @@
 .category-form {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 15px;}
 .category {display: flex; align-items: center; background: #ffffff; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);transition: transform 0.2s ease-in-out;}
 .category:hover { transform: translateY(-2px);}
-input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}
+/*input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}*/
 label {font-size: 16px; cursor: pointer;}
 label:hover {color: #fa7508;}
 #all + label {color: red;}
@@ -161,7 +178,63 @@ label:hover {color: #fa7508;}
 /*마켓 PDF 분석*/
 .upload-container { text-align: center; padding: 40px 40px 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
 .file-label {display: inline-block; padding: 10px 30px; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;}
-.file-label:hover {background-color: #0056b3;}
+.file-label:hover {background-color: #00BFFF;}
 .file-name {display: block; margin-top: 10px; color: #666;}
 .ocrButton {display: inline-block; margin: 20px 10px; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;}
-.ocrButton:hover {background-color: #00BFFF;}
+.ocrButton:hover {background-color: #7487f1;}
+
+/*국내 뉴스영역 화면*/
+.news-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.news-btn { width: 100px; height: 30px; padding: 5px; font-size: 13px; text-align: center; line-height: 20px; background-color: #4765ee; border: none; border-radius: 4px; color: white; cursor: pointer; transition: background-color 0.3s ease; font-weight: bold}
+.news-btn:hover { background-color: #3521a7; }
+.news-show { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 4px; min-height: 200px; margin-top: 10px; }
+.news-btn.selected { background-color: #f0a30a; color: white; }
+.news-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.naver-news-item { display: flex; align-items: flex-start; background: #fff; border: 1px solid #eaeaea; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.naver-news-thumb { flex: 0 0 auto; width: 100px; height: 100px; border-radius: 4px; margin-right: 15px; }
+.naver-news-content { flex-grow: 1; overflow: hidden; }
+.naver-news-title, .naver-news-summary, .naver-news-info { overflow: hidden; text-overflow: ellipsis; }
+.naver-news-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; }
+.naver-news-summary { font-size: 14px; color: #666; margin-bottom: 10px; }
+.naver-news-info { font-size: 12px; color: #999; }
+.naver-news-detailed {border: 1px solid #ccc; border-radius: 8px; background-color: #fffbe5; padding: 20px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;}
+.naver-news-detailed h1, .naver-news-detailed h2, .naver-news-detailed h3, .naver-news-detailed h4, .naver-news-detailed h5, .naver-news-detailed h6 {color: #333;}
+.naver-news-detailed p {color: #666; margin-bottom: 1em;}
+.naver-news-detailed a {color: #007bff; text-decoration: none;}
+.naver-news-detailed a:hover {text-decoration: underline;}
+.naver-news-detail-btn { background-color: #666; color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: auto; align-self: center; cursor: pointer; }
+.news-api-btn { width: 150px; height: 30px; padding: 5px; font-size: 13px; text-align: center; line-height: 20px; background-color: #ffffff; border: 1px solid #000000; border-radius: 4px; color: #000000; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; }
+.news-api-btn:hover { background-color: #ffcccc; color: #000000; }
+.news-api-btn.selected { background-color: #e2be1f; color: white; }
+#naver-api-search-area {margin: 20px 0; display: flex; align-items: center; gap: 10px;}
+.naver-api-input {flex-grow: 1; border: 2px solid #ee9632; border-radius: 20px; padding: 5px 10px; font-size: 14px; color: #333; outline: none; transition: border-color 0.3s ease;}
+.naver-api-input:focus {border-color: #f0a30a;}
+.naver-api-search-btn {padding: 5px 15px; font-size: 12px; border: none; border-radius: 4px; background-color: #535151; color: white; cursor: pointer; transition: background-color 0.3s ease;}
+.naver-api-search-btn:hover {background-color: #bbb;}
+.ai-summary-button-container { text-align: right; margin-right: 10px; margin-top: 5px; }
+.ai-summary-button { background-color: #e60000; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background-color 0.3s; }
+.ai-summary-button:hover { background-color: #cc0000; }
+.ai-summary-result {margin: 20px 0; padding: 15px; background-color: #f0f0f0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.ai-summary-content {font-size: 16px; line-height: 1.6;}
+
+/***** 국내주식 유사국면 분석 *****/
+.stock-search-box {margin: 20px auto; text-align: center; width: 80%; max-width: 600px;}
+.select2-container--default .select2-selection--single {border-radius: 20px; height: 50px; font-size: 16px; background-color: #E0F7FA;}
+.select2-container--default .select2-selection--single .select2-selection__rendered {line-height: 48px; background-color: #dfe7ff;}
+.select2-container--default .select2-selection--single .select2-selection__arrow {height: 48px;}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {color: black;}
+.date-selection {text-align: center; margin-top: 20px;} 
+.date-instruction {margin-bottom: 10px; font-size: 15px; color: #ee9714;} 
+#fromDate, #toDate {margin: 0 20px; padding: 8px; border-radius: 20px;} 
+.stockChartsearch {padding: 5px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px;} 
+.stockChartsearch:hover {background-color: #5a6268;}
+.stockChartContainer {text-align: center; margin-top: 20px; max-width: 800px; margin: auto;}
+.noUi-handle {width: 20px; height: 20px; border-radius: 50%; background-color: #34568B;}
+.noUi-connect { background: #bfeafc;}
+#date-select-2 { margin-top: 25px; margin-bottom: 15px; display: none; position: relative; max-width: 800px; margin: 5px auto;}
+.date-instruction2 {text-align: center; margin-bottom: 20px; color: rgba(11, 13, 160, 0.918); font-weight: bold;}
+#fromDate_2, #toDate_2 {margin: 0 20px; padding: 8px; border-radius: 20px; background-color: #fcfbbb;} 
+.similarity-result {background-color: #ffffe0; border: 1px solid #000; padding: 10px; margin-bottom: 20px; text-align: center; font-weight: bold; display:none;}
+.stockChartContainer2 {text-align: center; margin-top: 20px; margin-bottom: 300px; max-width: 800px; margin: auto;}
+.loading-text-similar {background-color: rgb(242, 234, 253); color: rgba(255, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
+.moreToDev {height: 100px;}
