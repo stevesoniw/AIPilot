@@ -50,10 +50,35 @@
             });
         }
 //************************************** FIN GPT 함수 Starts ********************************************//
+        //디지털리서치 요청으로 종목코드 select 선택모듈로 변경
+        async function fetchForeignStockCodes() {
+            try {
+                const response = await fetch('/api/get_foreign_stock_symbols');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const selectElement = $('#foreign_ticker');
+                const fragment = document.createDocumentFragment();
+
+                data.forEach(stock => {
+                    let option = new Option(`${stock.description} (${stock.symbol})`, stock.symbol);
+                    fragment.appendChild(option);
+                });
+
+                selectElement.empty().append(fragment).select2({
+                    placeholder: "원하시는 종목을 검색해주세요!",
+                    allowClear: true,
+                    minimumResultsForSearch: 0 // 검색 활성화
+                }).val(null).trigger("change");
+            } catch (error) {
+                console.error("Failed to fetch foreign stock codes: ", error);
+            }
+        }
 
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
         async function loadChartData() {
-            const ticker = document.getElementById('ticker').value;             
+            const ticker = document.getElementById('foreign_ticker').value;             
             try {
                 document.getElementById('loading_bar_fingpt').style.top = '50%';                 
                 document.getElementById('loading_bar_fingpt').style.display = 'block';                    
@@ -75,15 +100,43 @@
                 // 차트 영역을 보이게 설정
                 document.getElementById('fingptChartArea').style.display = 'block';
                 document.getElementById('loading_bar_fingpt').style.display = 'none';  
-                gptAnalysis(ticker);
+                fetchEarningsAnnouncement(ticker);
 
             } catch (error) {
                 console.error('Error loading chart data:', error);
-                gptAnalysis(ticker);
+                fetchEarningsAnnouncement(ticker);
                 document.getElementById('fingptChartArea').style.display = 'none';
                 document.getElementById('loading_bar_fingpt').style.display = 'none'; 
             }
         }
+        //실적발표 테이블 표 만들어서 보여주기
+        async function fetchEarningsAnnouncement(ticker) {
+            const apiUrl = `/api/get_earning_announcement/${ticker}`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                throw new Error('서버에서 데이터를 가져오는 데 실패했습니다. 응답 상태: ' + response.status);
+                }
+                const data = await response.json();
+                if (data) {
+                document.getElementById('gpt-earning-table-area').style.display = 'block';
+                document.getElementById('latest_revenue').textContent = data.current_quarter_revenue || '-';
+                document.getElementById('yoy_revenue_growth').textContent = data.revenue_YoY || '-';
+                document.getElementById('qoq_revenue_growth').textContent = data.revenue_QoQ || '-';
+                document.getElementById('revenue_beat_miss_ratio').textContent = data.revenue_beat_miss_ratio || '-';
+                document.getElementById('latest_eps').textContent = data.current_quarter_eps || '-';
+                document.getElementById('yoy_eps_growth').textContent = data.eps_YoY || '-';
+                document.getElementById('qoq_eps_growth').textContent = data.eps_QoQ || '-';
+                document.getElementById('eps_beat_miss_ratio').textContent = data.eps_beat_miss_ratio || '-';
+                }
+                gptAnalysis(ticker);
+            } catch (error) {
+                document.getElementById('gpt-earning-table-area').style.display = 'none';
+                gptAnalysis(ticker);
+                console.error('Error Fetching 실적발표 테이블:', error.message);
+            }
+        }
+
         //FinGPT 실적발표 전후 반응 + 근거 문서 갖고와서 보여주기 
         async function gptAnalysis(ticker) {
             try {   
@@ -1146,9 +1199,12 @@ console.log(result);
             <div class="right-area">
                 <div id="menua" class="menu-cont on">
                     <h2 class="s-tit">AI가 말해주는 주식 정보 [해외]</h2>
-                    <h3 class="s-tit">종목코드를 입력해주세요 (*예: AAPL) </h3>
+                    <h3 class="s-tit">종목코드를 선택해주세요! </h3>
                     <div class="input-container">
-                        <input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">
+                        <!--<input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">--> 
+                        <div class="foreign-search-box">
+                            <select id="foreign_ticker" style="width: 100%"></select>
+                        </div>                        
                         <div class="buttons-container">
                             <button class="chartBtn" id="getStockInfo" onclick="loadChartData();">Get Stock Info</button>
                         </div>
@@ -1162,6 +1218,34 @@ console.log(result);
                             <img id="earningsChart" alt="Earnings Chart">
                             <img id="recommendationsChart" alt="Recommendations Chart">
                         </div>
+                    </div>
+                    <div id="gpt-earning-table-area" style="display: none;">
+                        <div class="earning-title-container">
+                            <h2>최근 실적발표 데이터 정리</h2>
+                        </div>
+                        <table class="earning-table">
+                            <tr>
+                                <th class="earning-header-content">내용</th>
+                                <th>latest_earning_quarter</th>
+                                <th>YoY(%,달러)</th>
+                                <th>QoQ(%,달러)</th>
+                                <th>컨센 beat/miss</th>
+                            </tr>
+                            <tr>
+                                <td>매출액</td>
+                                <td>latest_revenue</td>
+                                <td>yoy_revenue_growth</td>
+                                <td>qoq_revenue_growth</td>
+                                <td>revenue_beat_miss_ratio</td>
+                            </tr>
+                            <tr>
+                                <td>영업이익</td>
+                                <td>latest_eps</td>
+                                <td>yoy_eps_growth</td>
+                                <td>qoq_eps_growth</td>
+                                <td>eps_beat_miss_ratio</td>
+                            </tr>
+                        </table>
                     </div>
                     <div class="gpt-message-area" id="gpt-message-area" style="display: none;">
                         <div id="analysisResultBox" class="result-box">
@@ -1679,21 +1763,26 @@ console.log(result);
                     this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
                 });
             });
-             //유사국면메뉴에서 종목코드 로드
-            fetchStockCodes();
-            $('#stockCodeSelect').select2({
-                placeholder: "Code Loading 중이에요",
-                language: {
-                    noResults: function() {
-                        return "종목을 찾을 수 없습니다.";
+             //FinGPT 메뉴(해외)와 유사국면 메뉴에서 종목코드 로드 세팅함수임
+             function initializeSelect2(selector, placeholderText) {
+                $(selector).select2({
+                    placeholder: placeholderText,
+                    language: {
+                        noResults: function() {
+                            return "종목을 찾을 수 없습니다.";
+                        },
+                        searching: function() {
+                            return "종목 로딩중..";
+                        }
                     },
-                    searching: function() {
-                        return "종목 로딩중..";
-                    }
-                },
-                // 초기 로딩 메시지를 보여주기 위해 임시 disabled 옵션 사용
-                minimumResultsForSearch: Infinity
-            }).val(null).trigger("change");
+                    minimumResultsForSearch: Infinity
+                }).val(null).trigger("change");
+            }
+            fetchStockCodes();
+            initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");
+            fetchForeignStockCodes();
+            initializeSelect2('#foreign_ticker', "Code Loading 중이에요");
+
             //유사국면에서 데이트피커 컨트롤
             $("#fromDate, #toDate").datepicker({
                 dateFormat: "yy-mm-dd",

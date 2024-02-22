@@ -7,9 +7,10 @@ import httpx
 from urllib.parse import quote 
 import asyncio
 from io import BytesIO
-from typing import List, Optional
+from typing import List, Dict, Union, Optional
 import base64
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import Optional
 # 기존 Util 함수들
 from google.cloud import vision
@@ -610,12 +611,98 @@ async def gpt4_pdf_talk(response_data):
 
 
 ######################################## 마켓 PDF 분석 Ends  ##############################################            
-################################### FIN GPT 구현 부분 Starts (본부장님소스) ################################
+################################### FIN GPT 구현 부분 Starts (본부장님소스) + 나의 수정 ################################
 
 
 def get_curday():
     return date.today().strftime("%Y-%m-%d")
 
+# 날짜로 분기 계산하기 
+def get_quarter_from_date(curday):
+    date_obj = datetime.strptime(curday, "%Y-%m-%d")
+    year = date_obj.year
+    quarter = (date_obj.month - 1) // 3 + 1
+    return f"FY{quarter}Q{year}"
+
+# 성장률 계산 함수
+def calculate_growth(actual, previous):
+    if actual is not None and previous is not None and previous != 0:
+        return (actual - previous) / previous * 100
+    return "-"
+# Beat/Miss 비율 계산 함수
+def calculate_beat_miss_ratio(actual, estimate):
+    if actual is not None and estimate is not None:
+        return "Beat" if actual > estimate else "Miss"
+    return "-"
+
+@app.get("/api/get_earning_announcement/{ticker}")
+def calculate_financial_metrics(ticker: str):
+    # YoY계산을 위해서 현재 날짜 기준으로 1년 전의 날짜를 시작 날짜로 설정
+    Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
+    # 현재 날짜를 종료 날짜로 설정
+    End_date_calen = get_curday()
+    # Finnhub API를 사용하여 earnings calendar 데이터 가져오기
+    earnings_calendar = finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')
+
+    # 결과를 저장할 딕셔너리
+    results = {
+        "revenue_YoY": "-",
+        "revenue_QoQ": "-",
+        "revenue_beat_miss_ratio": "-",
+        "eps_YoY": "-",
+        "eps_QoQ": "-",
+        "eps_beat_miss_ratio": "-",
+        "current_quarter_revenue": "-",
+        "current_quarter_eps": "-",
+        "current_year_quarter": get_quarter_from_date(get_curday())
+    }
+
+    # 데이터 정렬 (최신 순)
+    sorted_earnings = sorted(earnings_calendar, key=lambda x: x['date'], reverse=True)
+    
+    if not sorted_earnings:
+        return results  # 데이터가 없으면 빈 결과 반환
+    
+    # 최신 분기 데이터
+    latest = sorted_earnings[0]
+    results["current_quarter_revenue"] = latest.get("revenueActual", "-")
+    results["current_quarter_eps"] = latest.get("epsActual", "-")
+    
+    # 이전 분기 및 작년 동일 분기 찾기
+    previous_quarter, previous_year = None, None
+    for earning in sorted_earnings[1:]:
+        if previous_quarter is None and earning['quarter'] == latest['quarter'] - 1:
+            previous_quarter = earning
+        if previous_year is None and earning['quarter'] == latest['quarter'] and earning['year'] == latest['year'] - 1:
+            previous_year = earning
+        if previous_quarter and previous_year:
+            break
+    
+    # YoY, QoQ 계산
+    if previous_year:
+        results["revenue_YoY"] = calculate_growth(latest['revenueActual'], previous_year['revenueActual'])
+        results["eps_YoY"] = calculate_growth(latest['epsActual'], previous_year['epsActual'])
+    if previous_quarter:
+        results["revenue_QoQ"] = calculate_growth(latest['revenueActual'], previous_quarter['revenueActual'])
+        results["eps_QoQ"] = calculate_growth(latest['epsActual'], previous_quarter['epsActual'])
+    
+    # Beat/Miss 비율
+    results["revenue_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['revenueActual'], latest['revenueEstimate'])
+    results["eps_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['epsActual'], latest['epsEstimate'])
+    
+    return results
+
+print(calculate_financial_metrics('AAPL'))
+        
+@app.get("/api/get_foreign_stock_symbols")
+def get_stock_symbols():
+    try:
+        symbols = finnhub_client.stock_symbols('US')
+        # Filter out necessary fields
+        symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
+        return symbols_filtered
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)

@@ -54,7 +54,7 @@
 .buttons-container {margin-top: 10px;}
 .chartBtn {padding: 5px 20px; font-size: 14px; background-color: #6ea6e2; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
 .chartBtn:hover {background-color: #4452d8;}
-.gpt-chart-area{width:100%; height:auto; border:1px solid #ccc;}
+.gpt-chart-area {width:100%; height:auto; border:1px solid #ccc;}
 .gpt-chart-area img {width: 60%; height: auto; display: block; margin: 10px auto;}
 .gpt-message-area {max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
 .result-box {margin-top: 20px; padding: 15px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px; font-size: 15px;}
@@ -62,6 +62,15 @@
 .info-header {margin-bottom: 10px; font-weight: bold;}
 .highlight {color: #ff6600;}
 #tickerInput {width: calc(100% - 90px); padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;}
+.foreign-search-box{margin: 20px auto; text-align: center; width: 80%; max-width: 800px;}
+.earning-title-container {background-color: rgba(255, 0, 0, 0.2); color: #FF6347; text-align: center; padding: 20px; margin-bottom: 20px; border-radius: 8px;}
+.earning-table {width: 80%; margin: 0 auto; border-collapse: collapse;}
+.earning-table th, .earning-table td {border: 1px solid #ddd; padding: 8px; text-align: center;}
+.earning-table th {background-color: #f2f2f2;}
+.earning-header-content {background-color: #f0f0f0;}
+.earning-table tr:nth-child(even) {background-color: #f9f9f9;}
+.earning-table th:first-child, .earning-table td:first-child {background-color: #eeeeee;}
+
 
 /* 글로벌 주요 경제지표 1.[핵심지표] 영역 */
 .form-container {background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px auto; width: 80%; max-width: 960px;}
