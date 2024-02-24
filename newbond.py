@@ -7,7 +7,7 @@ import httpx
 from urllib.parse import quote 
 import asyncio
 from io import BytesIO
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Any
 import base64
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -18,6 +18,7 @@ from google.oauth2 import service_account
 from pydantic import BaseModel
 import urllib.request
 from pandas import Timestamp
+from pandas_datareader import data as pdr
 import pandas as pd
 import numpy as np 
 import matplotlib
@@ -30,6 +31,7 @@ from plotly.subplots import make_subplots
 from bs4 import BeautifulSoup, NavigableString
 from scipy.spatial.distance import euclidean
 import seaborn as sns
+from functools import lru_cache
 #금융관련 APIs
 import finnhub
 import fredpy as fp
@@ -692,14 +694,136 @@ def calculate_financial_metrics(ticker: str):
     
     return results
 
-print(calculate_financial_metrics('AAPL'))
+def ytest():
+    
+    msft = yf.Ticker("MSFT")
+    balance_sheet_annual = msft.balance_sheet
+
+    print(balance_sheet_annual.columns)
+
+#ytest()
+
+# 반환할 데이터 모델 정의
+class FinancialData(BaseModel):
+    income_statement: dict
+    quarterly_income_statement: dict
+    additional_info: dict
+    charts_data: dict
+
+@app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
+def get_financials_and_metrics(ticker: str):
+    stock = yf.Ticker(ticker)
+    info = stock.info
+    try : 
+        stock = yf.Ticker(ticker)
+        info = stock.info
         
+        # 연간 재무제표 데이터
+        income_statement = stock.financials.T.head(5)
+        balance_sheet = stock.balance_sheet.T.head(5)
+        # 분기별 재무제표 데이터
+        quarterly_income_statement = stock.quarterly_financials.T.head(5)
+
+        # 연간 데이터 계산
+        if 'Operating Income' in income_statement.columns and 'Total Revenue' in income_statement.columns:
+            income_statement['Operating Margin'] = income_statement['Operating Income'] / income_statement['Total Revenue'].replace(0, np.nan)
+        else:
+            income_statement['Operating Margin'] = np.nan  
+        if 'Net Income' in income_statement.columns:
+            income_statement['EPS'] = income_statement['Net Income'] / balance_sheet['Common Stock'].replace(0, np.nan)
+            income_statement['ROE'] = income_statement['Net Income'] / balance_sheet['Stockholders Equity'].replace(0, np.nan)
+        else:
+            income_statement['EPS'] = np.nan  
+            income_statement['ROE'] = np.nan  
+
+        # 분기별 데이터 계산
+        if 'Total Revenue' in quarterly_income_statement.columns:
+            quarterly_income_statement['Revenue Growth QoQ'] = quarterly_income_statement['Total Revenue'].pct_change()
+        else:
+            quarterly_income_statement['Revenue Growth QoQ'] = np.nan  # 'Total Revenue' 컬럼이 없는 경우 처리
+
+        # 후속 처리와 데이터 포맷팅...
+
+
+        # EPS, PBR 계산을 위한 유효성 검사
+        current_price = info.get('currentPrice', np.nan)
+        shares_outstanding = info.get('sharesOutstanding', np.nan)
+
+        # EPS, PBR 계산
+        eps = income_statement['EPS'].iloc[0] if 'EPS' in income_statement.columns and not income_statement['EPS'].empty else np.nan
+        book_value_per_share = (balance_sheet['Stockholders Equity'].iloc[0] / shares_outstanding) if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty and shares_outstanding != 0 else np.nan
+        per = current_price / eps if eps and not np.isnan(eps) and current_price else np.nan
+        pbr = current_price / book_value_per_share if book_value_per_share and not np.isnan(book_value_per_share) and current_price else np.nan
+        
+        # 데이터 추출 전 유효성 검사
+        total_assets = balance_sheet['Total Assets'].iloc[0] if 'Total Assets' in balance_sheet.columns and not balance_sheet['Total Assets'].empty else np.nan
+        shareholder_equity = balance_sheet['Stockholders Equity'].iloc[0] if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty else np.nan
+
+        # 추가 정보 딕셔너리에 안전하게 값을 채워넣기
+        financial_data = {
+            'annual_data': income_statement.to_dict(),
+            'quarterly_data': quarterly_income_statement.to_dict(),
+            'additional_info': {
+                'Company Name': info.get('shortName'),
+                'Sector': info.get('sector'),
+                'Current Price': current_price,
+                '50 Day Average': info.get('fiftyDayAverage'),
+                '52 Week High': info.get('fiftyTwoWeekHigh'),
+                '52 Week Low': info.get('fiftyTwoWeekLow'),
+                'Total Assets': total_assets,
+                'Shareholder Equity': shareholder_equity,
+                'Market Cap': info.get('marketCap'),
+                'Shares Outstanding': shares_outstanding,
+                'Total Debt': info.get('totalDebt', np.nan),
+                'Operating Cash Flow': info.get('operatingCashflow', np.nan),
+                'PER': per,
+                'PBR': pbr
+            }
+        }
+        # 차트 데이터 준비
+        charts_data = {
+            "annual_financials": {
+                "years": list(income_statement.index),
+                "revenue": list(income_statement['Total Revenue']) if 'Total Revenue' in income_statement.columns else [np.nan],
+                "operating_income": list(income_statement['Operating Income']) if 'Operating Income' in income_statement.columns else [np.nan],
+                "net_income": list(income_statement['Net Income']) if 'Net Income' in income_statement.columns else [np.nan],
+                "eps": list(income_statement['EPS']),
+                "roe": list(income_statement['ROE']),
+                # PER와 PBR은 현재 직접 계산이 어려움. 시장 가격 기반 계산 필요하면 별도 로직 구현
+            },
+            "quarterly_growth": {
+                "quarters": list(quarterly_income_statement.index),
+                "revenue": list(income_statement['Total Revenue']) if 'Total Revenue' in income_statement.columns else [np.nan],
+                "revenue_growth": list(quarterly_income_statement['Revenue Growth QoQ']) if 'Revenue Growth QoQ' in quarterly_income_statement.columns else [np.nan],
+            },
+            # PER, PBR 차트 데이터 구조도 비슷하게 추가 가능
+        }
+        return {
+                "income_statement": income_statement.to_dict(),
+                "quarterly_income_statement": quarterly_income_statement.to_dict(),
+                "additional_info": financial_data,
+                "charts_data": charts_data
+        }
+                    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))        
+
+print(get_financials_and_metrics('AAPU'))
+
+# 해외종목코드 검색 :: 속도가 너무느려 캐싱함수도 써보자
+@lru_cache(maxsize=100)
+def cached_stock_symbols(exchange: str, mic: str):
+    symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+    symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
+    return symbols_filtered
+
+# 해외종목코드 검색 :: Finnhub API 사용(쫌 느림)        
 @app.get("/api/get_foreign_stock_symbols")
-def get_stock_symbols():
+def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str = Query(default="", description="Market Identifier Code")):
     try:
-        symbols = finnhub_client.stock_symbols('US')
-        # Filter out necessary fields
-        symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
+        symbols_filtered = cached_stock_symbols('US', mic)
+        if q:
+            symbols_filtered = [sym for sym in symbols_filtered if q.lower() in sym['description'].lower() or q.lower() in sym['symbol'].lower()]
         return symbols_filtered
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

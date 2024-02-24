@@ -70,6 +70,23 @@
 .earning-header-content {background-color: #f0f0f0;}
 .earning-table tr:nth-child(even) {background-color: #f9f9f9;}
 .earning-table th:first-child, .earning-table td:first-child {background-color: #eeeeee;}
+.stockBasic-input-container{margin-bottom: 20px;}
+.loading_bar_stockbasic{position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
+.loading_bar_stockbasic > img {max-width: 100px; max-height: 100px;}
+.loading-text-stockbasic {background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
+.stockBasic-gpt-chart-area{margin-top: 20px;}
+.stockBasic-earningsChart, .stockBasic-recommendationsChart{width: 100%;height: auto;margin-top: 20px;}
+.stockBasicInfoTable, .stockAnnualFinancialsTable { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.stockBasicInfoTable caption, .stockAnnualFinancialsTable caption { font-size: 1.5em; margin-bottom: 10px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+tr:nth-child(even){background-color: #f9f9f9;}
+.stockBasicInfoTable td, .stockAnnualFinancialsTable th, .stockBasicInfoTable th, .stockAnnualFinancialsTable td { border: 1px solid #ddd; padding: 8px; text-align: left; } 
+.stockBasicInfoTable tr:nth-child(even), .stockAnnualFinancialsTable tr:nth-child(even) { background-color: #f2f2f2; } 
+.stockBasicInfoTable tr:hover, .stockAnnualFinancialsTable tr:hover { background-color: #ddd; }
+.stockBasicInfoTable th, .stockAnnualFinancialsTable th { padding-top: 12px; padding-bottom: 12px; background-color: #04AA6D; color: white; }
+.chart-container { width: 100%; margin-bottom: 20px; }
+
 
 
 /* 글로벌 주요 경제지표 1.[핵심지표] 영역 */

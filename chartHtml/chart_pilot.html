@@ -75,7 +75,108 @@
                 console.error("Failed to fetch foreign stock codes: ", error);
             }
         }
+        //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 
+        async function loadBasicInfo() {
 
+            document.getElementById('loading_bar_stockbasic').style.display = 'block';
+            
+            try {
+                const ticker = document.getElementById('foreign_ticker').value; 
+                const response = await fetch(`/foreignStock/financials/${ticker}`);
+                if (!response.ok) throw new Error('Failed to fetch foreign stock basic info data');
+                
+                const data = await response.json();
+console.log(data);                
+                // 여기에 데이터를 화면에 표시하는 로직을 구현하세요.
+                document.getElementById('loading_bar_stockbasic').style.display = 'none';
+                displayFinancialData(data);
+                
+            } catch (error) {
+                console.error('Error fetching stock info:', error);
+                document.getElementById('loading_bar_stockbasic').style.display = 'none';
+                // 에러 처리 로직
+            } finally {
+                // 로딩 바 숨기기
+                document.getElementById('loading_bar_stockbasic').style.display = 'none';
+            }
+        }
+        
+        function displayFinancialData(data) {
+            // 기업 및 추가 정보 표시
+            document.getElementById('stockBasic_info_area').style.display = 'block';
+            document.getElementById('stockBasic_company_info').innerHTML = ""; //초기화
+            const additionalInfo = data.additional_info['additional_info'];
+            let htmlContent = `<table class="stockBasicInfoTable"><caption>Company & Financial Information</caption><tbody>`;
+            Object.keys(additionalInfo).forEach(key => {
+                htmlContent += `<tr><td>${key}</td><td>${additionalInfo[key]}</td></tr>`;
+            });
+            htmlContent += `</tbody></table>`;
+            document.getElementById('stockBasic_company_info').innerHTML += htmlContent;
+        
+            // 연간 재무 데이터 표시
+            if (data.annual_data && typeof data.annual_data === 'object') {
+                const annualData = data['annual_data'];
+                let annualHtmlContent = `<table class="stockAnnualFinancialsTable"><caption>Annual Financials</caption><thead><tr>`;
+                if (Object.keys(annualData).length > 0) {
+                    const firstYearData = annualData[Object.keys(annualData)[0]];
+                    Object.keys(firstYearData).forEach(key => {
+                        annualHtmlContent += `<th>${key}</th>`;
+                    });
+                    annualHtmlContent += `</tr></thead><tbody>`;
+            
+                    Object.keys(annualData).forEach(year => {
+                        annualHtmlContent += `<tr>`;
+                        Object.keys(annualData[year]).forEach(key => {
+                            let value = annualData[year][key];
+                            annualHtmlContent += `<td>${value !== null ? value : '-'}</td>`;
+                        });
+                        annualHtmlContent += `</tr>`;
+                    });
+                    annualHtmlContent += `</tbody></table>`;
+                    document.getElementById('stockBasic_company_info').innerHTML += annualHtmlContent;
+                }
+            } else {
+                console.error('annual_data is not available or not an object');
+            }
+            // 차트 데이터 준비 및 차트 표시 함수 호출
+            const chartData = data.charts_data;
+            displayCharts(chartData);
+        }
+
+        function displayCharts(chartData) {
+            // 차트 컨테이너 준비
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'chart-container';
+            document.getElementById('stockBasic_quarter_revenue').appendChild(chartContainer);
+        
+            // 캔버스 요소 생성
+            const canvas = document.createElement('canvas');
+            chartContainer.appendChild(canvas);
+        
+            // Chart.js를 사용하여 차트 생성
+            new Chart(canvas, {
+                type: 'line', // 또는 'bar' 등 차트 타입
+                data: {
+                    labels: chartData.labels, // X축 레이블 (예: ['2019', '2020', '2021'])
+                    datasets: [{
+                        label: 'Annual Revenue',
+                        data: chartData.annualRevenue, // 연간 수익 데이터
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
         async function loadChartData() {
             const ticker = document.getElementById('foreign_ticker').value;             
@@ -1206,9 +1307,31 @@ console.log(result);
                             <select id="foreign_ticker" style="width: 100%"></select>
                         </div>                        
                         <div class="buttons-container">
-                            <button class="chartBtn" id="getStockInfo" onclick="loadChartData();">Get Stock Info</button>
+<!--                        <button class="chartBtn" id="getStockInfo" onclick="loadChartData();">Get Stock Info</button>-->
+                            <button class="chartBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info</button>
                         </div>
                     </div>
+                    <!-- 해외주식 기본정보 보여주는 영역 시작--> 
+                    <div class="stockBasic-input-container">
+
+                    </div>
+                    <div id="loading_bar_stockbasic" class="loading_bar_stockbasic" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text-stockbasic">데이터 로딩중입니다.</p>
+                    </div>                      
+                    <div class="stockBasic-gpt-chart-area" id="stockBasic_info_area" style="display: none;">
+                        <div>
+                            <div id="stockBasic_company_info"></div>
+                            <div id="stockBasic_finance_info"></div>
+                        </div>
+                        <div>
+                            <div id="stockBasic_quarter_revenue"></div>
+                            <div id="stockBasic_annual_margin_chart"></div>
+                            <div id="stockBasic_per_chart"></div>
+                        </div>                        
+                    </div>                    
+                    <!-- 해외주식 기본정보 보여주는 영역 끝--> 
+
                     <div id="loading_bar_fingpt" class="loading_bar" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_C.gif">
                         <p>데이터 로딩중입니다.</p>
@@ -1780,8 +1903,34 @@ console.log(result);
             }
             fetchStockCodes();
             initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");
-            fetchForeignStockCodes();
-            initializeSelect2('#foreign_ticker', "Code Loading 중이에요");
+            //fetchForeignStockCodes();  너무 느려서 아래 검색방식으로 변경함 
+            $('#foreign_ticker').select2({
+                ajax: {
+                    url: '/api/get_foreign_stock_symbols', 
+                    dataType: 'json',
+                    delay: 550, // 사용자가 마지막으로 입력한 후 검색이 시작되기까지의 지연 시간 (밀리초)
+                    data: function (params) {
+                        return {
+                            q: params.term, //  사용자 검색한거 
+                            page: params.page // 페이지 번호인데 나중에 필요한 경우 사용하자
+                        };
+                    },
+                    processResults: function (data, params) {
+                        return {
+                            results: data.map(stock => ({ id: stock.symbol, text: `${stock.description} (${stock.symbol})` }))
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: '원하시는 종목을 검색해주세요!',
+                minimumInputLength: 1, // 사용자가 최소 1개의 문자를 입력하기 전까지는 검색 결과를 표시하지 않음
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return "검색 결과가 없습니다."; 
+                    }
+                }
+            });
 
             //유사국면에서 데이트피커 컨트롤
             $("#fromDate, #toDate").datepicker({
