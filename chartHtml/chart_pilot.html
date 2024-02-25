@@ -24,14 +24,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <!-- Chart.js -->  
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>    
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
-    <!-- Highstock 모듈. 캔드차트를 도저히 그릴수 없어 highchart로 변경 -->
+    <!-- Highstock 모듈. 캔들차트를 도저히 그릴수 없어 highchart로 변경 -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/stock/highstock.js"></script>
     <script src="https://code.highcharts.com/modules/data.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+</head>
     <!-- Select -->  
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> 
     <!-- datepicker -->
@@ -87,20 +90,59 @@
                 
                 const data = await response.json();
 console.log(data);                
-                // 여기에 데이터를 화면에 표시하는 로직을 구현하세요.
                 document.getElementById('loading_bar_stockbasic').style.display = 'none';
                 displayFinancialData(data);
                 
             } catch (error) {
                 console.error('Error fetching stock info:', error);
                 document.getElementById('loading_bar_stockbasic').style.display = 'none';
-                // 에러 처리 로직
             } finally {
                 // 로딩 바 숨기기
                 document.getElementById('loading_bar_stockbasic').style.display = 'none';
             }
         }
+        //차트데이터 전처리 함수
+        function preprocessChartData(chartData) {
+            // Timestamp 객체를 ISO 날짜 문자열로 변환
+            chartData.annual_financials.years = chartData.annual_financials.years.map(date => 
+                new Date(date).toISOString().split('T')[0]
+            );
         
+            chartData.quarterly_growth.quarters = chartData.quarterly_growth.quarters.map(date => 
+                new Date(date).toISOString().split('T')[0]
+            );
+        
+            // NaN 값을 처리 (예: NaN을 0으로 변환하거나, 또는 NaN 값을 포함하는 데이터 포인트를 제거)
+            chartData.quarterly_growth.revenue_growth = chartData.quarterly_growth.revenue_growth.map(value => 
+                isNaN(value) ? 0 : value
+            );
+        
+            return chartData;
+        }
+        // 숫자를 억 단위로 변환하는 함수 (깔끔하게 보여주게)
+        function convertToBillion(value) {
+            return (value / 100000000).toFixed(2) + '억';
+        }
+        // 특정 키에 대한 단위를 추가하는 함수
+        function appendUnit(key, value) {
+            // 데이터가 null인 경우 "-"로 표시
+            if (value === null) {
+                return "-";
+            }
+            const keysWithUSD = ['50일 평균가', '52주 신고가', '52주 신저가', '총 자산', '자기자본', '시가총액', '총 부채', '영업현금흐름'];
+            const keysInBillion = ['총 자산', '자기자본', '시가총액', '총 부채', '영업현금흐름'];
+            if (keysWithUSD.includes(key)) {
+                if (keysInBillion.includes(key)) {
+                    return convertToBillion(value) + ' (USD)';
+                }
+                return value + ' (USD)';
+            } else if (key === '발행주식 수') {
+                return value + ' 주';
+            } else if (key === 'PER' || key === 'PBR') {
+                return Math.round(value * 100) / 100; // 소수점 셋째 자리에서 반올림
+            }
+            return value;
+        }
         function displayFinancialData(data) {
             // 기업 및 추가 정보 표시
             document.getElementById('stockBasic_info_area').style.display = 'block';
@@ -108,77 +150,215 @@ console.log(data);
             const additionalInfo = data.additional_info['additional_info'];
             let htmlContent = `<table class="stockBasicInfoTable"><caption>Company & Financial Information</caption><tbody>`;
             Object.keys(additionalInfo).forEach(key => {
-                htmlContent += `<tr><td>${key}</td><td>${additionalInfo[key]}</td></tr>`;
+                const valueWithUnit = appendUnit(key, additionalInfo[key]);
+                htmlContent += `<tr><td>${key}</td><td>${valueWithUnit}</td></tr>`;
             });
             htmlContent += `</tbody></table>`;
             document.getElementById('stockBasic_company_info').innerHTML += htmlContent;
         
             // 연간 재무 데이터 표시
-            if (data.annual_data && typeof data.annual_data === 'object') {
-                const annualData = data['annual_data'];
-                let annualHtmlContent = `<table class="stockAnnualFinancialsTable"><caption>Annual Financials</caption><thead><tr>`;
-                if (Object.keys(annualData).length > 0) {
-                    const firstYearData = annualData[Object.keys(annualData)[0]];
-                    Object.keys(firstYearData).forEach(key => {
-                        annualHtmlContent += `<th>${key}</th>`;
-                    });
-                    annualHtmlContent += `</tr></thead><tbody>`;
+            if (data.income_statement && typeof data.income_statement === 'object') {
+                const incomeStatement = data.income_statement;
+                // 키 값을 한글로 매핑
+                const keyMapping = {
+                    'Total Revenue': '총 매출액',
+                    'Operating Income': '영업이익',
+                    'Operating Margin': '영업이익률',
+                    'Net Income': '순이익',
+                    'EPS': '주당순이익'
+                };
+                // 숫자를 '억 달러' 단위로 포맷팅하는 함수
+                const formatCurrency = (num) => {
+                    return `${(num / 100000000).toFixed(2)} 억 달러`;
+                };
+                // EPS를 소수점 넷째 자리까지 포맷팅하는 함수
+                const formatEPS = (num) => {
+                    return `${num.toFixed(3)} 달러`;
+                };
+                let htmlContent = `<table class="stockAnnualFinancialsTable"><caption>Annual Financials</caption><thead><tr><th>년도</th>`;
+                // 테이블 헤더 생성
+                Object.keys(incomeStatement).forEach((key) => {
+                    htmlContent += `<th>${keyMapping[key] || key}</th>`;
+                });
+                htmlContent += `</tr></thead><tbody>`;
             
-                    Object.keys(annualData).forEach(year => {
-                        annualHtmlContent += `<tr>`;
-                        Object.keys(annualData[year]).forEach(key => {
-                            let value = annualData[year][key];
-                            annualHtmlContent += `<td>${value !== null ? value : '-'}</td>`;
-                        });
-                        annualHtmlContent += `</tr>`;
+                // 각 연도별 데이터를 행으로 추가
+                Object.keys(incomeStatement[Object.keys(incomeStatement)[0]]).sort().reverse().forEach((date) => {
+                    const year = new Date(date).getFullYear(); // 년도 추출
+                    htmlContent += `<tr><td>${year}</td>`;
+                    Object.keys(incomeStatement).forEach((key) => {
+                        let value = incomeStatement[key][date];
+                        if (key === 'Total Revenue' || key === 'Operating Income' || key === 'Net Income') {
+                            value = formatCurrency(value); // 숫자 포맷팅
+                        } else if (key === 'Operating Margin') {
+                            value = `${(value * 100).toFixed(2)}%`; // 백분율로 변환
+                        } else if (key === 'EPS') {
+                            value = formatEPS(value); // EPS 포맷팅
+                        }
+                        htmlContent += `<td>${value !== null ? value : '-'}</td>`;
                     });
-                    annualHtmlContent += `</tbody></table>`;
-                    document.getElementById('stockBasic_company_info').innerHTML += annualHtmlContent;
-                }
-            } else {
+                    htmlContent += `</tr>`;
+                });
+            
+                htmlContent += `</tbody></table>`;
+                document.getElementById('stockBasic_company_info').innerHTML += htmlContent;
+            }
+            else {
                 console.error('annual_data is not available or not an object');
             }
             // 차트 데이터 준비 및 차트 표시 함수 호출
             const chartData = data.charts_data;
-            displayCharts(chartData);
+            const processedChartData = preprocessChartData(chartData);            
+
+            console.log(processedChartData);            
+            displayAnnualFinancialsChart(processedChartData);
+            displayQuarterlyGrowthChart(processedChartData);
+
         }
 
-        function displayCharts(chartData) {
-            // 차트 컨테이너 준비
-            const chartContainer = document.createElement('div');
-            chartContainer.className = 'chart-container';
-            document.getElementById('stockBasic_quarter_revenue').appendChild(chartContainer);
-        
-            // 캔버스 요소 생성
-            const canvas = document.createElement('canvas');
-            chartContainer.appendChild(canvas);
-        
-            // Chart.js를 사용하여 차트 생성
-            new Chart(canvas, {
-                type: 'line', // 또는 'bar' 등 차트 타입
-                data: {
-                    labels: chartData.labels, // X축 레이블 (예: ['2019', '2020', '2021'])
-                    datasets: [{
-                        label: 'Annual Revenue',
-                        data: chartData.annualRevenue, // 연간 수익 데이터
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
+        function displayAnnualFinancialsChart(chartData) {
+            var operatingMargins = chartData.annual_financials.operating_margin;
+            var transformedOperatingMargins = operatingMargins.map(function(value) {
+                return parseFloat((value * 100).toFixed(2)); // 100을 곱하고, 소수점 두 자리까지 반올림
+            });
+            Highcharts.chart('annualFinancialsChart', {
+                chart: {
+                    zoomType: 'xy'
                 },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                title: {
+                    text: '년도별 매출 및 영업이익 추이'
+                },
+                xAxis: [{
+                    categories: chartData.annual_financials.years,
+                    crosshair: true
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}억',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: '매출액 & 영업이익',
+                        style: {
+                            color: 'black'
                         }
                     }
-                }
+                }, { // Secondary yAxis
+                    title: {
+                        text: '영업이익률',
+                        style: {
+                            color: 'black'
+                        }
+                    },
+                    labels: {
+                        format: '{value} %',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                series: [{
+                    name: '매출액',
+                    type: 'column',
+                    yAxis: 0,
+                    data: chartData.annual_financials.revenue.map(value => value / 1e8), // 억 달러로 변환
+                    tooltip: {
+                        valueSuffix: ' 억'
+                    }
+    
+                }, {
+                    name: '영업이익',
+                    type: 'column',
+                    yAxis: 0,
+                    data: chartData.annual_financials.operating_income.map(value => value / 1e8), // 억 달러로 변환
+                    tooltip: {
+                        valueSuffix: ' 억'
+                    }
+                }, {
+                    name: '영업이익률(%)',
+                    type: 'spline',
+                    yAxis: 1,
+                    data: transformedOperatingMargins,
+                    color: '#FFA500', 
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
             });
         }
-
+  
+        function displayQuarterlyGrowthChart(chartData) {
+            Highcharts.chart('quarterlyGrowthChart', {
+                chart: {
+                    zoomType: 'xy'
+                },
+                title: {
+                    text: '분기별 매출 성장 추이'
+                },
+                xAxis: [{
+                    categories: chartData.quarterly_growth.quarters,
+                    crosshair: true
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}억',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: '매출액',
+                        style: {
+                            color: 'black'
+                        }
+                    }
+                }, { // Secondary yAxis
+                    title: {
+                        text: '매출 성장률',
+                        style: {
+                            color: 'black'
+                        }
+                    },
+                    labels: {
+                        format: '{value} %',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                series: [{
+                    name: 'Revenue',
+                    type: 'column',
+                    yAxis: 0,
+                    data: chartData.quarterly_growth.revenue.map(value => value / 1e8), // 억 달러로 변환
+                    tooltip: {
+                        valueSuffix: ' 억'
+                    }
+                }, {
+                    name: 'Revenue Growth',
+                    type: 'spline',
+                    yAxis: 1,
+                    data: chartData.quarterly_growth.revenue_growth,
+                    color: '#FFA500', 
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
+            });
+        }
         
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
-        async function loadChartData() {
+        async function loadEarningData() {
             const ticker = document.getElementById('foreign_ticker').value;             
             try {
                 document.getElementById('loading_bar_fingpt').style.top = '50%';                 
@@ -1307,8 +1487,8 @@ console.log(result);
                             <select id="foreign_ticker" style="width: 100%"></select>
                         </div>                        
                         <div class="buttons-container">
-<!--                        <button class="chartBtn" id="getStockInfo" onclick="loadChartData();">Get Stock Info</button>-->
-                            <button class="chartBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info</button>
+                            <button class="basicInfoBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info<p>(종목 기본정보)</p></button>
+                            <button class="earningBtn" id="getEarningInfo" onclick="loadEarningData();">Get Earning Info<p>(실적 데이터)</button>                            
                         </div>
                     </div>
                     <!-- 해외주식 기본정보 보여주는 영역 시작--> 
@@ -1325,9 +1505,8 @@ console.log(result);
                             <div id="stockBasic_finance_info"></div>
                         </div>
                         <div>
-                            <div id="stockBasic_quarter_revenue"></div>
-                            <div id="stockBasic_annual_margin_chart"></div>
-                            <div id="stockBasic_per_chart"></div>
+                            <div id="annualFinancialsChart" style="width:100%; height:400px;"></div>
+                            <div id="quarterlyGrowthChart" style="width:100%; height:400px;"></div>
                         </div>                        
                     </div>                    
                     <!-- 해외주식 기본정보 보여주는 영역 끝--> 
