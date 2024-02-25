@@ -30,12 +30,11 @@ time, mark, audio, video, button {
 h1, h2, h3, h4, h5, h6{font-weight:500;}
 button {/*font-family:'Spoqa Han Sans Neo', 'Helvetica Neue', arial, helvetica, helve, sans-serif;*/cursor:pointer;}
 html, body {
-    overflow:hidden;
     padding: 0;
     margin: 0;
     height: 100%;
+    overflow-x: hidden;
 }
-
 article,aside,details,figcaption,figure,
 footer,header,hgroup,menu,nav,section { 
 	display: block;

@@ -1,12 +1,10 @@
 /* 헤더 영역 추가 */
 /*기존 스타일 수정*/
-.left-area{overflow-y:auto;position:relative;width:300px;height:calc(100% - 81px);background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
-.left-area .menu-wrap{padding-top:50px;}
 #chartPilot .right-area{overflow-y:auto;width:calc(100% - 280px);height:calc(100% - 81px);padding:0 50px 40px;}
 #chartPilot.wrap {width: 100%; height: 100%; position: relative; color: #111;}
 /*신규 스타일 추가*/
 /*#chartPilot .header{position:relative;display:flex;align-items:center;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #e1e1e1;}*/
-#chartPilot .myHeader{position:fixed;width:100%;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #21e1e1;background:#fff}
+#chartPilot .myHeader{position: sticky; top: 0; width:100%;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #21e1e1;background:#fff;z-index: 1000;}
 #chartPilot .myHeader h1{position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:25px;}
 #chartPilot .myHeader h1 span{color:#ffc045;font-weight:500;}
 #chartPilot .myHeader .menux{display:flex;align-items:center;height:100%;}
@@ -15,14 +13,15 @@
 #chartPilot .myHeader .menux ul li a.on{color:#4066ef;}
 
 /*#chartPilot main{display:flex;height:100%;}*/
-#chartPilot mainx, .mainx {display: flex; height: 100%; padding-top: 81px;}
+#chartPilot mainx, .mainx {display: flex; height: 100%;}
 
 /* left 메뉴 */
 /* PROMPT */
-.left-area{overflow-y:scroll;position:relative;width:300px;height:100%;background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
+.left-area{overflow-y:scroll;position:fixed;width:300px;height:100%;background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
+.left-area .menu-wrap{padding-top:50px;}
 .left-area::before{content:'';position:absolute;top:0;left:0;width:300px;height:286px;background:url('/static/assets/images/left_bg.png') no-repeat center;opacity:.5;}
 .left-area::-webkit-scrollbar{width:0px;}
-.left-area .title-wrap{overflow:hidden;position:relative;padding:20px 20px;font-size:22px;color:#fff;}
+.left-area .title-wrap{overflow:hidden;position:relative;padding:20px 50px;font-size:22px;color:#fff;}
 .left-area span{color:#ffc045;font-weight:500;}
 
 .left-area .menu-wrap{position:relative;padding:0px 20px 0;}
@@ -34,7 +33,7 @@
 .highlight {color: orange;font-weight: bold;}
 
 /* 우측 영역 */
-#chartPilot .right-area{position: relative;overflow-y:auto;width:calc(100% - 280px);height:100%;padding:0 50px;}
+#chartPilot .right-area{position: relative;overflow-y:auto;width:calc(100% - 280px);height:100%;padding:0 50px; margin-left: 300px;}
 #chartPilot .right-area::-webkit-scrollbar{width:0px;}
 #chartPilot .right-area div[id^=menu]{margin:40px 0;}
 #chartPilot .menu-cont{display:none;}
@@ -48,14 +47,18 @@
 #chartPilot .list-dep li:first-child{margin-top:0;}
 #chartPilot .list-dep li::before{content:'';position:absolute;left:0;top:9px;width:4px;height:4px;background:#313daa;border-radius:50%;}
 
-/* FinGPT 영역 */
+/* AI가 말해주는 주식정보(해외)  #1. Get Stock Info  #2. Get Earning Info*/
 .input-container {display: flex; flex-direction: column; align-items: center; margin-top: 10px;}
 .input-ticker {padding: 5px 10px; height: 30px; font-size: 14px; border: 2px solid #ddd; border-radius: 4px; outline: none; margin-bottom: 10px;}
-.buttons-container {margin-top: 10px; display: flex; justify-content: center;  gap: 20px;}
+.foreign-buttons-container {margin-top: 10px; display: flex; justify-content: center;  gap: 20px;}
 .basicInfoBtn {padding: 5px 20px; font-size: 14px; background-color: #6ea6e2; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
 .basicInfoBtn:hover {background-color: #4452d8;}
 .earningBtn {padding: 5px 20px; font-size: 14px; background-color: #4969d3; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
 .earningBtn:hover {background-color: #1626bb;}
+.foreignNewsBtn {padding: 5px 20px; font-size: 14px; background-color: #2f2dad; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.foreignNewsBtn:hover {background-color: #08158b;}
+.aiChatBtn {padding: 5px 20px; font-size: 14px; background-image: linear-gradient(to right, #f5c263, #f58b00); color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.aiChatBtn:hover {background-image: linear-gradient(to right, #f58b00, #eca445); }
 .gpt-chart-area {width:100%; height:auto; border:1px solid #ccc;}
 .gpt-chart-area img {width: 60%; height: auto; display: block; margin: 10px auto;}
 .gpt-message-area {max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
@@ -72,7 +75,6 @@
 .earning-header-content {background-color: #f0f0f0;}
 .earning-table tr:nth-child(even) {background-color: #f9f9f9;}
 .earning-table th:first-child, .earning-table td:first-child {background-color: #eeeeee;}
-
 .stockBasic-input-container { display: flex; flex-wrap: wrap; width: 1200px; margin: 0 auto; }
 .infoSection { flex: 0 0 600px; padding: 20px; box-sizing: border-box; }
 .chartSection { flex: 0 0 600px; display: flex; flex-direction: column; padding: 45px 20px 20px; box-sizing: border-box; }
@@ -93,7 +95,14 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .chartContainer { width: 600px; height: 600px; float: right; }
 .chartContainer .chart { width: 100%; height: 50%; }
 
-
+/* AI가 말해주는 주식정보(해외)  #4. Ask AI Anything **/
+#chatApp {box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; width: 1000px; margin: 0 auto; margin-bottom: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; justify-content: space-between; height: 600px;}
+#chatTitle {background: linear-gradient(120deg, #007bff, #6610f2); color: white; padding: 15px; font-size: 18px; text-align: center; display: flex; align-items: center;}
+#chatMessages {flex-grow: 1; overflow-y: auto; background-color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px;}
+#chatMessages .message {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #f0f0f0; border: 1px solid #e0e0e0; word-wrap: break-word;}
+#chatMessages .message.user {align-self: flex-end; background-color: #007bff; color: white; border: none;}
+#chatInput {box-sizing: border-box; width: 100%; padding: 15px 20px; border: none; border-top: 1px solid #ccc; font-size: 14px; outline: none; background: #fefefe; color: #555;}
+#chatInput:focus {background: #e8e8e8;}
 
 
 

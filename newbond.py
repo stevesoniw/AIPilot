@@ -710,7 +710,7 @@ class FinancialData(BaseModel):
     quarterly_income_statement: dict
     additional_info: dict
     charts_data: dict
-
+#AI가 말해주는 주식 정보 [#1 종목 기본 정보] 호출용
 @app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
 def get_financials_and_metrics(ticker: str):
     stock = yf.Ticker(ticker)
@@ -718,7 +718,6 @@ def get_financials_and_metrics(ticker: str):
     try : 
         stock = yf.Ticker(ticker)
         info = stock.info
-        
         # 연간 재무제표 데이터
         income_statement = stock.financials.T.head(5).sort_index(ascending=True)
         balance_sheet = stock.balance_sheet.T.head(5).sort_index(ascending=True)
@@ -743,10 +742,8 @@ def get_financials_and_metrics(ticker: str):
         else:
             income_statement['EPS'] = np.nan  
             income_statement['ROE'] = np.nan  
-
         # 필요한 컬럼만 선택
         selected_columns = income_statement[required_columns]
-                
         # 분기별 데이터 계산
         if 'Total Revenue' in quarterly_income_statement.columns:
             # 분기별 매출 성장률 계산
@@ -760,21 +757,17 @@ def get_financials_and_metrics(ticker: str):
         else:
             quarterly_income_statement['Revenue Growth QoQ'] = np.nan  # 'Total Revenue' 컬럼이 없는 경우 처리
 
-
         # EPS, PBR 계산을 위한 유효성 검사
         current_price = info.get('currentPrice', np.nan)
         shares_outstanding = info.get('sharesOutstanding', np.nan)
-
         # EPS, PBR 계산
         eps = income_statement['EPS'].iloc[0] if 'EPS' in income_statement.columns and not income_statement['EPS'].empty else np.nan
         book_value_per_share = (balance_sheet['Stockholders Equity'].iloc[0] / shares_outstanding) if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty and shares_outstanding != 0 else np.nan
         per = current_price / eps if eps and not np.isnan(eps) and current_price else np.nan
         pbr = current_price / book_value_per_share if book_value_per_share and not np.isnan(book_value_per_share) and current_price else np.nan
-        
         # 데이터 추출 전 유효성 검사
         total_assets = balance_sheet['Total Assets'].iloc[0] if 'Total Assets' in balance_sheet.columns and not balance_sheet['Total Assets'].empty else np.nan
         shareholder_equity = balance_sheet['Stockholders Equity'].iloc[0] if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty else np.nan
-
         # 추가 정보 딕셔너리에 안전하게 값을 채워넣기
         financial_data = {
             'annual_data': income_statement.to_dict(),
@@ -806,24 +799,19 @@ def get_financials_and_metrics(ticker: str):
                 "net_income": list(income_statement['Net Income']) if 'Net Income' in income_statement.columns else [np.nan],
                 "eps": list(income_statement['EPS']),
                 "roe": list(income_statement['ROE']),
-                # PER와 PBR은 현재 직접 계산이 어려움. 시장 가격 기반 계산 필요하면 별도 로직 구현
             },
             "quarterly_growth": {
                 "quarters": list(quarterly_income_statement.index),
                 "revenue": list(quarterly_income_statement['Total Revenue']) if 'Total Revenue' in quarterly_income_statement.columns else [np.nan],
                 "revenue_growth": list(quarterly_income_statement['Revenue Growth QoQ']) if 'Revenue Growth QoQ' in quarterly_income_statement.columns else [np.nan],
             },
-            # PER, PBR 차트 데이터 구조도 비슷하게 추가 가능
         }
-        print(charts_data)
         return {
                 "income_statement": selected_columns.to_dict(),
                 "quarterly_income_statement": quarterly_income_statement.to_dict(),
                 "additional_info": financial_data,
                 "charts_data": charts_data
         }
-                    
-                    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))        
 
