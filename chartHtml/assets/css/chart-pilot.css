@@ -72,22 +72,29 @@
 .earning-header-content {background-color: #f0f0f0;}
 .earning-table tr:nth-child(even) {background-color: #f9f9f9;}
 .earning-table th:first-child, .earning-table td:first-child {background-color: #eeeeee;}
-.stockBasic-input-container{margin-bottom: 20px;}
-.loading_bar_stockbasic{position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
-.loading_bar_stockbasic > img {max-width: 100px; max-height: 100px;}
-.loading-text-stockbasic {background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
-.stockBasic-gpt-chart-area{margin-top: 20px;}
-.stockBasic-earningsChart, .stockBasic-recommendationsChart{width: 100%;height: auto;margin-top: 20px;}
-.stockBasicInfoTable, .stockAnnualFinancialsTable { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-.stockBasicInfoTable caption, .stockAnnualFinancialsTable caption { font-size: 1.5em; margin-bottom: 10px; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-th { background-color: #f2f2f2; }
-tr:nth-child(even){background-color: #f9f9f9;}
-.stockBasicInfoTable td, .stockAnnualFinancialsTable th, .stockBasicInfoTable th, .stockAnnualFinancialsTable td { border: 1px solid #ddd; padding: 8px; text-align: left; } 
-.stockBasicInfoTable tr:nth-child(even), .stockAnnualFinancialsTable tr:nth-child(even) { background-color: #f2f2f2; } 
+
+.stockBasic-input-container { display: flex; flex-wrap: wrap; width: 1200px; margin: 0 auto; }
+.infoSection { flex: 0 0 600px; padding: 20px; box-sizing: border-box; }
+.chartSection { flex: 0 0 600px; display: flex; flex-direction: column; padding: 45px 20px 20px; box-sizing: border-box; }
+.financialSection { width: 100%; padding: 20px; padding-bottom: 100px; box-sizing: border-box; margin: 0 auto; display: flex; justify-content: center; flex-direction: column; }
+#annualFinancialsChart, #quarterlyGrowthChart { width: 100%; flex: 1; }
+#annualFinancialsChart, #quarterlyGrowthChart { flex: 1; }
+.stockBasicInfoTable, .stockAnnualFinancialsTable { width: 100%; border-collapse: collapse; }
+.stockBasicInfoTable, .stockAnnualFinancialsTable, th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+.stockBasicInfoTable caption, .stockAnnualFinancialsTable caption { font-size: 1.5em; margin: 16px 0; color: #333; }
+th { background-color: #576388; color: white; }
+tr:nth-child(even) { background-color: #f2f2f2; }
 .stockBasicInfoTable tr:hover, .stockAnnualFinancialsTable tr:hover { background-color: #ddd; }
-.stockBasicInfoTable th, .stockAnnualFinancialsTable th { padding-top: 12px; padding-bottom: 12px; background-color: #6e7172; color: white; }
-.chart-container { width: 100%; margin-bottom: 20px; }
+.stockBasicInfoTable th:first-child, .stockBasicInfoTable td:first-child { background-color: #71959b; color: white; } 
+.loading_bar_stockbasic { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
+.loading_bar_stockbasic > img { max-width: 100px; max-height: 100px; }
+.loading-text-stockbasic { background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
+.stockBasic-gpt-chart-area, .stockBasic-earningsChart, .stockBasic-recommendationsChart { margin-top: 20px; width: 100%; height: auto; }
+.chartContainer { width: 600px; height: 600px; float: right; }
+.chartContainer .chart { width: 100%; height: 50%; }
+
+
+
 
 
 
