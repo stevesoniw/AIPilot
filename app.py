@@ -1,8 +1,12 @@
 import os
+import config
 import tempfile
 import streamlit as st
 from streamlit_chat import message
 from rag_openai import ChatPDF
+
+os.environ['OPENAI_API_KEY'] = config.OPENAI_API_KEY
+
 
 st.set_page_config(page_title="ChatPDF")
 

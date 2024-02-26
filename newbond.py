@@ -43,6 +43,7 @@ from fastdtw import fastdtw
 from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
+from ragUpload import router
 #config 파일
 import config
 #FAST API 관련
@@ -55,6 +56,7 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
 app = FastAPI()
+app.include_router(router)
 logging.basicConfig(level=logging.DEBUG)
 
 ##############################################          공통          ################################################
