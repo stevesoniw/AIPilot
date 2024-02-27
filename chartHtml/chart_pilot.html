@@ -1478,21 +1478,45 @@
             const result = await response.json();
             console.log(result);
         }
-        async function sendMessage() {
+        //채팅 답변 요청 
+        async function ragSendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value;
-            
-            const response = await fetch('/process-message/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({message: message}),
-            });
-            const result = await response.json();
-            document.getElementById('response').innerText = result.message;
+            messageInput.value = '';
+            ragChatDisplay(message, 'sent')
+            try {
+                const response = await fetch('/process-message/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message}),
+                });
+                if (!response.ok) {
+                    throw new Error(`RAG HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                console.log(result.message);
+            } catch (error) {
+                console.error("RAG Fetch error: " + error.message);
+            }            
+            //document.getElementById('response').innerText = result.message;
+        }
+        // 채팅 화면에 뿌려주기
+        function ragChatDisplay(messageText, sender = 'sent') {
+            const inputField = document.querySelector('.rag-chat-input input');
+            const messagesContainer = document.querySelector('.rag-messages');            
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('rag-message', `rag-${sender}`);
+
+            const messageTextDiv = document.createElement('div');
+            messageTextDiv.classList.add('rag-text');
+            messageTextDiv.textContent = messageText;
+
+            messageWrapper.appendChild(messageTextDiv);
+            messagesContainer.appendChild(messageWrapper);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; 
         }        
     </script> 
+    
     
  <!--******************************** [[스트립트 종료]]************************************-->
 <body>
@@ -1882,8 +1906,8 @@
                     <h2 class="s-tit">마켓 PDF 분석</h2>
                     <h3 class="s-tit">Market Data Weekly 분석화면</h3>
                     <div class="upload-container">
-                        <h2>Upload your PDF</h2>
-                        <input type="file" id="fileInput" accept=".pdf" hidden/>
+                        <h2>Upload your PDF or Docx</h2>
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx" hidden/>
                         <label for="fileInput" class="file-label">Choose a file</label>
                         <span id="fileName" class="file-name">[No file chosen yet]</span>
                         <canvas id="pdfCanvas" hidden></canvas>
@@ -1999,10 +2023,24 @@
                         <img src="/static/assets/images/LoadingBar_C.gif">
                         <p class="loading-text">데이터 로딩중입니다.</p>
                     </div>
+                    <!-- 채팅영역 -->
                     <div class="box-instruction">
-                        <ul class="list-dep">
-                            <div id="ragResultArea"></div>
-                        </ul>
+                        <div id="ragResultArea" class="rag-chat-container">
+                            <div class="rag-messages">
+                                <div class="rag-message rag-received">
+                                    <div class="rag-text">안녕하세요! 질문해주세요</div>
+                                </div>
+                                <!-- Example of a sent message -->
+                                <div class="rag-message rag-sent">
+                                    <div class="rag-text"></div>
+                                </div>
+                                <!-- Add more messages here -->
+                            </div>
+                            <div class="rag-chat-input">
+                                <input type="text" id="messageInput" placeholder="Type your message here..." />
+                                <button class="rag-send-button" onclick="ragSendMessage()">Send</button>
+                            </div>    
+                        </div>
                     </div>
                 </div> 
 <!--********************************* [국내] 3RD GNB- 리서치RAG  Ends *****************************************--> 
@@ -2253,6 +2291,15 @@
                     uploadRagFile(); // 파일 업로드 함수 호출
                 }
             };
+            // 
+            const inputField = document.querySelector('.rag-chat-input input');
+                         // 채팅 창에서 엔터먹이기
+            inputField.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && inputField.value.trim() !== '') {
+                    const messageText = inputField.value.trim();
+                    ragSendMessage();
+                }
+            });            
             /*******************************************************************************/
 
         });
