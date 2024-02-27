@@ -7,9 +7,10 @@ import httpx
 from urllib.parse import quote 
 import asyncio
 from io import BytesIO
-from typing import List, Optional
+from typing import List, Dict, Union, Optional, Any
 import base64
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import Optional
 # 기존 Util 함수들
 from google.cloud import vision
@@ -17,6 +18,7 @@ from google.oauth2 import service_account
 from pydantic import BaseModel
 import urllib.request
 from pandas import Timestamp
+from pandas_datareader import data as pdr
 import pandas as pd
 import numpy as np 
 import matplotlib
@@ -29,6 +31,8 @@ from plotly.subplots import make_subplots
 from bs4 import BeautifulSoup, NavigableString
 from scipy.spatial.distance import euclidean
 import seaborn as sns
+from functools import lru_cache
+import os
 #금융관련 APIs
 import finnhub
 import fredpy as fp
@@ -39,6 +43,7 @@ from fastdtw import fastdtw
 from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
+from ragUpload import router
 #config 파일
 import config
 #FAST API 관련
@@ -51,6 +56,7 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
 app = FastAPI()
+app.include_router(router)
 logging.basicConfig(level=logging.DEBUG)
 
 ##############################################          공통          ################################################
@@ -610,12 +616,242 @@ async def gpt4_pdf_talk(response_data):
 
 
 ######################################## 마켓 PDF 분석 Ends  ##############################################            
-################################### FIN GPT 구현 부분 Starts (본부장님소스) ################################
+################################### FIN GPT 구현 부분 Starts (본부장님소스) + 나의 수정 ################################
 
 
 def get_curday():
     return date.today().strftime("%Y-%m-%d")
 
+# 날짜로 분기 계산하기 
+def get_quarter_from_date(curday):
+    date_obj = datetime.strptime(curday, "%Y-%m-%d")
+    year = date_obj.year
+    quarter = (date_obj.month - 1) // 3 + 1
+    return f"FY{quarter}Q{year}"
+
+# 성장률 계산 함수
+def calculate_growth(actual, previous):
+    if actual is not None and previous is not None and previous != 0:
+        return (actual - previous) / previous * 100
+    return "-"
+# Beat/Miss 비율 계산 함수
+def calculate_beat_miss_ratio(actual, estimate):
+    if actual is not None and estimate is not None:
+        return "Beat" if actual > estimate else "Miss"
+    return "-"
+
+@app.get("/api/get_earning_announcement/{ticker}")
+def calculate_financial_metrics(ticker: str):
+    # YoY계산을 위해서 현재 날짜 기준으로 1년 전의 날짜를 시작 날짜로 설정
+    Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
+    # 현재 날짜를 종료 날짜로 설정
+    End_date_calen = get_curday()
+    # Finnhub API를 사용하여 earnings calendar 데이터 가져오기
+    earnings_calendar = finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')
+
+    # 결과를 저장할 딕셔너리
+    results = {
+        "revenue_YoY": "-",
+        "revenue_QoQ": "-",
+        "revenue_beat_miss_ratio": "-",
+        "eps_YoY": "-",
+        "eps_QoQ": "-",
+        "eps_beat_miss_ratio": "-",
+        "current_quarter_revenue": "-",
+        "current_quarter_eps": "-",
+        "current_year_quarter": get_quarter_from_date(get_curday())
+    }
+
+    # 데이터 정렬 (최신 순)
+    sorted_earnings = sorted(earnings_calendar, key=lambda x: x['date'], reverse=True)
+    
+    if not sorted_earnings:
+        return results  # 데이터가 없으면 빈 결과 반환
+    
+    # 최신 분기 데이터
+    latest = sorted_earnings[0]
+    results["current_quarter_revenue"] = latest.get("revenueActual", "-")
+    results["current_quarter_eps"] = latest.get("epsActual", "-")
+    
+    # 이전 분기 및 작년 동일 분기 찾기
+    previous_quarter, previous_year = None, None
+    for earning in sorted_earnings[1:]:
+        if previous_quarter is None and earning['quarter'] == latest['quarter'] - 1:
+            previous_quarter = earning
+        if previous_year is None and earning['quarter'] == latest['quarter'] and earning['year'] == latest['year'] - 1:
+            previous_year = earning
+        if previous_quarter and previous_year:
+            break
+    
+    # YoY, QoQ 계산
+    if previous_year:
+        results["revenue_YoY"] = calculate_growth(latest['revenueActual'], previous_year['revenueActual'])
+        results["eps_YoY"] = calculate_growth(latest['epsActual'], previous_year['epsActual'])
+    if previous_quarter:
+        results["revenue_QoQ"] = calculate_growth(latest['revenueActual'], previous_quarter['revenueActual'])
+        results["eps_QoQ"] = calculate_growth(latest['epsActual'], previous_quarter['epsActual'])
+    
+    # Beat/Miss 비율
+    results["revenue_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['revenueActual'], latest['revenueEstimate'])
+    results["eps_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['epsActual'], latest['epsEstimate'])
+    
+    return results
+
+def ytest():
+    
+    msft = yf.Ticker("MSFT")
+    balance_sheet_annual = msft.balance_sheet
+
+    print(balance_sheet_annual.columns)
+
+#ytest()
+
+# 반환할 데이터 모델 정의
+class FinancialData(BaseModel):
+    income_statement: dict
+    quarterly_income_statement: dict
+    additional_info: dict
+    charts_data: dict
+#AI가 말해주는 주식 정보 [#1 종목 기본 정보] 호출용
+@app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
+def get_financials_and_metrics(ticker: str):
+    stock = yf.Ticker(ticker)
+    info = stock.info
+    try : 
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        # 연간 재무제표 데이터
+        income_statement = stock.financials.T.head(5).sort_index(ascending=True)
+        balance_sheet = stock.balance_sheet.T.head(5).sort_index(ascending=True)
+
+        # 분기별 재무제표 데이터
+        quarterly_income_statement = stock.quarterly_financials.T.head(5).sort_index(ascending=True)
+        
+        # 일단 데이터 자체가 없는 종목들이 많아서 빈 값으로 초기화
+        required_columns = ['Total Revenue', 'Operating Income', 'Operating Margin', 'Net Income', 'EPS']
+        for column in required_columns:
+            if column not in income_statement.columns:
+                income_statement[column] = np.nan  # 빈 값으로 컬럼 초기화
+
+        # 연간 데이터 계산
+        if 'Operating Income' in income_statement.columns and 'Total Revenue' in income_statement.columns:
+            income_statement['Operating Margin'] = income_statement['Operating Income'] / income_statement['Total Revenue'].replace(0, np.nan)
+        else:
+            income_statement['Operating Margin'] = np.nan  
+        if 'Net Income' in income_statement.columns and 'Common Stock' in balance_sheet.columns:
+            income_statement['EPS'] = income_statement['Net Income'] / balance_sheet['Common Stock'].replace(0, np.nan)
+            income_statement['ROE'] = income_statement['Net Income'] / balance_sheet['Stockholders Equity'].replace(0, np.nan)
+        else:
+            income_statement['EPS'] = np.nan  
+            income_statement['ROE'] = np.nan  
+        # 필요한 컬럼만 선택
+        selected_columns = income_statement[required_columns]
+        # 분기별 데이터 계산
+        if 'Total Revenue' in quarterly_income_statement.columns:
+            # 분기별 매출 성장률 계산
+            revenue_growth_qoq = quarterly_income_statement['Total Revenue'].pct_change()
+            # 결과를 백분율로 변환
+            revenue_growth_qoq_percentage = revenue_growth_qoq * 100
+            # 첫 번째 값을 NaN으로 설정
+            revenue_growth_qoq_percentage.iloc[0] = np.nan
+            # 계산된 성장률을 DataFrame에 추가
+            quarterly_income_statement['Revenue Growth QoQ'] = revenue_growth_qoq_percentage
+        else:
+            quarterly_income_statement['Revenue Growth QoQ'] = np.nan  # 'Total Revenue' 컬럼이 없는 경우 처리
+
+        # EPS, PBR 계산을 위한 유효성 검사
+        current_price = info.get('currentPrice', np.nan)
+        shares_outstanding = info.get('sharesOutstanding', np.nan)
+        # EPS, PBR 계산
+        eps = income_statement['EPS'].iloc[0] if 'EPS' in income_statement.columns and not income_statement['EPS'].empty else np.nan
+        book_value_per_share = (balance_sheet['Stockholders Equity'].iloc[0] / shares_outstanding) if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty and shares_outstanding != 0 else np.nan
+        per = current_price / eps if eps and not np.isnan(eps) and current_price else np.nan
+        pbr = current_price / book_value_per_share if book_value_per_share and not np.isnan(book_value_per_share) and current_price else np.nan
+        # 데이터 추출 전 유효성 검사
+        total_assets = balance_sheet['Total Assets'].iloc[0] if 'Total Assets' in balance_sheet.columns and not balance_sheet['Total Assets'].empty else np.nan
+        shareholder_equity = balance_sheet['Stockholders Equity'].iloc[0] if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty else np.nan
+        # 추가 정보 딕셔너리에 안전하게 값을 채워넣기
+        financial_data = {
+            'annual_data': income_statement.to_dict(),
+            'quarterly_data': quarterly_income_statement.to_dict(),
+            'additional_info': {
+                '회사 이름': info.get('shortName'),
+                '섹터': info.get('sector'),
+                '현재가': current_price,
+                '50일 평균가': info.get('fiftyDayAverage'),
+                '52주 신고가': info.get('fiftyTwoWeekHigh'),
+                '52주 신저가': info.get('fiftyTwoWeekLow'),
+                '총 자산': total_assets,
+                '자기자본': shareholder_equity,
+                '시가총액': info.get('marketCap'),
+                '발행주식 수': shares_outstanding,
+                '총 부채': info.get('totalDebt', np.nan),
+                '영업현금흐름': info.get('operatingCashflow', np.nan),
+                'PER': per,
+                'PBR': pbr
+            }
+        }
+        # 차트 데이터 준비
+        charts_data = {
+            "annual_financials": {
+                "years": list(income_statement.index),
+                "revenue": list(income_statement['Total Revenue']) if 'Total Revenue' in income_statement.columns else [np.nan],
+                "operating_income": list(income_statement['Operating Income']) if 'Operating Income' in income_statement.columns else [np.nan],
+                "operating_margin": list(income_statement['Operating Margin']) if 'Operating Margin' in income_statement.columns else [np.nan],
+                "net_income": list(income_statement['Net Income']) if 'Net Income' in income_statement.columns else [np.nan],
+                "eps": list(income_statement['EPS']),
+                "roe": list(income_statement['ROE']),
+            },
+            "quarterly_growth": {
+                "quarters": list(quarterly_income_statement.index),
+                "revenue": list(quarterly_income_statement['Total Revenue']) if 'Total Revenue' in quarterly_income_statement.columns else [np.nan],
+                "revenue_growth": list(quarterly_income_statement['Revenue Growth QoQ']) if 'Revenue Growth QoQ' in quarterly_income_statement.columns else [np.nan],
+            },
+        }
+        return {
+                "income_statement": selected_columns.to_dict(),
+                "quarterly_income_statement": quarterly_income_statement.to_dict(),
+                "additional_info": financial_data,
+                "charts_data": charts_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))        
+
+#get_financials_and_metrics('ITTSF')
+
+def save_data_to_file(data, filename):
+    """데이터를 JSON 파일로 저장"""
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+
+def read_data_from_file(filename):
+    """종목코드 JSON 파일에서 데이터"""
+    with open(filename, 'r') as f:
+        return json.load(f)
+
+@lru_cache(maxsize=100)
+def cached_stock_symbols(exchange: str, mic: str):
+    filename = f"{exchange}_{mic}_symbols.json"
+    # 파일이 존재하면, 파일에서 데이터 읽기
+    if os.path.exists(filename):
+        return read_data_from_file(filename)
+    # 파일이 없으면 API 호출
+    symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+    symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
+    # 데이터를 파일에 저장
+    save_data_to_file(symbols_filtered, filename)
+    return symbols_filtered
+# 종목코드 읽기. Finnhub 에서 읽어오다가 도저히 느려서 안되겠음. 파일로 저장해서 읽는다. 
+@app.get("/api/get_foreign_stock_symbols")
+def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str = Query(default="", description="Market Identifier Code")):
+    try:
+        symbols_filtered = cached_stock_symbols('US', mic)
+        if q:
+            symbols_filtered = [sym for sym in symbols_filtered if q.lower() in sym['description'].lower() or q.lower() in sym['symbol'].lower()]
+        return symbols_filtered
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
 
 def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)

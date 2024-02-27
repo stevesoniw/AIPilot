@@ -4,10 +4,21 @@ import json
 import random
 import requests
 import httpx
+from urllib.parse import quote 
 import asyncio
 from io import BytesIO
+from typing import List, Dict, Union, Optional, Any
 import base64
-# 기존 함수들
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from typing import Optional
+# 기존 Util 함수들
+from google.cloud import vision
+from google.oauth2 import service_account
+from pydantic import BaseModel
+import urllib.request
+from pandas import Timestamp
+from pandas_datareader import data as pdr
 import pandas as pd
 import numpy as np 
 import matplotlib
@@ -17,20 +28,26 @@ from matplotlib.figure import Figure
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import date, datetime, timedelta
+from bs4 import BeautifulSoup, NavigableString
+from scipy.spatial.distance import euclidean
+import seaborn as sns
+from functools import lru_cache
+import os
 #금융관련 APIs
 import finnhub
 import fredpy as fp
 from fredapi import Fred
 import yfinance as yf
 from openai import OpenAI
+from fastdtw import fastdtw
+from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
 #config 파일
 import config
 #FAST API 관련
 import logging
-from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi import FastAPI, Query, Form, HTTPException, Request, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -38,7 +55,9 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
 app = FastAPI()
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+
+##############################################          공통          ################################################
 
 # FastAPI에서 정적 파일과 템플릿을 제공하기 위한 설정
 templates = Jinja2Templates(directory="chartHtml")
@@ -51,126 +70,147 @@ finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 rapidAPI = config.RAPID_API_KEY
 
-######################################## 글로벌 주요경제지표 보여주기 Starts ###########################################
-#Consumer Price Index (CPI) series data 
-def CPI() -> pd.DataFrame:
-    series_id = "CPIAUCSL"  
-    # Fred 클래스의 get_series 메소드를 사용하여 데이터 가져오기
-    df = fred.get_series(series_id=series_id)
-    # df가 시리즈로 반환되므로 DataFrame으로 변환
-    df = df.reset_index()
-    df.columns = ['date', 'value']
-    # value 컬럼을 숫자 타입으로 변환
-    df['value'] = pd.to_numeric(df['value'], errors="coerce")
-    # date 컬럼을 datetime 타입으로 변환 및 인덱스 설정
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index("date")
-    # 12개월 전 값을 계산하여 새로운 컬럼에 할당
-    df['value_last_year'] = df['value'].shift(12)
-    # 연간 CPI 변화율 계산
-    df['CPI(YoY)'] = (df['value'] - df['value_last_year']) / df['value_last_year'] * 100
-    # 필요한 컬럼만 선택
-    df = df[['CPI(YoY)']]
-    return df
-#Personal Consumption Expenditures (PCE) series data 
-def PCE() -> pd.DataFrame:
-    series_id = "PCEPI"  # PCE 시리즈 ID
-    df = fred.get_series(series_id=series_id)
-    df = df.reset_index()
-    df.columns = ['date', 'value']
-    df['value'] = pd.to_numeric(df['value'], errors="coerce")
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index("date")
-    df['value_last_year'] = df['value'].shift(12)
-    # 연간 PCE 변화율 계산
-    df['PCE(YoY)'] = (df['value'] - df['value_last_year']) / df['value_last_year'] * 100
-    df = df[['PCE(YoY)']]
-    return df
-#Producer Price Index (PPI) series data
-def PPI() -> pd.DataFrame:
-    series_id = "PPIFID"  # PPI 시리즈 ID
-    df = fred.get_series(series_id=series_id)
-    df = df.reset_index()
-    df.columns = ['date', 'value']
-    df['value'] = pd.to_numeric(df['value'], errors="coerce")
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index("date")
-    df['value_last_year'] = df['value'].shift(12)
-    # 연간 PPI 변화율 계산
-    df['PPI(YoY)'] = (df['value'] - df['value_last_year']) / df['value_last_year'] * 100
-    df = df[['PPI(YoY)']]
-    return df
-#Federal Funds Rate series data
-def FED_RATE() -> pd.DataFrame:
-    series_id = "DFEDTARU"
-    df = fred.get_series(series_id=series_id)
-    df = df.reset_index()
-    df.columns = ['date', 'FED RATE']
-    df['FED RATE'] = pd.to_numeric(df['FED RATE'], errors="coerce")
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index("date")
-    df = df[['FED RATE']]
-    return df
-#Case-Shiller National Home Price Index series data
-def CS() -> pd.DataFrame:
-    series_id = "CSUSHPISA"
-    df = fred.get_series(series_id=series_id)
-    df = df.reset_index()
-    df.columns = ['date', 'value']
-    df['value'] = pd.to_numeric(df['value'], errors="coerce")
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index("date")
-    # 연간 CS 변화율 계산
-    df['value_last_year'] = df['value'].shift(12)
-    df['CS(YoY)'] = (df['value'] - df['value_last_year']) / df['value_last_year'] * 100
-    df = df[['CS(YoY)']]
-    return df
-#US GDP growth rate (annualized QoQ) series data
-def GDP() -> pd.DataFrame:
-    series_id = "A191RL1Q225SBEA"
-    df = fred.get_series(series_id=series_id)
-    df = df.reset_index()
-    df.columns = ['date', 'GDP RATE']
-    df['GDP RATE'] = pd.to_numeric(df['GDP RATE'], errors="coerce")
-    # Convert 'date' column to datetime and set it as the index
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index("date")
-    df = df[['GDP RATE']]
-    return df
+# 차트를 Base64 인코딩된 문자열로 변환하는 기본 함수
+def get_chart_base64(fig):
+    buf = BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight")
+    plt.close(fig)  # 차트 닫기
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
 
-def fetch_and_merge_economic_data(start_date="2019-01-01") -> pd.DataFrame:
-    # Fetch data
-    cpi = CPI()
-    pce = PCE()
-    ppi = PPI()
-    fed_rate = FED_RATE()
-    cs = CS()
-    gdp = GDP()
-    # Merge data
-    dfs = [cpi, pce, ppi, fed_rate, cs, gdp]
-    # Convert to daily frequency and fill missing values with previous values
-    dfs = [df.resample("D").asfreq().ffill() for df in dfs]
-    # Merge data into a single DataFrame
-    merged_df = pd.concat(dfs, axis=1).ffill()
-    # Filter data starting from 'start_date'
-    target_df = merged_df[start_date:]
-    return target_df
+def get_chart_base64_plotly(fig):
+    # plotly figure를 이미지로 변환하고 Base64로 인코딩
+    img_bytes = fig.to_image(format="png")
+    return base64.b64encode(img_bytes).decode('utf-8')
 
-# 경제지표들 모은것 차트로 보여주기 
-def plot_economic_indicators(df: pd.DataFrame):
-    fig = px.line(df, x=df.index, y=list(df.columns))
+##############################################          MAIN          ################################################
+# 루트 경로에 대한 GET 요청 처리
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    # 초기 페이지 렌더링. plot_html 변수가 없으므로 비워둡니다.
+    return templates.TemplateResponse("chart_pilot.html", {"request": request, "plot_html": None})
+
+######################################## 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts ###########################################
+# series id 받아서 데이터 갖고오는 공통함수 
+def fetch_indicator(series_id: str, calculation: str = None) -> pd.DataFrame:
+    # Fetch series data using Fred class
+    df = fred.get_series(series_id=series_id)
+    df = df.reset_index().rename(columns={0: 'value', 'index': 'date'})
+    df['value'] = pd.to_numeric(df['value'], errors='coerce')
+    df['date'] = pd.to_datetime(df['date'])
+    df.set_index('date', inplace=True)
+    if calculation == "YoY":
+        df[f'{series_id}(YoY)'] = (df['value'] - df['value'].shift(12)) / df['value'].shift(12) * 100
+        df = df[[f'{series_id}(YoY)']]
+    
+    return df
+# 갖고 온 데이터들 합쳐서 Merge 하는 함수 
+def fetch_and_merge_economic_data(start_date="2020-01-01", selected_indicators=None):
+    indicators = {
+        "CPIAUCSL": "YoY",
+        "PCEPI": "YoY",
+        "PPIFID": "YoY",
+        "DFEDTARU": None,
+        "CSUSHPISA": "YoY",
+        "A191RL1Q225SBEA": None
+    }
+    
+    if not selected_indicators:
+        selected_indicators = ["CPIAUCSL"]  # 기본값으로 CPI 설정
+
+    # 선택된 지표에 해당하는 데이터만 가져오기
+    dfs = []
+    for series_id, calculation in indicators.items():
+        if series_id in selected_indicators:
+            df = fetch_indicator(series_id, calculation)
+            df = df.resample("D").asfreq().ffill()
+            dfs.append(df)
+    
+    merged_df = pd.concat(dfs, axis=1).ffill()  # 여러 DataFrame을 합침
+    merged_df.columns = selected_indicators  # 열 이름을 지표 ID로 설정
+    return merged_df[start_date:]
+
+#서버에서 차트 만들어서 내려주는 형태 :: 차트가 안예뻐서 일단보류;
+'''@app.get("/api/economic-indicators")
+async def get_economic_indicators():
+    df = fetch_and_merge_economic_data("2019-01-01")
+    fig = go.Figure()
+    # 차트 데이터 추가
+    for col in df.columns:
+        fig.add_trace(go.Scatter(x=df.index, y=df[col], name=col))
     fig.update_layout(
-        title={
-            'text': "Key Global Economic Indicators",
-            'y': 0.95,
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top'},
+        title={'text': "Key Global Economic Indicators", 'y': 0.95, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
         xaxis_title="Date",
         yaxis_title="Value",
     )
-    fig.show()
+    economic_indicators_chart_base64 = get_chart_base64_plotly(fig)
+    return JSONResponse(content={"economic_indicators_chart": economic_indicators_chart_base64}) '''
 
+@app.get("/api/economic-indicators")
+async def get_economic_indicators(indicators: str = None, aiOpinion: Optional[bool] = False):
+    if indicators:
+        selected_indicators = indicators.split(",")  # 쉼표로 구분된 문자열을 리스트로 변환
+    else:
+        selected_indicators = ["CPIAUCSL"]  # 기본값 설정
+
+    df = fetch_and_merge_economic_data("2020-01-01", selected_indicators)
+    labels = df.index.strftime('%Y-%m-%d').tolist()
+    datasets = []
+
+    for col in df.columns:
+        datasets.append({
+            "label": col,
+            "data": df[col].fillna(0).tolist(),
+            "backgroundColor": "rgba(255, 99, 132, 0.2)",
+            "borderColor": "rgba(255, 99, 132, 1)",
+            "fill": False
+        })
+
+    response_data = {"labels": labels, "datasets": datasets}
+    #print("labels={}".format(response_data['labels']))
+    #print("datasets={}".format(response_data['datasets']))    
+    if aiOpinion:
+        chart_talk = await gpt4_chart_talk(response_data)
+        response_data["chart_talk"] = chart_talk
+    else:
+        response_data["chart_talk"] = ""        
+    return JSONResponse(content=response_data)
+
+async def gpt4_chart_talk(response_data):
+    try:
+        SYSTEM_PROMPT = "You are an outstanding economist and chart data analyst. I'm going to show you annual chart data for specific economic indicators. Please explain in as much detail as possible and share your opinion on the chart trends. It would be even better if you could explain the future market outlook based on facts. However, Do not provide explanations or definitions for individual indicators. Instead, analyze the patterns of the data and its impact on society or the market, and share your opinion on it. Please mark the part you think is the most important with a red tag so that it appears in red."
+        prompt = "다음이 system 이 이야기한 차트 데이터야. system prompt가 말한대로 분석해줘. 단 답변을 꼭 한국어로 해줘. 차트데이터 : " + str(response_data)
+        completion = client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_function: %s", str(e))
+        return None
+    
+'''async def test():
+    figData = await get_economic_indicators2()
+    print(figData)
+asyncio.run(test())'''
+
+
+######################################## 글로벌 주요경제지표 보여주기 [1.핵심지표] Ends ###########################################
+################################# 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Starts ###########################################
+# Timestamp 객체를 문자열로 변환하는 함수
+def timestamp_to_str(ts):
+    if isinstance(ts, Timestamp):
+        return ts.strftime('%Y-%m-%d')
+    return ts
+
+# 예시 데이터 변환 함수
+def convert_data_for_json(data):
+    # 날짜 데이터가 들어있는 리스트를 변환
+    dates_converted = [timestamp_to_str(date) for date in data.index]
+    values = data.values.tolist()
+    return dates_converted, values
 
 # 기준금리 데이터를 가져오는 함수
 def get_base_rate(start_date, end_date):
@@ -180,52 +220,175 @@ def get_base_rate(start_date, end_date):
 
 # 미국채 이자율 데이터를 가져와 보여주는 함수
 def create_interest_rate_chart():
-    rate_10Y = fred.get_series('DGS10')
-    rate_2Y  = fred.get_series('DGS2')
-    #rate_3M  = fred.get_series('DGS3M')
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatter(x=rate_10Y.index, y=rate_10Y.values, mode='lines', name='10Y'))
-    fig.add_trace(go.Scatter(x=rate_2Y.index,  y=rate_2Y.values,  mode='lines', name='2Y'))
-#   fig.add_trace(go.Scatter(x=rate_3M.index,  y=rate_3M.values,  mode='lines', name='3M'))
-    
-    fig.update_layout(title='미국 국채 이자율', xaxis_title='날짜', yaxis_title='이자율(%)')
-    interest_plot_html = fig.to_html(full_html=False)    
-    return interest_plot_html
+    rate_10Y = fred.get_series('DGS10').fillna(0)
+    rate_2Y = fred.get_series('DGS2').fillna(0)
+    rate_3M = fred.get_series('DGS3MO').fillna(0)
 
-# 루트 경로에 대한 GET 요청 처리
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    # 초기 페이지 렌더링. plot_html 변수가 없으므로 비워둡니다.
-    return templates.TemplateResponse("chart_pilot.html", {"request": request, "plot_html": None})
+    # 현재 날짜에서 20년을 빼서 시작 날짜 계산
+    twenty_years_ago = pd.to_datetime('today') - pd.DateOffset(years=20)
+    
+    # 데이터를 최근 20년간으로 필터링
+    rate_10Y = rate_10Y[twenty_years_ago:]
+    rate_2Y = rate_2Y[twenty_years_ago:]
+    rate_3M = rate_3M[twenty_years_ago:]
 
-# 1번메뉴 차트요청 처리
-@app.post("/submit", response_class=HTMLResponse)
-async def submit(request: Request):
-    plot_html = show_base_rate()
-    interest_plot_html = create_interest_rate_chart()
-    # 결과 페이지에 차트 HTML 포함하여 반환
-    return templates.TemplateResponse("chart_pilot.html", {"request": request, "plot_html": plot_html, "interest_plot_html" :interest_plot_html})
+    # Timestamp 객체를 문자열로 변환
+    rate_10Y_dates = rate_10Y.index.strftime('%Y-%m-%d').tolist()
+    rate_2Y_dates = rate_2Y.index.strftime('%Y-%m-%d').tolist()
+    rate_3M_dates = rate_3M.index.strftime('%Y-%m-%d').tolist()
+
+    # 차트 데이터 준비
+    chart_data = [
+        {'x': rate_10Y_dates, 'y': rate_10Y.values.tolist(), 'type': 'scatter', 'mode': 'lines', 'name': '10Y'},
+        {'x': rate_2Y_dates, 'y': rate_2Y.values.tolist(), 'type': 'scatter', 'mode': 'lines', 'name': '2Y'},
+        {'x': rate_3M_dates, 'y': rate_3M.values.tolist(), 'type': 'scatter', 'mode': 'lines', 'name': '3M'}
+    ]
+
+
+    # 차트 레이아웃 설정
+    chart_layout = {
+        'title': {
+            'text': 'Market Yield on U.S. Treasury Securities',
+            'font': {
+                'color': 'orange',  # 제목 색상 설정
+                'size': 24          # 제목 글꼴 크기 설정 (옵션)
+            }
+        },
+        'xaxis': {'title': '날짜'},
+        'yaxis': {'title': '이자율(%)'}
+    }
+
+    # JSON으로 변환 가능한 딕셔너리 반환
+    return {'data': chart_data, 'layout': chart_layout}
 
 def show_base_rate():
+    # 데이터 가져오기 및 변환   #날짜 입력받는 건 나중에 하자
     start_date = '2000-01-01'
     end_date = '2023-02-01'
-
-    # 데이터 가져오기
     data = get_base_rate(start_date, end_date)
 
-    # 데이터 시각화
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data.index, y=data.values, name='기준금리'))
-    fig.update_layout(title_text='미국 금리 변동 추이', title_x=0.5)
-    # Plotly 차트를 HTML로 변환
-    plot_html = fig.to_html(full_html=False)
-    return plot_html
+    dates_converted, values = convert_data_for_json(data)
 
-def finnhub_test():
-    finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
-    data = finnhub_client.bond_profile(isin='US912810TD00')
-    print(data)
+    # 변환된 데이터를 사용하여 차트 데이터 구성
+    chart_data = [{
+        'x': dates_converted,
+        'y': values,
+        'type': 'scatter',
+        'name': '기준금리'
+    }]
+
+    chart_layout = {
+        'title': {
+            'text': '미국 금리 변동 추이',
+            'font': {
+                'color': 'black',  # 제목 색상 설정
+                'size': 24          # 제목 글꼴 크기 설정 (옵션)
+            }
+        },        
+        'xaxis': {'title': '날짜'},
+        'yaxis': {'title': '금리 (%)'}
+    }
+
+    return {'data': chart_data, 'layout': chart_layout}
+
+# 채권 차트요청 처리
+@app.post("/get_bonds_data")
+async def get_bonds_data():
+    base_rate_chart = show_base_rate()
+    interest_rate_chart = create_interest_rate_chart()
+
+    return JSONResponse({
+        "base_rate_chart": base_rate_chart,
+        "interest_rate_chart": interest_rate_chart
+    })
+
+#test 
+'''async def rapid():
+    get_bonds_data_data = await get_bonds_data()
+    print(get_bonds_data_data)
+asyncio.run(rapid())'''
+
+#### 채권 관련 뉴스 뽑아내기
+def rapidapi_bond_news(category):
+    url = "https://seeking-alpha.p.rapidapi.com/news/v2/list"
+    querystring = {"category": category, "size": "100", "number": "1"}
+    headers = {
+	    "X-RapidAPI-Key": rapidAPI,
+	    "X-RapidAPI-Host": "seeking-alpha.p.rapidapi.com"
+    }    
+        
+    response = requests.get(url, headers=headers, params=querystring)
+    return response.json()
+
+# seeking alpha 뉴스에서 쓸데없는 파라미터들 없애기
+def extract_news_data(news_json):
+    extracted_data = []
+    for item in news_json['data']:
+        news_item = item['attributes']
+        extracted_item = {
+            'publishOn': news_item.get('publishOn', None),
+            'gettyImageUrl': news_item.get('gettyImageUrl', None),
+            'title': news_item.get('title', None),
+            'content': news_item.get('content', None)
+        }
+        extracted_data.append(extracted_item)
+    return json.dumps(extracted_data, indent=4, ensure_ascii=False)
+
+def filter_bond_news(news_json): 
+    # 이 부분이 문제네..
+    bond_keywords = ['bonds', 'treasury', 'FOMC', 'fixed income', 'interest rate', 'inflation', 'yield', 'credit rating', 'default risk', 'duration']
+    filtered_news = {"data": []}
+
+    for item in news_json['data']:
+        title = item['attributes'].get('content', '').lower()
+        if any(keyword in title for keyword in bond_keywords):
+            filtered_news["data"].append(item)
+
+    return filtered_news
+
+# 채권관련 뉴스만 뽑아오도록 해보자 ㅠ
+@app.get("/bond-news/{category}")
+async def fetch_bond_news(category: str):
+    news_json = rapidapi_bond_news(category)
+    filtered_news_json = filter_bond_news(news_json)
+    extracted_data = json.loads(extract_news_data(filtered_news_json))
+    return extracted_data
+
+# 채권뉴스 GPT 이용해서 번역해보기 //메뉴3 일반뉴스 번역에서도 씀
+def translate_gpt(text):
+    try:
+        SYSTEM_PROMPT = "다음 내용을 한국어로 번역해줘. url이나 링크 부분만 번역하지마" 
+        prompt = f"영어를 한국어로 번역해서 알려줘. 내용은 다음과 같아\n{text}"
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in translate_gpt function: %s", str(e))
+        return None       
+
+class TranslateRequest(BaseModel):
+    title: str
+    content: str
+@app.post("/translate")
+async def translate_text(request: TranslateRequest):
+    # GPT를 호출하여 번역하는 함수
+    translated_title = translate_gpt(request.title)
+    translated_content = translate_gpt(request.content)
+    
+    return {"title": translated_title, "content": translated_content}
+
+
+'''테스트
+async def rapid():
+    get_bonds_data_data = await fetch_bond_news('market-news::top-news')
+    print(get_bonds_data_data)
+asyncio.run(rapid())'''
+
 
 ######################################## CALENDAR 보여주기 Starts ###########################################
 # 증시 캘린더 관련 함수 
@@ -272,7 +435,7 @@ async def rapidapi_seekingNews(categories):
     }
     
     response = requests.get(url, headers=headers, params=querystring)
-    return response.json()
+    return response.json() 
 
 '''# RapidAPI 테스트용
 async def rapid():
@@ -297,24 +460,10 @@ def extract_title_and_content(json_str):
         title_and_content.append({'title': title, 'content': content})
     return title_and_content
 
-# seeking alpha 뉴스에서 쓸데없는 파라미터들 없애기
-def extract_news_data(news_json):
-    extracted_data = []
-    for item in news_json['data']:
-        news_item = item['attributes']
-        extracted_item = {
-            'publishOn': news_item.get('publishOn', None),
-            'gettyImageUrl': news_item.get('gettyImageUrl', None),
-            'title': news_item.get('title', None),
-            'content': news_item.get('content', None)
-        }
-        extracted_data.append(extracted_item)
-    return json.dumps(extracted_data, indent=4, ensure_ascii=False)
-
 # GPT4 에 뉴스요약을 요청 
 async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 뉴스 데이터 : " + str(newsData)
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 빨간색으로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
         completion = client.chat.completions.create(
             model="gpt-4-0125-preview",
             messages=[
@@ -349,6 +498,12 @@ async def gpt_request(request_data: dict):
         SYSTEM_PROMPT = "You're an expert in data summarization. Given the provided JSON data, please summarize its contents systematically and comprehensively into about 20 sentences, ignoring JSON parameters unrelated to news articles."        
         digest_news = extract_title_and_content(g_news)
         gpt_result = await gpt4_news_sum(digest_news, SYSTEM_PROMPT)
+
+    elif action == "navergpt":
+        # 네이버 뉴스에 대한 GPT 의견 묻기임 
+        SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications."        
+        digest_news = g_news
+        gpt_result = await gpt4_news_sum(digest_news, SYSTEM_PROMPT)        
         
     else:
         gpt_result = {"error": "Invalid action"}
@@ -367,13 +522,346 @@ async def gpttest():
     print(gpt_summary)
     
 asyncio.run(gpttest()) '''
-            
-################################### FIN GPT 구현 부분 Starts (본부장님소스) ################################
+######################################## 마켓 PDF 분석 Starts  ##############################################
+
+class ImageData(BaseModel):
+    image: str  # Base64 인코딩된 이미지 데이터
+
+
+@app.post("/perform_ocr")
+async def perform_ocr(data: ImageData):
+    # Base64 인코딩된 이미지 데이터를 디코딩
+    print(data)
+    image_data = base64.b64decode(data.image.split(',')[1])
+
+    logging.debug(image_data)
+
+    # 서비스 계정 키 파일 경로
+    key_path = "sonvision-36a28cdac666.json"
+
+    # 서비스 계정 키 파일을 사용하여 인증 정보 생성
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+
+    # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
+    client = vision.ImageAnnotatorClient(credentials=credentials)
+
+    image = vision.Image(content=image_data)
+
+    # OCR 처리
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    if response.error.message:
+        raise HTTPException(status_code=500, detail=response.error.message)
+
+    # OCR 결과 반환
+    return {"texts": [text.description for text in texts]}
+
+def process_ocr_texts(texts):
+    processed_texts = []
+    for text in texts:
+        description = text.description
+        processed_texts.append(description)
+    
+    return processed_texts
+
+
+@app.post("/ocrGptTest")
+async def perform_ocr(data: ImageData):
+    # Base64 인코딩된 이미지 데이터를 디코딩
+    image_data = base64.b64decode(data.image.split(',')[1])
+
+    # 서비스 계정 키 파일 경로
+    key_path = "sonvision-36a28cdac666.json"
+
+    # 서비스 계정 키 파일을 사용하여 인증 정보 생성
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+
+    # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
+    client = vision.ImageAnnotatorClient(credentials=credentials)
+
+    image = vision.Image(content=image_data)
+
+    # OCR 처리
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    if response.error.message:
+        raise HTTPException(status_code=500, detail=response.error.message)
+
+    structured_ocr_data = process_ocr_texts(texts)
+    # OCR 결과를 GPT-4 분석 함수에 전달
+    analysis_result = await gpt4_pdf_talk(structured_ocr_data)
+
+    # 분석 결과 반환
+    return {"texts": analysis_result}
+
+async def gpt4_pdf_talk(response_data):
+    try:
+        SYSTEM_PROMPT = "You are a financial data analyst with outstanding data recognition skills. The following is table data on market data interest rates and exchange rates. This data is not structured because it was read using OCR. However, knowing that this is data read from a table using OCR, please explain this data systematically. Provide as detailed and accurate a response as possible."
+        prompt = f"The following is OCR extracted table data. Analyze it as the system prompt has described. The response should be in Korean. Extracted data: {response_data}"
+        response = client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print("An error occurred in gpt4_chart_talk:", str(e))
+        return None
+
+
+######################################## 마켓 PDF 분석 Ends  ##############################################            
+################################### FIN GPT 구현 부분 Starts (본부장님소스) + 나의 수정 ################################
 
 
 def get_curday():
     return date.today().strftime("%Y-%m-%d")
 
+# 날짜로 분기 계산하기 
+def get_quarter_from_date(curday):
+    date_obj = datetime.strptime(curday, "%Y-%m-%d")
+    year = date_obj.year
+    quarter = (date_obj.month - 1) // 3 + 1
+    return f"FY{quarter}Q{year}"
+
+# 성장률 계산 함수
+def calculate_growth(actual, previous):
+    if actual is not None and previous is not None and previous != 0:
+        return (actual - previous) / previous * 100
+    return "-"
+# Beat/Miss 비율 계산 함수
+def calculate_beat_miss_ratio(actual, estimate):
+    if actual is not None and estimate is not None:
+        return "Beat" if actual > estimate else "Miss"
+    return "-"
+
+@app.get("/api/get_earning_announcement/{ticker}")
+def calculate_financial_metrics(ticker: str):
+    # YoY계산을 위해서 현재 날짜 기준으로 1년 전의 날짜를 시작 날짜로 설정
+    Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
+    # 현재 날짜를 종료 날짜로 설정
+    End_date_calen = get_curday()
+    # Finnhub API를 사용하여 earnings calendar 데이터 가져오기
+    earnings_calendar = finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')
+
+    # 결과를 저장할 딕셔너리
+    results = {
+        "revenue_YoY": "-",
+        "revenue_QoQ": "-",
+        "revenue_beat_miss_ratio": "-",
+        "eps_YoY": "-",
+        "eps_QoQ": "-",
+        "eps_beat_miss_ratio": "-",
+        "current_quarter_revenue": "-",
+        "current_quarter_eps": "-",
+        "current_year_quarter": get_quarter_from_date(get_curday())
+    }
+
+    # 데이터 정렬 (최신 순)
+    sorted_earnings = sorted(earnings_calendar, key=lambda x: x['date'], reverse=True)
+    
+    if not sorted_earnings:
+        return results  # 데이터가 없으면 빈 결과 반환
+    
+    # 최신 분기 데이터
+    latest = sorted_earnings[0]
+    results["current_quarter_revenue"] = latest.get("revenueActual", "-")
+    results["current_quarter_eps"] = latest.get("epsActual", "-")
+    
+    # 이전 분기 및 작년 동일 분기 찾기
+    previous_quarter, previous_year = None, None
+    for earning in sorted_earnings[1:]:
+        if previous_quarter is None and earning['quarter'] == latest['quarter'] - 1:
+            previous_quarter = earning
+        if previous_year is None and earning['quarter'] == latest['quarter'] and earning['year'] == latest['year'] - 1:
+            previous_year = earning
+        if previous_quarter and previous_year:
+            break
+    
+    # YoY, QoQ 계산
+    if previous_year:
+        results["revenue_YoY"] = calculate_growth(latest['revenueActual'], previous_year['revenueActual'])
+        results["eps_YoY"] = calculate_growth(latest['epsActual'], previous_year['epsActual'])
+    if previous_quarter:
+        results["revenue_QoQ"] = calculate_growth(latest['revenueActual'], previous_quarter['revenueActual'])
+        results["eps_QoQ"] = calculate_growth(latest['epsActual'], previous_quarter['epsActual'])
+    
+    # Beat/Miss 비율
+    results["revenue_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['revenueActual'], latest['revenueEstimate'])
+    results["eps_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['epsActual'], latest['epsEstimate'])
+    
+    return results
+
+def ytest():
+    
+    msft = yf.Ticker("MSFT")
+    balance_sheet_annual = msft.balance_sheet
+
+    print(balance_sheet_annual.columns)
+
+#ytest()
+
+# 반환할 데이터 모델 정의
+class FinancialData(BaseModel):
+    income_statement: dict
+    quarterly_income_statement: dict
+    additional_info: dict
+    charts_data: dict
+
+@app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
+def get_financials_and_metrics(ticker: str):
+    stock = yf.Ticker(ticker)
+    info = stock.info
+    try : 
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        
+        # 연간 재무제표 데이터
+        income_statement = stock.financials.T.head(5).sort_index(ascending=True)
+        balance_sheet = stock.balance_sheet.T.head(5).sort_index(ascending=True)
+
+        # 분기별 재무제표 데이터
+        quarterly_income_statement = stock.quarterly_financials.T.head(5).sort_index(ascending=True)
+        
+        # 일단 데이터 자체가 없는 종목들이 많아서 빈 값으로 초기화
+        required_columns = ['Total Revenue', 'Operating Income', 'Operating Margin', 'Net Income', 'EPS']
+        for column in required_columns:
+            if column not in income_statement.columns:
+                income_statement[column] = np.nan  # 빈 값으로 컬럼 초기화
+
+        # 연간 데이터 계산
+        if 'Operating Income' in income_statement.columns and 'Total Revenue' in income_statement.columns:
+            income_statement['Operating Margin'] = income_statement['Operating Income'] / income_statement['Total Revenue'].replace(0, np.nan)
+        else:
+            income_statement['Operating Margin'] = np.nan  
+        if 'Net Income' in income_statement.columns and 'Common Stock' in balance_sheet.columns:
+            income_statement['EPS'] = income_statement['Net Income'] / balance_sheet['Common Stock'].replace(0, np.nan)
+            income_statement['ROE'] = income_statement['Net Income'] / balance_sheet['Stockholders Equity'].replace(0, np.nan)
+        else:
+            income_statement['EPS'] = np.nan  
+            income_statement['ROE'] = np.nan  
+
+        # 필요한 컬럼만 선택
+        selected_columns = income_statement[required_columns]
+                
+        # 분기별 데이터 계산
+        if 'Total Revenue' in quarterly_income_statement.columns:
+            # 분기별 매출 성장률 계산
+            revenue_growth_qoq = quarterly_income_statement['Total Revenue'].pct_change()
+            # 결과를 백분율로 변환
+            revenue_growth_qoq_percentage = revenue_growth_qoq * 100
+            # 첫 번째 값을 NaN으로 설정
+            revenue_growth_qoq_percentage.iloc[0] = np.nan
+            # 계산된 성장률을 DataFrame에 추가
+            quarterly_income_statement['Revenue Growth QoQ'] = revenue_growth_qoq_percentage
+        else:
+            quarterly_income_statement['Revenue Growth QoQ'] = np.nan  # 'Total Revenue' 컬럼이 없는 경우 처리
+
+
+        # EPS, PBR 계산을 위한 유효성 검사
+        current_price = info.get('currentPrice', np.nan)
+        shares_outstanding = info.get('sharesOutstanding', np.nan)
+
+        # EPS, PBR 계산
+        eps = income_statement['EPS'].iloc[0] if 'EPS' in income_statement.columns and not income_statement['EPS'].empty else np.nan
+        book_value_per_share = (balance_sheet['Stockholders Equity'].iloc[0] / shares_outstanding) if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty and shares_outstanding != 0 else np.nan
+        per = current_price / eps if eps and not np.isnan(eps) and current_price else np.nan
+        pbr = current_price / book_value_per_share if book_value_per_share and not np.isnan(book_value_per_share) and current_price else np.nan
+        
+        # 데이터 추출 전 유효성 검사
+        total_assets = balance_sheet['Total Assets'].iloc[0] if 'Total Assets' in balance_sheet.columns and not balance_sheet['Total Assets'].empty else np.nan
+        shareholder_equity = balance_sheet['Stockholders Equity'].iloc[0] if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty else np.nan
+
+        # 추가 정보 딕셔너리에 안전하게 값을 채워넣기
+        financial_data = {
+            'annual_data': income_statement.to_dict(),
+            'quarterly_data': quarterly_income_statement.to_dict(),
+            'additional_info': {
+                '회사 이름': info.get('shortName'),
+                '섹터': info.get('sector'),
+                '현재가': current_price,
+                '50일 평균가': info.get('fiftyDayAverage'),
+                '52주 신고가': info.get('fiftyTwoWeekHigh'),
+                '52주 신저가': info.get('fiftyTwoWeekLow'),
+                '총 자산': total_assets,
+                '자기자본': shareholder_equity,
+                '시가총액': info.get('marketCap'),
+                '발행주식 수': shares_outstanding,
+                '총 부채': info.get('totalDebt', np.nan),
+                '영업현금흐름': info.get('operatingCashflow', np.nan),
+                'PER': per,
+                'PBR': pbr
+            }
+        }
+        # 차트 데이터 준비
+        charts_data = {
+            "annual_financials": {
+                "years": list(income_statement.index),
+                "revenue": list(income_statement['Total Revenue']) if 'Total Revenue' in income_statement.columns else [np.nan],
+                "operating_income": list(income_statement['Operating Income']) if 'Operating Income' in income_statement.columns else [np.nan],
+                "operating_margin": list(income_statement['Operating Margin']) if 'Operating Margin' in income_statement.columns else [np.nan],
+                "net_income": list(income_statement['Net Income']) if 'Net Income' in income_statement.columns else [np.nan],
+                "eps": list(income_statement['EPS']),
+                "roe": list(income_statement['ROE']),
+                # PER와 PBR은 현재 직접 계산이 어려움. 시장 가격 기반 계산 필요하면 별도 로직 구현
+            },
+            "quarterly_growth": {
+                "quarters": list(quarterly_income_statement.index),
+                "revenue": list(quarterly_income_statement['Total Revenue']) if 'Total Revenue' in quarterly_income_statement.columns else [np.nan],
+                "revenue_growth": list(quarterly_income_statement['Revenue Growth QoQ']) if 'Revenue Growth QoQ' in quarterly_income_statement.columns else [np.nan],
+            },
+            # PER, PBR 차트 데이터 구조도 비슷하게 추가 가능
+        }
+        print(charts_data)
+        return {
+                "income_statement": selected_columns.to_dict(),
+                "quarterly_income_statement": quarterly_income_statement.to_dict(),
+                "additional_info": financial_data,
+                "charts_data": charts_data
+        }
+                    
+                    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))        
+
+#get_financials_and_metrics('ITTSF')
+
+def save_data_to_file(data, filename):
+    """데이터를 JSON 파일로 저장"""
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+
+def read_data_from_file(filename):
+    """종목코드 JSON 파일에서 데이터"""
+    with open(filename, 'r') as f:
+        return json.load(f)
+
+@lru_cache(maxsize=100)
+def cached_stock_symbols(exchange: str, mic: str):
+    filename = f"{exchange}_{mic}_symbols.json"
+    # 파일이 존재하면, 파일에서 데이터 읽기
+    if os.path.exists(filename):
+        return read_data_from_file(filename)
+    # 파일이 없으면 API 호출
+    symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+    symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
+    # 데이터를 파일에 저장
+    save_data_to_file(symbols_filtered, filename)
+    return symbols_filtered
+# 종목코드 읽기. Finnhub 에서 읽어오다가 도저히 느려서 안되겠음. 파일로 저장해서 읽는다. 
+@app.get("/api/get_foreign_stock_symbols")
+def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str = Query(default="", description="Market Identifier Code")):
+    try:
+        symbols_filtered = cached_stock_symbols('US', mic)
+        if q:
+            symbols_filtered = [sym for sym in symbols_filtered if q.lower() in sym['description'].lower() or q.lower() in sym['symbol'].lower()]
+        return symbols_filtered
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
 
 def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)
@@ -602,13 +1090,6 @@ def get_stock_data_fig (ticker):
     ax2.tick_params('y', colors='green')
     return fig 
 
-# 차트를 Base64 인코딩된 문자열로 변환하는 함수
-def get_chart_base64(fig):
-    buf = BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight")
-    plt.close(fig)  # 차트 닫기
-    return base64.b64encode(buf.getvalue()).decode('utf-8')
-
 @app.get("/api/charts/both/{ticker}")
 async def get_both_charts(ticker: str):
     # 주식 실적 이력 차트 생성 및 Base64 인코딩
@@ -650,3 +1131,319 @@ asyncio.run(cccc())'''
     result = query_gpt4('AAPL')
     print(result)
 queryGPT4()'''
+
+############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 ################################
+
+#1. 네이버 검색 API
+@app.get("/api/search-naver")
+async def search_naver(keyword: str = Query(default="금융")):
+    client_id = config.NAVER_API_KEY
+    client_secret = config.NAVER_SECRET
+    encText = quote(keyword)
+    naver_url = f"https://openapi.naver.com/v1/search/blog?query={encText}"
+
+    headers = {
+        "X-Naver-Client-Id": client_id,
+        "X-Naver-Client-Secret": client_secret,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(naver_url, headers=headers)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Error from Naver API: {response.status_code}")
+
+    # Process the response to match the expected format
+    data = response.json()
+    return {"items": data.get("items", [])}
+
+        
+#2. 네이버 증권 주요뉴스 스크래핑  :: 기본 타이틀+내용 가져오기
+class NewsItem(BaseModel):
+    thumb_url: Optional[str]
+    article_subject: str
+    article_link: Optional[str]
+    summary: str
+    press: str
+    wdate: str
+    
+@app.get("/naver-scraping-news/", response_model=List[NewsItem])    
+def fetch_naver_finance_news(url: str):
+    try : 
+        response = requests.get(url)
+        # 요청이 성공적일때만
+        if response.status_code == 200:
+            # BeautifulSoup 객체를 생성하여 HTML을 파싱
+            soup = BeautifulSoup(response.text, 'html.parser')
+            news_items  = []
+            
+            #메인뉴스랑 다른애들이랑 html 이 좀 다름. 분기쳐주자. 
+            if 'mainnews.naver' in url: #메인뉴스 url은 현재 https://finance.naver.com/news/mainnews.naver 임                
+                news_section = soup.find('div', class_='mainNewsList')
+              # 각 뉴스 아이템을 순회
+                for item in news_section.find_all('li', class_='block1'):
+                    # Extract thumbnail image
+                    thumb_element = item.select_one('.thumb img')
+                    thumb_url = thumb_element['src'] if thumb_element else None
+                    # Extract article subject and remark
+                    # 타이틀이랑 링크까지 갖고오기 
+                    article_subject_element = item.select_one('dd.articleSubject a')
+                    if article_subject_element:
+                        article_subject = article_subject_element.get_text(strip=True)
+                        article_link = article_subject_element['href']
+                    else:
+                        article_subject = None
+                        article_link = None
+                    # Extract article summary // press랑 wdate는 포함안되게 하자
+                    article_summary_element = item.select_one('dd.articleSummary')
+                    if article_summary_element:
+                        summary = ''.join([str(child) for child in article_summary_element.contents if type(child) == NavigableString]).strip()
+                    else:
+                        summary = None
+                    # Extract press name
+                    press = item.select_one('.press').get_text(strip=True) if item.select_one('.press') else None
+                    # Extract writing date
+                    wdate = item.select_one('.wdate').get_text(strip=True) if item.select_one('.wdate') else None
+
+                    news_items.append({
+                        "thumb_url": thumb_url,
+                        "article_subject": article_subject,
+                        "article_link": article_link,
+                        "summary": summary,
+                        "press": press,
+                        "wdate": wdate
+                    })
+                return news_items                
+            else: 
+                news_items = []
+
+                # 'ul class="realtimeNewsList"' 내의 모든 'li' 요소를 찾음 (각 기사 리스트)
+                #  <dl> <dt><dd><dd> 순으로 1개 게시글인데 갑자기 이미지 없어져서 <dt>에 타이틀 들어올때도 있음;; 개하드코딩 필요
+                for li in soup.select('ul.realtimeNewsList > li'):
+                    # 'li' 내의 모든 'dl' 요소 (각 기사) 처리
+                    for dl in li.find_all('dl'):
+                        elements = dl.find_all(['dt', 'dd'])  # 'dt'와 'dd' 요소를 모두 찾음
+                        # 초기화
+                        thumb_url = None
+                        article_subject = ''
+                        article_link = ''
+                        summary = ''
+                        press = ''
+                        wdate = ''
+                        for element in elements:
+                            if element.name == 'dt' and 'thumb' in element.get('class', []):
+                                # 이미지 URL 처리
+                                thumb_url = element.find('img')['src'] if element.find('img') else None
+                            elif element.name == 'dt' and 'articleSubject' in element.get('class', []):
+                                # 이미지 없이 제목만 있는 경우 처리
+                                thumb_url = None  # 이미지가 없으므로 None으로 설정
+                                article_subject = element.find('a').get('title', '')
+                                article_link = "https://news.naver.com" + element.find('a')['href']
+                            elif 'articleSubject' in element.get('class', []):
+                                # 기사 제목 처리
+                                article_subject = element.find('a').get('title', '')
+                                article_link = "https://news.naver.com" + element.find('a')['href']
+                            elif 'articleSummary' in element.get('class', []):
+                                # 기사 요약, 출판사, 작성 날짜 처리
+                                summary = element.contents[0].strip() if element.contents else ''
+                                press = element.find('span', class_='press').text if element.find('span', class_='press') else ''
+                                wdate = element.find('span', class_='wdate').text if element.find('span', class_='wdate') else ''
+                                # 모든 정보가 수집되었으므로 news_items에 추가
+                                news_items.append({
+                                    "thumb_url": thumb_url,
+                                    "article_subject": article_subject,
+                                    "article_link": article_link,
+                                    "summary": summary,
+                                    "press": press,
+                                    "wdate": wdate
+                                })
+                return news_items
+        else:
+            return "Failed to fetch the naverNews with status code: {}".format(response.status_code)
+    except requests.exceptions.RequestException as e:
+      return "An error occurred while fetching the naver news: {}".format(e)        
+
+#왜 그런지 모르겠는데, 네이버페이지 상의 호출URL과 소스보기로 보여지는 URL이 다르다. 이거때매 url함수만듬;
+def makeNaverUrl(news_url: str) :
+    article_id = ""
+    office_id = ""
+    # '&'로 분리하여 각 파라미터를 순회
+    for param in news_url.split('&'):
+        # 'article_id' 파라미터인 경우
+        if 'article_id=' in param:
+            article_id = param.split('=')[1]
+        # 'office_id' 파라미터인 경우
+        elif 'office_id=' in param:
+            office_id = param.split('=')[1]
+    return article_id, office_id
+# 문자 치환해서 뉴스 클라이언트로 보내주기
+def clean_html_content(html_content: str) -> str:
+    # \n을 공백으로 치환
+    cleaned_content = html_content.replace('\n', ' ')
+    cleaned_content = cleaned_content.replace('\t', ' ')
+    cleaned_content = ' '.join(cleaned_content.split())
+    return cleaned_content
+# 네이버 상세 Contents 스크래핑
+class NewsURL(BaseModel):
+    url: str
+@app.post("/api/news-detail")
+def fetch_news_detail(news_url: NewsURL):
+    try:
+        article_id, office_id = makeNaverUrl(news_url.url)
+        new_url = f"https://n.news.naver.com/mnews/article/{office_id}/{article_id}"
+        response = requests.get(new_url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')            
+        newsct_article = soup.find('div', id='newsct_article')
+        if newsct_article is not None:
+            dic_area = newsct_article.find('article', id='dic_area')
+            if dic_area is not None:
+                #return dic_area.prettify()  ## prettify 로 예쁘게ㅋ
+                # decode_contents()로 내용을 가져온 후 개행 문자를 공백으로 치환
+                html_content = dic_area.decode_contents()
+                cleaned_html_content = clean_html_content(html_content)
+                return cleaned_html_content
+            else:
+                raise HTTPException(status_code=404, detail="Article content not found")
+        else:
+            raise HTTPException(status_code=404, detail="News content not found")
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
+    
+############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 끝 ################################
+############################## 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 시작   ################################
+#일단 종목코드 갖고오는것부터 구현하자
+@app.get("/stock-codes/")    
+async def stock_code_fetch():
+    krxurl = 'http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13'
+    try:
+        # 'encoding' 파라미터에 'CP949' 추가
+        code_df = pd.read_html(krxurl, encoding='CP949')[0]
+        code_df.종목코드 = code_df.종목코드.map('{:06d}'.format)
+        code_df = code_df[['회사명', '종목코드']]
+        stock_list = code_df.values.tolist()
+        return stock_list
+    except Exception as e:
+        print(f"Stock Code 데이터를 불러오는 중 오류가 발생했습니다: {e}")
+        return []
+#print(stock_code_fetch())
+
+#주식 차트 데이터 만들어서 돌려주자
+class ChartRequest(BaseModel):
+    stockCode: str
+    fromDate: str
+    toDate: str
+@app.post("/stock-chart-data")
+async def get_stock_chart_data(request: ChartRequest):
+    try:
+        ticker_symbol = request.stockCode + ".KS"
+        stock = yf.Ticker(ticker_symbol)
+        hist = stock.history(start=request.fromDate, end=request.toDate)
+        # pandas DataFrame의 인덱스(날짜)를 'Date' 컬럼으로 변환
+        hist.reset_index(inplace=True)
+        # 'Date' 컬럼을 확인하고 필요한 경우 datetime 타입으로 변환
+        if not pd.api.types.is_datetime64_any_dtype(hist['Date']):
+            hist['Date'] = pd.to_datetime(hist['Date'])
+        # 'Date' 컬럼을 문자열로 변환
+        hist['Date'] = hist['Date'].dt.strftime('%Y-%m-%d')
+        # 차트 데이터 구성
+        chart_data = {
+            'labels': hist['Date'].tolist(),
+            'datasets': [
+                {'label': 'Open', 'data': hist['Open'].tolist()},
+                {'label': 'High', 'data': hist['High'].tolist()},
+                {'label': 'Low', 'data': hist['Low'].tolist()},
+                {'label': 'Close', 'data': hist['Close'].tolist()},
+            ]
+        }
+        #await save_to_txt(chart_data, "chart_data2.txt")
+        return {"chartData": chart_data}
+    except Exception as e:
+        print(f"Error fetching stock chart data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching stock chart data")
+    
+#로컬 테스트용 함수  
+async def save_to_txt(data, filename="chart_data2.txt"):
+    with open(filename, "w") as file:
+        json.dump(data, file)
+     
+'''async def rapid():
+    request_data = ChartRequest(stockCode="068270", fromDate="2020-01-01", toDate="2020-12-31")
+    chart_data = await get_stock_chart_data(request_data)
+    await save_to_txt(chart_data, "chart_data2.txt")
+asyncio.run(rapid())'''
+
+#주식 유사국면 찾기 함수 시작. DTW 라이브러리 활용(dtaidistance씀)
+class StockRequest(BaseModel):
+    stockCode: str
+    fromDate: str
+    toDate: str
+    fromDate_2: str
+    toDate_2: str
+
+@app.post("/find-similar-period")
+async def find_similar_period(request: StockRequest):
+    # Yahoo Finance 데이터 로드
+    ticker_symbol = request.stockCode + ".KS"  # For Korean stock codes
+    stock = yf.Ticker(ticker_symbol)
+    
+    # 전체 기간에 대한 역사적 데이터 가져오기
+    hist_full = stock.history(start=request.fromDate_2, end=request.toDate_2)
+    
+    # 참조 기간에 대한 역사적 데이터 가져오기
+    hist_ref = stock.history(start=request.fromDate, end=request.toDate)
+    
+    # 'Close' 가격에 초점을 맞춰 NumPy 배열로 변환
+    series_ref = np.array(hist_ref['Close'], dtype=np.double)
+    series_full = np.array(hist_full['Close'], dtype=np.double)
+    
+    # 참조 기간의 인덱스 찾기
+    ref_start_idx = hist_full.index.get_loc(hist_ref.index[0])
+    ref_end_idx = hist_full.index.get_loc(hist_ref.index[-1])    
+   
+    # 참조 기간의 길이
+    len_ref = len(series_ref)    
+    
+    # 가장 낮은 DTW 거리와 해당 시작 인덱스 초기화
+    lowest_distance = float('inf')
+    best_start_index = -1    
+    
+    # 전체 기간 내에서 참조 기간을 제외한 부분에 대해 DTW 거리 계산
+    for start_index in range(len(series_full)):
+        # 참조 기간과 겹치지 않는 범위를 확인
+        if start_index + len_ref - 1 < ref_start_idx or start_index > ref_end_idx:
+            end_index = start_index + len_ref
+            # 배열 범위 확인
+            if end_index <= len(series_full):
+                current_segment = series_full[start_index:end_index]
+                distance = dtw.distance(series_ref, current_segment)
+                
+                # 가장 낮은 거리 업데이트
+                if distance < lowest_distance:
+                    lowest_distance = distance
+                    best_start_index = start_index
+                    
+    # 유효한 유사 구간이 없는 경우 처리
+    if best_start_index == -1:
+        return {"message": "No similar period found without overlapping the reference period."}
+    
+                    
+    # 가장 유사한 구간의 시작과 끝 날짜 찾기
+    best_period_start_date = hist_full.index[best_start_index].strftime('%Y-%m-%d')
+    best_period_end_date = hist_full.index[best_start_index + len_ref - 1].strftime('%Y-%m-%d')
+    
+    # best_start, best_end, lowest_distance 3개 값 나왔으면, 다시 야후로 해당기간 차트데이터 get ㄱㄱ
+    chart_request = ChartRequest(stockCode=request.stockCode, fromDate=best_period_start_date, toDate=best_period_end_date)
+    chart_data = await get_stock_chart_data(chart_request)
+ 
+    return {"chartData": chart_data, 
+            "dtwDistance": lowest_distance, 
+            "bestPeriodStart": best_period_start_date, 
+            "bestPeriodEnd" : best_period_end_date
+            }
+
+'''async def rapid():
+    request_data = StockRequest(stockCode="068270", fromDate="2020-02-01", toDate="2020-06-30", fromDate_2="2016-01-01", toDate_2="2022-12-31" )
+    wow = await find_similar_period(request_data)
+    await save_to_txt(wow, "wow.txt")
+asyncio.run(rapid())'''

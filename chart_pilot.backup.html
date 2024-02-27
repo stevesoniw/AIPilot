@@ -13,29 +13,351 @@
     <link href="/static/assets/css/newFont.css" rel="stylesheet" type="text/css">
     <link href="/static/assets/css/common.css" rel="stylesheet" type="text/css">
     <link href="/static/assets/css/chart-pilot.css" rel="stylesheet" type="text/css" />
-    <!-- fullcalendar CDN -->  
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' /> 
-</head>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>  
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">  
     <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
     <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+    <!-- fullcalendar Lib-->  
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>  
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- Chart.js -->  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>    
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
+    <!-- Highstock 모듈. 캔들차트를 도저히 그릴수 없어 highchart로 변경 -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="https://code.highcharts.com/modules/data.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+</head>
+    <!-- Select -->  
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> 
+    <!-- datepicker -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
+</head>
     <script>
         var g_news;
-        window.onload = function() {
-            document.getElementById('loading_bar_fingpt').style.display = 'none';     //1번
-            document.getElementById('loading_bar_economics').style.display = 'none';  //2번           
-            document.getElementById('loading_bar_news').style.display = 'none';       //3번     
-            document.getElementById('loading_bar_gpt').style.display = 'none';        //3번-설명
-            document.getElementById('loading_bar_fred').style.display = 'none';                        
-            document.getElementById('loading_bar_calendar').style.display = 'none';   //5번
-        };   
-//************************************** FIN GPT 함수 Starts ********************************************//
+        window.onload = function() {  //로딩바들 none 으로 일단 초기화하고 시작
+            hideLoadingBars('loading_bar');
+        };
 
+        function hideLoadingBars(prefix) {
+            var elements = document.querySelectorAll('[id^="' + prefix + '"]');
+            elements.forEach(function(element) {
+                element.style.display = 'none';
+            });
+        }
+//************************************** FIN GPT 함수 Starts ********************************************//
+        //디지털리서치 요청으로 종목코드 select 선택모듈로 변경
+        async function fetchForeignStockCodes() {
+            try {
+                const response = await fetch('/api/get_foreign_stock_symbols');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const selectElement = $('#foreign_ticker');
+                const fragment = document.createDocumentFragment();
+
+                data.forEach(stock => {
+                    let option = new Option(`${stock.description} (${stock.symbol})`, stock.symbol);
+                    fragment.appendChild(option);
+                });
+
+                selectElement.empty().append(fragment).select2({
+                    placeholder: "원하시는 종목을 검색해주세요!",
+                    allowClear: true,
+                    minimumResultsForSearch: 0 // 검색 활성화
+                }).val(null).trigger("change");
+            } catch (error) {
+                console.error("Failed to fetch foreign stock codes: ", error);
+            }
+        }
+        //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 
+        async function loadBasicInfo() {
+
+            document.getElementById('loading_bar_stockbasic').style.display = 'block';
+            
+            try {
+                const ticker = document.getElementById('foreign_ticker').value; 
+                const response = await fetch(`/foreignStock/financials/${ticker}`);
+                if (!response.ok) throw new Error('Failed to fetch foreign stock basic info data');
+                
+                const data = await response.json();
+console.log(data);                
+                document.getElementById('loading_bar_stockbasic').style.display = 'none';
+                displayFinancialData(data);
+                
+            } catch (error) {
+                console.error('Error fetching stock info:', error);
+                document.getElementById('loading_bar_stockbasic').style.display = 'none';
+            } finally {
+                // 로딩 바 숨기기
+                document.getElementById('loading_bar_stockbasic').style.display = 'none';
+            }
+        }
+        //차트데이터 전처리 함수
+        function preprocessChartData(chartData) {
+            // Timestamp 객체를 ISO 날짜 문자열로 변환
+            chartData.annual_financials.years = chartData.annual_financials.years.map(date => 
+                new Date(date).toISOString().split('T')[0]
+            );
+        
+            chartData.quarterly_growth.quarters = chartData.quarterly_growth.quarters.map(date => 
+                new Date(date).toISOString().split('T')[0]
+            );
+        
+            // NaN 값을 처리 (예: NaN을 0으로 변환하거나, 또는 NaN 값을 포함하는 데이터 포인트를 제거)
+            chartData.quarterly_growth.revenue_growth = chartData.quarterly_growth.revenue_growth.map(value => 
+                isNaN(value) ? 0 : value
+            );
+        
+            return chartData;
+        }
+        // 숫자를 억 단위로 변환하는 함수 (깔끔하게 보여주게)
+        function convertToBillion(value) {
+            return (value / 100000000).toFixed(2) + '억';
+        }
+        // 특정 키에 대한 단위를 추가하는 함수
+        function appendUnit(key, value) {
+            // 데이터가 null인 경우 "-"로 표시
+            if (value === null) {
+                return "-";
+            }
+            const keysWithUSD = ['50일 평균가', '52주 신고가', '52주 신저가', '총 자산', '자기자본', '시가총액', '총 부채', '영업현금흐름'];
+            const keysInBillion = ['총 자산', '자기자본', '시가총액', '총 부채', '영업현금흐름'];
+            if (keysWithUSD.includes(key)) {
+                if (keysInBillion.includes(key)) {
+                    return convertToBillion(value) + ' (USD)';
+                }
+                return value + ' (USD)';
+            } else if (key === '발행주식 수') {
+                return value + ' 주';
+            } else if (key === 'PER' || key === 'PBR') {
+                return Math.round(value * 100) / 100; // 소수점 셋째 자리에서 반올림
+            }
+            return value;
+        }
+        function displayFinancialData(data) {
+            // 기업 및 추가 정보 표시
+            document.getElementById('stockBasic_info_area').style.display = 'block';
+            document.getElementById('stockBasic_company_info').innerHTML = ""; //초기화
+            const additionalInfo = data.additional_info['additional_info'];
+            let htmlContent = `<table class="stockBasicInfoTable"><caption>종목 기본 정보</caption><tbody>`;
+            Object.keys(additionalInfo).forEach(key => {
+                const valueWithUnit = appendUnit(key, additionalInfo[key]);
+                htmlContent += `<tr><td>${key}</td><td>${valueWithUnit}</td></tr>`;
+            });
+            htmlContent += `</tbody></table>`;
+            document.getElementById('stockBasic_company_info').innerHTML += htmlContent;
+        
+            // 연간 재무 데이터 표시
+            if (data.income_statement && typeof data.income_statement === 'object') {
+                const incomeStatement = data.income_statement;
+                // 키 값을 한글로 매핑
+                const keyMapping = {
+                    'Total Revenue': '총 매출액',
+                    'Operating Income': '영업이익',
+                    'Operating Margin': '영업이익률',
+                    'Net Income': '순이익',
+                    'EPS': '주당순이익'
+                };
+                // 숫자를 '억 달러' 단위로 포맷팅하는 함수
+                const formatCurrency = (num) => {
+                    return `${(num / 100000000).toFixed(2)} 억 달러`;
+                };
+                // EPS를 소수점 넷째 자리까지 포맷팅하는 함수
+                const formatEPS = (num) => {
+                    return `${num.toFixed(3)} 달러`;
+                };
+                let htmlContent = `<table class="stockAnnualFinancialsTable"><caption>Annual Financials</caption><thead><tr><th>년도</th>`;
+                // 테이블 헤더 생성
+                Object.keys(incomeStatement).forEach((key) => {
+                    htmlContent += `<th>${keyMapping[key] || key}</th>`;
+                });
+                htmlContent += `</tr></thead><tbody>`;
+            
+                // 각 연도별 데이터를 행으로 추가
+                Object.keys(incomeStatement[Object.keys(incomeStatement)[0]]).sort().reverse().forEach((date) => {
+                    const year = new Date(date).getFullYear(); // 년도 추출
+                    htmlContent += `<tr><td>${year}</td>`;
+                    Object.keys(incomeStatement).forEach((key) => {
+                        let value = incomeStatement[key][date];
+                        if (key === 'Total Revenue' || key === 'Operating Income' || key === 'Net Income') {
+                            value = formatCurrency(value); // 숫자 포맷팅
+                        } else if (key === 'Operating Margin') {
+                            value = `${(value * 100).toFixed(2)}%`; // 백분율로 변환
+                        } else if (key === 'EPS') {
+                            value = formatEPS(value); // EPS 포맷팅
+                        }
+                        htmlContent += `<td>${value !== null ? value : '-'}</td>`;
+                    });
+                    htmlContent += `</tr>`;
+                });
+            
+                htmlContent += `</tbody></table>`;
+                document.getElementById('stockBasic_company_info').innerHTML += htmlContent;
+            }
+            else {
+                console.error('annual_data is not available or not an object');
+            }
+            // 차트 데이터 준비 및 차트 표시 함수 호출
+            const chartData = data.charts_data;
+            const processedChartData = preprocessChartData(chartData);            
+
+            console.log(processedChartData);            
+            displayAnnualFinancialsChart(processedChartData);
+            displayQuarterlyGrowthChart(processedChartData);
+
+        }
+        function displayAnnualFinancialsChart(chartData) {
+            var operatingMargins = chartData.annual_financials.operating_margin;
+            var transformedOperatingMargins = operatingMargins.map(function(value) {
+                return parseFloat((value * 100).toFixed(2)); // 100을 곱하고, 소수점 두 자리까지 반올림
+            });
+            Highcharts.chart('annualFinancialsChart', {
+                chart: {
+                    zoomType: 'xy'
+                },
+                title: {
+                    text: '년도별 매출 및 영업이익 추이'
+                },
+                xAxis: [{
+                    categories: chartData.annual_financials.years,
+                    crosshair: true
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}억',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: '매출액 & 영업이익',
+                        style: {
+                            color: 'black'
+                        }
+                    }
+                }, { // Secondary yAxis
+                    title: {
+                        text: '영업이익률',
+                        style: {
+                            color: 'black'
+                        }
+                    },
+                    labels: {
+                        format: '{value} %',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                series: [{
+                    name: '매출액',
+                    type: 'column',
+                    yAxis: 0,
+                    data: chartData.annual_financials.revenue.map(value => value / 1e8), // 억 달러로 변환
+                    tooltip: {
+                        valueSuffix: ' 억'
+                    }
+    
+                }, {
+                    name: '영업이익',
+                    type: 'column',
+                    yAxis: 0,
+                    data: chartData.annual_financials.operating_income.map(value => value / 1e8), // 억 달러로 변환
+                    tooltip: {
+                        valueSuffix: ' 억'
+                    }
+                }, {
+                    name: '영업이익률(%)',
+                    type: 'spline',
+                    yAxis: 1,
+                    data: transformedOperatingMargins,
+                    color: '#FFA500', 
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
+            });
+        }
+  
+        function displayQuarterlyGrowthChart(chartData) {
+            Highcharts.chart('quarterlyGrowthChart', {
+                chart: {
+                    zoomType: 'xy'
+                },
+                title: {
+                    text: '분기별 매출 성장 추이'
+                },
+                xAxis: [{
+                    categories: chartData.quarterly_growth.quarters,
+                    crosshair: true
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}억',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: '매출액',
+                        style: {
+                            color: 'black'
+                        }
+                    }
+                }, { // Secondary yAxis
+                    title: {
+                        text: '매출 성장률',
+                        style: {
+                            color: 'black'
+                        }
+                    },
+                    labels: {
+                        format: '{value} %',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                series: [{
+                    name: 'Revenue',
+                    type: 'column',
+                    yAxis: 0,
+                    data: chartData.quarterly_growth.revenue.map(value => value / 1e8), // 억 달러로 변환
+                    tooltip: {
+                        valueSuffix: ' 억'
+                    }
+                }, {
+                    name: 'Revenue Growth',
+                    type: 'spline',
+                    yAxis: 1,
+                    data: chartData.quarterly_growth.revenue_growth,
+                    color: '#FFA500', 
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
+            });
+        }
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
-        async function loadChartData() {
-            const ticker = document.getElementById('ticker').value;             
+        async function loadEarningData() {
+            const ticker = document.getElementById('foreign_ticker').value;             
             try {
                 document.getElementById('loading_bar_fingpt').style.top = '50%';                 
                 document.getElementById('loading_bar_fingpt').style.display = 'block';                    
@@ -57,15 +379,43 @@
                 // 차트 영역을 보이게 설정
                 document.getElementById('fingptChartArea').style.display = 'block';
                 document.getElementById('loading_bar_fingpt').style.display = 'none';  
-                gptAnalysis(ticker);
+                fetchEarningsAnnouncement(ticker);
 
             } catch (error) {
                 console.error('Error loading chart data:', error);
-                gptAnalysis(ticker);
+                fetchEarningsAnnouncement(ticker);
                 document.getElementById('fingptChartArea').style.display = 'none';
                 document.getElementById('loading_bar_fingpt').style.display = 'none'; 
             }
         }
+        //실적발표 테이블 표 만들어서 보여주기
+        async function fetchEarningsAnnouncement(ticker) {
+            const apiUrl = `/api/get_earning_announcement/${ticker}`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                throw new Error('서버에서 데이터를 가져오는 데 실패했습니다. 응답 상태: ' + response.status);
+                }
+                const data = await response.json();
+                if (data) {
+                document.getElementById('gpt-earning-table-area').style.display = 'block';
+                document.getElementById('latest_revenue').textContent = data.current_quarter_revenue || '-';
+                document.getElementById('yoy_revenue_growth').textContent = data.revenue_YoY || '-';
+                document.getElementById('qoq_revenue_growth').textContent = data.revenue_QoQ || '-';
+                document.getElementById('revenue_beat_miss_ratio').textContent = data.revenue_beat_miss_ratio || '-';
+                document.getElementById('latest_eps').textContent = data.current_quarter_eps || '-';
+                document.getElementById('yoy_eps_growth').textContent = data.eps_YoY || '-';
+                document.getElementById('qoq_eps_growth').textContent = data.eps_QoQ || '-';
+                document.getElementById('eps_beat_miss_ratio').textContent = data.eps_beat_miss_ratio || '-';
+                }
+                gptAnalysis(ticker);
+            } catch (error) {
+                document.getElementById('gpt-earning-table-area').style.display = 'none';
+                gptAnalysis(ticker);
+                console.error('Error Fetching 실적발표 테이블:', error.message);
+            }
+        }
+
         //FinGPT 실적발표 전후 반응 + 근거 문서 갖고와서 보여주기 
         async function gptAnalysis(ticker) {
             try {   
@@ -118,12 +468,8 @@
         }
 
 //************************************** FIN GPT 함수 Ends ********************************************// 
-//******************************** 글로벌 주요경제지표 함수 Starts **************************************// 
+//******************************** 글로벌 주요경제지표 함수 [#1.핵심지표] Starts ***********************************// 
 
-        function goRate(){
-            document.getElementById('loading_bar_fred').style.display = 'block';            
-            document.getElementById('rateForm').submit();           
-        }
         /** 서버에서 이미지 만들어서 base64로 받아오는 형태 [차트가 안예뻐서 일단 보류]
         async function loadEconomicIndicators() {
             try {
@@ -149,39 +495,37 @@
                 const formData = new FormData(form);
                 const selectedIndicators = formData.getAll('indicators');
                 const aiOpinionCheck = document.getElementById('aiOpinionCheck').checked;
-
+        
                 document.getElementById('loading_bar_economics').style.display = 'block';
         
                 const url = `/api/economic-indicators?indicators=${selectedIndicators.join(',')}&aiOpinion=${aiOpinionCheck}`;
                 const response = await fetch(url);
                 const data = await response.json();
-                //로딩바 없애고..
                 document.getElementById('loading_bar_economics').style.display = 'none';
-                console.log(data.chart_talk);
-
+        
+                // 차트 및 분석 데이터의 표시 여부를 결정
+                const chartContainer = document.getElementById('chartContainer');
+                const chartAnalysisArea = document.getElementById('chart-anal-area');
                 if (data && data.datasets.length > 0) {
-                    // 차트 데이터가 있을 경우에만 차트와 분석 부분을 표시
-                    document.getElementById('chartContainer').style.display = 'block';
-                    document.getElementById('chart-anal-area').style.display = 'block';
+                    chartContainer.style.display = 'block';
+                    if(data.chart_talk){
+                        chartAnalysisArea.style.display = 'block';
+                        document.getElementById('chartAnalysis').innerText = data.chart_talk;
+                    }else{
+                        chartAnalysisArea.style.display = 'none';
+                    }
                 } else {
-                    // 차트 데이터가 없을 경우 차트와 분석 부분을 숨김
-                    document.getElementById('chartContainer').style.display = 'none';
-                    document.getElementById('chart-anal-area').style.display = 'none';
-                }               
-
-
-                if(data.chart_talk){
-                    document.getElementById('chartAnalysis').innerText = data.chart_talk;                
+                    chartContainer.style.display = 'none';
+                    chartAnalysisArea.style.display = 'none';
                 }
         
-                // 데이터셋에서 각 항목에 대해 더 진한 색상과 더 두꺼운 선을 설정
                 const backgroundColors = [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
                 ];
                 const borderColors = [
                     'rgba(255,99,132,1)',
@@ -191,7 +535,6 @@
                     'rgba(153, 102, 255, 1)',
                     'rgba(255, 159, 64, 1)'
                 ];
-        
                 const indicatorLabels = {
                     "CPIAUCSL": "소비자물가지수 (CPI)",
                     "PCEPI": "개인소비지출 (PCE)",
@@ -200,75 +543,65 @@
                     "CSUSHPISA": "주택가격지수",
                     "A191RL1Q225SBEA": "실질 국내총생산 (GDP)"
                 };
-
-                data.datasets.forEach((dataset, i) => {
-                    dataset.backgroundColor = backgroundColors[i % backgroundColors.length];
-                    dataset.borderColor = borderColors[i % borderColors.length];
-                    dataset.borderWidth = 3; // 선 두께 증가
-                    dataset.pointBackgroundColor = borderColors[i % borderColors.length];
-                    dataset.pointBorderColor = "#fff";
-                    dataset.pointHoverBackgroundColor = "#fff";
-                    dataset.pointHoverBorderColor = borderColors[i % borderColors.length];
-                    dataset.pointRadius = 5;
-                    dataset.pointHoverRadius = 7;
-                    dataset.label = indicatorLabels[dataset.label] || dataset.label; 
-                });
+    
+                // 데이터셋 설정
+                const transformedDatasets = data.datasets.map((dataset, i) => ({
+                    ...dataset,
+                    data: dataset.data.map((value, index) => ({ t: data.labels[index], y: value })),
+                    backgroundColor: backgroundColors[i % backgroundColors.length],
+                    borderColor: borderColors[i % borderColors.length],
+                    borderWidth: 3,
+                    pointBackgroundColor: borderColors[i % borderColors.length],
+                    pointBorderColor: "#fff",
+                    pointHoverBackgroundColor: "#fff",
+                    pointHoverBorderColor: borderColors[i % borderColors.length],
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    label: indicatorLabels[dataset.label] || dataset.label,
+                    fill: false,
+                    spanGaps: true,
+                }));
+                
         
+                // 차트 생성
                 const ctx = document.getElementById('myEconomicChart').getContext('2d');
                 if (window.myEconomicChart instanceof Chart) {
                     window.myEconomicChart.destroy();
                 }
                 window.myEconomicChart = new Chart(ctx, {
                     type: 'line',
-                    data: data,
+                    data: { datasets: transformedDatasets },
                     options: {
                         responsive: true,
-                        title: {
-                            display: true,
-                            text: 'Economic Indicators Over Time'
-                        },
+                        spanGaps: true,
+                        title: { display: true, text: 'Economic Indicators Over Time' },
                         scales: {
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero: false
-                                },
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'Value'
-                                }
-                            }],
-                            xAxes: [{
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'Date'
-                                }
-                            }]
+                            xAxes: [{ type: 'time', time: { parser: 'YYYY-MM-DD', tooltipFormat: 'll', unit: 'day',
+                                                                displayFormats: {
+                                                                    day: 'MMM D, YYYY',
+                                                                    month: 'MMM YYYY',
+                                                                    year: 'YYYY'
+                                                               }
+                                                          },
+                                      scaleLabel: { display: true, labelString: 'Date' },
+                                      ticks: {
+                                            autoSkip: true,
+                                            maxTicksLimit: 20 // X축에 표시할 최대 눈금 수를 조정하여 레이블이 겹치지 않도록 함
+                                      }
+                                    }],
+                            yAxes: [{ ticks: { beginAtZero: false }, scaleLabel: { display: true, labelString: 'Value' } }]
                         },
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltips: {
-                            mode: 'index',
-                            intersect: false,
-                        },
-                        hover: {
-                            mode: 'nearest',
-                            intersect: true
-                        }
-                    },
-                    datasets: [{
-                        label: 'My Dataset',
-                        data: data,
-                        fill: false,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        spanGaps: true,  // 결측치가 있는 부분에서도 선을 연결
-                    }]
+                        legend: { position: 'top' },
+                        tooltips: { mode: 'index', intersect: false },
+                        hover: { mode: 'nearest', intersect: true }
+                    }
                 });
             } catch (error) {
                 console.error('Error loading economic indicators data:', error);
                 document.getElementById('loading_bar_economics').style.display = 'none';
             }
         }
+        
         function clearData() {
             // 모든 체크박스 선택 해제
             document.querySelectorAll('#indicatorForm input[type="checkbox"]').forEach(checkbox => {
@@ -284,68 +617,156 @@
             document.getElementById('chartAnalysis').innerText = "";            
         }        
         
-//*********************************** 글로벌 주요경제지표 함수 Ends *****************************************// 
-//************************************** 증시캘린더 함수 Starts ******************************************//
+//****************************** 글로벌 주요경제지표 함수 [#1.핵심지표] Ends *******************************// 
+//****************************** 글로벌 주요경제지표 함수 [#2.채권가격] Start ******************************// 
 
-        async function goCalendar() {
-            document.getElementById('loading_bar_calendar').style.display = 'block';    
-            // AJAX 요청을 통해 서버로부터 데이터 가져오기
-            const response = await fetch('/calendar', {
+    async function fetchBondsData() {
+        // 'bonds_chart_div'에 이미 차트 데이터가 있으면 요청 중단(=메뉴이동 시에 한번 호출한적 있으면 하지말자)
+        const bondsChartDiv = document.getElementById('bonds_chart_div');
+        if (Plotly.d3.select(bondsChartDiv).select('.plot-container').node()) {
+            // 차트가 이미 그려져 있다면 함수 종료
+            console.log('Chart already drawn. Skipping fetch.');
+            return;
+        }
+        try {
+            // 'loading_bar_bonds'을 표시
+            document.getElementById('loading_bar_bonds').style.display = 'block';
+
+            // 서버에서 차트 구성 데이터와 레이아웃 설정을 가져오기
+            const response = await fetch('/get_bonds_data', {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-                // 필요한 경우 body 추가
-            });
-            const calendarData = await response.json(); // JSON 형태로 데이터 받기
-            document.getElementById('loading_bar_calendar').style.display = 'none';    
-
-            console.log(calendarData);
-
-            // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
-            const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
-
-            // FullCalendar 초기화 및 데이터 표시
-            var calendarEl = document.getElementById('calendar');
-            if (!calendarEl) {
-                // 달력 컨테이너가 아직 페이지에 없는 경우
-                alert('Calendar element not found on the page.');
-                return;
-            }
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
-                timeZone: 'UTC',
-                expandRows: true, 
-                locale : "KO",
-                firstDay: 1,
-                navLinks: true, 
-                ihandleWindowResize : true,
-                windowResizeDelay : 100,
-                nowIndicator: true,
-                dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
-                eventLimit: true, // 더 보기 버튼 활성화              
-                events: filteredData.map(event => ({
-                    id: event.id.toString(),
-                    title: event.title,
-                    start: event.start,
-                    end: event.end,
-                    color: `#${event.hexColor}`, // 이벤트 색상 설정
-                    description: event.shortDesc // 이벤트 설명 추가
-                })),
-
-                eventContent: function(arg) { // 이벤트 내용 커스터마이징
-                    var element = document.createElement('div');
-                    element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
-                    return { domNodes: [element] };
-                }
+                    'Content-Type': 'application/json',
+                },
             });
             
-            calendar.render();
-        }
-//************************************** 증시캘린더 함수 Ends ******************************************//
+            // JSON으로 데이터 변환
+            const data = await response.json();
+            
+            // 기준금리 차트 데이터 및 레이아웃 설정
+            const baseRateData = data.base_rate_chart.data;
+            const baseRateLayout = data.base_rate_chart.layout;
 
+            // 이자율 차트 데이터 및 레이아웃 설정
+            const interestRateData = data.interest_rate_chart.data;
+            const interestRateLayout = data.interest_rate_chart.layout;
+            
+            // Plotly 차트를 생성
+            Plotly.newPlot('bonds_chart_div', baseRateData, baseRateLayout);
+            Plotly.newPlot('interest_chart_div', interestRateData, interestRateLayout);
+            // 'loading_bar_bonds' 숨기기
+            document.getElementById('loading_bar_bonds').style.display = 'none';
+            var bondArea = document.getElementById('bond-area').style.display = 'block';
+        }catch (error) {
+            console.error('Error loading fetchBondsData(chart):', error);
+            document.getElementById('loading_bar_bonds').style.display = 'none';
+        }
+        
+    }
+
+    //채권 뉴스 가져오기
+    async function fetchAndDisplayBondsNews(category) {
+        try{
+            document.getElementById('loading_bar_bondsNews').style.display = 'block';
+            const response = await fetch(`/bond-news/${category}`);
+            const bondNews = await response.json();
+        
+            document.getElementById('loading_bar_bondsNews').style.display = 'none';
+
+            console.log(bondNews);
+
+            const bondsNewsContainer = document.getElementById('bonds_news_div');
+
+            if (bondNews.length === 0) {
+                // 뉴스 데이터가 없을 경우 표시할 메시지
+                const noNewsMessage = document.createElement('div');
+                noNewsMessage.textContent = '관련 뉴스가 없습니다.';
+                noNewsMessage.className = 'no-news-message'; // 스타일 적용을 위한 클래스 추가
+                bondsNewsContainer.appendChild(noNewsMessage);
+            } else {
+
+                bondsNewsContainer.innerHTML = ''; // 기존 내용을 지우고 새로운 뉴스로 업데이트
+                bondNews.forEach(news => {
+                    const newsDiv = document.createElement('div');
+                    newsDiv.className = 'bondNews-container';
+
+                    console.log(news.title)
+                    const imageUrl = news.gettyImageUrl || "/static/assets/images/nature.jpg"; // 기본 이미지 경로 설정
+                    const image = document.createElement('img');
+                    image.src = imageUrl;
+                    image.alt = "News Image";
+                    image.className = 'bondNews-image';
+            
+                    const title = document.createElement('div');
+                    title.className = 'bondNews-title';
+                    title.textContent = news.title;
+            
+                    const content = document.createElement('div');
+                    content.className = 'bondNews-content';
+                    content.innerHTML = news.content; 
+
+                    // '한국어로 번역하기' 버튼 추가
+                    const translateButton = document.createElement('button');
+                    translateButton.textContent = '한국어로 번역하기';
+                    translateButton.className = 'translate-button'; // 스타일 적용을 위한 클래스 추가
+
+                    translateButton.addEventListener('click', function() {
+                        const newsItem = this.parentNode; // 뉴스 항목의 컨테이너 참조
+                        const newsTitle = newsItem.querySelector('.bondNews-title').textContent;
+                        const newsContent = newsItem.querySelector('.bondNews-content').innerHTML;
+                    
+                        // 로딩바 HTML 문자열
+                        const loadingBarHtml = `
+                            <div id="loading_bar_bondsTranslate" class="loading_bar_translate">
+                                <img src="/static/assets/images/LoadingBar_A.gif">
+                                <p class="loading-text">데이터 로딩중입니다.</p>
+                            </div>`;
+                    
+                        // 로딩바를 뉴스 항목에 추가
+                        newsItem.insertAdjacentHTML('beforeend', loadingBarHtml);
+                        const loadingBar = newsItem.querySelector('.loading_bar_translate');
+                        loadingBar.style.display = 'block'; // 로딩바 표시
+                    
+                        fetch('/translate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ title: newsTitle, content: newsContent })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // 번역된 내용으로 업데이트
+                            newsItem.querySelector('.bondNews-title').textContent = data.title;
+                            newsItem.querySelector('.bondNews-content').innerHTML = data.content;
+                            
+                            // 로딩바 제거
+                            loadingBar.style.display = 'none'; 
+                            loadingBar.remove();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // 오류 발생 시 로딩바도 제거
+                            loadingBar.style.display = 'none';
+                            loadingBar.remove();
+                        });
+                    });
+                
+            
+                    newsDiv.appendChild(image);
+                    newsDiv.appendChild(translateButton);                     
+                    newsDiv.appendChild(title);
+                    newsDiv.appendChild(content);
+
+                    bondsNewsContainer.appendChild(newsDiv);
+                });
+            }
+        }catch (error) {
+                console.error('Error loading fetchAndDisplayBondsNews[news]:', error);
+                document.getElementById('loading_bar_bondsNews').style.display = 'none';
+        }
+    }
+//****************************** 글로벌 주요경제지표 함수 [#2.채권가격] Ends ******************************// 
 //************************************** 뉴스요청 함수 Starts ******************************************//
         async function goNews() {
             const checkboxes = document.querySelectorAll("#categoryForm input[name='categories']");
@@ -410,16 +831,48 @@
                             <div>
                                 <div class="news-title">${item.title}</div>
                                 <p class="news-body">${item.content}</p>
-                                <div class="publish-date">Published on: ${item.publishOn}</div> <!-- publishOn 데이터 추가 -->
+                                <div class="publish-date">Published on: ${item.publishOn}</div>
                             </div>
                         </div>
                     `;
+                    const translateButton = document.createElement('button');
+                    translateButton.className = 'newstrans-button';
+                    translateButton.textContent = '한국어 번역하기';
+                    newsItem.querySelector('.news-content > div').appendChild(translateButton); // 버튼을 뉴스 컨텐츠 div에 추가
+
+                    translateButton.addEventListener('click', async function() {
+                        const loadingBar = document.createElement('div');
+                        loadingBar.className = 'loading-bar';
+                        loadingBar.innerHTML = '<img src="/static/assets/images/LoadingBar_C.gif" alt="Loading" />';
+                        newsItem.appendChild(loadingBar);
+
+                        try {
+                            const response = await fetch('/translate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ title: item.title, content: item.content })
+                            });
+                            if (!response.ok) throw new Error('Network response was not ok.');
+                            const translatedData = await response.json();
+
+                            newsItem.querySelector('.news-title').textContent = translatedData.title;
+                            newsItem.querySelector('.news-body').innerHTML = translatedData.content;
+                        } catch (error) {
+                            console.error('Error:', error);
+                        } finally {
+                            loadingBar.remove();
+                        }
+                    });
+
                     newsContainer.appendChild(newsItem);
                 });
             } else {
                 console.error('Received data is not an array:', seekingNewsData);
             }
-        }  
+        }
+
 
         async function gptRequest(action) {
             if (g_news.length === 0) {
@@ -465,25 +918,556 @@
                 console.error('Error:', error);
             }
         }
+        
 //************************************** 뉴스요청 함수 Ends ******************************************//        
+//**************************************** 마켓PDF분석  Starts ******************************************//
 
-    </script>          
+function performOCR(canvas) {
+    // Canvas에서 이미지 데이터를 Base64 인코딩된 문자열로 변환
+    const imageDataUrl = canvas.toDataURL('image/png');
+    // 서버로 전송할 데이터 구성
+    const data = { image: imageDataUrl };
+    document.getElementById('ocrResultArea').innerText = "";
+    document.getElementById('loading_bar_ocr').style.display = 'block';   
+
+    // Fetch API를 사용하여 서버로 POST 요청 보내기
+    fetch('/perform_ocr', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('OCR 결과:', data);
+        // OCR 결과 처리 (예: 화면에 표시)
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+        document.getElementById('ocrResultArea').innerText = data.texts;
+    })
+    .catch(error => {
+        console.error('OCR 처리 중 오류 발생:', error);
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+    });
+}
+
+function ocrGptTest(canvas) {
+    // Canvas에서 이미지 데이터를 Base64 인코딩된 문자열로 변환
+    const imageDataUrl = canvas.toDataURL('image/png');
+
+    // 서버로 전송할 데이터 구성
+    const data = { image: imageDataUrl };
+
+    document.getElementById('ocrResultArea').innerText = "";
+    document.getElementById('loading_bar_ocr').style.display = 'block';   
+    // Fetch API를 사용하여 서버로 POST 요청 보내기
+    fetch('/ocrGptTest', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('OCR 결과:', data);
+        // OCR 결과 처리 (예: 화면에 표시)
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+        document.getElementById('ocrResultArea').innerText = data.texts;
+    })
+    .catch(error => {
+        console.error('OCR 처리 중 오류 발생:', error);
+        document.getElementById('loading_bar_ocr').style.display = 'none';   
+    });
+}
+
+function interestData(){
+    alert("금리 설명하기- 준비중입니다.")
+}
+
+//**************************************** 마켓PDF분석 Ends** ******************************************//
+//************************************** 증시캘린더 함수 Starts ******************************************//
+async function goCalendar() {
+            document.getElementById('loading_bar_calendar').style.display = 'block';    
+            // AJAX 요청을 통해 서버로부터 데이터 가져오기
+            const response = await fetch('/calendar', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+                // 필요한 경우 body 추가
+            });
+            const calendarData = await response.json(); // JSON 형태로 데이터 받기
+            document.getElementById('loading_bar_calendar').style.display = 'none';    
+
+            console.log(calendarData);
+
+            // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
+            const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
+
+            // FullCalendar 초기화 및 데이터 표시
+            var calendarEl = document.getElementById('calendar');
+            if (!calendarEl) {
+                // 달력 컨테이너가 아직 페이지에 없는 경우
+                alert('Calendar element not found on the page.');
+                return;
+            }
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
+                timeZone: 'UTC',
+                expandRows: true, 
+                locale : "KO",
+                firstDay: 1,
+                navLinks: true, 
+                ihandleWindowResize : true,
+                windowResizeDelay : 100,
+                nowIndicator: true,
+                dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
+                eventLimit: true, // 더 보기 버튼 활성화              
+                events: filteredData.map(event => ({
+                    id: event.id.toString(),
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                    color: `#${event.hexColor}`, // 이벤트 색상 설정
+                    description: event.shortDesc // 이벤트 설명 추가
+                })),
+
+                eventContent: function(arg) { // 이벤트 내용 커스터마이징
+                    var element = document.createElement('div');
+                    element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
+                    return { domNodes: [element] };
+                }
+            });
+            
+            calendar.render();
+        }
+//************************************** 증시캘린더 함수 Ends ******************************************//
+//******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Starts *************************************//
+// NAVER 뉴스 기본 정보 스크래핑해오기
+function naverScrapingNews(newsType) {
+    let url;
+    var inputBox = document.querySelector('.naver-api-input');
+    if (inputBox) {  //'내가검색하기' 쪽 인풋박스 일단 클리어 
+        inputBox.value = '';  
+    }
+    document.querySelector('.news-api-btn').classList.remove('selected');
+    switch (newsType) {
+        case 1:
+            url = "https://finance.naver.com/news/mainnews.naver";
+            break;
+        case 2:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=401";
+            break;
+        case 3:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=402";
+            break;            
+        case 4:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=404";
+            break;                        
+        case 5:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=406";
+            break;            
+        case 6:
+            url = "https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=429";
+            break;            
+        default:
+            console.error('Invalid news type');
+            return;
+    }
+    const apiUrl = `/naver-scraping-news?url=${encodeURIComponent(url)}`;
+    fetch(apiUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const newsShowArea = document.getElementById('news_show_area');
+        newsShowArea.innerHTML = '';
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'naver-news-item';
+            div.innerHTML = `
+                <img src="${item.thumb_url ? item.thumb_url : '/static/assets/images/defaultNews.jpg'}" alt="" class="naver-news-thumb">
+                <div class="naver-news-content">
+                    <div class="naver-news-title">${item.article_subject}</div>
+                    <div class="naver-news-summary">${item.summary}</div>
+                    <div class="naver-news-info">${item.press} | ${item.wdate}</div>
+                </div>
+            `;
+            const button = document.createElement('button');
+            button.className = 'naver-news-detail-btn';
+            button.textContent = '자세히 보기';
+            button.addEventListener('click', function(event) {
+                fetchDetaildNews(item.article_link, event);
+            });
+            div.appendChild(button);
+            newsShowArea.appendChild(div);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching news:', error);
+        document.getElementById('news_show_area').innerHTML = '<p>뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+    });
+}
+// NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
+function fetchDetaildNews(url, event) {
+    fetch('/api/news-detail', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.text())
+    .then(html => {
+        const detailedNewsDiv = document.createElement('div');
+        detailedNewsDiv.className = 'naver-news-detailed';
+        detailedNewsDiv.innerHTML = html;
+        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', detailedNewsDiv);
+    })
+    .catch(error => {
+        console.error('Error fetching detailed news:', error);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'naver-news-detailed';
+        errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', errorDiv);
+    });
+}
+// 네이버 키워드 입력란 보이게 하는 함수
+function naverKeyword() {
+    // 'naver-api-search-area' 요소가 이미 있는지 확인
+    let searchArea = document.getElementById('naver-api-search-area');
+    
+    // 요소가 존재하지 않는 경우에만 생성 및 추가
+    if (!searchArea) {
+        searchArea = document.createElement('div');
+        searchArea.setAttribute('id', 'naver-api-search-area');
+        searchArea.innerHTML = `
+        <span>검색할 뉴스 키워드를 입력해주세요 :</span>
+        <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
+        <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
+        
+        const newsSelectionArea = document.getElementById('news_selection_area');
+        // 'news_selection_area'의 바로 다음에 검색 영역을 삽입
+        document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
+    }
+
+    // naver-api-input에 자동으로 focus 설정 및 엔터키 이벤트 핸들러 설정
+    const input = document.querySelector('.naver-api-input');
+    if (input) {
+        input.focus();
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                naverSearchAPI();
+            }
+        });
+    }
+}
+
+// 네이버 검색 API를 활용해서 뉴스까지 가져오자 
+async function naverSearchAPI() {
+    // 일단 다른 뉴스 버튼들 (news-btn)의 'selected' 클래스 제거
+    document.querySelectorAll('.news-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    // news-api-btn에 'selected' 클래스 추가
+    document.querySelector('.news-api-btn').classList.add('selected');  
+
+    const keywordInput = document.querySelector('.naver-api-input');
+    if (!keywordInput) return; // Exit if no input field found
+    const keyword = keywordInput.value;
+    // Update the apiUrl if necessary to match your FastAPI route
+    const apiUrl = `/api/search-naver?keyword=${encodeURIComponent(keyword)}`;
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const { items } = await response.json(); // Destructure to get the items array
+
+        const newsShowArea = document.getElementById('news_show_area');
+        newsShowArea.innerHTML = ''; // Clear existing content
+
+        items.forEach(item => {
+            // Remove HTML tags from the title and description
+            const title = item.title.replace(/<\/?[^>]+(>|$)/g, "");
+            const description = item.description.replace(/<\/?[^>]+(>|$)/g, "");
+
+            const div = document.createElement('div');
+            div.className = 'naver-news-item';
+            div.innerHTML = `
+                <div class="naver-news-content">
+                    <div class="naver-news-title">${title}</div>
+                    <div class="naver-news-summary">${description}</div>
+                    <div class="naver-news-info">${item.bloggername} | ${new Date(item.postdate).toLocaleDateString()}</div>
+                </div>
+                <a href="${item.link}" target="_blank" class="naver-news-detail-btn">자세히 보기</a>
+            `;
+            newsShowArea.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error fetching news:', error);
+        document.getElementById('news_show_area').innerHTML = '<p>뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+    }
+}
+//네이버 뉴스 GPT(AI) 의견보기 함수 ::  요약보여주기
+function displaySummary(summary) {
+    const summaryContainer = document.querySelector('.ai-summary-result');
+    summaryContainer.innerHTML = `<div class="summary-content">${summary}</div>`;
+    summaryContainer.style.display = 'block';
+}
+//네이버 뉴스 GPT(AI) 의견보기 함수 ::  파이썬 호출 
+async function naverGptAsk() {
+    const newsSummaryElements = document.querySelectorAll('.naver-news-summary');
+    let send_news = Array.from(newsSummaryElements).map(elem => elem.textContent.trim()).join('\n');
+    if (!send_news) {
+        alert('분석할 뉴스 데이터가 없습니다.');
+        return;
+    }
+    document.getElementById('loading_bar_navergpt').style.display = 'block';  
+//console.log(send_news);
+    try {
+        const response = await fetch('/gptRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: "navergpt",
+                g_news: send_news
+            }),
+        });
+        if (!response.ok) {
+            throw new Error('서버 오류가 발생했습니다.');
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        }
+        const data = await response.json();
+        if (data.result.error) {
+            throw new Error(data.result.error);
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        } else {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            displaySummary(data.result); 
+        }
+    } catch (error) {
+        console.error('요약 데이터를 가져오는 중 오류가 발생했습니다:', error);
+        document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        alert('데이터를 가져오는 중 오류가 발생했습니다. 오류 메시지: ' + error.message);
+    }
+}
+
+
+//******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Ends *************************************//
+//******************************** 2nd GNB:: 국내 주식 유사국면 분석 Starts*************************************//
+// 1.종목코드 불러오기(from KRX)
+async function fetchStockCodes() {
+    try {
+        const response = await fetch('/stock-codes/');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const stockCodes = await response.json();
+ //console.log(stockCodes); // 데이터 구조 확인을 위해 콘솔에 출력
+        const selectElement = $('#stockCodeSelect'); //['케이씨티', '089150'], ['케이엔에스', '432470'] 이 형태로 반복해서옴
+        selectElement.empty(); //로딩중.. 요거 메시지 제거
+        stockCodes.forEach(stock => {
+            let option = new Option(`${stock[0]} (${stock[1]})`, stock[1]);
+            selectElement.append(option);
+        });
+        selectElement.select2({
+            placeholder: "원하시는 종목을 검색해주세요!",
+            allowClear: true,
+            minimumResultsForSearch: 0 // 검색 활성화
+        }).val(null).trigger("change");
+    } catch (error) {
+        console.error("Failed to fetch stock codes: ", error);
+    }
+}
+// 2. 주식차트 데이터 불러오기(from yFinance)
+async function fetchChartData() {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const stockCode = document.getElementById('stockCodeSelect').value;
+    //유사국면 차트 조회 후 다시 처음차트 조회하면 없애버리기 + 유사국면쪽 안보이게 리셋
+    document.getElementById('stockSecondChartContainer').innerHTML = ''; 
+    document.getElementById('date-select-2').style.display = 'none';
+    document.getElementById('similarityResult').style.display = 'none';
+
+    const requestBody = JSON.stringify({ stockCode, fromDate, toDate });
+    document.getElementById('loading_bar_firstStock').style.display = 'block';
+    try {
+        const response = await fetch('/stock-chart-data', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: requestBody
+        });
+        if (!response.ok) throw new Error('Network response was not ok.');
+        const responseData = await response.json();
+        document.getElementById('loading_bar_firstStock').style.display = 'none';
+
+console.log(responseData.chartData);
+
+        drawChart(responseData.chartData, 1); // 차트그리기
+    } catch (error) {
+        document.getElementById('date-select-2').style.display = 'none';
+        document.getElementById('loading_bar_firstStock').style.display = 'none';
+        console.error('Error fetching stock chart data:', error);
+    }
+}
+
+//3. 처음 요청한 주식차트 그리기 (Feat.HighChart)
+function drawChart(chartData, num) {
+    // 데이터 유효성 검사
+    if (!chartData || !chartData.labels || chartData.labels.length === 0 || !chartData.datasets || chartData.datasets.some(dataset => dataset.data.length === 0)) {
+        console.error('Invalid or missing chart data');
+        document.getElementById('date-select-2').style.display = 'none';
+        alert('차트 데이터가 유효하지 않습니다.');
+        return; // 함수 종료
+    }
+    var container;
+    if (num === 1){
+        container = document.getElementById('stockFirstChartContainer');    
+    }else if(num === 2){
+        container = document.getElementById('stockSecondChartContainer');    
+    }
+
+    // 차트 컨테이너 존재 여부 검사
+    if (!container) {
+        console.error('Chart container not found');
+        document.getElementById('date-select-2').style.display = 'none';
+        alert('차트 컨테이너를 찾을 수 없습니다.');
+        return; // 함수 종료
+    }
+
+    const financialData = chartData.labels.map((label, index) => [
+        Date.parse(label), // x 값: 타임스탬프로 변환
+        chartData.datasets[0].data[index], // open
+        chartData.datasets[1].data[index], // high
+        chartData.datasets[2].data[index], // low
+        chartData.datasets[3].data[index]  // close
+    ]);
+
+    document.getElementById('date-select-2').style.display = 'block';
+
+    // Highstock 사용하여 차트 생성
+    Highcharts.stockChart(container, {
+        chart: {
+            backgroundColor: 'transparent'
+        },
+        rangeSelector: {
+            selected: 1
+        },
+        title: {
+            text: 'Stock Price Data'
+        },
+        series: [{
+            type: 'candlestick',
+            name: 'Stock Price',
+            data: financialData,
+            color: 'blue',
+            lineColor: 'blue',
+            upColor: 'red',
+            upLineColor: 'red',
+        }],
+        events: {
+            load: function() {
+                container.style.display = 'block';
+                container.scrollIntoView({behavior: "smooth", block: "end"});
+            }
+        }
+    });
+    container.style.display = 'block';
+    container.scrollIntoView({behavior: "smooth", block: "end"});
+    const spacer = document.createElement('div');
+    spacer.style.height = '200px';
+    document.body.appendChild(spacer);
+
+    window.scrollTo(0, document.body.scrollHeight);;
+}
+//4. 유사국면 데이터 찾기 GOGO 
+async function similarTimeSearch() {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const fromDate_2 = document.getElementById('fromDate_2').value;
+    const toDate_2 = document.getElementById('toDate_2').value;
+    const stockCode = document.getElementById('stockCodeSelect').value;
+    document.getElementById('loading_bar_secondStock').style.display = 'block';
+    document.getElementById('similarityResult').style.display = 'none';
+
+    try {
+        const response = await fetch('/find-similar-period', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({stockCode, fromDate, toDate, fromDate_2, toDate_2})
+        });
+        if (!response.ok) throw new Error('Network response was not ok.');
+
+        const result = await response.json();
+        document.getElementById('loading_bar_secondStock').style.display = 'none';
+        document.getElementById('similarityResult').style.display = 'block';
+
+console.log(result); 
+
+        // 결과 표시 
+        const similarityResultDiv = document.getElementById('similarityResult');
+        similarityResultDiv.innerHTML = `
+            <span style="color: red;">[최종 선정 유사국면]   </span> 
+            <span style="color: darkorange;">${result.bestPeriodStart} ~ ${result.bestPeriodEnd}   </span> 
+            <span style="font-size: smaller;">  (*유사도점수 </span>
+            <span style="font-size: smaller; color: darkblue;"> : ${result.dtwDistance} (Feat. DTW알고리즘))</span>
+        `;
+        drawChart(result.chartData.chartData, 2); //차트 그리기 함수 호출
+
+    } catch (error) {
+        document.getElementById('loading_bar_secondStock').style.display = 'none';
+        console.error('Error fetching Similar chart data:', error);
+    }
+}
+
+
+
+//******************************** 2nd GNB:: 국내 주식 유사국면 분석 Ends*************************************//
+    </script> 
+    
+ <!--******************************** [[스트립트 종료]]************************************-->
 <body>
     <form id="rateForm" action="/submit" method="post" style="display:none;">
     </form>
     <div class="wrap" id="chartPilot">
-        <main class="clear">
+        <!-- header 시작 -->
+        <header class="myHeader">
+            <h1 class="title-wrap">
+                <a href="#" onClick="window.location.reload()"><img src="/static/assets/images/logo.png" alt="AI솔루션본부 PILOT" /></a>
+            </h1>
+            <nav class="menux">
+                <ul>
+                    <li data-menu="menu1"><a href="#">[해외]마켓데이터 분석</a></li>
+                    <li data-menu="menu2"><a href="#">[국내]마켓데이터 분석</a></li>
+                    <li data-menu="menu3"><a href="#">리서치 리포트 분석</a></li>
+                </ul>
+            </nav>
+        </header>
+        <mainx class="clear">
+             <!-- left-nav 메뉴 시작 -->
             <div class="left-area">
                 <div class="title-wrap">
-                    <span>AI</span> Science팀 <span>Pilot</span>
+                    <span>AI</span> Science팀 <span>Work</span>
+                </div>
+                <div class="co-working-info">
+                    <span class="highlight">★co-working :</span><br/>
+                    채권부문, Equity솔루션본부<br/>고객자산배분본부, 디지털리서치팀
                 </div>
                 <div class="menu-wrap">
                     <ul class="menu-list">
-                        <li class="page-menu on" data-tab="menua"><a href="#none">1. AI가 말해주는 주식 정보 [해외]</a></li>
-                        <li class="page-menu" data-tab="menub"><a href="#none">2. 글로벌 주요경제지표</a></li>
-                        <li class="page-menu" data-tab="menuc"><a href="#none">3. 뉴스 데이터 분석 [해외] </a></li>
-                        <li class="page-menu" data-tab="menud"><a href="#none">4. 금리 데이터 분석</a></li>
-                        <li class="page-menu" data-tab="menue"><a href="javascript:goCalendar();">5. 증시 캘린더</a></li>
+                        <li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>
+                        <li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>
+                        <li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외] </a></li>
+                        <li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>
+                        <li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>
                     </ul>
                 </div>
 
@@ -494,13 +1478,37 @@
             <div class="right-area">
                 <div id="menua" class="menu-cont on">
                     <h2 class="s-tit">AI가 말해주는 주식 정보 [해외]</h2>
-                    <h3 class="s-tit">종목코드를 입력해주세요 (*예: AAPL) </h3>
+                    <h3 class="s-tit">종목코드를 선택해주세요! </h3>
                     <div class="input-container">
-                        <input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">
+                        <!--<input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">--> 
+                        <div class="foreign-search-box">
+                            <select id="foreign_ticker" style="width: 100%"></select>
+                        </div>                        
                         <div class="buttons-container">
-                            <button class="chartBtn" id="getStockInfo" onclick="loadChartData();">Get Stock Info</button>
+                            <button class="basicInfoBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info<p>(종목 기본정보)</p></button>
+                            <button class="earningBtn" id="getEarningInfo" onclick="loadEarningData();">Get Earning Info<p>(실적 데이터)</button>                            
                         </div>
                     </div>
+                    <!-- 해외주식 기본정보 보여주는 영역 시작--> 
+                    <div class="stockBasic-input-container">
+
+                    </div>
+                    <div id="loading_bar_stockbasic" class="loading_bar_stockbasic" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text-stockbasic">데이터 로딩중입니다.</p>
+                    </div>                      
+                    <div class="stockBasic-gpt-chart-area" id="stockBasic_info_area" style="display: none;">
+                        <div>
+                            <div id="stockBasic_company_info"></div>
+                            <div id="stockBasic_finance_info"></div>
+                        </div>
+                        <div>
+                            <div id="annualFinancialsChart" style="width:100%; height:400px;"></div>
+                            <div id="quarterlyGrowthChart" style="width:100%; height:400px;"></div>
+                        </div>                        
+                    </div>                    
+                    <!-- 해외주식 기본정보 보여주는 영역 끝--> 
+
                     <div id="loading_bar_fingpt" class="loading_bar" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_C.gif">
                         <p>데이터 로딩중입니다.</p>
@@ -510,6 +1518,34 @@
                             <img id="earningsChart" alt="Earnings Chart">
                             <img id="recommendationsChart" alt="Recommendations Chart">
                         </div>
+                    </div>
+                    <div id="gpt-earning-table-area" style="display: none;">
+                        <div class="earning-title-container">
+                            <h2>최근 실적발표 데이터 정리</h2>
+                        </div>
+                        <table class="earning-table">
+                            <tr>
+                                <th class="earning-header-content">내용</th>
+                                <th>latest_earning_quarter</th>
+                                <th>YoY(%,달러)</th>
+                                <th>QoQ(%,달러)</th>
+                                <th>컨센 beat/miss</th>
+                            </tr>
+                            <tr>
+                                <td>매출액</td>
+                                <td>latest_revenue</td>
+                                <td>yoy_revenue_growth</td>
+                                <td>qoq_revenue_growth</td>
+                                <td>revenue_beat_miss_ratio</td>
+                            </tr>
+                            <tr>
+                                <td>영업이익</td>
+                                <td>latest_eps</td>
+                                <td>yoy_eps_growth</td>
+                                <td>qoq_eps_growth</td>
+                                <td>eps_beat_miss_ratio</td>
+                            </tr>
+                        </table>
                     </div>
                     <div class="gpt-message-area" id="gpt-message-area" style="display: none;">
                         <div id="analysisResultBox" class="result-box">
@@ -569,7 +1605,7 @@
                                     <label for="aiOpinionCheck" class="ai-opinion-label">AI의견 함께보기</label>
                                 </div>
                                 <div class="center-button">
-                                    <button type="button" id="indicatorButton" onclick="fetchAndDisplayIndicators();">Show Chart</button>
+                                    <button type="button" id="indicatorButton" class="indicatorButton" onclick="fetchAndDisplayIndicators();">Show Chart</button>
                                 </div>                        
                                 <button type="button" id="clearButton" onclick="clearData();">데이터 클리어</button>
                             </div> 
@@ -581,7 +1617,7 @@
 
                     <div id="loading_bar_economics" class="loading_bar" style="display: none;">
                         <img src="/static/assets/images/LoadingBar_A.gif">
-                        <p>데이터 로딩중입니다.</p>
+                        <p class="loading-text-economics">핵심지표 분석중입니다.<br/>(AI 분석은 시간이 오래 걸릴 수 있습니다)</p>
                     </div>                   
                     <div id="chartContainer" style="display: none;">
                         <canvas id="myEconomicChart" width="1200" height="600"></canvas>
@@ -597,7 +1633,30 @@
                             <div id="chartAnalysis"></div>
                         </ul>
                     </div>
-                    <h3 class="s-tit">2> 핵심지표 분석</h3>
+                    <h3 class="nth-menu">2> 미국 채권 데이터 분석</h3>
+                    <div class="bond-chart-area">
+                        <div id="loading_bar_bonds" class="loading_bar" style="margin-left: 0px;">
+                            <img src="/static/assets/images/LoadingBar_C.gif">
+                            <p>데이터 로딩중입니다.</p>
+                        </div>   
+                        <div id="bonds_chart_div"></div>           
+                        <div id="interest_chart_div"></div>  
+                    </div>
+                    <div class="bond-area" id="bond-area" style="display:none;">
+                        <div class="center-button">
+                            <button type="button" id="bondNewsButton" class="indicatorButton" onclick="fetchAndDisplayBondsNews('market-news::financials|market-news::issuance|market-news::us-economy');">채권관련 최근뉴스 보기</button>
+                        </div>
+                        <div id="loading_bar_bondsNews" class="loading_bar" style="margin-left: 0px;">
+                            <img src="/static/assets/images/LoadingBar_A.gif">
+                            <p class="loading-text">데이터 로딩중입니다.</p>
+                        </div>                                                   
+                        <div class="bondNews-instruction">
+                            <ul class="news-dep">
+                                <div id="bonds_news_div"></div>  
+                            </ul>
+                        </div>   
+                    </div>                                     
+
                 </div>
 
 
@@ -710,7 +1769,7 @@
                         </div>                            
                     </div>
                      <div class="buttons-container">
-                        <button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>
+                        <!--<button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>-->
                         <button class="btn" onclick="javascript:gptRequest('opinions')">AI 의견보기</button>
                         <button class="btn" onclick="javascript:gptRequest('summarize')">내용 요약하기</button>
                     </div>
@@ -724,7 +1783,7 @@
                     </div>
                     <div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_B.gif">
-                        <p>데이터 로딩중입니다.</p>
+                        <p class="loading-text">데이터 로딩중입니다.</p>
                     </div>                    
                     <div id="gpt-summary-container" style="display:none;">
                         <h3 class="gpt_t">GPT Summary</h3>     
@@ -747,22 +1806,24 @@
                 </div>
 
                 <div id="menud" class="menu-cont">
-                    <h2 class="s-tit">미국증시20년 1</h2>
-                    <h3 class="s-tit">해당 그래프에 대한 추가 설명문구 영역</h3>
-                    <div class="chart-area">
-                        <div id="loading_bar_fred" class="loading_bar" style="margin-left: 0px;">
-                            <img src="/static/assets/images/LoadingBar_C.gif">
-                            <p>데이터 로딩중입니다.</p>
-                        </div>                          
-                        {{ plot_html|safe }}
+                    <h2 class="s-tit">마켓 PDF 분석</h2>
+                    <h3 class="s-tit">Market Data Weekly 분석화면</h3>
+                    <div class="upload-container">
+                        <h2>Upload your PDF</h2>
+                        <input type="file" id="fileInput" accept=".pdf" hidden/>
+                        <label for="fileInput" class="file-label">Choose a file</label>
+                        <span id="fileName" class="file-name">[No file chosen yet]</span>
+                        <canvas id="pdfCanvas" hidden></canvas>
                     </div>
-
+                    <div id="ocrArea"></div>
+                    <div id="buttonsContainer" style="text-align: center;"></div> 
+                    <div id="loading_bar_ocr" class="loading_bar_translate">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">데이터 로딩중입니다.</p>
+                    </div>
                     <div class="box-instruction">
                         <ul class="list-dep">
-                            <li>2001년: 미국 증시는 도트컴 버블의 붕괴로 인해 급격한 하락세를 보였습니다. 기술주와 인터넷 기업들의 폭망으로 인해 경기 둔화와 불확실성이 발생했습니다.</li>
-                            <li>2002년 - 2007년: 그 이후로 증시는 점진적인 회복을 시작했습니다. 경기 침체의 끝과 함께 회복 신호가 보이면서 주식시장은 점차 상승을 이어갔습니다. 부동산 부문에서의 성장과 함께 경제 상황이 개선되었습니다.</li>
-                            <li>2008년: 금융위기가 발발하면서 증시는 2008년 하락세를 겪게 되었습니다. 서브프라임 모기지 위기로 인한 금융 기관의 파산 우려로 경기 둔화와 대량 해고가 발생했습니다.</li>
-                            <li>2009년 - 2012년: 금융위기 이후 미국 정부의 강력한 경기부양 정책에 의해 증시는 회복을 시작했습니다. 경기 침체를 넘어선 후 점차 상승세를 이어갔으며, QE 정책과 저금리 환경이 이어지면서 주식시장은 안정성을 되찾았습니다.</li>
+                            <div id="ocrResultArea"></div>
                         </ul>
                     </div>
                 </div>
@@ -776,24 +1837,101 @@
                         <p>데이터 로딩중입니다.</p>
                     </div>     
                     <div id="calendar"></div>                        
+                </div>     
+<!--************************************ [[ GNB 2ND ]]  Starts ****************************************-->                 
+<!--******************************* [국내] 마켓데이터 분석 Starts ***************************************-->                 
+                <div id="menu_2nd_a" class="menu-cont">
+                    <h2 class="s-tit">국내 뉴스 Summary</h2>
+                    <h3 class="s-tit">주요 시장 뉴스를 확인해보세요</h3>
+ 
+   
+                    <div id="news_selection_area" class="news-selection">
+                        <button class="news-btn selected" data-news-type="주요뉴스" onclick="naverScrapingNews(1)">주요뉴스</button>
+                        <button class="news-btn" data-news-type="시황,전망" onclick="naverScrapingNews(2)">시황,전망</button>
+                        <button class="news-btn" data-news-type="기업,종목분석" onclick="naverScrapingNews(3)">기업,종목분석</button>
+                        <button class="news-btn" data-news-type="채권,선물" onclick="naverScrapingNews(4)">채권,선물</button>
+                        <button class="news-btn" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</button>
+                        <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
+                        <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">그냥 내가 검색</button>
                     </div>
-                </div>                
+                    <!-- AI 요약 버튼 추가 -->
+                    <div class="ai-summary-button-container">
+                        <button class="ai-summary-button" onclick="naverGptAsk()">아래 기사들에 대한 AI 요약 및 의견 보기</button>
+                    </div>
+                    <div class="ai-summary-result" style="display:none;"></div>
+                    <div id="loading_bar_navergpt" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">데이터 로딩중입니다. AI 의견은 속도가 느릴수 있습니다.</p>
+                    </div>                      
+                    <div id="news_show_area" class="news-show"></div> 
+                </div> 
+<!--******************************* [국내] 마켓데이터 분석 Ends ***************************************-->                                                  
+<!--******************************* [국내] 유사 국면 분석 Starts ***************************************--> 
+                <div id="menu_2nd_b" class="menu-cont">
+                    <h2 class="s-tit">국내 주식 유사국면 찾기</h2>
+                    <h3 class="s-tit">특정 주식을 골라 유사국면을 검색해보세요</h3>
+  
+                    <div class="stock-search-box">
+                        <select id="stockCodeSelect" style="width: 100%"></select>
+                    </div>
+                    <div class="date-selection">
+                        <p class="date-instruction">"해당 종목의 차트데이터 확인을 위해 하단 날짜를 선택해주세요"</p>
+                        <label for="fromDate">From</label>
+                        <input type="text" id="fromDate" name="fromDate">
+                        <label for="toDate">To</label>
+                        <input type="text" id="toDate" name="toDate"><br/>
+                        <button id="stockChartsearch" class="stockChartsearch" onclick="fetchChartData()">검색</button>
+                    </div>   
+                    <!-- 처음 차트가 실제 그려지는 영역임-->
+                    <div id="loading_bar_firstStock" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">차트 로딩중입니다.</p>
+                    </div>
+                    <div id="stockFirstChartContainer" class="stockChartContainer"></div>
+                    <div id="date-select-2" class="date-selection">
+                        <p class="date-instruction2">"현재 조회된 차트데이터와 유사한 과거 기록을 찾을 구간을 선택해주세요"</p>
+                        <label for="fromDate">From</label>
+                        <input type="text" id="fromDate_2" name="fromDate">
+                        <label for="toDate">To</label>
+                        <input type="text" id="toDate_2" name="toDate"><br/>
+                        <button id="similarTimeSearch" class="stockChartsearch" onclick="similarTimeSearch()">유사국면 찾기</button>
+                    </div> 
+                    <div id="loading_bar_secondStock" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text-similar">유사국면 차트 로딩중입니다.<br/>(유사국면 검색은 시간이 오래 걸릴 수 있습니다)</p>
+                    </div>
+                    <div id="similarityResult" class="similarity-result"></div>
+                    <div id="stockSecondChartContainer" class="stockChartContainer"></div>                 
+                    <div id="moreToDev" class="moreToDev"></div>                 
+                </div> 
+<!--********************************* [국내] 유사 국면 분석 Ends *****************************************--> 
             </div>
-            <!-- 우측 영역 끝 -->
+            <!-- 우측 Main 화면영역 끝 -->
 
         </main>
 
     </div>
     <!-- wrap 끝 -->
     <script>
-
         function guideTab(){
-            $('.menu-list li').click(function(){
+            $('.menu-list li').click(function(event){
+                event.preventDefault(); // 기본 동작 방지
                 var activeTab = $(this).attr('data-tab');
                 window.location.hash = activeTab; // URL 해시를 변경
-                setActiveTab();
+
+                // 여기서 추가적인 액션을 호출
+                switch(activeTab) {
+                    case 'menub':
+                        fetchBondsData(); // 글로벌 주요경제지표 데이터 가져오기
+                        break;
+                    case 'menue':
+                        goCalendar(); // 증시 캘린더 보여주기
+                        break;
+                    // 다른 탭에 대한 추가적인 액션을 여기에 추가할 수 있습니다.
+                }
             });
         }
+
         function setActiveTab() {
             var activeTab = window.location.hash.replace('#', '');
             if(activeTab) {
@@ -801,14 +1939,103 @@
                 $('[data-tab="' + activeTab + '"]').addClass('on');
                 $('#' + activeTab).addClass('on');
             }
-        }
-        $(document).ready(function(){
-            guideTab();
-            setActiveTab(); // 페이지 로딩 시 활성 탭 설정
+        }   
+     
+        $(document).ready(function() {
+            // 메뉴에 따른 추가적인 액션을 실행
+            function executeTabAction(activeTab) {
+                switch(activeTab) {
+                    case 'menub':
+                        fetchBondsData(); // 글로벌 주요경제지표 데이터 가져오기
+                        break;
+                    case 'menue':
+                        goCalendar(); // 증시 캘린더 보여주기
+                        break;
+                    case 'menu_2nd_a':
+                        naverScrapingNews(1); // 네이버 주요뉴스 스크래핑한거 보여주기
+                        break;
+                 }
+            }                
+            // 메뉴 업데이트와 이벤트 바인딩을 처리하는 함수
+            function updateAndBindMenu() {
+                $('.menux ul li').click(function(event) {
+                    event.preventDefault(); // 기본 동작 방지                    
+                    var menuType = $(this).data('menu');
+                    updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
+                });
+        
+                // 메뉴 리스트 항목에 대한 클릭 이벤트 바인딩
+                $('.menu-list').on('click', 'li', function(event) {
+                    event.preventDefault(); // 기본 동작 방지
+                    var activeTab = $(this).data('tab');
+                    window.location.hash = activeTab; // URL 해시를 변경
+        
+                    // 여기서 추가적인 액션을 호출
+                    executeTabAction(activeTab);
+                });
+        
+                setActiveTab(); // 활성 탭 설정
+                $(window).on('hashchange', setActiveTab); // 해시 변경에 따른 탭 설정
+            }
+            // 직접적으로 탭을 활성화하는 함수. 화면이 자꾸 위로 올라가서 새로만듬..
+            function setActiveTabDirectly(activeTab) {
+                $('.menu-list li, .menu-cont').removeClass('on'); // 모든 탭과 컨텐츠의 활성화 상태를 제거
+                $('li.page-menu[data-tab="' + activeTab + '"]').addClass('on'); // 지정된 탭 활성화
+                $('#' + activeTab).addClass('on'); // 지정된 탭에 해당하는 컨텐츠 활성화
+
+                executeTabAction(activeTab);
+            }                 
+  
+            //GNB 넣으면서 메뉴구조 바꾸기!! 파일쪼개기는 시간상 버겁다 ㅠㅠ
+            function updateMenuList(menuType) {
+                $('.menu-list').empty(); // 기존 메뉴 리스트 비우기
+             
+                var menuItems = [];
+                if(menuType === 'menu1') {
+                    // 마켓데이터 해외 메뉴 리스트
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>',
+                        '<li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>',
+                        '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외]</a></li>',
+                        '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',
+                        '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                } else if(menuType === 'menu2') {
+                    // 마켓데이터 국내 메뉴 리스트
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menu_2nd_a"><a href="javascript:void(0);">1. 국내 뉴스 정보</a></li>',
+                        '<li class="page-menu" data-tab="menu_2nd_b"><a href="javascript:void(0);">2. 유사국면 분석</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                } else if(menuType === 'menu3') {
+                    var menuItems = [
+                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 디지털리서치팀::요건분석중입니다</a></li>'
+                    ];
+                    $('.menu-list').append(menuItems.join(''));
+                }
+                // GNB 클릭 시 첫 번째 하위 메뉴 활성화
+                if(menuType === 'menu2') {
+                    // setTimeout 사용하여 DOM 업데이트가 완료된 후에 실행
+                    setTimeout(function() {
+                        setActiveTabDirectly('menu_2nd_a'); // 직접적으로 탭을 활성화
+                    }, 1);
+                }
+
+                updateAndBindMenu(); // 페이지 로딩 시 메뉴 업데이트와 이벤트 바인딩 실행
+            }
+        
+            $('.menux ul li').click(function(event) {
+                event.preventDefault(); // 기본 동작 방지
+                var menuType = $(this).data('menu');
+                updateMenuList(menuType); // 메뉴 타입에 따라 메뉴 리스트 업데이트
+            });
+        
+            updateAndBindMenu(); // 초기 이벤트 바인딩
+            setActiveTab(); // 활성 탭 설정
+            $(window).on('hashchange', setActiveTab); // 해시 변경에 따른 탭 설정
         });
-        $(window).on('load', function(){
-            
-        });
+        
         /**** News 영역 Listener****/
         // 'All Market News' 체크박스를 클릭할 때 다른 체크박스를 체크 해제하자
         document.getElementById('all').addEventListener('click', function() {
@@ -827,7 +2054,83 @@
                 }
             });
         });
+        // 국내 뉴스 버튼 제어용 (selected 되게)
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.news-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
+                    this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
+                });
+            });
+             //FinGPT 메뉴(해외)와 유사국면 메뉴에서 종목코드 로드 세팅함수임
+             function initializeSelect2(selector, placeholderText) {
+                $(selector).select2({
+                    placeholder: placeholderText,
+                    language: {
+                        noResults: function() {
+                            return "종목을 찾을 수 없습니다.";
+                        },
+                        searching: function() {
+                            return "종목 로딩중..";
+                        }
+                    },
+                    minimumResultsForSearch: Infinity
+                }).val(null).trigger("change");
+            }
+            fetchStockCodes();
+            initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");
+            //fetchForeignStockCodes();  너무 느려서 아래 검색방식으로 변경함 
+            $('#foreign_ticker').select2({
+                ajax: {
+                    url: '/api/get_foreign_stock_symbols', 
+                    dataType: 'json',
+                    delay: 550, // 사용자가 마지막으로 입력한 후 검색이 시작되기까지의 지연 시간 (밀리초)
+                    data: function (params) {
+                        return {
+                            q: params.term, //  사용자 검색한거 
+                            page: params.page // 페이지 번호인데 나중에 필요한 경우 사용하자
+                        };
+                    },
+                    processResults: function (data, params) {
+                        return {
+                            results: data.map(stock => ({ id: stock.symbol, text: `${stock.description} (${stock.symbol})` }))
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: '원하시는 종목을 검색해주세요!',
+                minimumInputLength: 1, // 사용자가 최소 1개의 문자를 입력하기 전까지는 검색 결과를 표시하지 않음
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return "검색 결과가 없습니다."; 
+                    }
+                }
+            });
+
+            //유사국면에서 데이트피커 컨트롤
+            $("#fromDate, #toDate").datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true
+            });
+            $("#fromDate_2, #toDate_2").datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true
+            });            
+            $("#fromDate").datepicker("setDate", "2023-02-16"); // fromDate 기본값 설정
+            $("#toDate").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정
+            $("#fromDate_2").datepicker("setDate", "2017-02-24"); // fromDate 기본값 설정
+            $("#toDate_2").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정            
+            //유사국면에서 슬라이더바쪽 컨트롤
+        });
 
   </script>
   </body>
+   <!-- PDF.js 라이브러리 로드 -->
+   <script type="module" src="/static/assets/js/pdf.mjs"></script>
+   <script type="module" src="/static/assets/js/pdf.worker.mjs"></script>
+   <script src="/static/assets/js/pdf-to-image.js"></script>
 </html>
