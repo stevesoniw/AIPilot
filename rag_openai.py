@@ -33,7 +33,7 @@ class ChatPDF:
         self.model = ChatOpenAI(temperature=0.1, openai_api_key=config.OPENAI_API_KEY)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=config.OPENAI_API_KEY)
         # text_splitter 정의 
-        self.text_splitter = CharacterTextSplitter(chunk_size=1024, chunk_overlap=100, separator= "\n\n\n")
+        self.text_splitter = CharacterTextSplitter(chunk_size=512, chunk_overlap=50, separator= "\n\n\n")
         # Elastic Search 정리
         self.ES_INDEX_NAME = "research-test"
         self.ES_URL = config.ELASTIC_URL
@@ -51,7 +51,7 @@ class ChatPDF:
             ]
         )
     # Unique ID 생성하기
-    def generate_uuid_with_prefix():
+    def generate_uuid_with_prefix(self):
         unique_id = "id_" + str(uuid.uuid4())
         return unique_id
 
@@ -62,7 +62,7 @@ class ChatPDF:
         #print(prompt_text)
         prompt = ChatPromptTemplate.from_template(prompt_text)
         # Summary chain
-        model = ChatOpenAI(temperature=0, model=self.LLM_MODEL_NAME)
+        model = self.model
         chain = LLMChain(
             llm=model,
             prompt=prompt
@@ -70,8 +70,36 @@ class ChatPDF:
         answer = chain.run(query)
         return answer     
     
-    # chunk neat하게 
-    def processChunks(self,chunks):
+
+    async def ingest(self, file_path: str = None, file_type: str = None, file_name_itself: str = None, chunks: list = None):
+        if file_path and file_type:
+            if file_type == 'pdf':
+                loader = PyPDFLoader(file_path=file_path)
+                docs = loader.load()
+                print("***********************")
+                print(docs)
+                if isinstance(docs, list):
+                    text_list = [doc.page_content for doc in docs]
+                    docs = "\n".join(text_list)
+            elif file_type == 'docx':
+                loader = Docx2txtLoader(file_path=file_path)
+                docs = loader.load()
+                docs = "\n".join(docs) if isinstance(docs, list) else docs
+            else:
+                raise ValueError("File path and file type must be provided.")
+
+        doc =  Doc(page_content=docs, metadata={"source": file_name_itself})
+
+        #chunk & 복잡한 거 일단 정규화 및 제거
+        chunks = self.text_splitter.split_documents([doc])
+        chunks = filter_complex_metadata(chunks) 
+        print(chunks)
+
+        #Data 넣어줄 것 잘 가공하기 
+        vectors=[]
+        id_vectors=[]
+        meta = {}
+
         for doc in chunks:
             family_id = self.generate_uuid_with_prefix()
             text_id = self.generate_uuid_with_prefix()
@@ -80,77 +108,50 @@ class ChatPDF:
             datas = {"id": text_summary_id, "vector": [], "text": "", "metadata": {}}
             meta = {}
             get_summary = self.call_multivector(doc.page_content)
-
-            embeds = self.embeddings.embed_query(get_summary)["result"]["embedding"]   
-            
-            query_result = self.es_client.search(index=self.ES_INDEX_NAME, body=embeds)
-            
+            print("****** summary ******************************************************")
+            print(get_summary)
+            embeds = self.embeddings.embed_query(get_summary)
+            print("****** embeds *************************************** ******************************************************")
+            print(embeds)
             datas["text"] = get_summary
             datas["vector"] = embeds
-
             meta["text"] = get_summary
             meta["original_text"] = doc.page_content
             meta["text_title_yn"] = "Y"
             meta["table_yn"] = "N"
             meta["family_id"] = family_id
-            meta["source"] = file_name
-            datas["metadata"] = meta      
-
-  
-
-    async def ingest(self, file_path: str = None, file_type: str = None, file_name_itself: str = None, chunks: list = None):
-        if file_path and file_type:
-            if file_type == 'pdf':
-                docs = PyPDFLoader(file_path=file_path)
-            elif file_type == 'docx':
-                loader = Docx2txtLoader(file_path=file_path)
-                docs = loader.load()
-            else:
-                raise ValueError("File path and file type must be provided.")
-
-        doc =  Doc(page_content=docs, metadata={"source": file_name_itself})
-
-        #chunk & 복잡한 거 일단 정규화 및 제거
-        chunks = self.text_splitter.split_documents(doc)
-        chunks = filter_complex_metadata(chunks) 
-        print(chunks)
-
-        returnData = self.processChunks(chunks, file_name_itself)
-
-        vectors=[]
-        id_vectors=[]
-        meta = {}
+            meta["source"] = file_name_itself
+            datas["metadata"] = meta              
+            #요약 먼저  업데이트 
+            self.es_client.update(body={"doc" : datas, "doc_as_upsert" : True}, index=self.ES_INDEX_NAME, id=datas["id"], upsert={"id": datas["id"]})
             
-
+            print("************************[Summary Updated][Original Starts*********************************")
             
-        if chunks is None:
-            raise ValueError("Either a pdf_file_path must be provided or chunks of text.")
+            datas = {"id": text_id, "vector": [], "text": "", "metadata": {}}
+            meta = {}
+            embeds = self.embeddings.embed_query(doc.page_content)  
 
-
+            datas["vector"] = embeds
+            datas["text"] = doc.page_content
+            doc.metadata["text"] = doc.page_content
+            meta["table_yn"] = "N"
+            meta["text_title_yn"] = "N"
+            meta["family_id"] = family_id
+            meta["source"] = file_name_itself
+            datas["metadata"] = meta        
+            
+            self.es_client.update(body={"doc" : datas, "doc_as_upsert" : True}, index=self.ES_INDEX_NAME, id=datas["id"], upsert={"id": datas["id"]})
+        
 ########################################################################################
-        
-
-        vector_store = ElasticsearchStore(
-            es_url=self.ES_URL,
-            es_user=self.ES_USERNAME,
-            es_password=self.ES_PASSWORD,
-            embedding=self.embeddings,
-            index_name="research-test",
-        )
-
-        #document_ids = vector_store.add_documents(documents=chunks)  
-        document_ids = vector_store.add_embeddings(body={"doc" : chunks, "doc_as_upsert" : True})  
-        
-        print(f"Indexed documents with IDs: {document_ids}")
-
-        # Refresh index to make sure all documents are searchable
+   
         self.es_client.indices.refresh(index="research-test")
 
-        self.retriever = vector_store.as_retriever(
+        '''self.retriever = ElasticsearchStore(index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()(
             search_type="similarity_score_threshold",
             search_kwargs={"k": 3, "score_threshold": 0.5},
-        )
+        )'''
 
+        self.retriever = ElasticsearchStore(index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()
         self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
                       | self.prompt
                       | self.model
