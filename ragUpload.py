@@ -40,6 +40,6 @@ async def process_message(message_body: Message):
     if not message or len(message.strip()) == 0:
         raise HTTPException(status_code=400, detail="Empty message")
     
-    response_message = assistant.ask(message.strip())
+    response_message = await assistant.ask(message.strip())
     return {"message": response_message}
 

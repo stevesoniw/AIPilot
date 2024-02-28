@@ -9,6 +9,8 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
+from langchain.chains.question_answering import load_qa_chain
+from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
 from langchain.vectorstores.utils import filter_complex_metadata
 from langchain.docstore.document import Document as Doc
 from langchain_elasticsearch import ElasticsearchStore
@@ -151,17 +153,18 @@ class ChatPDF:
             search_kwargs={"k": 3, "score_threshold": 0.5},
         )'''
 
-        self.retriever = ElasticsearchStore(index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()
+
+        
+    async def ask(self, query: str):
+
+        self.retriever = ElasticsearchStore(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()
         self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
                       | self.prompt
                       | self.model
                       | StrOutputParser())
-
-    def ask(self, query: str):
-        if not self.chain:
-            return "Please, add a PDF document first."
-        print(self.chain.invoke(query))
-        return self.chain.invoke(query)
+        result = self.retriever.get_relevant_documents(query)
+        return result[0]
+        #return self.chain.invoke(query)
 
     def clear(self):
         self.vector_store = None

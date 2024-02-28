@@ -1494,7 +1494,20 @@
                     throw new Error(`RAG HTTP error! status: ${response.status}`);
                 }
                 const result = await response.json();
-                console.log(result.message);
+                if (result.message) {
+                    console.log(result.message);
+                    // 답변온것 보여주는 영역
+                    const newMessage = document.createElement('div');
+                    newMessage.classList.add('rag-message', 'rag-received');
+                    const messageTextDiv = document.createElement('div');
+                    messageTextDiv.classList.add('rag-text');
+                    messageTextDiv.textContent = result.message;
+                    newMessage.appendChild(messageTextDiv);
+                    document.querySelector('.rag-messages').appendChild(newMessage);
+                } else {
+                    console.error("No message received from the RAG server.");
+                    const defaultMsg = "No response from the RAG server.";
+                }
             } catch (error) {
                 console.error("RAG Fetch error: " + error.message);
             }            
