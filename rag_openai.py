@@ -9,17 +9,20 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
 from langchain.vectorstores.utils import filter_complex_metadata
 from langchain.docstore.document import Document as Doc
 from langchain_elasticsearch import ElasticsearchStore
+from langchain.chains import create_history_aware_retriever
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.retrievers.self_query.base import SelfQueryRetriever
+from langchain.chains import create_retrieval_chain
+from langchain_core.prompts import MessagesPlaceholder
 from elasticsearch import Elasticsearch
 # 기본 유틸
 import config
 import os
 import uuid
-
+from pprint import pprint
 #https://research-test-ki113xk.svc.gcp-starter.pinecone.io
 
 
@@ -28,12 +31,13 @@ class ChatPDF:
     retriever = None
     chain = None
     LLM_MODEL_NAME = "gpt-4-1106-preview"
-    OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
+    #OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
+    OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
     def __init__(self):
         # openAI 쪽 정의
-        self.model = ChatOpenAI(temperature=0.1, openai_api_key=config.OPENAI_API_KEY)
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=config.OPENAI_API_KEY)
+        self.llmModel = ChatOpenAI(temperature=0.1, openai_api_key=config.OPENAI_API_KEY)
+        self.embeddings = OpenAIEmbeddings(model=self.OPENAI_EMBEDDING_MODEL, openai_api_key=config.OPENAI_API_KEY)
         # text_splitter 정의 
         self.text_splitter = CharacterTextSplitter(chunk_size=512, chunk_overlap=50, separator= "\n\n\n")
         # Elastic Search 정리
@@ -64,7 +68,7 @@ class ChatPDF:
         #print(prompt_text)
         prompt = ChatPromptTemplate.from_template(prompt_text)
         # Summary chain
-        model = self.model
+        model = self.llmModel
         chain = LLMChain(
             llm=model,
             prompt=prompt
@@ -157,14 +161,31 @@ class ChatPDF:
         
     async def ask(self, query: str):
 
-        self.retriever = ElasticsearchStore(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()
+        '''self.retriever = ElasticsearchStore(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()
         self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
                       | self.prompt
-                      | self.model
+                      | self.llmModel
                       | StrOutputParser())
         result = self.retriever.get_relevant_documents(query)
-        return result[0]
-        #return self.chain.invoke(query)
+        return result[0].page_content'''
+        #vector = ElasticsearchStore.from_documents(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD)
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "Answer the user's questions based on the below context:\n\n{context}"),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
+        ])
+        #document_chain = create_stuff_documents_chain(self.llmModel, prompt)
+        #retrieval_chain = create_retrieval_chain(retriever_chain, document_chain)
+        document_content_description = "market data research document"
+        retriever = SelfQueryRetriever.from_llm(lll= self.llmModel, vectorstore=self.es_client, document_contents=document_content_description, verbose=True)
+        #retriever_chain  = create_history_aware_retriever(self.llmModel, retriever, prompt)
+        relevant_answer = retriever.get_relevant_documents(query)
+        #response = retriever.invoke({"input": query})
+        pprint(relevant_answer)
+        return relevant_answer[0].page_content
+        print(response[0].page_content)
+
 
     def clear(self):
         self.vector_store = None
