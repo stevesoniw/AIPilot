@@ -6,9 +6,7 @@ from typing import List
 import os
 import tempfile
 
-
-# ChatPDF 클래스 및 기타 필요한 모듈을 여기에 임포트하세요
-# from rag_openai import ChatPDF
+# 기본 함수들은 다 rag_openai 파일에 정의함 
 
 router = APIRouter()
 # FastAPI로 ChatPDF 인스턴스 초기화

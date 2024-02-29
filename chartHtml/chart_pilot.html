@@ -499,6 +499,15 @@
              catch (error) {
             }         
         }
+        // 채팅에 설정버튼 기능
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = (modal.style.display === 'none' || modal.style.display === '') ? 'flex' : 'none';
+        }
+        function closeChatApp() {
+            document.getElementById('chatApp').style.display = 'none';
+            window.scrollTo(0, 0);
+        }
 
 
 
@@ -1666,9 +1675,52 @@
                     </div>
                     <!-- AI가 말해주는 주식 정보 [#4 ASK AI Anything]-->     
                     <div id="chatApp" style="display:none;">
-                        <div id="chatTitle">AI TALK</div>
+                        <div id="chatTitle">
+                            AI TALK
+                            <div class="setting-buttons-container">                            
+                                <img src="/static/assets/images/settings.png" alt="Settings" id="settingsButton" onclick="toggleSettingsModal();">
+                                <img src="/static/assets/images/close.png" alt="Close" id="closeButton" onclick="closeChatApp();">
+                            </div>
+                        </div>
                         <div id="chatMessages"></div>
                         <input type="text" id="chatInput" placeholder="메시지를 입력하세요!">
+                        <!--채팅창의 설정창 모달팝업-->
+                        <div id="settingsModal" style="display:none;">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    AI 와의 대화를 위한 설정 영역입니다
+                                    <img src="/static/assets/images/close3.png" alt="Close" id="modalCloseButton" onclick="toggleSettingsModal();" style="cursor: pointer;">
+                                </div>
+                                <div class="modal-body">
+                                    <label class="custom-radio">
+                                        <input type="radio" name="aiOption" value="gpt4">
+                                        일반 GPT4 TALK
+                                        <span class="hint">※ 반드시 hallucination(거짓말) 에 주의해주세요. 해당 사이트에서는 책임지지 않습니다.</span>
+                                    </label>
+                                    <label class="custom-radio">
+                                        <input type="radio" name="aiOption" value="aiQuery">
+                                        위에 조회한 내용을 기반으로 한 AI 질의
+                                        <span class="hint">※ 활용법 예시: '위 내용을 요약하고 너의 의견을 줘!'</span>
+                                    </label>
+                                    <label class="custom-radio">
+                                        <input type="radio" name="aiOption" value="webBased">
+                                        특정 웹사이트를 기반으로 한 AI 질의
+                                        <input type="text" placeholder="예: http://www.naver.com/finance/fomc.html" class="url-input">
+                                    </label>
+                                    <label class="custom-radio">
+                                        <input type="radio" name="aiOption" value="youtubeBased">
+                                        특정 유튜브를 기반으로 한 AI 질의
+                                        <input type="text" placeholder="예: https://youtu.be/B_UeeNcsuyM" class="url-input">
+                                    </label>
+                                    <label class="custom-radio">
+                                        <input type="radio" name="aiOption" value="googleBased">
+                                        구글 검색을 바탕으로 한 질의
+                                    </label>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
                     </div>                    
 
                 </div>            
