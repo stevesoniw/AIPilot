@@ -100,10 +100,12 @@ img {
     height: auto;
 }
 
+/*
 input[type="radio"]{
     display:none;
- }
+ }*/
  
+ /*
  input[type="radio"] + label
  {
      background-image:url(/static/assets/images/newmain/ic_radio_button.png);
@@ -113,7 +115,7 @@ input[type="radio"]{
      display:inline-block;
      padding: 0 0 0 0px;
      cursor:pointer;
- }
+ }*/
  
  /* input[type="radio"]:checked + label
  {

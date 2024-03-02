@@ -68,13 +68,13 @@
 .highlight {color: #ff6600;}
 #tickerInput {width: calc(100% - 90px); padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;}
 .foreign-search-box{margin: 20px auto; text-align: center; width: 80%; max-width: 800px;}
-.earning-title-container {background-color: rgba(255, 0, 0, 0.2); color: #FF6347; text-align: center; padding: 20px; margin-bottom: 20px; border-radius: 8px;}
-.earning-table {width: 80%; margin: 0 auto; border-collapse: collapse;}
-.earning-table th, .earning-table td {border: 1px solid #ddd; padding: 8px; text-align: center;}
-.earning-table th {background-color: #f2f2f2;}
-.earning-header-content {background-color: #f0f0f0;}
-.earning-table tr:nth-child(even) {background-color: #f9f9f9;}
-.earning-table th:first-child, .earning-table td:first-child {background-color: #eeeeee;}
+.earning-title-container {color: #333; text-align: center; padding: 10px; margin-bottom: 10px; padding-top: 35px;}
+.earning-table {width: 90%; margin: 20px auto; border-collapse: collapse; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding-top:1px; border-radius: 8px; overflow: hidden;}
+.earning-table th, .earning-table td {border: 1px solid #ddd; padding: 12px 15px; text-align: center; font-size: 16px;}
+.earning-table th {background-color: #5da1ce; color: white; font-weight: normal;}
+.earning-header-content {background-color: #74adbb;}
+.earning-table tr:nth-child(even) {background-color: #f2f2f2;}
+.earning-table td:first-child {font-weight: bold; color: #333;}
 .stockBasic-input-container { display: flex; flex-wrap: wrap; width: 1200px; margin: 0 auto; }
 .infoSection { flex: 0 0 600px; padding: 20px; box-sizing: border-box; }
 .chartSection { flex: 0 0 600px; display: flex; flex-direction: column; padding: 45px 20px 20px; box-sizing: border-box; }
@@ -97,28 +97,39 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 
 /* AI가 말해주는 주식정보(해외)  #4. Ask AI Anything **/
 #chatApp {box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; width: 1000px; margin: 0 auto; margin-bottom: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; position: relative; justify-content: space-between; height: 600px;}
-#chatTitle {background: linear-gradient(120deg, #007bff, #6610f2); color: white; font-weight:bold; font-size: 19px; text-align: center; display: flex; align-items: center; justify-content: space-between; padding: 15px;}
+#chatTitle {background: linear-gradient(120deg, #007bff, #6610f2); color: white; font-weight: bold; font-size: 19px; display: flex; align-items: center; justify-content: start; padding: 15px; gap: 5px;} 
+#chatTitle > span, .current-status-container, .setting-buttons-container {margin-right: 8px;} 
+.current-status-container {display: flex; align-items: center; white-space: nowrap;}
+#currentModeButton {background-color: #8a2be2; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: normal;} 
+#settingsButton, #closeButton, #resetButton {cursor: pointer; transition: transform 0.3s ease; max-height: 30px; max-width: 30px;} 
+#settingsButton {margin-left: 1px;} 
+#settingsButton:hover, #closeButton:hover, #resetButton:hover {transform: scale(1.1);} 
+.setting-buttons-container {display: flex; align-items: center; margin-left: auto; gap: 14px;}
 #chatMessages {flex-grow: 1; overflow-y: auto; background-color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px;}
-#chatMessages .message {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #f0f0f0; border: 1px solid #e0e0e0; word-wrap: break-word;}
+#chatMessages .message {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #dcecf8; border: 1px solid #e0e0e0; word-wrap: break-word;}
 #chatMessages .message.user {align-self: flex-end; background-color: #007bff; color: white; border: none;}
-#chatInput {box-sizing: border-box; width: 100%; padding: 15px 20px; border: none; border-top: 1px solid #ccc; font-size: 14px; outline: none; background: #fefefe; color: #555;}
+#chatInput {box-sizing: border-box; width: 100%; padding: 15px 20px; border: none; border-top: 1px solid #ccc; font-size: 14px; outline: none; background: #f9f9f9; color: #555;}
 #chatInput:focus {background: #e8e8e8;}
-#settingsButton, #closeButton {cursor: pointer; transition: transform 0.3s ease; max-height: 30px; max-width: 30px; min-height: 20px; min-width: 20px; margin-left: 10px;}
-#settingsButton { margin-right: 8px;}
-#settingsButton:hover, #closeButton:hover {transform: scale(1.1);}
-.setting-buttons-container {display: flex; align-items: center;
-}
-#settingsModal {position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 70%; max-width: 800px; min-height: 500px; max-height: 90%; background-color: transparent; display: flex; justify-content: center; align-items: center;} 
-.modal-content {background: #ffffff; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); overflow: hidden; padding-bottom: 20px;} 
-.modal-header {padding: 20px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;} 
-.modal-header img {width: 38px; height: 38px; cursor: pointer;} 
-.modal-body {padding: 20px; overflow-y: auto;} 
-.custom-radio {display: flex; align-items: center; margin-bottom: 20px; font-size: 16px; font-weight: bold; color: #333;} 
-.custom-radio input[type="radio"] {margin-right: 10px; -webkit-appearance: none; appearance: none; outline: 2px solid #007bff; width: 20px; height: 20px; border-radius: 50%; background-color: #fff; cursor: pointer;} 
-.custom-radio input[type="radio"]:checked {background-color: #007bff;} 
-.hint {font-size: 14px; color: #555; display: block; font-weight: bold;} 
-.url-input {width: 80%; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; margin-top: 5px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; color: #333;}
-
+#currentMode {background-color: #8a2be2; color: white; padding: 5px 10px; border-radius: 5px; font-weight: normal; font-size: 14px;}
+#chatMessages .loading {background-color: #FFF3CD; color: #856404; padding: 10px; border-radius: 20px; max-width: 80%; word-wrap: break-word;}
+#settingsModal {position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 70%; max-width: 850px; min-height: 500px; max-height: 90%; background-color: transparent; display: flex; justify-content: center; align-items: center;}
+.modal-content {position: relative; background: #ffffff; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); overflow: hidden; padding-bottom: 20px;}
+.modal-header {padding: 15px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 50px;}
+.modal-header img {width: 38px; height: 38px; cursor: pointer;}
+.modal-body {padding: 20px; overflow-y: auto;}
+.modal-footer {position: absolute; right: 20px; bottom: 20px;}
+.custom-radio {display: block; margin-bottom: 20px; font-size: 16px; font-weight: bold; color: #333; border-bottom: 1px solid #eee; padding-bottom: 15px;}
+.custom-radio:last-child {border-bottom: none;}
+.custom-radio input[type="radio"] {margin-right: 10px; -webkit-appearance: none; appearance: none; outline: 2px solid #007bff; width: 18px; height: 18px; border-radius: 50%; background-color: #fff; cursor: pointer; vertical-align: middle;}
+.custom-radio input[type="radio"]:checked {background-color: #007bff;}
+.hint, .url-input {display: block; margin-top: 5px;}
+.hint {font-size: 14px; color: #555; font-weight: bold;}
+.url-input {width: 100%; max-width: 420px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; background-color: #c6f7bf; color: #2b2929; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+#saveButton {padding: 6px 24px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;  font-size: 14px; transition: background-color 0.3s ease;}
+#saveButton:hover {background: linear-gradient(135deg, #5d6dcb, #896bc3);}
+.loading_bar_chatting { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
+.loading_bar_chatting > img { max-width: 200px; max-height: 200px; }
+.loading-text-chatting { background-color: rgb(209, 247, 228); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
 
 /* 글로벌 주요 경제지표 1.[핵심지표] 영역 */
 .form-container {background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px auto; width: 80%; max-width: 960px;}

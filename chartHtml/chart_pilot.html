@@ -389,23 +389,23 @@
         }
         //실적발표 테이블 표 만들어서 보여주기
         async function fetchEarningsAnnouncement(ticker) {
-            const apiUrl = `/api/get_earning_announcement/${ticker}`;
+            const apiUrl = `/foreignStock/financials/earningTable/${ticker}`;
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
-                throw new Error('서버에서 데이터를 가져오는 데 실패했습니다. 응답 상태: ' + response.status);
+                    throw new Error('서버에서 데이터를 가져오는 데 실패했습니다. 응답 상태: ' + response.status);
                 }
                 const data = await response.json();
                 if (data) {
-                document.getElementById('gptEarningTableArea').style.display = 'block';
-                document.getElementById('latest_revenue').textContent = data.current_quarter_revenue || '-';
-                document.getElementById('yoy_revenue_growth').textContent = data.revenue_YoY || '-';
-                document.getElementById('qoq_revenue_growth').textContent = data.revenue_QoQ || '-';
-                document.getElementById('revenue_beat_miss_ratio').textContent = data.revenue_beat_miss_ratio || '-';
-                document.getElementById('latest_eps').textContent = data.current_quarter_eps || '-';
-                document.getElementById('yoy_eps_growth').textContent = data.eps_YoY || '-';
-                document.getElementById('qoq_eps_growth').textContent = data.eps_QoQ || '-';
-                document.getElementById('eps_beat_miss_ratio').textContent = data.eps_beat_miss_ratio || '-';
+                    document.getElementById('gptEarningTableArea').style.display = 'block';
+                    document.getElementById('latest_quarter_revenue').textContent = data.latest_quarter_revenue ? data.latest_quarter_revenue.toLocaleString() + ' (USD)' : '-';
+                    document.getElementById('revenue_yoy_percentage').textContent = typeof data.revenue_yoy_percentage === 'number' ? data.revenue_yoy_percentage.toFixed(2) + '%' : '-';
+                    document.getElementById('revenue_qoq_percentage').textContent = typeof data.revenue_qoq_percentage === 'number' ? data.revenue_qoq_percentage.toFixed(2) + '%' : '-';
+                    document.getElementById('revenue_beat_miss_ratio').textContent = typeof data.revenue_beat_miss_ratio === 'number' ? data.revenue_beat_miss_ratio.toFixed(2) + '%' : '-';
+                    document.getElementById('latest_quarter_operating_income').textContent = typeof data.latest_quarter_operating_income ? data.latest_quarter_operating_income.toLocaleString() + ' (USD)': '-';
+                    document.getElementById('operating_income_yoy_percentage').textContent = typeof data.operating_income_yoy_percentage === 'number' ? data.operating_income_yoy_percentage.toFixed(2) + '%' : '-';
+                    document.getElementById('operating_income_qoq_percentage').textContent = typeof data.operating_income_qoq_percentage === 'number' ? data.operating_income_qoq_percentage.toFixed(2) + '%' : '-';
+                    document.getElementById('eps_beat_miss_ratio').textContent = typeof data.eps_beat_miss_ratio === 'number' ? data.eps_beat_miss_ratio.toFixed(2) + '%' : '-';
                 }
                 gptAnalysis(ticker);
             } catch (error) {
@@ -500,15 +500,244 @@
             }         
         }
         // 채팅에 설정버튼 기능
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            const selectedOption = document.querySelector('input[name="aiOption"]:checked').value;
+            modal.setAttribute('data-initial-ai-option', selectedOption); 
+            modal.style.display = 'flex';
+        }
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = 'none';
+            const initialAiOption = modal.getAttribute('data-initial-ai-option'); 
+            if (initialAiOption) {
+                document.querySelector(`input[name="aiOption"][value="${initialAiOption}"]`).checked = true;
+            }
+        }
+        // Save 버튼 클릭 시 변경한 라디오 선택값 저장하는거
         function toggleSettingsModal() {
             const modal = document.getElementById('settingsModal');
-            modal.style.display = (modal.style.display === 'none' || modal.style.display === '') ? 'flex' : 'none';
+            if (modal.style.display === 'none' || modal.style.display === '') {
+                openSettingsModal();
+            } else {
+                const selectedOption = document.querySelector('input[name="aiOption"]:checked').value;
+                modal.setAttribute('data-initial-ai-option', selectedOption); 
+                saveClassification(selectedOption);
+                modal.style.display = 'none';
+            }
         }
+        //채팅창 닫기
         function closeChatApp() {
             document.getElementById('chatApp').style.display = 'none';
             window.scrollTo(0, 0);
+        }   
+        //라디오 버튼 선택한거에 따라 DB 저장하기   
+        /**************[젼역 생성]*************/
+        let currentSelections = [];
+        let tempSelections = [];
+        function saveClassification(selectedOption){
+            // "gpt4" 선택 시 다른 선택 사항 초기화
+            if (selectedOption === "gpt4") {
+                // "GPT4 Talk" 선택 시 임시 배열에 현재 선택 사항을 저장하고, 중복 제거
+                tempSelections = [...new Set([...currentSelections, "gpt4"])];
+                currentSelections = ["gpt4"];
+            } else {
+                // "GPT4 Talk"가 아닌 다른 선택이 이루어지면 "gpt4"를 배열에서 제거하고, 이전 선택을 복원
+                const index = currentSelections.indexOf("gpt4");
+                if (index > -1) {
+                    currentSelections.splice(index, 1, ...tempSelections.filter(option => option !== "gpt4"));
+                    tempSelections = []; // 임시 저장된 선택 사항을 비움
+                }
+                
+                // 선택된 옵션을 배열에 추가 (이미 있으면 추가하지 않음)
+                if (!currentSelections.includes(selectedOption)) {
+                    currentSelections.push(selectedOption);
+                }
+            }
+            switch (selectedOption) {
+                case "aiQuery":
+                    handleAiQuery();
+                    break;
+                case "webBased":
+                    const webUrl = document.querySelector('input[name="aiOption"][value="webBased"] + input').value;
+                    handleWebBasedQuery(webUrl);
+                    break;
+                case "youtubeBased":
+                    const youtubeUrl = document.querySelector('input[name="aiOption"][value="youtubeBased"] + input').value;
+                    handleYoutubeBasedQuery(youtubeUrl);
+                    break;
+                case "googleBased":
+                    handleGoogleBasedQuery();
+                    break;
+            }
+            updateCurrentMode(); 
         }
-
+        
+        function updateCurrentMode() {
+            let currentText = currentSelections.map(option => {
+                switch(option) {
+                    case "aiQuery": return "조회내용기반 Talk";
+                    case "webBased": return "웹사이트기반 Talk";
+                    case "youtubeBased": return "Youtube기반 Talk";
+                    case "googleBased": return "Google기반 Talk";
+                    default: return "";
+                }
+            }).join(", ");
+        
+            document.getElementById("currentModeButton").textContent = currentText ? `${currentText}` : 'GPT4 Talk';
+        }
+        
+        //리셋버튼 클릭시
+        function resetClassification() {
+            currentSelections = ['gpt4'];
+            updateCurrentMode();
+            // 모든 라디오 버튼의 체크를 해제하고, gpt4만 체크
+            document.querySelectorAll('input[name="aiOption"]').forEach((input) => {
+                input.checked = input.value === 'gpt4';
+            });
+        }
+        
+        //설정창 >> 1. 현재 조회된 데이터들에 대한 TALK를 위한 데이터 vectorDB 저장
+        function handleAiQuery() {
+            const selectors = [
+                "#stockBasic_company_info", "#annualFinancialsChart", "#quarterlyGrowthChart",
+                "#stockBasic_finance_info", "#earningsChart", "#recommendationsChart",
+                "#latest_quarter_revenue", "#revenue_yoy_percentage", "#revenue_qoq_percentage",
+                "#revenue_beat_miss_ratio", "#latest_quarter_operating_income",
+                "#operating_income_yoy_percentage", "#operating_income_qoq_percentage",
+                "#eps_beat_miss_ratio", "#analysisResult", "#newsAnalysis", "#stockwaveChart"
+            ];
+            let markdownData = "";
+            selectors.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element && (element.innerHTML.trim() !== "" || element.innerText.trim() !== "")) {
+                    // Only proceed if element has non-whitespace content
+                    let title = selector.replace(/#/g, "").replace(/_/g, " ").toUpperCase();
+                    let content = element.innerHTML.trim() || element.innerText.trim();
+                    markdownData += `### ${title}\n${content}\n\n`;
+                }
+            });
+            if (markdownData.trim() !== "") {
+                // Send the markdown data to the server
+                document.getElementById('loading_bar_chatting').style.display = 'block';
+                fetch('/rag/handle-ai-query/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ markdownData: markdownData })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Success:", data);
+                    if (data && data.result) {  //채팅창에 간단하게 웹사이트 설명 보여주고 시작하자
+                        document.getElementById('loading_bar_chatting').style.display = 'none'; 
+                        const responseDiv = document.createElement('div');
+                        responseDiv.classList.add('message', 'server');
+                        responseDiv.textContent = data.result; 
+                        document.getElementById('chatMessages').appendChild(responseDiv);
+                        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                    }                
+                })
+                .catch(error => {
+                    console.error("Error:", error.message);
+                    document.getElementById('loading_bar_chatting').style.display = 'none'; 
+                });
+            } else {
+                alert("주식정보 Data를 조회한 후 설정해주세요!")
+                document.getElementById('loading_bar_chatting').style.display = 'none'; 
+                console.log("No data to send.");
+            }
+        }
+        //설정창 >> 2. 불러올 web base에 대한 vectorDB 저장
+        function handleWebBasedQuery(webUrl) {
+            document.getElementById('loading_bar_chatting').style.display = 'block'; 
+            fetch('/rag/handle-webbased-query/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: webUrl })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`handleWebBasedQuery not ok, status: ${response.status}`);
+                    document.getElementById('loading_bar_chatting').style.display = 'none'; 
+                }
+                return response.json(); 
+            })
+            .then(data => {
+                console.log("Success:", data);
+                if (data && data.result) {  //채팅창에 간단하게 웹사이트 설명 보여주고 시작하자
+                    document.getElementById('loading_bar_chatting').style.display = 'none'; 
+                    const responseDiv = document.createElement('div');
+                    responseDiv.classList.add('message', 'server');
+                    responseDiv.textContent = data.result.output_text; 
+                    document.getElementById('chatMessages').appendChild(responseDiv);
+                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                }                
+            })
+            .catch(error => {
+                console.error("Error:", error.message);
+                document.getElementById('loading_bar_chatting').style.display = 'none'; 
+            });
+        }
+         //실제 메시지 입력하면, 데이터 호출해서 보여주는 함수 
+         function sendChatMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'user');
+            messageDiv.textContent = message;
+            document.getElementById('chatMessages').appendChild(messageDiv);
+        
+            // 로딩 메시지 추가
+            const loadingDiv = document.createElement('div');
+            loadingDiv.classList.add('message', 'loading');
+            loadingDiv.style.backgroundColor = '#FFF3CD'; // 연주황색 배경 설정
+            document.getElementById('chatMessages').appendChild(loadingDiv);
+            
+            const loadingSpan = document.createElement('span');
+            const loadingText = '열심히 답변 생성중입니다 ';
+            let loadingTextIndex = 0;
+            
+            const loadingInterval = setInterval(() => {
+                loadingSpan.textContent = loadingText.substring(0, loadingTextIndex) + '_';
+                loadingTextIndex++;
+                if (loadingTextIndex > loadingText.length) loadingTextIndex = 0;
+            }, 150);
+            
+            loadingDiv.appendChild(loadingSpan);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        
+            console.log(message);
+            
+            // 'gpt4' 옵션이 선택되었는지 확인
+            const isGPT4Checked = document.querySelector('input[name="aiOption"][value="gpt4"]').checked;
+            const requestURL = isGPT4Checked ? '/rag/handle-gpt4-talk/' : '/rag/handle-ai-answer/';
+            
+            fetch(requestURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(loadingInterval); // 로딩 텍스트 애니메이션 중지
+                loadingDiv.remove(); // 로딩 메시지 제거
+        
+                const responseDiv = document.createElement('div');
+                responseDiv.classList.add('message', 'server');
+                responseDiv.textContent = data.result;
+                document.getElementById('chatMessages').appendChild(responseDiv);
+                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+            })
+            .catch(error => {
+                clearInterval(loadingInterval);
+                console.error('Error:', error);
+            });
+        }
+        
 
 
 //******************************** 글로벌 주요경제지표 함수 [#1.핵심지표] Starts ***********************************// 
@@ -1221,21 +1450,18 @@
             document.querySelector('.news-api-btn').classList.add('selected');  
 
             const keywordInput = document.querySelector('.naver-api-input');
-            if (!keywordInput) return; // Exit if no input field found
+            if (!keywordInput) return; 
             const keyword = keywordInput.value;
-            // Update the apiUrl if necessary to match your FastAPI route
             const apiUrl = `/api/search-naver?keyword=${encodeURIComponent(keyword)}`;
-
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const { items } = await response.json(); // Destructure to get the items array
 
                 const newsShowArea = document.getElementById('news_show_area');
-                newsShowArea.innerHTML = ''; // Clear existing content
+                newsShowArea.innerHTML = ''; 
 
                 items.forEach(item => {
-                    // Remove HTML tags from the title and description
                     const title = item.title.replace(/<\/?[^>]+(>|$)/g, "");
                     const description = item.description.replace(/<\/?[^>]+(>|$)/g, "");
 
@@ -1635,27 +1861,28 @@
                         <table class="earning-table">
                             <tr>
                                 <th class="earning-header-content">내용</th>
-                                <th>latest_earning_quarter</th>
+                                <th>최근 분기</th>
                                 <th>YoY(%,달러)</th>
                                 <th>QoQ(%,달러)</th>
                                 <th>컨센 beat/miss</th>
                             </tr>
                             <tr>
                                 <td>매출액</td>
-                                <td>latest_revenue</td>
-                                <td>yoy_revenue_growth</td>
-                                <td>qoq_revenue_growth</td>
-                                <td>revenue_beat_miss_ratio</td>
+                                <td id="latest_quarter_revenue"></td>
+                                <td id="revenue_yoy_percentage"></td>
+                                <td id="revenue_qoq_percentage"></td>
+                                <td id="revenue_beat_miss_ratio"></td>
                             </tr>
                             <tr>
                                 <td>영업이익</td>
-                                <td>latest_eps</td>
-                                <td>yoy_eps_growth</td>
-                                <td>qoq_eps_growth</td>
-                                <td>eps_beat_miss_ratio</td>
+                                <td id="latest_quarter_operating_income"></td>
+                                <td id="operating_income_yoy_percentage"></td>
+                                <td id="operating_income_qoq_percentage"></td>
+                                <td id="eps_beat_miss_ratio"></td>
                             </tr>
                         </table>
                     </div>
+                    
                     <div class="gpt-message-area" id="gptMessageArea" style="display: none;">
                         <div id="analysisResultBox" class="result-box">
                            <p class="info-header" id="message1">최근 실적발표가 있었던 경우에는, <span class="highlight">실적발표 전/후 반응</span>을 나누어 비교 분석합니다. 실적 발표 예정인 경우에는 이전 정보 기준으로만 분석합니다.</p>
@@ -1676,36 +1903,46 @@
                     <!-- AI가 말해주는 주식 정보 [#4 ASK AI Anything]-->     
                     <div id="chatApp" style="display:none;">
                         <div id="chatTitle">
-                            AI TALK
-                            <div class="setting-buttons-container">                            
+                            <span>AI TALK</span>
+                            <div class="current-status-container">
+                                <span>[Currently :</span>
+                                <button id="currentModeButton">GPT4 Talk</button>
+                                <span>]</span>
+                            </div>
+                            <div class="setting-buttons-container">
+                                <img src="/static/assets/images/reset2.png" alt="Reset" id="resetButton" onclick="resetClassification();">
                                 <img src="/static/assets/images/settings.png" alt="Settings" id="settingsButton" onclick="toggleSettingsModal();">
                                 <img src="/static/assets/images/close.png" alt="Close" id="closeButton" onclick="closeChatApp();">
                             </div>
                         </div>
                         <div id="chatMessages"></div>
+                        <div id="loading_bar_chatting" class="loading_bar_chatting">
+                            <img src="/static/assets/images/LoadingBar_D.gif">
+                            <p class="loading-text-chatting">채팅 기능 설정중입니다. 잠시만 기다려주세요!</p>
+                        </div>                        
                         <input type="text" id="chatInput" placeholder="메시지를 입력하세요!">
                         <!--채팅창의 설정창 모달팝업-->
                         <div id="settingsModal" style="display:none;">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     AI 와의 대화를 위한 설정 영역입니다
-                                    <img src="/static/assets/images/close3.png" alt="Close" id="modalCloseButton" onclick="toggleSettingsModal();" style="cursor: pointer;">
+                                    <img src="/static/assets/images/close3.png" alt="Close" id="modalCloseButton" onclick="closeSettingsModal();" style="cursor: pointer;">
                                 </div>
                                 <div class="modal-body">
                                     <label class="custom-radio">
-                                        <input type="radio" name="aiOption" value="gpt4">
+                                        <input type="radio" name="aiOption" value="gpt4" checked>
                                         일반 GPT4 TALK
                                         <span class="hint">※ 반드시 hallucination(거짓말) 에 주의해주세요. 해당 사이트에서는 책임지지 않습니다.</span>
                                     </label>
                                     <label class="custom-radio">
                                         <input type="radio" name="aiOption" value="aiQuery">
                                         위에 조회한 내용을 기반으로 한 AI 질의
-                                        <span class="hint">※ 활용법 예시: '위 내용을 요약하고 너의 의견을 줘!'</span>
+                                        <span class="hint">※ 활용법 예시: '위 내용을 요약하고 너의 의견을 줘!' (*데이터 조회 후 선택해주세요)</span>
                                     </label>
                                     <label class="custom-radio">
                                         <input type="radio" name="aiOption" value="webBased">
                                         특정 웹사이트를 기반으로 한 AI 질의
-                                        <input type="text" placeholder="예: http://www.naver.com/finance/fomc.html" class="url-input">
+                                        <input type="text" placeholder="예: https://www.federalreserve.gov/newsevents/speeches.htm" class="url-input">
                                     </label>
                                     <label class="custom-radio">
                                         <input type="radio" name="aiOption" value="youtubeBased">
@@ -1716,10 +1953,14 @@
                                         <input type="radio" name="aiOption" value="googleBased">
                                         구글 검색을 바탕으로 한 질의
                                     </label>
+                                    <div class="modal-footer">
+                                        <button type="button" id="saveButton" onclick="toggleSettingsModal();">Save</button>
+                                    </div>                                  
                                 </div>
                                 
                             </div>
                         </div>
+                        <div id="dataOutput"></div>
                         
                     </div>                    
 
@@ -2109,6 +2350,42 @@
                     </div>
                 </div> 
 <!--********************************* [국내] 3RD GNB- 리서치RAG  Ends *****************************************--> 
+<!--******************************* [국내] 3RD GNB- RAG TESTING Starts ***************************************--> 
+                <!-- [#3-1 메뉴 시작] 리서치 RAG 테스트 -->                             
+                <div id="menu_3rd_b" class="menu-cont">
+                    <h2 class="s-tit">리서치 RAG 테스트</h2>
+                    <h3 class="s-tit">Research PDF Uploading TEST</h3>
+                    <div class="upload-container">
+                        <h2>Upload your PDF</h2>
+                        <input type="file" id="fileRagInput" accept=".pdf" hidden/>
+                        <label for="fileRagInput" class="file-label">Choose a file</label>
+                        <span id="fileRagName" class="file-name">[No file chosen yet]</span>
+                    </div>
+                    <div id="loading_bar_rag" class="loading_bar">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p class="loading-text">데이터 로딩중입니다.</p>
+                    </div>
+                    <!-- 채팅영역 -->
+                    <div class="box-instruction">
+                        <div id="ragResultArea" class="rag-chat-container">
+                            <div class="rag-messages">
+                                <div class="rag-message rag-received">
+                                    <div class="rag-text">안녕하세요! 질문해주세요</div>
+                                </div>
+                                <!-- Example of a sent message -->
+                                <div class="rag-message rag-sent">
+                                    <div class="rag-text"></div>
+                                </div>
+                                <!-- Add more messages here -->
+                            </div>
+                            <div class="rag-chat-input">
+                                <input type="text" id="messageInput" placeholder="Type your message here..." />
+                                <button class="rag-send-button" onclick="ragSendMessage()">Send</button>
+                            </div>    
+                        </div>
+                    </div>
+                </div> 
+<!--********************************* [국내] 3RD GNB- RAG TESTING   Ends *****************************************--> 
             </div>
             <!-- 우측 Main 화면영역 끝 -->
         </main>
@@ -2212,7 +2489,8 @@
                     $('.menu-list').append(menuItems.join(''));
                 } else if(menuType === 'menu3') {
                     var menuItems = [
-                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 디지털리서치팀::요건분석중입니다</a></li>'
+                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 디지털리서치팀::요건분석중입니다</a></li>',
+                        '<li class="page-menu" data-tab="menu_3rd_b"><a href="javascript:void(0);"> RAG TESTING </a></li>'
                     ];
                     $('.menu-list').append(menuItems.join(''));
                 }
@@ -2311,12 +2589,9 @@
                 }
             });
             /********* AI가 말해주는 주식정보(해외) - #4. Ask AI Anything 채팅영역 ************/
-            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            document.getElementById('chatInput').addEventListener('keypress', function(e) { //엔터쳤을때 메시지보이게하고, 데이터요청 함수콜한다
                 if (e.key === 'Enter' && this.value.trim() !== '') {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.classList.add('message', 'user');
-                    messageDiv.textContent = this.value;
-                    document.getElementById('chatMessages').appendChild(messageDiv);
+                    sendChatMessage(this.value.trim()); 
                     this.value = '';
                     document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
                 }

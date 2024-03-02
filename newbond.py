@@ -43,7 +43,7 @@ from fastdtw import fastdtw
 from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
-from ragUpload import router
+from ragControlTower import router
 #config 파일
 import config
 #FAST API 관련
@@ -640,7 +640,9 @@ def calculate_beat_miss_ratio(actual, estimate):
         return "Beat" if actual > estimate else "Miss"
     return "-"
 
-@app.get("/api/get_earning_announcement/{ticker}")
+### Finnhub earnings_calendar 유료결제(분기 150달러)가 되어야 사용가능할듯.
+### Freekey는 1분기꺼밖에 안옴. 일단 막아놓고 야후꺼로 조합해서 쓴다 ㅠㅠ
+'''@app.get("/api/get_earning_announcement/{ticker}")
 def calculate_financial_metrics(ticker: str):
     # YoY계산을 위해서 현재 날짜 기준으로 1년 전의 날짜를 시작 날짜로 설정
     Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
@@ -695,16 +697,61 @@ def calculate_financial_metrics(ticker: str):
     results["revenue_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['revenueActual'], latest['revenueEstimate'])
     results["eps_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['epsActual'], latest['epsEstimate'])
     
-    return results
+    return results'''
 
-def ytest():
-    
-    msft = yf.Ticker("MSFT")
-    balance_sheet_annual = msft.balance_sheet
+# 최근 실적 YoY, QoQ 데이터. 야후꺼와 finnhub calendar 최근분기만 조합해서 다시만듬. . 
+@app.get("/foreignStock/financials/earningTable/{ticker}")
+async def get_financial_earningTable(ticker: str):
+    try:
+        stock = yf.Ticker(ticker)
+        
+        # 분기별 재무제표 데이터
+        quarterly_financials = stock.quarterly_financials.fillna(0)
+        
+        # 가장 최근 분기 선택
+        latest_quarter = quarterly_financials.columns[0]
+        latest_financials = quarterly_financials[latest_quarter]
+        
+        # YoY 및 QoQ 계산을 위한 이전 분기 선택
+        previous_year_quarter = quarterly_financials.columns[4]
+        previous_quarter = quarterly_financials.columns[1]
+        previous_year_financials = quarterly_financials[previous_year_quarter]
+        previous_quarter_financials = quarterly_financials[previous_quarter]
+        
+        # 필요한 데이터 계산
+        total_revenue = latest_financials.get('Total Revenue', np.nan)
+        operating_income = latest_financials.get('Operating Income', np.nan)
+        
+        revenue_yoy = ((total_revenue - previous_year_financials.get('Total Revenue', np.nan)) / abs(previous_year_financials.get('Total Revenue', 1)) * 100) if previous_year_financials.get('Total Revenue') else np.nan
+        operating_income_yoy = ((operating_income - previous_year_financials.get('Operating Income', np.nan)) / abs(previous_year_financials.get('Operating Income', 1)) * 100) if previous_year_financials.get('Operating Income') else np.nan
+        
+        revenue_qoq = ((total_revenue - previous_quarter_financials.get('Total Revenue', np.nan)) / abs(previous_quarter_financials.get('Total Revenue', 1)) * 100) if previous_quarter_financials.get('Total Revenue') else np.nan
+        operating_income_qoq = ((operating_income - previous_quarter_financials.get('Operating Income', np.nan)) / abs(previous_quarter_financials.get('Operating Income', 1)) * 100) if previous_quarter_financials.get('Operating Income') else np.nan
+        
+        # 현재 날짜를 기준으로 Finnhub에서 데이터 조회
+        
+        recent_earnings = finnhub_client.company_earnings(ticker, limit=1)
+        if recent_earnings:
+            eps_actual = recent_earnings[0].get('actual', np.nan)
+            eps_estimate = recent_earnings[0].get('estimate', np.nan)
+            eps_beat_miss_ratio = ((eps_actual - eps_estimate) / abs(eps_estimate) * 100) if eps_estimate and eps_actual is not None else np.nan
+        else:
+            eps_actual, eps_estimate, eps_beat_miss_ratio = np.nan, np.nan, np.nan
 
-    print(balance_sheet_annual.columns)
+        return {
+            "latest_quarter_revenue": total_revenue,
+            "latest_quarter_operating_income": operating_income,
+            "revenue_yoy_percentage": revenue_yoy,
+            "operating_income_yoy_percentage": operating_income_yoy,
+            "revenue_qoq_percentage": revenue_qoq,
+            "operating_income_qoq_percentage": operating_income_qoq,
+            "eps_actual": eps_actual,
+            "eps_estimate": eps_estimate,
+            "eps_beat_miss_ratio": eps_beat_miss_ratio,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-#ytest()
 
 # 반환할 데이터 모델 정의
 class FinancialData(BaseModel):
@@ -712,6 +759,7 @@ class FinancialData(BaseModel):
     quarterly_income_statement: dict
     additional_info: dict
     charts_data: dict
+    
 #AI가 말해주는 주식 정보 [#1 종목 기본 정보] 호출용
 @app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
 def get_financials_and_metrics(ticker: str):
@@ -879,17 +927,26 @@ def get_prompt_earning (ticker):
     # find announce calendar 
     Start_date_calen = (datetime.strptime(curday, "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
     End_date_calen = (datetime.strptime(curday, "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")  # 현재 시점 + 1개월 
-    announce_calendar= finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')[0]
-        
-    # get information from earning announcement
-    date_announce= announce_calendar.get('date')
-    eps_actual=announce_calendar.get('epsActual')
-    eps_estimate=announce_calendar.get('epsEstimate')
-    earning_y = announce_calendar.get('year')
-    earning_q = announce_calendar.get('quarter')
-    revenue_estimate=round(announce_calendar.get('revenueEstimate')/1000000)
+    # 데이터 안와서 에러나는 종목들이 있어서 로직 수정
+    finnhub_data = finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')
+    date_announce, eps_actual, eps_estimate, earning_y, earning_q, revenue_estimate = None, np.nan, np.nan, None, None, np.nan
+    # 데이터 있을때만 처리한다
+    if finnhub_data and len(finnhub_data) > 0:
+        announce_calendar = finnhub_data[0]
+        date_announce = announce_calendar.get('date')
+        eps_actual = announce_calendar.get('epsActual', np.nan)
+        eps_estimate = announce_calendar.get('epsEstimate', np.nan)
+        earning_y = announce_calendar.get('year')
+        earning_q = announce_calendar.get('quarter')
+        revenue_estimate_raw = announce_calendar.get('revenueEstimate')
+        if revenue_estimate_raw is not None:
+            revenue_estimate = round(revenue_estimate_raw / 1000000, 2)
+        else:
+            revenue_estimate = np.nan
+    else:
+        print("No earnings announcement data available for this ticker.")
        
-    if eps_actual == None : # [Case2] 실적발표 전 
+    if  eps_actual is None or np.isnan(eps_actual):  # [Case2] 실적발표 전 
         # create Prompt 
         head = "{}의 {}년 {}분기 실적 발표일은 {}으로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다. ".format(profile['name'], earning_y,earning_q, date_announce, revenue_estimate, eps_estimate)
         
