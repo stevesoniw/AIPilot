@@ -139,7 +139,7 @@ input[type="checkbox"] + label
 {
   display:inline-block;
   padding: 0 0 0 0px;
-  background:url('/static/assets/images/chk_off.png') no-repeat left;
+  background:url('/static/assets/images/chk_off.png') no-repeat left !important;
   background-size: 13px 13px;
   /* height: 19px;
   width: 19px; */

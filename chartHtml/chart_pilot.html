@@ -29,8 +29,7 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>    
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
     <!-- Highstock 모듈. 캔들차트를 도저히 그릴수 없어 highchart로 변경 -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
     <script src="https://code.highcharts.com/modules/data.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
@@ -1820,8 +1819,8 @@
                         </div>                        
                         <div class="foreign-buttons-container">
                             <button class="basicInfoBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info<p>(종목 기본정보)</p></button>
-                            <button class="earningBtn" id="getEarningInfo" onclick="loadEarningData();">Get Earning Info<p>(실적 데이터)</button>                            
                             <button class="foreignNewsBtn" id="getForeignStockNews" onclick="loadForeignStockNews();">Get News Info<p>(소셜 데이터)</p></button>
+                            <button class="earningBtn" id="getEarningInfo" onclick="loadEarningData();">Get Earning Info<p>(실적 데이터)</button>   
                             <button class="aiChatBtn" id="aiStockChat" onclick="loadAiChat();">Ask AI Anything <p><span id="aiChatStatus">[OFF]</span></p></button>
 
                         </div>
@@ -1843,7 +1842,31 @@
                             <div id="stockBasic_finance_info"></div>
                         </div>
                     </div>
-                    <!-- AI가 말해주는 주식 정보 [#2 실적 데이터]-->
+                    <!-- AI가 말해주는 주식 정보 [#2 뉴스(소셜) 데이터]-->
+                    <div id="loading_bar_foreignnews" class="loading_bar_foreignnews" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_F.gif">
+                        <p class="loading-text-foreignnews">데이터 로딩중입니다.</p>
+                    </div>                      
+                    <div class="foreignTickerNews-container">
+                        <span class="foreignTickerNews-datetime">2019-09-26</span>
+                        <div class="foreignTickerNews-image">
+                            <img src="https://img.etimg.com/thumb/msid-71321314,width-1070,height-580,imgsize-481831,overlay-economictimes/photo.jpg" alt="Electronic Manufacturing News">
+                        </div>
+                        <div class="foreignTickerNews-content">
+                            <div class="foreignTickerNews-header">
+                                <h2 class="foreignTickerNews-headline">More sops needed to boost electronic manufacturing: Top govt official</h2>
+                                <span class="foreignTickerNews-source">The Economic Times India</span>
+                            </div>
+                            <p class="foreignTickerNews-summary">NEW DELHI | CHENNAI: India may have to offer...</p>
+                            <div class="foreignTickerNews-buttons-container">
+                                <a class="foreignTickerNews-link" href="#">read more</a>
+                                <button class="foreignTickerNews-analysis" onclick="analyzeArticle();">AI 기사분석</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                   
+                    <!-- AI가 말해주는 주식 정보 [#3 실적 데이터]-->
                     <div id="loading_bar_fingpt" class="loading_bar" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_C.gif">
                         <p>데이터 로딩중입니다.</p>
