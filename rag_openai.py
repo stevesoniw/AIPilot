@@ -30,7 +30,7 @@ class ChatPDF:
     vector_store = None
     retriever = None
     chain = None
-    LLM_MODEL_NAME = "gpt-4-0125-preview"
+    LLM_MODEL_NAME = "gpt-4-1106-preview"
     #OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
     OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
@@ -100,8 +100,12 @@ class ChatPDF:
         chunks = self.text_splitter.split_documents([doc])
         chunks = filter_complex_metadata(chunks) 
         print(chunks)
+
         #Data 넣어줄 것 잘 가공하기 
+        vectors=[]
+        id_vectors=[]
         meta = {}
+
         for doc in chunks:
             family_id = self.generate_uuid_with_prefix()
             text_id = self.generate_uuid_with_prefix()
@@ -128,9 +132,11 @@ class ChatPDF:
             self.es_client.update(body={"doc" : datas, "doc_as_upsert" : True}, index=self.ES_INDEX_NAME, id=datas["id"], upsert={"id": datas["id"]})
             
             print("************************[Summary Updated][Original Starts*********************************")
+            
             datas = {"id": text_id, "vector": [], "text": "", "metadata": {}}
             meta = {}
             embeds = self.embeddings.embed_query(doc.page_content)  
+
             datas["vector"] = embeds
             datas["text"] = doc.page_content
             doc.metadata["text"] = doc.page_content
@@ -139,43 +145,48 @@ class ChatPDF:
             meta["family_id"] = family_id
             meta["source"] = file_name_itself
             datas["metadata"] = meta        
+            
             self.es_client.update(body={"doc" : datas, "doc_as_upsert" : True}, index=self.ES_INDEX_NAME, id=datas["id"], upsert={"id": datas["id"]})
         
+########################################################################################
+   
         self.es_client.indices.refresh(index="research-test")
 
         '''self.retriever = ElasticsearchStore(index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()(
             search_type="similarity_score_threshold",
             search_kwargs={"k": 3, "score_threshold": 0.5},
         )'''
-       
+
+
+        
     async def ask(self, query: str):
 
-        vector = ElasticsearchStore(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD)
+        '''self.retriever = ElasticsearchStore(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD).as_retriever()
+        self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
+                      | self.prompt
+                      | self.llmModel
+                      | StrOutputParser())
+        result = self.retriever.get_relevant_documents(query)
+        return result[0].page_content'''
+        #vector = ElasticsearchStore.from_documents(embedding=self.embeddings, index_name=self.ES_INDEX_NAME, es_url=self.ES_URL, es_user=self.ES_USERNAME, es_password=self.ES_PASSWORD)
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", "Answer the user's questions based on the below context:\n\n{context}"),
             MessagesPlaceholder(variable_name="chat_history"),
             ("user", "{input}"),
         ])
-        retriever = vector.as_retriever(search_kwargs={"k": 2})
-        
-        template = """Answer the question with the following context:
-        {context}
-        Question: {question}
-        """
-        prompt = ChatPromptTemplate.from_template(template)
-        
-        chain = (
-            {"context": retriever, "question": RunnablePassthrough()}
-            | prompt
-            | self.llmModel
-            | StrOutputParser()
-        )       
-         
-        reply = chain.invoke(query)
-        print("Answer: " + reply)    
-        return reply
-         
+        #document_chain = create_stuff_documents_chain(self.llmModel, prompt)
+        #retrieval_chain = create_retrieval_chain(retriever_chain, document_chain)
+        document_content_description = "market data research document"
+        retriever = SelfQueryRetriever.from_llm(llm= self.llmModel, vectorstore=self.es_client, document_contents=document_content_description, verbose=True)
+        #retriever_chain  = create_history_aware_retriever(self.llmModel, retriever, prompt)
+        relevant_answer = retriever.get_relevant_documents(query)
+        #response = retriever.invoke({"input": query})
+        pprint(relevant_answer)
+        return relevant_answer[0].page_content
+        print(response[0].page_content)
+
+
     def clear(self):
         self.vector_store = None
         self.retriever = None
@@ -184,8 +195,8 @@ class ChatPDF:
 
 
         
-#chat_pdf_instance = ChatPDF()
+chat_pdf_instance = ChatPDF()
 #chat_pdf_instance.test()
     # 함수 실행
 #chat_pdf_instance.test_retrieve_document() 
-#print(chat_pdf_instance.ask("who is the author of this document?"))
+print(chat_pdf_instance.ask("who is the author of this document?"))

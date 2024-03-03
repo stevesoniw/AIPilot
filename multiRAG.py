@@ -134,7 +134,8 @@ class multiRAG:
         vectordb = Chroma.from_documents(documents=texts, embedding=self.embeddings, persist_directory=user_persist_directory)
         result = chain_summary.invoke(loader)
         return result
-              
+
+    #chat 질문에 대한 답변용          
     async def askRetriver(self, query, user_identifier):
         user_persist_directory = os.path.join(self.persist_directory, user_identifier)
         os.makedirs(user_persist_directory, exist_ok=True)          
@@ -155,13 +156,38 @@ class multiRAG:
         
         return self.chain.invoke(query)
     
+    #GPT4 와의 그냥 대화용
     async def askGPT4(self, query):
         llm = self.llmModel
         answer = llm([HumanMessage(content=query)])
         result = answer.content
         return result   
        
+    # Finnhub에서 조회한 종목뉴스를 분석해서 보여주기
+    async def webNewsAnalyzer(self, url):
+        docs = WebBaseLoader(url).load_and_split(self.text_splitter)
+        template = '''다음의 내용을 한글로 요약해줘: {text}'''
+        combine_template = '''{text}
 
+        요약의 결과는 다음의 형식으로 작성해줘:
+        제목: 신문기사의 제목
+        주요내용: 세 줄로 요약된 내용
+        작성자: 김철수 대리
+        내용: 주요내용을 불렛포인트 형식으로 작성
+        AI의견 : 해당 뉴스가 관련 주식 종목에 미칠만한 영향과 향후 주시해야 하는 포인트 
+        '''
+        prompt = PromptTemplate(template=template, input_variables=['text'])
+        combine_prompt = PromptTemplate(template=combine_template, input_variables=['text'])
+        
+        llm = ChatOpenAI(temperature=0, model=self.LLM_MODEL_NAME, openai_api_key=config.OPENAI_API_KEY)
+        chain = load_summarize_chain(llm, 
+                                map_prompt=prompt, 
+                                combine_prompt=combine_prompt, 
+                                chain_type='map_reduce', 
+                                verbose=False)
+        
+        result = chain.invoke(docs)
+        return result
 
 
 #multiCon = multiRAG()

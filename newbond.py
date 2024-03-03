@@ -91,7 +91,7 @@ async def read_root(request: Request):
     # 초기 페이지 렌더링. plot_html 변수가 없으므로 비워둡니다.
     return templates.TemplateResponse("chart_pilot.html", {"request": request, "plot_html": None})
 
-######################################## 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts ###########################################
+################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts #########################################
 # series id 받아서 데이터 갖고오는 공통함수 
 def fetch_indicator(series_id: str, calculation: str = None) -> pd.DataFrame:
     # Fetch series data using Fred class
@@ -199,8 +199,8 @@ async def gpt4_chart_talk(response_data):
 asyncio.run(test())'''
 
 
-######################################## 글로벌 주요경제지표 보여주기 [1.핵심지표] Ends ###########################################
-################################# 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Starts ###########################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Ends #########################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Starts ##################################
 # Timestamp 객체를 문자열로 변환하는 함수
 def timestamp_to_str(ts):
     if isinstance(ts, Timestamp):
@@ -391,8 +391,8 @@ async def rapid():
     print(get_bonds_data_data)
 asyncio.run(rapid())'''
 
-
-######################################## CALENDAR 보여주기 Starts ###########################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Ends ##################################
+##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 Starts #####################################################
 # 증시 캘린더 관련 함수 
 @app.post("/calendar", response_class=JSONResponse)
 async def get_calendar(request: Request):
@@ -414,8 +414,8 @@ async def rapidapi_calendar():
     calendar_data = response.json()
     return calendar_data
 
-######################################## CALENDAR 보여주기 Ends ###########################################
-######################################## NEWS 보여주기 Starts ##############################################
+##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 ENDS #####################################################
+##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 Starts ###################################################
 
 # Seeking Alpha 관련 뉴스 호출 함수
 @app.post("/seekingNews", response_class=JSONResponse)
@@ -512,7 +512,7 @@ async def gpt_request(request_data: dict):
     
     return {"result": gpt_result}
 
-######################################## NEWS 보여주기 Ends  ##############################################
+##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 ENDS ###################################################
 
 ''' 테스트
 async def gpttest():
@@ -524,7 +524,7 @@ async def gpttest():
     print(gpt_summary)
     
 asyncio.run(gpttest()) '''
-######################################## 마켓 PDF 분석 Starts  ##############################################
+##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 Starts ###################################################
 
 class ImageData(BaseModel):
     image: str  # Base64 인코딩된 이미지 데이터
@@ -615,10 +615,10 @@ async def gpt4_pdf_talk(response_data):
         return None
 
 
-######################################## 마켓 PDF 분석 Ends  ##############################################            
-################################### FIN GPT 구현 부분 Starts (본부장님소스) + 나의 수정 ################################
-
-
+##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 ENDS ###################################################            
+##################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보 [본부장님소스+ 내꺼] Starts ###############################
+    
+############ [1ST_GNB][1ST_MENU][공통함수] #################
 def get_curday():
     return date.today().strftime("%Y-%m-%d")
 
@@ -640,7 +640,21 @@ def calculate_beat_miss_ratio(actual, estimate):
         return "Beat" if actual > estimate else "Miss"
     return "-"
 
-### Finnhub earnings_calendar 유료결제(분기 150달러)가 되어야 사용가능할듯.
+############ [1ST_GNB][1ST_MENU][GET NEWS INFO (해외뉴스정보) 및 (소셜정보)] #################
+# Finnhub 해외 종목뉴스 
+@app.get("/foreignStock/financials/news/{ticker}")
+async def get_financial_earningTable(ticker: str):
+    try:
+        #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
+        Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
+        End_date_calen = get_curday()     
+        recent_news = finnhub_client.company_news(ticker, _from=Start_date_calen, to=End_date_calen)
+        return recent_news
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+### Finnhub earnings_calendar 유료결제(분기 150달러)가 되어야 사용가능할듯.(Finnhub중에서도 Estimates쪽 결재필요)
 ### Freekey는 1분기꺼밖에 안옴. 일단 막아놓고 야후꺼로 조합해서 쓴다 ㅠㅠ
 '''@app.get("/api/get_earning_announcement/{ticker}")
 def calculate_financial_metrics(ticker: str):
@@ -699,6 +713,7 @@ def calculate_financial_metrics(ticker: str):
     
     return results'''
 
+############ [1ST_GNB][1ST_MENU][GET STOCK INFO (종목기본정보)] #################
 # 최근 실적 YoY, QoQ 데이터. 야후꺼와 finnhub calendar 최근분기만 조합해서 다시만듬. . 
 @app.get("/foreignStock/financials/earningTable/{ticker}")
 async def get_financial_earningTable(ticker: str):
@@ -752,7 +767,6 @@ async def get_financial_earningTable(ticker: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 # 반환할 데이터 모델 정의
 class FinancialData(BaseModel):
     income_statement: dict
@@ -760,7 +774,7 @@ class FinancialData(BaseModel):
     additional_info: dict
     charts_data: dict
     
-#AI가 말해주는 주식 정보 [#1 종목 기본 정보] 호출용
+#AI가 말해주는 주식 정보 [#2 종목 기본 정보] 호출용
 @app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
 def get_financials_and_metrics(ticker: str):
     stock = yf.Ticker(ticker)
@@ -900,7 +914,7 @@ def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-
+############ [1ST_GNB][1ST_MENU][GET EARNING INFO (실적발표)][본부장님 소스] #################
 def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)
     if len(news) > count :
@@ -1166,7 +1180,7 @@ def get_stockwave(ticker: str):
     stockwave_base64 = get_chart_base64(fig)
     return JSONResponse(content={"stockwave_data": stockwave_base64})
 
-#################################### FIN GPT 구현 부분 Ends (본부장님소스) ###################################
+##################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보 [본부장님소스+ 내꺼] ENDS ###############################
 
 ''' 테스트
 async def cccc():
@@ -1178,8 +1192,7 @@ asyncio.run(cccc())'''
     result = query_gpt4('AAPL')
     print(result)
 queryGPT4()'''
-
-############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 ################################
+############################## [2ND_GNB][1ST_MENU] 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 Starts ######################
 
 #1. 네이버 검색 API
 @app.get("/api/search-naver")
@@ -1356,9 +1369,9 @@ def fetch_news_detail(news_url: NewsURL):
             raise HTTPException(status_code=404, detail="News content not found")
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
-    
-############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 끝 ################################
-############################## 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 시작   ################################
+
+############################## [2ND_GNB][1ST_MENU] 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 Ends ######################    
+############################## [2ND_GNB][2ND_MENU] 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 Starts   ################################
 #일단 종목코드 갖고오는것부터 구현하자
 @app.get("/stock-codes/")    
 async def stock_code_fetch():
@@ -1494,3 +1507,4 @@ async def find_similar_period(request: StockRequest):
     wow = await find_similar_period(request_data)
     await save_to_txt(wow, "wow.txt")
 asyncio.run(rapid())'''
+############################## [2ND_GNB][2ND_MENU] 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 Ends   ################################

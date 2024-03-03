@@ -52,7 +52,107 @@
                 element.style.display = 'none';
             });
         }
-//************************************** FIN GPT 함수 Starts [#1.Get StockInfo]********************************************//
+//********************************** AI가 말해주는 주식정보 함수 Starts [#1.Get ForeignStockNewsInfo]**************************************//
+        //Finnhub에서 종목뉴스 가져오기 
+        async function loadForeignStockNews() {
+            const ticker = document.getElementById('foreign_ticker').value;
+            if (!ticker) {
+                alert('종목을 먼저 선택해주세요!');
+                document.getElementById('loading_bar_foreignnews').style.display = 'none';
+                return;
+            }
+            document.getElementById('loading_bar_foreignnews').style.display = 'block';
+            try {
+                const response = await fetch(`/foreignStock/financials/news/${ticker}`);
+                if (!response.ok) throw new Error('Failed to fetch foreign stock news info data');
+                
+                const data = await response.json();
+                const newsContainer = document.getElementById('foreignTickerNewsArea');
+                newsContainer.innerHTML = '';
+                if (data.length === 0) {
+                    newsContainer.innerHTML = '<p>최근 등록된 뉴스가 없습니다.</p>';
+                    return;
+                }
+                // 뉴스 항목 너무 많아서 최대 15개까지만 표시함
+                data.slice(0, 15).forEach(news => {
+                    const newsDate = new Date(news.datetime * 1000).toISOString().slice(0, 10);
+                    const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 5) + 1}.jpg`;
+                    const newsElement = `
+                        <div class="foreignTickerNews-container">
+                            <span class="foreignTickerNews-datetime">${newsDate}</span>
+                            <div class="foreignTickerNews-image">
+                                <img src="${imageSrc}" alt="${news.related}">
+                            </div>
+                            <div class="foreignTickerNews-content">
+                                <div class="foreignTickerNews-header">
+                                    <h2 class="foreignTickerNews-headline">${news.headline}</h2>
+                                    <span class="foreignTickerNews-source">${news.source}</span>
+                                </div>
+                                <p class="foreignTickerNews-summary">${news.summary}</p>
+                                <div class="foreignTickerNews-buttons-container">
+                                    <a class="foreignTickerNews-link" href="${news.url}" target="_blank">read more</a>
+                                    <button class="foreignTickerNews-analysis" onclick="analyzeArticle('${news.url.replace(/'/g, "\\'")}');">AI 기사분석</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    newsContainer.insertAdjacentHTML('beforeend', newsElement);
+                });
+                // 뉴스 내용 접기/펼치기 버튼 추가
+                if (!document.getElementById('toggleNewsButton')) {
+                    const toggleButton = document.createElement('button');
+                    toggleButton.id = 'toggleNewsButton';
+                    toggleButton.innerText = '뉴스 접기/펼치기';
+                    toggleButton.onclick = function() {
+                        const newsContent = document.querySelectorAll('.foreignTickerNews-container');
+                        newsContent.forEach(content => {
+                            if (content.classList.contains('hiddenNews')) {
+                                content.classList.remove('hiddenNews');
+                            } else {
+                                content.classList.add('hiddenNews');
+                            }
+                        });
+                    };
+                    newsContainer.before(toggleButton);
+                }
+            } catch (error) {
+                console.error('Error fetching stock info:', error);
+            } finally {
+                document.getElementById('loading_bar_foreignnews').style.display = 'none';
+            }
+        }
+        function analyzeArticle(webUrl){
+            //AI기사분석 함수 
+            document.getElementById('loading_bar_foreignnews').style.display = 'block'; 
+            fetch('/rag/handle-analyze-webnews/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: webUrl })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`analyzeArticle not ok, status: ${response.status}`);
+                    document.getElementById('loading_bar_foreignnews').style.display = 'none'; 
+                }
+                return response.json(); 
+            })
+            .then(data => {
+                console.log("Success:", data);
+                if (data && data.result) {  
+
+     
+                }                
+            })
+            .catch(error => {
+                console.error("Error:", error.message);
+                document.getElementById('loading_bar_foreignnews').style.display = 'none'; 
+            });
+        }
+
+//********************************** AI가 말해주는 주식정보 함수 Ends [#1.Get ForeignStockNewsInfo]**************************************//        
+//************************************** AI가 말해주는 주식정보 함수 Starts [#2.Get StockInfo]********************************************//
         //디지털리서치 요청으로 종목코드 select 선택모듈로 변경
         async function fetchForeignStockCodes() {
             try {
@@ -350,8 +450,8 @@
                 }]
             });
         }
-//************************************** FIN GPT 함수 Ends [#1.Get StockInfo]********************************************//
-//*********************************** FIN GPT 함수 Starts [#2.Get EarningIfno]********************************************//
+//************************************** AI가 말해주는 주식정보 함수 Ends [#2.Get StockInfo]********************************************//
+//*********************************** AI가 말해주는 주식정보 함수 Starts [#3.Get EarningIfno]********************************************//
         //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
         async function loadEarningData() {
             const ticker = document.getElementById('foreign_ticker').value;             
@@ -465,8 +565,8 @@
             }         
         }
 
-//*********************************** FIN GPT 함수 Ends [#2.Get EarningIfno]****************************************//
-//********************************* FIN GPT 함수 Starts [#4.Ask AI Anything]****************************************//
+//*********************************** AI가 말해주는 주식정보 함수 Ends [#3.Get EarningIfno]****************************************//
+//********************************* AI가 말해주는 주식정보 함수 Starts [#4.Ask AI Anything]****************************************//
         function loadAiChat() {
             try {
                 //앞선 데이터들 모두 클리어(?!) 기획을.. 어케할지 고민
@@ -1818,14 +1918,21 @@
                             <select id="foreign_ticker" style="width: 100%"></select>
                         </div>                        
                         <div class="foreign-buttons-container">
-                            <button class="basicInfoBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info<p>(종목 기본정보)</p></button>
                             <button class="foreignNewsBtn" id="getForeignStockNews" onclick="loadForeignStockNews();">Get News Info<p>(소셜 데이터)</p></button>
+                            <button class="basicInfoBtn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info<p>(종목 기본정보)</p></button>
                             <button class="earningBtn" id="getEarningInfo" onclick="loadEarningData();">Get Earning Info<p>(실적 데이터)</button>   
                             <button class="aiChatBtn" id="aiStockChat" onclick="loadAiChat();">Ask AI Anything <p><span id="aiChatStatus">[OFF]</span></p></button>
 
                         </div>
                     </div>
-                    <!-- AI가 말해주는 주식 정보 [#1 종목 기본정보]-->
+                    <!-- AI가 말해주는 주식 정보 [#1 뉴스(소셜) 데이터]-->
+                    <div id="loading_bar_foreignnews" class="loading_bar_foreignnews" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_D.gif">
+                        <p class="loading-text-foreignnews">데이터 로딩중입니다.</p>
+                    </div>   
+                    <div id="foreignTickerNewsArea">
+                    </div>                      
+                    <!-- AI가 말해주는 주식 정보 [#2 종목 기본정보]-->
                     <div id="loading_bar_stockbasic" class="loading_bar_stockbasic" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_C.gif">
                         <p class="loading-text-stockbasic">데이터 로딩중입니다.</p>
@@ -1842,30 +1949,6 @@
                             <div id="stockBasic_finance_info"></div>
                         </div>
                     </div>
-                    <!-- AI가 말해주는 주식 정보 [#2 뉴스(소셜) 데이터]-->
-                    <div id="loading_bar_foreignnews" class="loading_bar_foreignnews" style="margin-left: 0px;">
-                        <img src="/static/assets/images/LoadingBar_F.gif">
-                        <p class="loading-text-foreignnews">데이터 로딩중입니다.</p>
-                    </div>                      
-                    <div class="foreignTickerNews-container">
-                        <span class="foreignTickerNews-datetime">2019-09-26</span>
-                        <div class="foreignTickerNews-image">
-                            <img src="https://img.etimg.com/thumb/msid-71321314,width-1070,height-580,imgsize-481831,overlay-economictimes/photo.jpg" alt="Electronic Manufacturing News">
-                        </div>
-                        <div class="foreignTickerNews-content">
-                            <div class="foreignTickerNews-header">
-                                <h2 class="foreignTickerNews-headline">More sops needed to boost electronic manufacturing: Top govt official</h2>
-                                <span class="foreignTickerNews-source">The Economic Times India</span>
-                            </div>
-                            <p class="foreignTickerNews-summary">NEW DELHI | CHENNAI: India may have to offer...</p>
-                            <div class="foreignTickerNews-buttons-container">
-                                <a class="foreignTickerNews-link" href="#">read more</a>
-                                <button class="foreignTickerNews-analysis" onclick="analyzeArticle();">AI 기사분석</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                   
                     <!-- AI가 말해주는 주식 정보 [#3 실적 데이터]-->
                     <div id="loading_bar_fingpt" class="loading_bar" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_C.gif">

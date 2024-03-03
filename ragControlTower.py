@@ -146,4 +146,22 @@ async def handle_gpt4_talk(request: Request):
 
     except Exception as e:
         logging.exception("An error occurred")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")    
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")   
+
+# AI가 말해주는 해외주식정보 [해외 종목뉴스 1개 분석]
+@router.post("/rag/handle-analyze-webnews/")
+async def handle_analyze_webnews(web_url: WebURL):
+    try:
+        url = web_url.url
+        logging.info(f"url received: {url}")
+
+        response_message = await askMulti.webNewsAnalyzer(url)
+        return {"message": "Success", "result": response_message}
+
+    except ValueError as ve:
+        logging.exception("Validation error")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logging.exception("An unexpected error occurred")
+        raise HTTPException(status_code=500, detail="Unexpected error occurred")    
+         
