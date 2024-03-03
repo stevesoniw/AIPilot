@@ -165,14 +165,14 @@ class multiRAG:
        
     # Finnhub에서 조회한 종목뉴스를 분석해서 보여주기
     async def webNewsAnalyzer(self, url):
+        web_splitter = CharacterTextSplitter(chunk_size=3072, chunk_overlap=150, length_function=len)
         docs = WebBaseLoader(url).load_and_split(self.text_splitter)
         template = '''다음의 내용을 한글로 요약해줘: {text}'''
         combine_template = '''{text}
 
-        요약의 결과는 다음의 형식으로 작성해줘:
+        요약의 결과는 다음의 형식으로 작성해줘. 깔끔하게 줄바꿈되어 보일수있게 반드시 html형태로 답변해줘.:
         제목: 신문기사의 제목
-        주요내용: 세 줄로 요약된 내용
-        작성자: 김철수 대리
+        주요내용: 다섯 줄로 요약된 내용
         내용: 주요내용을 불렛포인트 형식으로 작성
         AI의견 : 해당 뉴스가 관련 주식 종목에 미칠만한 영향과 향후 주시해야 하는 포인트 
         '''

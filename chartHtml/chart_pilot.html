@@ -78,7 +78,7 @@
                     const newsDate = new Date(news.datetime * 1000).toISOString().slice(0, 10);
                     const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 5) + 1}.jpg`;
                     const newsElement = `
-                        <div class="foreignTickerNews-container">
+                        <div class="foreignTickerNews-container" data-news-id="${news.id}">
                             <span class="foreignTickerNews-datetime">${newsDate}</span>
                             <div class="foreignTickerNews-image">
                                 <img src="${imageSrc}" alt="${news.related}">
@@ -91,7 +91,8 @@
                                 <p class="foreignTickerNews-summary">${news.summary}</p>
                                 <div class="foreignTickerNews-buttons-container">
                                     <a class="foreignTickerNews-link" href="${news.url}" target="_blank">read more</a>
-                                    <button class="foreignTickerNews-analysis" onclick="analyzeArticle('${news.url.replace(/'/g, "\\'")}');">AI 기사분석</button>
+                                    <button class="foreignTickerNews-analysis" onclick="analyzeArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석</button>
+
                                 </div>
                             </div>
                         </div>
@@ -121,8 +122,8 @@
                 document.getElementById('loading_bar_foreignnews').style.display = 'none';
             }
         }
-        function analyzeArticle(webUrl){
-            //AI기사분석 함수 
+        function analyzeArticle(webUrl, newsId){
+            // AI기사분석 함수 
             document.getElementById('loading_bar_foreignnews').style.display = 'block'; 
             fetch('/rag/handle-analyze-webnews/', {
                 method: 'POST',
@@ -134,22 +135,33 @@
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`analyzeArticle not ok, status: ${response.status}`);
-                    document.getElementById('loading_bar_foreignnews').style.display = 'none'; 
                 }
                 return response.json(); 
             })
             .then(data => {
                 console.log("Success:", data);
-                if (data && data.result) {  
-
-     
+                if (data && data.result) {
+                    const analysisContainer = document.createElement('div');
+                    analysisContainer.className = 'analysisResultContainer';
+                    analysisContainer.innerHTML = `
+                        <div class="analysisTitle">해당 원본뉴스 사이트(${webUrl})를 분석한 내용입니다.</div>
+                        <div class="analysisContent">${data.result.output_text}</div>
+                    `;
+                    const newsElement = document.querySelector(`[data-news-id="${newsId}"]`);
+                    if (newsElement) {
+                        // 선택한 뉴스 아이템 바로 다음 위치에 분석 결과를 삽입합니다.
+                        newsElement.insertAdjacentElement('afterend', analysisContainer);
+                    }
                 }                
             })
             .catch(error => {
                 console.error("Error:", error.message);
+            })
+            .finally(() => {
                 document.getElementById('loading_bar_foreignnews').style.display = 'none'; 
             });
         }
+        
 
 //********************************** AI가 말해주는 주식정보 함수 Ends [#1.Get ForeignStockNewsInfo]**************************************//        
 //************************************** AI가 말해주는 주식정보 함수 Starts [#2.Get StockInfo]********************************************//
