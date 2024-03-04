@@ -99,7 +99,7 @@
                     `;
                     newsContainer.insertAdjacentHTML('beforeend', newsElement);
                 });
-                // 뉴스 내용 접기/펼치기 버튼 추가
+                // 해외종목 뉴스 내용 접기/펼치기 버튼 추가
                 if (!document.getElementById('toggleNewsButton')) {
                     const toggleButton = document.createElement('button');
                     toggleButton.id = 'toggleNewsButton';
@@ -142,7 +142,7 @@
             // AI기사분석 함수 
             var loadingText = document.getElementById('loading-text-foreignnews');
             loadingText.textContent = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.';            
-            document.getElementById('loading_bar_foreignnews').style.display = 'block'; 
+            loadingTextstyle.display = 'block'; 
 
             fetch('/rag/handle-analyze-webnews/', {
                 method: 'POST',
@@ -201,38 +201,86 @@
             container.innerHTML = ''; 
             data.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'release-item';
+                // Updated class name to match new naming convention
+                div.className = 'fomc-release-item'; 
                 div.innerHTML = `
                     <h3 data-link="${item.link}">${item.title}</h3>
+                    <button class="fomc-release-summary-btn" onclick="fetchFomcReleaseDetail('${item.link}', this.parentElement.querySelector('.fomc-release-detail'))">Press Release AI 요약내용 보기</button>
                     <p>Date: ${item.datetime}</p>
                     <p>Press Type: ${item.press_type}</p>
-                    <div class="release-detail"></div>
+                    <div class="fomc-release-detail"></div>
                 `;
                 container.appendChild(div);
             });
-            
-            document.querySelectorAll('.release-item h3').forEach(element => {
-                element.addEventListener('click', function() {
-                    const link = this.getAttribute('data-link');
-                    fetchFomcReleaseDetail(link, this.parentElement.querySelector('.release-detail'));
-                });
-            });
+            addGlobalToggle();
         }
+        //Fomc title 접기/펼치기 
+        function addGlobalToggle() {
+            if (!document.getElementById('toggleFomcButton')) {
+                const toggleButton = document.createElement('button');
+                toggleButton.id = 'toggleFomcButton';
+                toggleButton.className = 'fomc-toggle-visibility-btn';
+                toggleButton.innerText = 'FOMC Press Release 접기/펼치기';
+                toggleButton.onclick = function() {
+                    const releaseItems = document.querySelectorAll('#fomc-press-releases .fomc-release-item');
+                    releaseItems.forEach(item => toggleVisibility(item));
+                };
+                //document.body.insertBefore(toggleButton, document.getElementById("fomc-press-releases")); 
+                document.getElementById("fomc-press-releases").before(toggleButton);
+            }
+        }
+        // FOMC 상세 내용 보이고 안보이고 컨트롤 
+        function toggleFomcDetailVisibility(detailContainer) {
+            if (detailContainer.classList.contains('fomc-detail-hiddenNews')) {
+                detailContainer.classList.remove('fomc-detail-hiddenNews');
+                detailContainer.classList.add('fomc-detail-shownNews');
+                detailContainer.style.maxHeight = detailContainer.scrollHeight + 'px';
+                detailContainer.style.opacity = 1;
+                detailContainer.style.padding = '20px';
+            } else {
+                detailContainer.classList.add('fomc-detail-hiddenNews');
+                detailContainer.classList.remove('fomc-detail-shownNews');
+                detailContainer.style.maxHeight = '0';
+                detailContainer.style.opacity = 0;
+                detailContainer.style.padding = '0 20px'; 
+            }
+        }
+        
+        
         // FOMC 상세 데이터 다시 스크래핑 
         async function fetchFomcReleaseDetail(link, detailContainer) {
             try {
-                // Assuming there's an API endpoint to fetch detailed news based on the link
-                const response = await fetch(`/fetch-detail?url=${encodeURIComponent(link)}`);
+                var loadingText = document.getElementById('loading-text-foreignnews');
+                loadingText.textContent = 'Press Release 내용분석중입니다. 조금만 기다려주세요.';
+                loadingText.style.display = 'block'; 
+                const response = await fetch(`/fomc-scraping-details-release?url=${encodeURIComponent(link)}`);
                 if (response.ok) {
-                    const detailData = await response.text(); // Assuming the detail is returned as plain text or HTML
-                    detailContainer.innerHTML = detailData;
+                    const detailData = await response.text();
+                    console.log(detailData);
+        
+                    // 상세 데이터를 표시할 새로운 div 생성
+                    const detailDiv = document.createElement('div');
+                    detailDiv.className = 'fomc-detail-content';
+                    detailDiv.innerHTML = detailData;
+                    
+                    detailContainer.innerHTML = '';
+                    detailContainer.appendChild(detailDiv);
+        
+                    toggleFomcDetailVisibility(detailContainer);
                 } else {
                     console.error('Failed to fetch detail:', response.status);
+                    detailContainer.innerHTML = '<p>Error loading details.</p>';
                 }
             } catch (error) {
                 console.error('An error occurred:', error);
+                detailContainer.innerHTML = '<p>Error loading details.</p>';
+            } finally {
+                var loadingText = document.getElementById('loading-text-foreignnews');
+                loadingText.textContent = '데이터 로딩중입니다.';
+                loadingText.style.display = 'none';
             }
-        }                
+        }
+                 
 //********************************** AI가 말해주는 주식정보 함수 Ends [#1.Get ForeignStockNewsInfo]**************************************//        
 //************************************** AI가 말해주는 주식정보 함수 Starts [#2.Get StockInfo]********************************************//
         //디지털리서치 요청으로 종목코드 select 선택모듈로 변경
@@ -2518,7 +2566,7 @@
                         <div id="ragResultArea" class="rag-chat-container">
                             <div class="rag-messages">
                                 <div class="rag-message rag-received">
-                                    <div class="rag-text">안녕하세요! 질문해주세요</div>
+                                    <div class="rag-text">안녕하세요! 파일을 업로드 후 질문해주세요.<p>(※현재는 단순한 텍스트 위주의 파일에 대해서만 잘 대답해요)</p></div>
                                 </div>
                                 <!-- Example of a sent message -->
                                 <div class="rag-message rag-sent">

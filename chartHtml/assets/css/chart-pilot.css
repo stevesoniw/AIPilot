@@ -119,11 +119,23 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .analysisContent {font-size: 14px;}
 .webUrl {color: blue;}
 .foreignTickerNews-container, .analysisResultContainer {overflow: hidden; transition: max-height 0.5s ease-out;}
-.hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px;}
-.shownNews {max-height: 2000px;}
-#fomc-press-releases .release-item {margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;}
+.hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: all 0.5s ease;}
+.shownNews {max-height: 2000px; opacity: 1; max-height: none;  padding: 20px; transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;}
+
 .release-item h3 {margin: 0; color: #007bff; cursor: pointer;}
 .release-item p {margin: 5px 0;}
+#fomc-press-releases .fomc-release-item {margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s ease-in-out;}
+.fomc-release-item h3 {margin-bottom: 10px; color: #007bff; cursor: pointer;}
+.fomc-release-item p {margin: 5px 0; color: #666; font-size:12px;}
+.fomc-release-summary-btn {background-color: #055397; color: white; padding: 5px 10px; font-size: 13px; border-radius: 5px; cursor: pointer; margin-left: 10px; margin-top: 10px;}
+.fomc-toggle-visibility-btn {background-color: #007bff; color: white; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center;}
+.fomc-release-detail {display: none; margin-top: 10px;}
+.fomc-release-detail-content {padding: 15px; background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; line-height: 1.6;}
+.fomc-release-summary-btn:hover {background-color: #0056b3;}
+.fomc-toggle-visibility-btn:hover {background-color: #1e7e34;}
+.fomc-detail-hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: all 0.5s ease;}
+.fomc-detail-shownNews {opacity: 1; max-height: none; padding: 20px; transition: all 0.5s ease;} 
+.fomc-detail-content {background-color: #ffffe0; padding: 20px; margin-top: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.5s ease;}
 
   
 
