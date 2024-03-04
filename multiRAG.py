@@ -2,6 +2,7 @@
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
 from langchain_community.document_loaders.web_base import WebBaseLoader
+from langchain_community.document_loaders import BSHTMLLoader
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chains.summarize import load_summarize_chain
@@ -165,27 +166,27 @@ class multiRAG:
        
     # Finnhub에서 조회한 종목뉴스를 분석해서 보여주기
     async def webNewsAnalyzer(self, url):
-        web_splitter = CharacterTextSplitter(chunk_size=3072, chunk_overlap=150, length_function=len)
-        docs = WebBaseLoader(url).load_and_split(self.text_splitter)
-        template = '''다음의 내용을 한글로 요약해줘: {text}'''
+        web_splitter = CharacterTextSplitter(chunk_size=4072, chunk_overlap=150, length_function=len)
+        docs = WebBaseLoader(url).load_and_split(self.text_splitter) #BSHTMLLoader 가 WebBaseLoader 보다 더 가벼운듯함. 컴팩트하게 긁어옴
+        #template = '''다음의 내용을 한글로 요약해줘: {text}'''
+   
         combine_template = '''{text}
-
-        요약의 결과는 다음의 형식으로 작성해줘. 깔끔하게 줄바꿈되어 보일수있게 반드시 html형태로 답변해줘.:
+        위 내용을 반드시 한국어로 요약해줘
+        요약의 결과는 다음의 형식으로 작성해줘. 깔끔하게 줄바꿈되어 보일수있게 반드시 html형식으로 답변해줘. 그리고 한국어로 답변해줘 :
+        [답변 형식]
         제목: 신문기사의 제목
         주요내용: 다섯 줄로 요약된 내용
         내용: 주요내용을 불렛포인트 형식으로 작성
         AI의견 : 해당 뉴스가 관련 주식 종목에 미칠만한 영향과 향후 주시해야 하는 포인트 
         '''
-        prompt = PromptTemplate(template=template, input_variables=['text'])
-        combine_prompt = PromptTemplate(template=combine_template, input_variables=['text'])
+        prompt = PromptTemplate(template=combine_template, input_variables=['text'])
+        #combine_prompt = PromptTemplate(template=combine_template, input_variables=['text'])
         
         llm = ChatOpenAI(temperature=0, model=self.LLM_MODEL_NAME, openai_api_key=config.OPENAI_API_KEY)
-        chain = load_summarize_chain(llm, 
-                                map_prompt=prompt, 
-                                combine_prompt=combine_prompt, 
-                                chain_type='map_reduce', 
-                                verbose=False)
-        
+        chain = LLMChain(
+                        prompt=prompt, 
+                        #combine_prompt=combine_prompt, 
+                        llm=llm)
         result = chain.invoke(docs)
         return result
 
@@ -196,7 +197,8 @@ class multiRAG:
 #texts = "### STOCKBASIC COMPANY INFO <table class='stockBasicInfoTable'><caption>종목 기본 정보</caption><tbody><tr><td>회사 이름</td><td>AMERICAN AIRES INC</td></tr><tr><td>섹터</td><td>Technology</td></tr><tr><td>현재가</td><td>0.74905</td></tr><tr><td>50일 평균가</td><td>0.2678732 (USD)</td></tr><tr><td>52주 신고가</td><td>0.765 (USD)</td></tr><tr><td>52주 신저가</td><td>0.0473 (USD)</td></tr><tr><td>총 자산</td><td>0.02억 (USD)</td></tr><tr><td>자기자본</td><td>0.01억 (USD)</td></tr><tr><td>시가총액</td><td>0.13억 (USD)</td></tr><tr><td>발행주식 수</td><td>16660000 주</td></tr><tr><td>총 부채</td><td>0.01억 (USD)</td></tr><tr><td>영업현금흐름</td><td>-0.01억 (USD)</td></tr><tr><td>PER</td><td>-1.15</td></tr><tr><td>PBR</td><td>8.99</td></tr></tbody></table>"
 #file_path = "markdown\markdown.md"
 #data = multiCon.askGPT4("hello")
-
+#data = multiCon.webNewsAnalyzer("https://finnhub.io/api/news?id=7e9095477c9e03baab980f02d466eaa5053bc0eabbd22e960c5c750efe0cf0ab")
+#print(data)
 #print(data)
 
 #chat_pdf_instance.test()

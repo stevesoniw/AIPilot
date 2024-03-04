@@ -98,8 +98,8 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 /* AI가 말해주는 주식정보(해외)  #2. News 데이터 보여주기 */
 .loading_bar_foreignnews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
 .loading_bar_foreignnews > img { max-width: 100px; max-height: 100px; }
-.loading-text-foreignnews { background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
-.foreignTickerNews-container {display: flex; background-color: #f8ecec; border-radius: 8px; overflow: hidden; margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; overflow: hidden; max-height: 200px; opacity: 1;}
+.loading-text-foreignnews { background-color: rgb(236, 252, 221); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
+.foreignTickerNews-container {display: flex; background-color: #f8ecec; border-radius: 8px; overflow: hidden; margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
 .foreignTickerNews-image {padding: 10px; padding-right: 0; padding-top:65px; padding-left:15px; align-self: flex-start;}
 .foreignTickerNews-image img {width: 200px; height: auto; display: block; border-radius: 4px;}
 .foreignTickerNews-content {padding: 10px 20px; display: flex; flex-direction: column; justify-content: space-between; align-items:baseline;}
@@ -114,9 +114,18 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 #toggleNewsButton {padding: 10px 20px; font-size: 16px; color: #fff; background-color: #007bff; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; outline: none; margin: 20px auto; display: block;} 
 #toggleNewsButton:hover {background-color: #0056b3;}
 .hiddenNews {max-height: 0; opacity: 0;}
-.analysisResultContainer {background-color: #fffdee; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.analysisResultContainer {background-color: #fffdee; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
 .analysisTitle {font-size: 14px; font-weight: bold; margin-bottom: 5px; color:rgb(211, 24, 24);}
 .analysisContent {font-size: 14px;}
+.webUrl {color: blue;}
+.foreignTickerNews-container, .analysisResultContainer {overflow: hidden; transition: max-height 0.5s ease-out;}
+.hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px;}
+.shownNews {max-height: 2000px;}
+#fomc-press-releases .release-item {margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;}
+.release-item h3 {margin: 0; color: #007bff; cursor: pointer;}
+.release-item p {margin: 5px 0;}
+
+  
 
 
 

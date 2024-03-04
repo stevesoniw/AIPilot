@@ -53,7 +53,7 @@
             });
         }
 //********************************** AI가 말해주는 주식정보 함수 Starts [#1.Get ForeignStockNewsInfo]**************************************//
-        //Finnhub에서 종목뉴스 가져오기 
+        //Finnhub에서 해외 종목 뉴스데이터 가져오기 
         async function loadForeignStockNews() {
             const ticker = document.getElementById('foreign_ticker').value;
             if (!ticker) {
@@ -103,14 +103,15 @@
                 if (!document.getElementById('toggleNewsButton')) {
                     const toggleButton = document.createElement('button');
                     toggleButton.id = 'toggleNewsButton';
-                    toggleButton.innerText = '뉴스 접기/펼치기';
+                    toggleButton.innerText = '종목뉴스 접기/펼치기';
                     toggleButton.onclick = function() {
                         const newsContent = document.querySelectorAll('.foreignTickerNews-container');
                         newsContent.forEach(content => {
-                            if (content.classList.contains('hiddenNews')) {
-                                content.classList.remove('hiddenNews');
-                            } else {
-                                content.classList.add('hiddenNews');
+                            toggleVisibility(content);
+                            const nextElement = content.nextElementSibling;
+                            if (nextElement && nextElement.classList.contains('analysisResultContainer')) {
+                                // analysisContainer도 토글
+                                toggleVisibility(nextElement);
                             }
                         });
                     };
@@ -120,11 +121,29 @@
                 console.error('Error fetching stock info:', error);
             } finally {
                 document.getElementById('loading_bar_foreignnews').style.display = 'none';
+                //FOMC 호출 연이어서..
+                fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');
             }
         }
+        function toggleVisibility(element) {
+            if (element.classList.contains('hiddenNews')) {
+                // 펼치기: 실제 필요한 최대 높이로 설정함
+                element.classList.remove('hiddenNews');
+                // scrollHeight를 사용하여 요소의 실제 높이를 계산하고, 여유분을 더하자
+                element.style.maxHeight = element.scrollHeight + 'px';
+            } else {
+                // 접기ㅋ
+                element.classList.add('hiddenNews');
+                element.style.maxHeight = '0';
+            }
+        }
+
         function analyzeArticle(webUrl, newsId){
             // AI기사분석 함수 
+            var loadingText = document.getElementById('loading-text-foreignnews');
+            loadingText.textContent = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.';            
             document.getElementById('loading_bar_foreignnews').style.display = 'block'; 
+
             fetch('/rag/handle-analyze-webnews/', {
                 method: 'POST',
                 headers: {
@@ -145,11 +164,10 @@
                     analysisContainer.className = 'analysisResultContainer';
                     analysisContainer.innerHTML = `
                         <div class="analysisTitle">해당 원본뉴스 사이트(${webUrl})를 분석한 내용입니다.</div>
-                        <div class="analysisContent">${data.result.output_text}</div>
+                        <div class="analysisContent">${data.result.text}</div>
                     `;
                     const newsElement = document.querySelector(`[data-news-id="${newsId}"]`);
                     if (newsElement) {
-                        // 선택한 뉴스 아이템 바로 다음 위치에 분석 결과를 삽입합니다.
                         newsElement.insertAdjacentElement('afterend', analysisContainer);
                     }
                 }                
@@ -159,10 +177,62 @@
             })
             .finally(() => {
                 document.getElementById('loading_bar_foreignnews').style.display = 'none'; 
+                loadingText.textContent = '데이터 로딩중입니다.';  
             });
         }
-        
-
+       // FOMC 사이트가서 데이터 긁어온다 
+       async function fomcScrapingAPI(url) {
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayFomcData(data);
+                } else {
+                    console.error('Failed to fetch fomc main data:', response.status);
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+            }
+        } 
+        // FOMC 메인 타이틀 뉴스들 보여주기
+        function displayFomcData(data) {
+            console.log(data);
+            const container = document.getElementById('fomc-press-releases');
+            container.innerHTML = ''; 
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'release-item';
+                div.innerHTML = `
+                    <h3 data-link="${item.link}">${item.title}</h3>
+                    <p>Date: ${item.datetime}</p>
+                    <p>Press Type: ${item.press_type}</p>
+                    <div class="release-detail"></div>
+                `;
+                container.appendChild(div);
+            });
+            
+            document.querySelectorAll('.release-item h3').forEach(element => {
+                element.addEventListener('click', function() {
+                    const link = this.getAttribute('data-link');
+                    fetchFomcReleaseDetail(link, this.parentElement.querySelector('.release-detail'));
+                });
+            });
+        }
+        // FOMC 상세 데이터 다시 스크래핑 
+        async function fetchFomcReleaseDetail(link, detailContainer) {
+            try {
+                // Assuming there's an API endpoint to fetch detailed news based on the link
+                const response = await fetch(`/fetch-detail?url=${encodeURIComponent(link)}`);
+                if (response.ok) {
+                    const detailData = await response.text(); // Assuming the detail is returned as plain text or HTML
+                    detailContainer.innerHTML = detailData;
+                } else {
+                    console.error('Failed to fetch detail:', response.status);
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+            }
+        }                
 //********************************** AI가 말해주는 주식정보 함수 Ends [#1.Get ForeignStockNewsInfo]**************************************//        
 //************************************** AI가 말해주는 주식정보 함수 Starts [#2.Get StockInfo]********************************************//
         //디지털리서치 요청으로 종목코드 select 선택모듈로 변경
@@ -657,9 +727,8 @@
                 const index = currentSelections.indexOf("gpt4");
                 if (index > -1) {
                     currentSelections.splice(index, 1, ...tempSelections.filter(option => option !== "gpt4"));
-                    tempSelections = []; // 임시 저장된 선택 사항을 비움
+                    tempSelections = []; 
                 }
-                
                 // 선택된 옵션을 배열에 추가 (이미 있으면 추가하지 않음)
                 if (!currentSelections.includes(selectedOption)) {
                     currentSelections.push(selectedOption);
@@ -1162,7 +1231,6 @@
                 alert("하나 이상의 카테고리를 선택하세요.");
                 return;
             }
-
             document.getElementById('gpt_opinion').innerHTML = ""; 
             document.getElementById('gpt_summary').innerHTML = "";  
             document.getElementById('gpt-thoughts-container').style.display = 'none'; 
@@ -1255,8 +1323,6 @@
                 console.error('Received data is not an array:', seekingNewsData);
             }
         }
-
-
         async function gptRequest(action) {
             if (g_news.length === 0) {
                 alert("뉴스데이터가 조회된 후 클릭해주세요");
@@ -1550,7 +1616,6 @@
                 });
             }
         }
-
         // 네이버 검색 API를 활용해서 뉴스까지 가져오자 
         async function naverSearchAPI() {
             // 일단 다른 뉴스 버튼들 (news-btn)의 'selected' 클래스 제거
@@ -1940,10 +2005,11 @@
                     <!-- AI가 말해주는 주식 정보 [#1 뉴스(소셜) 데이터]-->
                     <div id="loading_bar_foreignnews" class="loading_bar_foreignnews" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_D.gif">
-                        <p class="loading-text-foreignnews">데이터 로딩중입니다.</p>
+                        <p class="loading-text-foreignnews" id="loading-text-foreignnews">데이터 로딩중입니다.</p>
                     </div>   
-                    <div id="foreignTickerNewsArea">
-                    </div>                      
+                    <div id="foreignTickerNewsArea"></div>
+                    <div id="fomc-press-releases"></div>
+
                     <!-- AI가 말해주는 주식 정보 [#2 종목 기본정보]-->
                     <div id="loading_bar_stockbasic" class="loading_bar_stockbasic" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_C.gif">
