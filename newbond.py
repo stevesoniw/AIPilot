@@ -87,7 +87,7 @@ def get_chart_base64_plotly(fig):
 # GPT4 에 뉴스요약을 요청하는 공통함수
 async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 빨간색으로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
         completion = client.chat.completions.create(
             model="gpt-4-0125-preview",
             messages=[

@@ -70,7 +70,7 @@
                 const newsContainer = document.getElementById('foreignTickerNewsArea');
                 newsContainer.innerHTML = '';
                 if (data.length === 0) {
-                    newsContainer.innerHTML = '<p>최근 등록된 뉴스가 없습니다.</p>';
+                    newsContainer.innerHTML = '<p style="padding-top:20px; color:orange; font-weight:bold;">최근 등록된 뉴스가 없습니다.</p>';
                     return;
                 }
                 // 뉴스 항목 너무 많아서 최대 15개까지만 표시함
@@ -103,8 +103,12 @@
                 if (!document.getElementById('toggleNewsButton')) {
                     const toggleButton = document.createElement('button');
                     toggleButton.id = 'toggleNewsButton';
-                    toggleButton.innerText = '종목뉴스 접기/펼치기';
+                    // 초기 상태를 'true'로 설정하여 뉴스가 표시되고 있음을 나타냄
+                    toggleButton.setAttribute('data-visible', 'true');
+                    toggleButton.innerText = '#1. 종목뉴스 접기 ▲';
+                    
                     toggleButton.onclick = function() {
+                        const isVisible = toggleButton.getAttribute('data-visible') === 'true';
                         const newsContent = document.querySelectorAll('.foreignTickerNews-container');
                         newsContent.forEach(content => {
                             toggleVisibility(content);
@@ -114,6 +118,15 @@
                                 toggleVisibility(nextElement);
                             }
                         });
+                        
+                        // 토글 상태에 따라 버튼 텍스트와 data-visible 속성 업데이트
+                        if (isVisible) {
+                            toggleButton.innerText = '#1. 종목뉴스 펼치기 ▼';
+                            toggleButton.setAttribute('data-visible', 'false');
+                        } else {
+                            toggleButton.innerText = '#1. 종목뉴스 접기 ▲';
+                            toggleButton.setAttribute('data-visible', 'true');
+                        }
                     };
                     newsContainer.before(toggleButton);
                 }
@@ -141,8 +154,8 @@
         function analyzeArticle(webUrl, newsId){
             // AI기사분석 함수 
             var loadingText = document.getElementById('loading-text-foreignnews');
-            loadingText.textContent = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.';            
-            loadingTextstyle.display = 'block'; 
+            loadingText.textContent = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다. (*Finnhub뉴스는 차단당하는 경우가 존재하여 조치중입니다.)';            
+            document.getElementById('loading_bar_foreignnews').style.display = 'block';
 
             fetch('/rag/handle-analyze-webnews/', {
                 method: 'POST',
@@ -162,9 +175,11 @@
                 if (data && data.result) {
                     const analysisContainer = document.createElement('div');
                     analysisContainer.className = 'analysisResultContainer';
+                    let modifiedData = data.result.text.replace(/\n/g, '<br>');
+                    modifiedData = modifiedData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
                     analysisContainer.innerHTML = `
-                        <div class="analysisTitle">해당 원본뉴스 사이트(${webUrl})를 분석한 내용입니다.</div>
-                        <div class="analysisContent">${data.result.text}</div>
+                        <div class="analysisTitle">해당 원본뉴스 사이트(<span class="webUrl">${webUrl}</span>)를 분석한 내용입니다.</div>
+                        <div class="analysisContent">${modifiedData}</div>
                     `;
                     const newsElement = document.querySelector(`[data-news-id="${newsId}"]`);
                     if (newsElement) {
@@ -220,12 +235,24 @@
                 const toggleButton = document.createElement('button');
                 toggleButton.id = 'toggleFomcButton';
                 toggleButton.className = 'fomc-toggle-visibility-btn';
-                toggleButton.innerText = 'FOMC Press Release 접기/펼치기';
+                // 초기 상태 설정
+                toggleButton.setAttribute('data-visible', 'true');
+                toggleButton.innerText = '#2. FOMC Press Release 종목뉴스 접기 ▲';
+                
                 toggleButton.onclick = function() {
+                    const isVisible = toggleButton.getAttribute('data-visible') === 'true';
                     const releaseItems = document.querySelectorAll('#fomc-press-releases .fomc-release-item');
-                    releaseItems.forEach(item => toggleVisibility(item));
+                    releaseItems.forEach(toggleShowHide);
+                    
+                    // 토글 상태 업데이트 및 텍스트 변경
+                    if (isVisible) {
+                        toggleButton.innerText = '#2. FOMC Press Release 종목뉴스 펼치기 ▼';
+                        toggleButton.setAttribute('data-visible', 'false');
+                    } else {
+                        toggleButton.innerText = '#2. FOMC Press Release 종목뉴스 접기 ▲';
+                        toggleButton.setAttribute('data-visible', 'true');
+                    }
                 };
-                //document.body.insertBefore(toggleButton, document.getElementById("fomc-press-releases")); 
                 document.getElementById("fomc-press-releases").before(toggleButton);
             }
         }
@@ -234,39 +261,53 @@
             if (detailContainer.classList.contains('fomc-detail-hiddenNews')) {
                 detailContainer.classList.remove('fomc-detail-hiddenNews');
                 detailContainer.classList.add('fomc-detail-shownNews');
+                detailContainer.style.display = 'block'; 
                 detailContainer.style.maxHeight = detailContainer.scrollHeight + 'px';
                 detailContainer.style.opacity = 1;
                 detailContainer.style.padding = '20px';
             } else {
                 detailContainer.classList.add('fomc-detail-hiddenNews');
                 detailContainer.classList.remove('fomc-detail-shownNews');
+                detailContainer.style.display = 'none'; 
                 detailContainer.style.maxHeight = '0';
                 detailContainer.style.opacity = 0;
-                detailContainer.style.padding = '0 20px'; 
+                detailContainer.style.padding = '0 20px';
             }
         }
-        
-        
-        // FOMC 상세 데이터 다시 스크래핑 
+        function toggleShowHide(item) { //도저히 깨지는 이유를 모르겠어서 비슷한 기능함수 일단 다시만듬;
+            if (item.style.display === 'none') {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        }        
+         // FOMC 상세 데이터 다시 스크래핑 
         async function fetchFomcReleaseDetail(link, detailContainer) {
             try {
                 var loadingText = document.getElementById('loading-text-foreignnews');
                 loadingText.textContent = 'Press Release 내용분석중입니다. 조금만 기다려주세요.';
-                loadingText.style.display = 'block'; 
+                document.getElementById('loading_bar_foreignnews').style.display = 'block';
                 const response = await fetch(`/fomc-scraping-details-release?url=${encodeURIComponent(link)}`);
                 if (response.ok) {
-                    const detailData = await response.text();
-                    console.log(detailData);
-        
+                    let detailData = await response.text();
+                    // \n을 <br>로 변환
+                    detailData = detailData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
+                    detailData = detailData.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
                     // 상세 데이터를 표시할 새로운 div 생성
-                    const detailDiv = document.createElement('div');
+                    let detailDiv = document.createElement('div');
                     detailDiv.className = 'fomc-detail-content';
                     detailDiv.innerHTML = detailData;
                     
                     detailContainer.innerHTML = '';
                     detailContainer.appendChild(detailDiv);
-        
-                    toggleFomcDetailVisibility(detailContainer);
+                    //약간 텀 주자
+                    setTimeout(() => {
+                        detailContainer.classList.remove('fomc-detail-hiddenNews');
+                        detailContainer.classList.add('fomc-detail-shownNews');
+                        detailContainer.style.display = 'block'; 
+                        const totalHeight = detailContainer.scrollHeight;
+                        detailContainer.style.maxHeight = `${totalHeight}px`; // 도저히 안됨ㅠ지연 후 maxHeight 설정하자. 
+                    }, 2);                  
                 } else {
                     console.error('Failed to fetch detail:', response.status);
                     detailContainer.innerHTML = '<p>Error loading details.</p>';
@@ -277,9 +318,10 @@
             } finally {
                 var loadingText = document.getElementById('loading-text-foreignnews');
                 loadingText.textContent = '데이터 로딩중입니다.';
-                loadingText.style.display = 'none';
+                document.getElementById('loading_bar_foreignnews').style.display = 'none';
             }
         }
+
                  
 //********************************** AI가 말해주는 주식정보 함수 Ends [#1.Get ForeignStockNewsInfo]**************************************//        
 //************************************** AI가 말해주는 주식정보 함수 Starts [#2.Get StockInfo]********************************************//
@@ -2050,6 +2092,7 @@
 
                         </div>
                     </div>
+                    <div class="dotted-line"></div> <!--예쁘게 선 하나 넣자 -->
                     <!-- AI가 말해주는 주식 정보 [#1 뉴스(소셜) 데이터]-->
                     <div id="loading_bar_foreignnews" class="loading_bar_foreignnews" style="margin-left: 0px;">
                         <img src="/static/assets/images/LoadingBar_D.gif">
@@ -2837,6 +2880,17 @@
                     chatApp.style.display = 'none'; 
                 }
             });            
+                /** 디폴트 메시지 보여주기 **/
+                function addServerMessage(message) {
+                    const responseDiv = document.createElement('div');
+                    responseDiv.classList.add('message', 'system'); // 'message'와 'server' 클래스 추가
+                    responseDiv.textContent = message; // 메시지 내용 설정
+                    document.getElementById('chatMessages').appendChild(responseDiv); // #chatMessages에 메시지 추가
+                }
+                addServerMessage("질문을 해주세요!^^");
+                addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
+                addServerMessage("현재는 GPT4 와의 대화창입니다.");
+
  
             /********* [2nd GNB] 국내마켓데이터 - 유사국면분석에서 데이트피커 컨트롤 ************/
             $("#fromDate, #toDate").datepicker({

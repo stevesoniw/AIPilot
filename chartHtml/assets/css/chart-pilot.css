@@ -59,6 +59,7 @@
 .foreignNewsBtn:hover {background-color: #08158b;}
 .aiChatBtn {padding: 5px 20px; font-size: 14px; background-image: linear-gradient(to right, #f5c263, #f58b00); color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
 .aiChatBtn:hover {background-image: linear-gradient(to right, #f58b00, #eca445); }
+.dotted-line {border-top: 1px dotted rgb(20, 30, 173); margin: 20px 0;}
 .gpt-chart-area {width:100%; height:auto; border:1px solid #ccc;}
 .gpt-chart-area img {width: 60%; height: auto; display: block; margin: 10px auto;}
 .gpt-message-area {max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
@@ -111,33 +112,34 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .foreignTickerNews-link {background-color: #007bff; color: white !important; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;}
 .foreignTickerNews-analysis {background: linear-gradient(135deg, #6e02af, #6e61b9); color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px;}
 .foreignTickerNews-buttons-container {display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px;}
-#toggleNewsButton {padding: 10px 20px; font-size: 16px; color: #fff; background-color: #007bff; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; outline: none; margin: 20px auto; display: block;} 
-#toggleNewsButton:hover {background-color: #0056b3;}
+#toggleNewsButton {padding: 10px 20px; font-size: 16px; color: #fff; background-color: #1e7e34; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; outline: none; margin: 20px 0px 20px 0px; display: block;} 
+#toggleNewsButton:hover {background-color: #8cdf5d;}
 .hiddenNews {max-height: 0; opacity: 0;}
 .analysisResultContainer {background-color: #fffdee; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
 .analysisTitle {font-size: 14px; font-weight: bold; margin-bottom: 5px; color:rgb(211, 24, 24);}
 .analysisContent {font-size: 14px;}
-.webUrl {color: blue;}
+.webUrl {color: rgb(79, 16, 150);}
 .foreignTickerNews-container, .analysisResultContainer {overflow: hidden; transition: max-height 0.5s ease-out;}
 .hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: all 0.5s ease;}
 .shownNews {max-height: 2000px; opacity: 1; max-height: none;  padding: 20px; transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;}
 
 .release-item h3 {margin: 0; color: #007bff; cursor: pointer;}
 .release-item p {margin: 5px 0;}
-#fomc-press-releases .fomc-release-item {margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s ease-in-out;}
+#fomc-press-releases .fomc-release-item {margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s ease-in-out; max-height: none;}
 .fomc-release-item h3 {margin-bottom: 10px; color: #007bff; cursor: pointer;}
 .fomc-release-item p {margin: 5px 0; color: #666; font-size:12px;}
 .fomc-release-summary-btn {background-color: #055397; color: white; padding: 5px 10px; font-size: 13px; border-radius: 5px; cursor: pointer; margin-left: 10px; margin-top: 10px;}
-.fomc-toggle-visibility-btn {background-color: #007bff; color: white; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center;}
-.fomc-release-detail {display: none; margin-top: 10px;}
+.fomc-toggle-visibility-btn {background-color: #299e44; color: white; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center;}
+.fomc-toggle-visibility-btn:hover {background-color: #9adf72;}
+.fomc-release-detail {display: none; margin-top: 10px; max-height:none; overflow: visible;}
 .fomc-release-detail-content {padding: 15px; background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; line-height: 1.6;}
 .fomc-release-summary-btn:hover {background-color: #0056b3;}
-.fomc-toggle-visibility-btn:hover {background-color: #1e7e34;}
-.fomc-detail-hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: all 0.5s ease;}
-.fomc-detail-shownNews {opacity: 1; max-height: none; padding: 20px; transition: all 0.5s ease;} 
+.fomc-detail-hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: opacity 0.5s ease, max-height 0.5s ease, padding 0.5s ease;}
+.fomc-detail-shownNews {max-height: 1000px; opacity: 1; padding: 20px; transition: opacity 0.5s ease, max-height 0.5s ease, padding 0.5s ease;}
 .fomc-detail-content {background-color: #ffffe0; padding: 20px; margin-top: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.5s ease;}
+.highlight_news { color: red; } 
 
-  
+
 
 
 
@@ -152,7 +154,8 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 #settingsButton:hover, #closeButton:hover, #resetButton:hover {transform: scale(1.1);} 
 .setting-buttons-container {display: flex; align-items: center; margin-left: auto; gap: 14px;}
 #chatMessages {flex-grow: 1; overflow-y: auto; background-color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px;}
-#chatMessages .message {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #dcecf8; border: 1px solid #e0e0e0; word-wrap: break-word;}
+#chatMessages .message {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #f5eed6; border: 1px solid #e0e0e0; word-wrap: break-word;}
+#chatMessages .message.system {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #eaf8dc; border: 1px solid #e0e0e0; word-wrap: break-word;}
 #chatMessages .message.user {align-self: flex-end; background-color: #007bff; color: white; border: none;}
 #chatInput {box-sizing: border-box; width: 100%; padding: 15px 20px; border: none; border-top: 1px solid #ccc; font-size: 14px; outline: none; background: #f9f9f9; color: #555;}
 #chatInput:focus {background: #e8e8e8;}
