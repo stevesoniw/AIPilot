@@ -9,6 +9,11 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain_core.messages import HumanMessage
+from langchain.agents import load_tools
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+from langchain_community.utilities import GoogleSerperAPIWrapper
+
 
 # DB 관련
 from langchain_community.vectorstores import Chroma
@@ -38,6 +43,7 @@ class multiRAG:
     #OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
     OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
+#########################################[INIT 정의]############################################
     def __init__(self):
         # openAI 쪽 정의
         self.llmModel = ChatOpenAI(temperature=0.1, openai_api_key=config.OPENAI_API_KEY)
@@ -68,6 +74,7 @@ class multiRAG:
         #)
         self.persist_directory = './chroma_database/'
     
+#########################################[VECTOR DB에 데이터 넣는 함수들]############################################    
     # 클라에서 데이터 조회한것 저장시키기
     async def foreignStockLoader(self, file_path, user_identifier):
         loader = UnstructuredMarkdownLoader(file_path)
@@ -136,6 +143,7 @@ class multiRAG:
         result = chain_summary.invoke(loader)
         return result
 
+#########################################[챗 질문-답변 함수들]############################################    
     #chat 질문에 대한 답변용          
     async def askRetriver(self, query, user_identifier):
         user_persist_directory = os.path.join(self.persist_directory, user_identifier)
@@ -164,6 +172,7 @@ class multiRAG:
         result = answer.content
         return result   
        
+#########################################[특정 요청에 대한 처리들]############################################           
     # Finnhub에서 조회한 종목뉴스를 분석해서 보여주기
     async def webNewsAnalyzer(self, url):
         web_splitter = CharacterTextSplitter(chunk_size=4072, chunk_overlap=150, length_function=len)
@@ -189,6 +198,20 @@ class multiRAG:
                         llm=llm)
         result = chain.invoke(docs)
         return result
+    
+#########################################[구글 검색용 AGENT 툴 만들기]############################################        
+    #serp api는 월 300개밖에 안돼서, serper api(2500)로 바꿈
+    async def serperAPI(self,query): 
+        os.environ["SERPER_API_KEY"] = config.SERPER_API_KEY
+        llm = self.llmModel
+        search = GoogleSerperAPIWrapper()
+        tool_names = ["google-serper"]
+        tools = load_tools(tool_names)
+
+        agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
+        result = agent.run(query)
+        return result
+
 
 
 #multiCon = multiRAG()
@@ -196,9 +219,8 @@ class multiRAG:
 #data = multiCon.askRetriver("AMERICAN AIRES 의 섹터는 뭐야?")
 #texts = "### STOCKBASIC COMPANY INFO <table class='stockBasicInfoTable'><caption>종목 기본 정보</caption><tbody><tr><td>회사 이름</td><td>AMERICAN AIRES INC</td></tr><tr><td>섹터</td><td>Technology</td></tr><tr><td>현재가</td><td>0.74905</td></tr><tr><td>50일 평균가</td><td>0.2678732 (USD)</td></tr><tr><td>52주 신고가</td><td>0.765 (USD)</td></tr><tr><td>52주 신저가</td><td>0.0473 (USD)</td></tr><tr><td>총 자산</td><td>0.02억 (USD)</td></tr><tr><td>자기자본</td><td>0.01억 (USD)</td></tr><tr><td>시가총액</td><td>0.13억 (USD)</td></tr><tr><td>발행주식 수</td><td>16660000 주</td></tr><tr><td>총 부채</td><td>0.01억 (USD)</td></tr><tr><td>영업현금흐름</td><td>-0.01억 (USD)</td></tr><tr><td>PER</td><td>-1.15</td></tr><tr><td>PBR</td><td>8.99</td></tr></tbody></table>"
 #file_path = "markdown\markdown.md"
-#data = multiCon.askGPT4("hello")
+#data = multiCon.serperAPI("한국의 대통령이 누구야")
 #data = multiCon.webNewsAnalyzer("https://finnhub.io/api/news?id=7e9095477c9e03baab980f02d466eaa5053bc0eabbd22e960c5c750efe0cf0ab")
-#print(data)
 #print(data)
 
 #chat_pdf_instance.test()

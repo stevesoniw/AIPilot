@@ -147,8 +147,24 @@ async def handle_gpt4_talk(request: Request):
     except Exception as e:
         logging.exception("An error occurred")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")   
+    
+# AI가 말해주는 해외주식정보 [구글검색(serperAPI)하여 답변]
+@router.post("/rag/handle-google-talk/")
+async def handle_gpt4_talk(request: Request):
+    try:
+        data = await request.json()  
+        message = data.get('message') 
+        if not message:
+            raise ValueError("No message received")
 
-# AI가 말해주는 해외주식정보 [해외 종목뉴스 1개 분석]
+        response_message = await askMulti.serperAPI(message)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")       
+
+# AI가 말해주는 해외주식정보 [해외 종목뉴스 원문 1개 분석]
 @router.post("/rag/handle-analyze-webnews/")
 async def handle_analyze_webnews(web_url: WebURL):
     try:

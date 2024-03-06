@@ -72,6 +72,10 @@ finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 rapidAPI = config.RAPID_API_KEY
 
+# 현재날짜 계산 기본함수
+def get_curday():
+    return date.today().strftime("%Y-%m-%d")
+
 # 차트를 Base64 인코딩된 문자열로 변환하는 기본 함수
 def get_chart_base64(fig):
     buf = BytesIO()
@@ -429,8 +433,22 @@ async def rapidapi_calendar():
         response = await client.post(url, json=payload, headers=headers)
     calendar_data = response.json()
     return calendar_data
-
 ##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 ENDS #####################################################
+##################################[1ST_GNB][6TH_MENU] IPO CALENDAR 보여주기 STARTS #####################################################
+
+@app.post("/calendar/ipo", response_class=JSONResponse)
+async def get_ipo_calendar():
+    try:
+        #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
+        Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=180)).strftime("%Y-%m-%d") # 현재 시점 - 6개월 
+        End_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") + timedelta(days=90)).strftime("%Y-%m-%d")   
+        recent_ipos = finnhub_client.ipo_calendar(_from=Start_date_calen, to=End_date_calen)
+        return JSONResponse(content=recent_ipos) 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+#print(get_ipo_calendar())
+##################################[1ST_GNB][6TH_MENU] IPO CALENDAR 보여주기 ENDS #####################################################
 ##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 Starts ###################################################
 
 # Seeking Alpha 관련 뉴스 호출 함수
@@ -619,9 +637,6 @@ async def gpt4_pdf_talk(response_data):
 ##################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보 [본부장님소스+ 내꺼] Starts ###############################
     
 ############ [1ST_GNB][1ST_MENU][공통함수] #####################
-def get_curday():
-    return date.today().strftime("%Y-%m-%d")
-
 # 날짜로 분기 계산하기 
 def get_quarter_from_date(curday):
     date_obj = datetime.strptime(curday, "%Y-%m-%d")

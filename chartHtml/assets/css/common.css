@@ -140,7 +140,7 @@ input[type="checkbox"] + label
   display:inline-block;
   padding: 0 0 0 0px;
   background:url('/static/assets/images/chk_off.png') no-repeat left !important;
-  background-size: 13px 13px;
+  background-size: 13px 13px !important;
   /* height: 19px;
   width: 19px; */
   padding-left:20px;
@@ -150,8 +150,8 @@ input[type="checkbox"] + label
 
 input[type="checkbox"]:checked + label
 {
-  background:url('/static/assets/images/chk_on.png?v2') no-repeat left;
-  background-size: 13px 13px;
+  background:url('/static/assets/images/chk_on.png?v2') no-repeat left !important;
+  background-size: 13px 13px !important;
 }
 
 input[type="text"] {padding-left: 10px;}

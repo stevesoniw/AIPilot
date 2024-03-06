@@ -837,7 +837,7 @@
                     handleYoutubeBasedQuery(youtubeUrl);
                     break;
                 case "googleBased":
-                    handleGoogleBasedQuery();
+                    //handleGoogleBasedQuery();
                     break;
             }
             updateCurrentMode(); 
@@ -982,7 +982,14 @@
             
             // 'gpt4' 옵션이 선택되었는지 확인
             const isGPT4Checked = document.querySelector('input[name="aiOption"][value="gpt4"]').checked;
-            const requestURL = isGPT4Checked ? '/rag/handle-gpt4-talk/' : '/rag/handle-ai-answer/';
+            const isGoogleBasedChecked = document.querySelector('input[name="aiOption"][value="googleBased"]').checked;
+            let requestURL = '/rag/handle-ai-answer/'; // 기본 URL
+
+            if (isGPT4Checked) {
+                requestURL = '/rag/handle-gpt4-talk/';
+            } else if (isGoogleBasedChecked) {
+                requestURL = '/rag/handle-google-talk/';
+            } 
             
             fetch(requestURL, {
                 method: 'POST',
@@ -1524,65 +1531,134 @@
         }
 
         //**************************************** 마켓PDF분석 Ends** ******************************************//
-        //************************************** 증시캘린더 함수 Starts ******************************************//
+        //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Starts *****************************//
         async function goCalendar() {
-                    document.getElementById('loading_bar_calendar').style.display = 'block';    
-                    // AJAX 요청을 통해 서버로부터 데이터 가져오기
-                    const response = await fetch('/calendar', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        }
-                        // 필요한 경우 body 추가
-                    });
-                    const calendarData = await response.json(); // JSON 형태로 데이터 받기
-                    document.getElementById('loading_bar_calendar').style.display = 'none';    
-
-                    console.log(calendarData);
-
-                    // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
-                    const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
-
-                    // FullCalendar 초기화 및 데이터 표시
-                    var calendarEl = document.getElementById('calendar');
-                    if (!calendarEl) {
-                        // 달력 컨테이너가 아직 페이지에 없는 경우
-                        alert('Calendar element not found on the page.');
-                        return;
+                document.getElementById('loading_bar_calendar').style.display = 'block';    
+                const response = await fetch('/calendar', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     }
-                    var calendar = new FullCalendar.Calendar(calendarEl, {
-                        initialView: 'dayGridMonth',
-                        headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
-                        timeZone: 'UTC',
-                        expandRows: true, 
-                        locale : "KO",
-                        firstDay: 1,
-                        navLinks: true, 
-                        ihandleWindowResize : true,
-                        windowResizeDelay : 100,
-                        nowIndicator: true,
-                        dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
-                        eventLimit: true, // 더 보기 버튼 활성화              
-                        events: filteredData.map(event => ({
-                            id: event.id.toString(),
-                            title: event.title,
-                            start: event.start,
-                            end: event.end,
-                            color: `#${event.hexColor}`, // 이벤트 색상 설정
-                            description: event.shortDesc // 이벤트 설명 추가
-                        })),
+                });
+                const calendarData = await response.json(); 
+                document.getElementById('loading_bar_calendar').style.display = 'none';    
 
-                        eventContent: function(arg) { // 이벤트 내용 커스터마이징
-                            var element = document.createElement('div');
-                            element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
-                            return { domNodes: [element] };
-                        }
-                    });
-                    
-                    calendar.render();
+                console.log(calendarData);
+
+                // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
+                const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
+
+                // FullCalendar 초기화 및 데이터 표시
+                var calendarEl = document.getElementById('calendar');
+                if (!calendarEl) {
+                    // 달력 컨테이너가 아직 페이지에 없는 경우
+                    alert('Calendar element not found on the page.');
+                    return;
                 }
-        //************************************** 증시캘린더 함수 Ends ******************************************//
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
+                    timeZone: 'UTC',
+                    expandRows: true, 
+                    locale : "KO",
+                    firstDay: 1,
+                    navLinks: true, 
+                    ihandleWindowResize : true,
+                    windowResizeDelay : 100,
+                    nowIndicator: true,
+                    dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
+                    eventLimit: true, // 더 보기 버튼 활성화              
+                    events: filteredData.map(event => ({
+                        id: event.id.toString(),
+                        title: event.title,
+                        start: event.start,
+                        end: event.end,
+                        color: `#${event.hexColor}`, // 색상 설정
+                        description: event.shortDesc // 설명 추가
+                    })),
+
+                    eventContent: function(arg) { // 이벤트 내용 커스터마이징
+                        var element = document.createElement('div');
+                        element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
+                        return { domNodes: [element] };
+                    }
+                });
+                
+                calendar.render();
+            }
+        //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Ends *****************************//                
+        //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Starts *****************************//                
+        async function goIpoCalendar() {
+            document.getElementById('loading_bar_ipoCalendar').style.display = 'block';    
+            const response = await fetch('/calendar/ipo', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            const ipoCalendarData = await response.json();
+            document.getElementById('loading_bar_ipoCalendar').style.display = 'none';    
+
+            // 데이터가 null 로 오는게 종종있다..
+            const defaultText = '[N/A]'; 
+            // 색상 하나로 하면 너무 안예뻐서 랜덤돌림ㅋㅋ
+            let colorIndex = 0;
+            const colors = ['#5b24da', '#9819ad', '#0c9d12'];
+            const ipoEvents = ipoCalendarData.ipoCalendar.map((event, index) => {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                colorIndex++; 
+
+                return {
+                    id: event.symbol || defaultText,
+                    title: `${event.name} (${event.symbol})${event.numberOfShares && event.numberOfShares > 1 ? ' +' : ''}`, // 2개 이상일 때 '+' 표시
+                    start: event.date,
+                    color: color, // 선택된 색상 사용
+                    description: `
+                        Exchange: ${event.exchange || defaultText}<br>
+                        Shares: ${event.numberOfShares || defaultText}<br>
+                        Price: ${event.price || defaultText}<br>
+                        Status: ${event.status || defaultText}<br>
+                        Total Shares Value: ${event.totalSharesValue ? `$${event.totalSharesValue.toLocaleString()}` : defaultText}
+                    `
+                };
+            });
+
+            var calendarEl = document.getElementById('ipo_calendar');
+            if (!calendarEl) {
+                alert('Calendar element not found on the page.');
+                return;
+            }
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth', // 초기 뷰 설정
+                headerToolbar: {
+                    left: 'prev,next today', // 이전, 다음, 오늘 버튼
+                    center: 'title', 
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay' // 오른쪽에 월, 주, 일 뷰 선택 버튼
+                },
+                timeZone: 'UTC',
+                expandRows: true, 
+                locale: "KO",
+                firstDay: 1,
+                navLinks: true, 
+                handleWindowResize: true,
+                windowResizeDelay: 100,
+                nowIndicator: true,
+                dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
+                eventLimit: true, // 더 보기 버튼 활성화
+                events: ipoEvents,
+                eventContent: function(arg) {
+                    var element = document.createElement('div');
+                    element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
+                    return { domNodes: [element] };
+                }
+            });
+
+            calendar.render();
+        }
+
+        //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Ends *******************************//                
         //******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Starts *************************************//
         // NAVER 뉴스 기본 정보 스크래핑해오기
         function naverScrapingNews(newsType) {
@@ -2066,7 +2142,8 @@
                         <li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>
                         <li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외] </a></li>
                         <li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>
-                        <li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>
+                        <li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 주요 economic 캘린더</a></li>
+                        <li class="page-menu" data-tab="menuf"><a href="javascript:void(0);">6. 해외 IPO 캘린더</a></li>
                     </ul>
                 </div>
 
@@ -2078,7 +2155,7 @@
                 <!-- AI가 말해주는 주식 정보(해외) 시작-->
                 <div id="menua" class="menu-cont on">
                     <h2 class="s-tit">AI가 말해주는 주식 정보 [해외]</h2>
-                    <h3 class="s-tit">종목코드를 선택해주세요! </h3>
+                    <h3 class="s-tit">종목코드를 선택해주세요!<p>(*종목에 따라 데이터가 일부 조회되지 않을 수 있습니다)</p></h3>
                     <div class="input-container">
                         <!--<input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">--> 
                         <div class="foreign-search-box">
@@ -2219,11 +2296,11 @@
                                         특정 웹사이트를 기반으로 한 AI 질의
                                         <input type="text" placeholder="예: https://www.federalreserve.gov/newsevents/speeches.htm" class="url-input">
                                     </label>
-                                    <label class="custom-radio">
+                                    <!--<label class="custom-radio">
                                         <input type="radio" name="aiOption" value="youtubeBased">
                                         특정 유튜브를 기반으로 한 AI 질의
                                         <input type="text" placeholder="예: https://youtu.be/B_UeeNcsuyM" class="url-input">
-                                    </label>
+                                    </label>-->
                                     <label class="custom-radio">
                                         <input type="radio" name="aiOption" value="googleBased">
                                         구글 검색을 바탕으로 한 질의
@@ -2517,7 +2594,18 @@
                     </div>     
                     <div id="calendar"></div>                        
                 </div> 
-                <!-- [#5 메뉴 끝] 증시캘린더  -->   
+                <!-- [#5 메뉴 끝] IPO 캘린더  -->   
+                <div id="menuf" class="menu-cont">
+                    <h2 class="s-tit">해외 IPO 캘린더</h2>
+                    <h3 class="s-tit">IPO 관련 economic calendar 입니다.<p>(※최근 6개월치 데이터만 보여줍니다.).</p></h3>
+                    
+                    <div id="loading_bar_ipoCalendar" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_C.gif">
+                        <p>데이터 로딩중입니다.</p>
+                    </div>     
+                    <div id="ipo_calendar"></div>                        
+                </div> 
+                <!-- [#5 메뉴 끝] 증시캘린더  -->                   
 <!--************************************ [[ GNB 2ND ]]  Starts ****************************************-->                 
 <!--******************************* [국내] 마켓데이터 분석 Starts ***************************************-->    
                 <!-- [#2-1 메뉴 시작] 국내 뉴스정보 -->             
@@ -2681,6 +2769,9 @@
                     case 'menue':
                         goCalendar(); // 증시 캘린더 보여주기
                         break;
+                    case 'menuf':
+                        goIpoCalendar(); // 증시 캘린더 보여주기
+                    break;                        
                     // 다른 탭에 대한 추가적인 액션을 여기에 추가할 수 있습니다.
                 }
             });
@@ -2705,6 +2796,9 @@
                     case 'menue':
                         goCalendar(); // 증시 캘린더 보여주기
                         break;
+                    case 'menuf':
+                        goIpoCalendar(); // IPO 캘린더
+                        break;                        
                     case 'menu_2nd_a':
                         naverScrapingNews(1); // 네이버 주요뉴스 스크래핑한거 보여주기
                         break;
@@ -2752,7 +2846,8 @@
                         '<li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>',
                         '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외]</a></li>',
                         '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',
-                        '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 증시 캘린더</a></li>'
+                        '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 주요 economic 캘린더</a></li>',
+                        '<li class="page-menu" data-tab="menuf"><a href="javascript:void(0);">6. 해외 IPO 캘린더</a></li>'
                     ];
                     $('.menu-list').append(menuItems.join(''));
                 } else if(menuType === 'menu2') {
@@ -2880,16 +2975,16 @@
                     chatApp.style.display = 'none'; 
                 }
             });            
-                /** 디폴트 메시지 보여주기 **/
-                function addServerMessage(message) {
-                    const responseDiv = document.createElement('div');
-                    responseDiv.classList.add('message', 'system'); // 'message'와 'server' 클래스 추가
-                    responseDiv.textContent = message; // 메시지 내용 설정
-                    document.getElementById('chatMessages').appendChild(responseDiv); // #chatMessages에 메시지 추가
-                }
-                addServerMessage("질문을 해주세요!^^");
-                addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
-                addServerMessage("현재는 GPT4 와의 대화창입니다.");
+            /** 디폴트 메시지 보여주기 **/
+            function addServerMessage(message) {
+                const responseDiv = document.createElement('div');
+                responseDiv.classList.add('message', 'system'); // 'message'와 'server' 클래스 추가
+                responseDiv.textContent = message; // 메시지 내용 설정
+                document.getElementById('chatMessages').appendChild(responseDiv); // #chatMessages에 메시지 추가
+            }
+            addServerMessage("질문을 해주세요!^^");
+            addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
+            addServerMessage("현재는 GPT4 와의 대화창입니다.");
 
  
             /********* [2nd GNB] 국내마켓데이터 - 유사국면분석에서 데이트피커 컨트롤 ************/
