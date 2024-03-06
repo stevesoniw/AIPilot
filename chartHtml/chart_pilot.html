@@ -352,30 +352,62 @@
         }
         //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 (Get Stock Info)
         async function loadBasicInfo() {
-            const ticker = document.getElementById('foreign_ticker').value;             
+            const ticker = document.getElementById('foreign_ticker').value;
             if (!ticker) {
                 alert('종목을 먼저 선택해주세요!');
                 document.getElementById('loading_bar_stockbasic').style.display = 'none';
                 return;
             }
             document.getElementById('loading_bar_stockbasic').style.display = 'block';
-            document.getElementById('chatApp').style.dispaly = 'none';
+            document.getElementById('chatApp').style.display = 'none';
             try {
                 const response = await fetch(`/foreignStock/financials/${ticker}`);
                 if (!response.ok) throw new Error('Failed to fetch foreign stock basic info data');
-                
+        
                 const data = await response.json();
-                document.getElementById('loading_bar_stockbasic').style.display = 'none';
                 displayFinancialData(data);
-                
+        
+                // 종목 기본정보 접기/펼치기 버튼 추가
+                if (!document.getElementById('toggleStockBasicButton')) {
+                    const toggleButton = document.createElement('button');
+                    toggleButton.id = 'toggleStockBasicButton';
+                    toggleButton.setAttribute('data-visible', 'true'); // 초기 상태를 true로 설정
+                    toggleButton.innerText = '#3. 종목 기본정보 접기 ▲';
+                    toggleButton.classList.add('stockBasicInfo-toggle-visibility-btn');
+        
+                    toggleButton.onclick = function() {
+                        const stockBasicContainer = document.getElementById('stockBasic');
+                        toggleStockBasicVisibility(stockBasicContainer); 
+        
+                        const isVisible = toggleButton.getAttribute('data-visible') === 'true';
+                        if (isVisible) {
+                            toggleButton.innerText = '#3. 종목 기본정보 펼치기 ▼';
+                            toggleButton.setAttribute('data-visible', 'false');
+                        } else {
+                            toggleButton.innerText = '#3. 종목 기본정보 접기 ▲';
+                            toggleButton.setAttribute('data-visible', 'true');
+                        }
+                    };
+        
+                    document.getElementById('loading_bar_stockbasic').after(toggleButton);
+                }
             } catch (error) {
                 console.error('Error fetching stock info:', error);
-                document.getElementById('loading_bar_stockbasic').style.display = 'none';
             } finally {
-                // 로딩 바 숨기기
                 document.getElementById('loading_bar_stockbasic').style.display = 'none';
             }
         }
+        
+        function toggleStockBasicVisibility(element) {
+            if (element.style.maxHeight !== '0px' && element.style.maxHeight !== '') {
+                element.style.maxHeight = '0';
+                element.setAttribute('data-visible', 'false');
+            } else {
+                element.style.maxHeight = element.scrollHeight + 'px';
+                element.setAttribute('data-visible', 'true');
+            }
+        }
+ 
         //차트데이터 전처리 함수
         function preprocessChartData(chartData) {
             // Timestamp 객체를 ISO 날짜 문자열로 변환
@@ -419,6 +451,9 @@
         }
         //종목 기본정보 실제적으로 display 해주는 함수 (Get Stock Info)
         function displayFinancialData(data) {
+            const stockBasicContainer = document.getElementById('stockBasic');
+            stockBasicContainer.style.maxHeight = '0'; // 초기에 컨테이너를 접기용
+
             // 기업 및 추가 정보 표시
             document.getElementById('stockBasic_company_info').innerHTML = ""; // 초기화
             const additionalInfo = data.additional_info['additional_info'];
@@ -479,6 +514,7 @@
             console.log(processedChartData);            
             displayAnnualFinancialsChart(processedChartData);
             displayQuarterlyGrowthChart(processedChartData);
+            stockBasicContainer.style.maxHeight = stockBasicContainer.scrollHeight + 'px';
 
         }
         //분기별 매출 성장 차트 
@@ -2958,6 +2994,7 @@
                     }
                 }
             });
+            /********* AI가 말해주는 주식정보(해외) - #2. Get Stock Info 영역 ************/
             /********* AI가 말해주는 주식정보(해외) - #4. Ask AI Anything 채팅영역 ************/
             document.getElementById('chatInput').addEventListener('keypress', function(e) { //엔터쳤을때 메시지보이게하고, 데이터요청 함수콜한다
                 if (e.key === 'Enter' && this.value.trim() !== '') {
