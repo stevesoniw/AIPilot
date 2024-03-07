@@ -77,6 +77,9 @@ class multiRAG:
 #########################################[VECTOR DB에 데이터 넣는 함수들]############################################    
     # 클라에서 데이터 조회한것 저장시키기
     async def foreignStockLoader(self, file_path, user_identifier):
+        print("*****************************************")
+        print(file_path)
+        print(user_identifier)
         loader = UnstructuredMarkdownLoader(file_path)
         data = loader.load()
         chunks = self.text_splitter.split_documents(data)

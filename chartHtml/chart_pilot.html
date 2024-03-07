@@ -836,7 +836,15 @@
         //채팅창 닫기
         function closeChatApp() {
             document.getElementById('chatApp').style.display = 'none';
-            window.scrollTo(0, 0);
+            const inputContainer = document.querySelector('.input-container');
+            //컨텐츠들이 중간에 계속 추가되다보니, scrollTo(0,0)이 언젠가부터 안먹혀서 만듬 ㅠ
+            if (inputContainer) {
+                const yOffset = inputContainer.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({top: yOffset, behavior: 'smooth'});
+            } else {
+                window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
+                console.log("Element not found.");
+            }            
         }   
         //라디오 버튼 선택한거에 따라 DB 저장하기   
         /**************[젼역 생성]*************/
@@ -911,7 +919,8 @@
                 "#latest_quarter_revenue", "#revenue_yoy_percentage", "#revenue_qoq_percentage",
                 "#revenue_beat_miss_ratio", "#latest_quarter_operating_income",
                 "#operating_income_yoy_percentage", "#operating_income_qoq_percentage",
-                "#eps_beat_miss_ratio", "#analysisResult", "#newsAnalysis", "#stockwaveChart"
+                "#eps_beat_miss_ratio", "#analysisResult", "#newsAnalysis", "#stockwaveChart",
+                "#foreignTickerNewsArea","#fomc-press-releases"
             ];
             let markdownData = "";
             selectors.forEach(selector => {
