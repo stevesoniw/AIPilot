@@ -43,6 +43,7 @@
     <script>
         var g_news;
         window.onload = function() {  //로딩바들 none 으로 일단 초기화하고 시작
+            //loadMarketData();            
             hideLoadingBars('loading_bar');
         };
 
@@ -52,6 +53,27 @@
                 element.style.display = 'none';
             });
         }
+
+        async function loadMarketData() {
+            const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD 형식의 날짜
+            const summaryPath = `/static/main_summary/summary_${date}.html`;
+        
+            try {
+                // 요약 HTML 로드한다
+                const response = await fetch(summaryPath);
+                if (response.ok) {
+                    const htmlContent = await response.text();
+                    document.getElementById('main_morning_brief').innerHTML = htmlContent;
+                } else {
+                    console.log('The specified HTML file does not exist.');
+                    document.getElementById('main_morning_brief').innerHTML = '';
+                }
+            } catch (error) {
+                console.error('An error occurred while attempting to load the market summary:', error);
+                // 오류가 발생해도 사용자에게는 표시되지 않는다.
+                document.getElementById('main_morning_brief').innerHTML = '';
+            }
+        }    
 //********************************** AI가 말해주는 주식정보 함수 Starts [#1.Get ForeignStockNewsInfo]**************************************//
         //Finnhub에서 해외 종목 뉴스데이터 가져오기 
         async function loadForeignStockNews() {
@@ -2161,7 +2183,7 @@
         <!-- header 시작 -->
         <header class="myHeader">
             <h1 class="title-wrap">
-                <a href="#" onClick="window.location.reload()"><img src="/static/assets/images/logo.png" alt="AI솔루션본부 PILOT" /></a>
+                <a href="#" onClick="window.location.href = window.location.origin;"><img src="/static/assets/images/logo.png" alt="AI솔루션본부 PILOT" /></a>
             </h1>
             <nav class="menux">
                 <ul>
@@ -2198,7 +2220,25 @@
             <!-- 우측 영역 시작 -->
             <div class="right-area">
                 <!-- AI가 말해주는 주식 정보(해외) 시작-->
-                <div id="menua" class="menu-cont on">
+                <div id="menuStart" class="menu-cont on">
+                    <div class="main-image-container">
+                        <div class="scrollable-content">
+                            <img src="/static/assets/images/center1_2.jpg" alt="center1">
+                        </div>
+                    </div>
+                    <svg width="0" height="0">
+                        <defs>
+                            <clipPath id="doubleSmoothWaveClipPath" clipPathUnits="objectBoundingBox">
+                                <path d="M0,0.2 Q0.125,0.1 0.25,0.2 T0.5,0.2 T0.75,0.2 Q0.875,0.1 1,0.2 V0.8 Q0.875,0.9 0.75,0.8 T0.5,0.8 T0.25,0.8 Q0.125,0.9 0,0.8 Z"></path>
+                            </clipPath>
+                        </defs>
+                    </svg>
+                    <div class="stock-info">
+                        <div id="main_morning_brief">{{ summary_content | safe }}</div>
+                    </div>                    
+
+                </div>                
+                <div id="menua" class="menu-cont">
                     <h2 class="s-tit">AI가 말해주는 주식 정보 [해외]</h2>
                     <h3 class="s-tit">종목코드를 선택해주세요!<p>(*종목에 따라 데이터가 일부 조회되지 않을 수 있습니다)</p></h3>
                     <div class="input-container">
@@ -2887,7 +2927,7 @@
                 if(menuType === 'menu1') {
                     // 마켓데이터 해외 메뉴 리스트
                     var menuItems = [
-                        '<li class="page-menu on" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>',
+                        '<li class="page-menu" data-tab="menua"><a href="javascript:void(0);">1. AI가 말해주는 주식 정보 [해외]</a></li>',
                         '<li class="page-menu" data-tab="menub"><a href="javascript:void(0);">2. 글로벌 주요경제지표</a></li>',
                         '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외]</a></li>',
                         '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',

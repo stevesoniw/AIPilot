@@ -48,6 +48,33 @@
 #chartPilot .list-dep li:first-child{margin-top:0;}
 #chartPilot .list-dep li::before{content:'';position:absolute;left:0;top:9px;width:4px;height:4px;background:#313daa;border-radius:50%;}
 
+/* Main INfo 화면 구성*/
+.main-image-container {width:100%; max-height:270px; overflow:hidden; display:flex; justify-content:center; clip-path: url(#doubleSmoothWaveClipPath);}
+.main-image-container img {width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease-out;}
+.scrollable-content img {width: 100%; min-height: 100%; display: block; transition: transform 0.3s ease-out;}
+.main-image-container:hover .scrollable-content img { transform: translateY(-20%);}
+.market_data_container { display: flex; flex-wrap: wrap; justify-content: space-between; }
+.market_table_container { width: 40%; }
+.main_summary_images { display: flex; flex-wrap: wrap; justify-content: space-between; width: 58%; }
+.market_table { width: 100%; border-collapse: collapse; text-align: center; }
+.market_table th, .market_table td { border: 1px solid #ddd; padding: 8px; text-align: center; height: 41px; }
+.market_chart { width: 48%; margin-bottom: 10px; }
+.market_chart img { width: 100%; height: auto; border-radius: 5px; }
+.chart_label { text-align: center; margin-top: 5px; color: rgb(160, 15, 15); font-size: 0.9em; } 
+.chart_label2 { text-align: center; margin-top: 5px; color: black; font-size: 0.8em; } 
+.gpt_summary { background-color: #fffee8; padding: 15px; margin-top: 20px; margin-bottom: 10px; border-top: solid 2px #ffaa00; } 
+.gpt_summary_title { background-color: #ffaa00; padding: 8px; margin-bottom: 10px; color:rgb(199, 0, 0); font-size:17px;} 
+.news_container, .additional_news_container { padding-top: 5px; }
+.news_item, .additional_news_item { background-color: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.news_section { display: flex; align-items: center; margin-bottom: 20px; }
+.evidence_button { background-color: #ffffff; color: #000000; border: 2px solid #363636; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 15x; }
+.news_text { color: #000000; font-size: 15px; }
+.additional_news_section { display: flex; align-items: center; margin-bottom: 20px; }
+.additional_news_button { background-color: #363636; color: #ffffff; border: 1px solid #000000; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 16px; }
+.finnhub_text { color: #000000; font-size: 15px; }
+
+
+
 /* AI가 말해주는 주식정보(해외)  #1. Get Stock Info  #3. Get Earning Info*/
 .input-container {display: flex; flex-direction: column; align-items: center; margin-top: 10px;}
 .input-ticker {padding: 5px 10px; height: 30px; font-size: 14px; border: 2px solid #ddd; border-radius: 4px; outline: none; margin-bottom: 10px;}

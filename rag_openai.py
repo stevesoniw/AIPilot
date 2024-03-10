@@ -195,8 +195,8 @@ class ChatPDF:
 
 
         
-chat_pdf_instance = ChatPDF()
+#chat_pdf_instance = ChatPDF()
 #chat_pdf_instance.test()
     # 함수 실행
 #chat_pdf_instance.test_retrieve_document() 
-print(chat_pdf_instance.ask("who is the author of this document?"))
+#print(chat_pdf_instance.ask("who is the author of this document?"))

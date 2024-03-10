@@ -43,6 +43,7 @@ from fastdtw import fastdtw
 from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
+from ragControlTower import router
 #config 파일
 import config
 #FAST API 관련
@@ -55,6 +56,7 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
 app = FastAPI()
+app.include_router(router)
 logging.basicConfig(level=logging.DEBUG)
 
 ##############################################          공통          ################################################
@@ -70,6 +72,23 @@ finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 rapidAPI = config.RAPID_API_KEY
 
+# 현재날짜 계산 기본함수
+def get_curday():
+    return date.today().strftime("%Y-%m-%d")
+
+# Timestamp 객체를 문자열로 변환하는 함수
+def timestamp_to_str(ts):
+    if isinstance(ts, Timestamp):
+        return ts.strftime('%Y-%m-%d')
+    return ts
+
+# 예시 데이터 변환 함수
+def convert_data_for_json(data):
+    # 날짜 데이터가 들어있는 리스트를 변환
+    dates_converted = [timestamp_to_str(date) for date in data.index]
+    values = data.values.tolist()
+    return dates_converted, values
+
 # 차트를 Base64 인코딩된 문자열로 변환하는 기본 함수
 def get_chart_base64(fig):
     buf = BytesIO()
@@ -82,14 +101,98 @@ def get_chart_base64_plotly(fig):
     img_bytes = fig.to_image(format="png")
     return base64.b64encode(img_bytes).decode('utf-8')
 
-##############################################          MAIN          ################################################
+# GPT4 에 뉴스요약을 요청하는 공통함수
+async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
+    try:
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
+        completion = client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
+        return None
+
+##############################################          MAIN  설정        ################################################
 # 루트 경로에 대한 GET 요청 처리
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     # 초기 페이지 렌더링. plot_html 변수가 없으므로 비워둡니다.
+    
     return templates.TemplateResponse("chart_pilot.html", {"request": request, "plot_html": None})
 
-######################################## 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts ###########################################
+########################################          MAIN  화면 데이터처리        ################################################
+
+# Main 화면에서 보여줄 데이터 구하기. 일단 차트이미지로 서버에 저장시키고, 메인에서는 이미지만 읽게한다. 데이터도 gpt4에 요약요청하도록 만들어줌.
+def get_main_marketdata():
+    yf.pdr_override()
+    start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+    tickers = {'^GSPC': 'SP500', '^DJI': 'DOW', '^IXIC': 'NASDAQ', '^KS11': 'KOSPI'}
+    market_summary = []
+
+    for ticker, name in tickers.items():
+        df = pdr.get_data_yahoo(ticker, start_date)
+        df.reset_index(inplace=True)
+
+        # 일단 마지막 두 날짜 데이터만 가져와 변화량을 계산하자
+        last_day = df.iloc[-1]
+        prev_day = df.iloc[-2]
+        change = (last_day['Adj Close'] - prev_day['Adj Close']) / prev_day['Adj Close'] * 100
+        summary = f"{name} 지수는 전일 대비 {change:.2f}% 변화하였습니다. 전일 가격은 {prev_day['Adj Close']:.2f}이며, 오늘 가격은 {last_day['Adj Close']:.2f}입니다."
+        market_summary.append(summary)
+
+        # 차트 생성 코드 
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df['Date'], y=df['Adj Close'], mode='lines', line=dict(color='red'), name='Adj Close'))
+        fig.update_layout(
+            title=name,
+            xaxis_title='Date',
+            yaxis_title='Price',
+            template='plotly_dark',
+            autosize=False,
+            width=800,
+            height=600,
+            margin=dict(l=50, r=50, b=100, t=100, pad=4)
+        )
+        # 이미지 저장 로직 
+        image_path = f'chartHtml/main_chart/{name}_{datetime.now().strftime("%Y-%m-%d")}.png'
+        fig.write_image(image_path)
+
+    return market_summary
+
+@app.get("/api/main/marketdata")
+def market_data():
+    image_date = datetime.now().strftime("%Y-%m-%d")
+    for market in ['SP500', 'DOW', 'NASDAQ', 'KOSPI']:
+        image_path = f'chartHtml/main_chart/{market}_{image_date}.png'
+        if not os.path.exists(image_path):
+            generate_market_summary()
+            break  
+    return {"message": "Market data images are ready."}
+
+#GPT4에 요약시킬 어제 증시뉴스. 뭐써야될지 몰겠. 일단 Finnhub꺼 씀
+def get_main_marketnews() :
+    market_news = finnhub_client.general_news('general', min_id=0)
+    return market_news
+
+async def generate_market_summary():
+    news_data = get_main_marketnews()  
+    market_data = get_main_marketdata()
+    
+    # gpt4_news_sum 함수에 전달할 데이터 준비
+    SYSTEM_PROMPT = "You are an exceptional news analyst and an expert in economics. Please systematically summarize the contents of the following news and share your forecast on the stock market. Specifically, explain succinctly how much the Dow Jones, NASDAQ, and S&P 500 indices have changed compared to the previous day."
+    
+    # 예시입니다. 실제 구현에서는 async 방식으로 gpt4_news_sum을 호출해야 합니다.
+    summary = await gpt4_news_sum({"news": news_data, "market_summary": market_data}, SYSTEM_PROMPT)
+    print(summary)
+    return summary
+
+
+################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts #########################################
 # series id 받아서 데이터 갖고오는 공통함수 
 def fetch_indicator(series_id: str, calculation: str = None) -> pd.DataFrame:
     # Fetch series data using Fred class
@@ -197,21 +300,8 @@ async def gpt4_chart_talk(response_data):
 asyncio.run(test())'''
 
 
-######################################## 글로벌 주요경제지표 보여주기 [1.핵심지표] Ends ###########################################
-################################# 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Starts ###########################################
-# Timestamp 객체를 문자열로 변환하는 함수
-def timestamp_to_str(ts):
-    if isinstance(ts, Timestamp):
-        return ts.strftime('%Y-%m-%d')
-    return ts
-
-# 예시 데이터 변환 함수
-def convert_data_for_json(data):
-    # 날짜 데이터가 들어있는 리스트를 변환
-    dates_converted = [timestamp_to_str(date) for date in data.index]
-    values = data.values.tolist()
-    return dates_converted, values
-
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Ends #########################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Starts ##################################
 # 기준금리 데이터를 가져오는 함수
 def get_base_rate(start_date, end_date):
     df1 = fp.series('FEDFUNDS', end_date)
@@ -389,8 +479,8 @@ async def rapid():
     print(get_bonds_data_data)
 asyncio.run(rapid())'''
 
-
-######################################## CALENDAR 보여주기 Starts ###########################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Ends ##################################
+##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 Starts #####################################################
 # 증시 캘린더 관련 함수 
 @app.post("/calendar", response_class=JSONResponse)
 async def get_calendar(request: Request):
@@ -411,9 +501,23 @@ async def rapidapi_calendar():
         response = await client.post(url, json=payload, headers=headers)
     calendar_data = response.json()
     return calendar_data
+##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 ENDS #####################################################
+##################################[1ST_GNB][6TH_MENU] IPO CALENDAR 보여주기 STARTS #####################################################
 
-######################################## CALENDAR 보여주기 Ends ###########################################
-######################################## NEWS 보여주기 Starts ##############################################
+@app.post("/calendar/ipo", response_class=JSONResponse)
+async def get_ipo_calendar():
+    try:
+        #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
+        Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=180)).strftime("%Y-%m-%d") # 현재 시점 - 6개월 
+        End_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") + timedelta(days=90)).strftime("%Y-%m-%d")   
+        recent_ipos = finnhub_client.ipo_calendar(_from=Start_date_calen, to=End_date_calen)
+        return JSONResponse(content=recent_ipos) 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+#print(get_ipo_calendar())
+##################################[1ST_GNB][6TH_MENU] IPO CALENDAR 보여주기 ENDS #####################################################
+##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 Starts ###################################################
 
 # Seeking Alpha 관련 뉴스 호출 함수
 @app.post("/seekingNews", response_class=JSONResponse)
@@ -460,22 +564,6 @@ def extract_title_and_content(json_str):
         title_and_content.append({'title': title, 'content': content})
     return title_and_content
 
-# GPT4 에 뉴스요약을 요청 
-async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
-    try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 빨간색으로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
-        completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-                ]
-        )
-        return completion.choices[0].message.content
-    except Exception as e:
-        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
-        return None
-
 @app.post("/gptRequest")
 async def gpt_request(request_data: dict):
     action = request_data.get("action")
@@ -510,7 +598,7 @@ async def gpt_request(request_data: dict):
     
     return {"result": gpt_result}
 
-######################################## NEWS 보여주기 Ends  ##############################################
+##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 ENDS ###################################################
 
 ''' 테스트
 async def gpttest():
@@ -522,7 +610,7 @@ async def gpttest():
     print(gpt_summary)
     
 asyncio.run(gpttest()) '''
-######################################## 마켓 PDF 분석 Starts  ##############################################
+##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 Starts ###################################################
 
 class ImageData(BaseModel):
     image: str  # Base64 인코딩된 이미지 데이터
@@ -531,7 +619,6 @@ class ImageData(BaseModel):
 @app.post("/perform_ocr")
 async def perform_ocr(data: ImageData):
     # Base64 인코딩된 이미지 데이터를 디코딩
-    print(data)
     image_data = base64.b64decode(data.image.split(',')[1])
 
     logging.debug(image_data)
@@ -576,16 +663,12 @@ async def perform_ocr(data: ImageData):
 
     # 서비스 계정 키 파일을 사용하여 인증 정보 생성
     credentials = service_account.Credentials.from_service_account_file(key_path)
-
     # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
     client = vision.ImageAnnotatorClient(credentials=credentials)
-
     image = vision.Image(content=image_data)
-
     # OCR 처리
     response = client.text_detection(image=image)
     texts = response.text_annotations
-
     if response.error.message:
         raise HTTPException(status_code=500, detail=response.error.message)
 
@@ -613,13 +696,10 @@ async def gpt4_pdf_talk(response_data):
         return None
 
 
-######################################## 마켓 PDF 분석 Ends  ##############################################            
-################################### FIN GPT 구현 부분 Starts (본부장님소스) + 나의 수정 ################################
-
-
-def get_curday():
-    return date.today().strftime("%Y-%m-%d")
-
+##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 ENDS ###################################################            
+##################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보 [본부장님소스+ 내꺼] Starts ###############################
+    
+############ [1ST_GNB][1ST_MENU][공통함수] #####################
 # 날짜로 분기 계산하기 
 def get_quarter_from_date(curday):
     date_obj = datetime.strptime(curday, "%Y-%m-%d")
@@ -638,7 +718,78 @@ def calculate_beat_miss_ratio(actual, estimate):
         return "Beat" if actual > estimate else "Miss"
     return "-"
 
-@app.get("/api/get_earning_announcement/{ticker}")
+############ [1ST_GNB][1ST_MENU][GET NEWS INFO (해외뉴스정보) 및 (소셜정보)] #################
+# Finnhub 해외 종목뉴스 
+@app.get("/foreignStock/financials/news/{ticker}")
+async def get_financial_earningTable(ticker: str):
+    try:
+        #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
+        Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
+        End_date_calen = get_curday()     
+        recent_news = finnhub_client.company_news(ticker, _from=Start_date_calen, to=End_date_calen)
+        return recent_news
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# FOMC 데이터 스크래핑 [1차 press relase 타이틀목록 조회용] 
+@app.get("/fomc-scraping-release/")    
+def fetch_fomc_press_release(url: str):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
+            data = response.content.decode('utf-8-sig')
+            json_data = json.loads(data)[:10]  
+            data_list = []
+            for item in json_data:
+                datetime = item.get("d")
+                title = item.get("t")
+                press_type = item.get("pt")
+                link = "https://www.federalreserve.gov" + item.get("l") 
+                
+                data_list.append({
+                    'datetime': datetime,
+                    'title': title,
+                    'link': link,
+                    'press_type': press_type
+                })
+            return data_list
+        else:
+            return "Failed to fetch FOMC title data with status code: {}".format(response.status_code)
+    except Exception as e:  
+        raise HTTPException(status_code=400, detail=str(e))    
+
+#print(fetch_fomc_press_release('https://www.federalreserve.gov/json/ne-press.json'))
+# FOMC 데이터 스크래핑 [1차 press relase 상세내용 조회용] 
+@app.get("/fomc-scraping-details-release/")    
+async def fetch_fomc_press_release(url: str):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
+            data = response.content.decode('utf-8-sig')
+            
+            soup = BeautifulSoup(data, 'html.parser')
+            # 타이틀을 뽑고
+            title = soup.find('h3', class_='title').text.strip()
+            # 콘텐츠를 뽑고
+            contents = soup.find('div', id='article').find_all('p')
+            contents_text = '\n'.join(p.text for p in contents if 'article__time' not in p.get('class', []))
+            # join해서 gpt로 던지자 
+            data_list = f"Title: {title}\nContents:\n{contents_text}"
+
+            SYSTEM_PROMPT = "너는 뉴스데이터 분석전문가야. 다음 뉴스 데이터를 7줄로 심도있게 요약해줘. 타이틀과 요약으로 나누어서 내용을 보여주고 이 뉴스가 향후 시장경제에 미치게 될 너의 전망도 같이 알려줘"
+            summary = await gpt4_news_sum(data_list, SYSTEM_PROMPT)
+            return summary            
+        else:
+            return f"Failed to fetch FOMC release detail data with status code: {response.status_code}"
+    except Exception as e:  
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+### Finnhub earnings_calendar 유료결제(분기 150달러)가 되어야 사용가능할듯.(Finnhub중에서도 Estimates쪽 결재필요)
+### Freekey는 1분기꺼밖에 안옴. 일단 막아놓고 야후꺼로 조합해서 쓴다 ㅠㅠ
+'''@app.get("/api/get_earning_announcement/{ticker}")
 def calculate_financial_metrics(ticker: str):
     # YoY계산을 위해서 현재 날짜 기준으로 1년 전의 날짜를 시작 날짜로 설정
     Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
@@ -693,16 +844,61 @@ def calculate_financial_metrics(ticker: str):
     results["revenue_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['revenueActual'], latest['revenueEstimate'])
     results["eps_beat_miss_ratio"] = calculate_beat_miss_ratio(latest['epsActual'], latest['epsEstimate'])
     
-    return results
+    return results'''
 
-def ytest():
-    
-    msft = yf.Ticker("MSFT")
-    balance_sheet_annual = msft.balance_sheet
+############ [1ST_GNB][1ST_MENU][GET STOCK INFO (종목기본정보)] #################
+# 최근 실적 YoY, QoQ 데이터. 야후꺼와 finnhub calendar 최근분기만 조합해서 다시만듬. . 
+@app.get("/foreignStock/financials/earningTable/{ticker}")
+async def get_financial_earningTable(ticker: str):
+    try:
+        stock = yf.Ticker(ticker)
+        
+        # 분기별 재무제표 데이터
+        quarterly_financials = stock.quarterly_financials.fillna(0)
+        
+        # 가장 최근 분기 선택
+        latest_quarter = quarterly_financials.columns[0]
+        latest_financials = quarterly_financials[latest_quarter]
+        
+        # YoY 및 QoQ 계산을 위한 이전 분기 선택
+        previous_year_quarter = quarterly_financials.columns[4]
+        previous_quarter = quarterly_financials.columns[1]
+        previous_year_financials = quarterly_financials[previous_year_quarter]
+        previous_quarter_financials = quarterly_financials[previous_quarter]
+        
+        # 필요한 데이터 계산
+        total_revenue = latest_financials.get('Total Revenue', np.nan)
+        operating_income = latest_financials.get('Operating Income', np.nan)
+        
+        revenue_yoy = ((total_revenue - previous_year_financials.get('Total Revenue', np.nan)) / abs(previous_year_financials.get('Total Revenue', 1)) * 100) if previous_year_financials.get('Total Revenue') else np.nan
+        operating_income_yoy = ((operating_income - previous_year_financials.get('Operating Income', np.nan)) / abs(previous_year_financials.get('Operating Income', 1)) * 100) if previous_year_financials.get('Operating Income') else np.nan
+        
+        revenue_qoq = ((total_revenue - previous_quarter_financials.get('Total Revenue', np.nan)) / abs(previous_quarter_financials.get('Total Revenue', 1)) * 100) if previous_quarter_financials.get('Total Revenue') else np.nan
+        operating_income_qoq = ((operating_income - previous_quarter_financials.get('Operating Income', np.nan)) / abs(previous_quarter_financials.get('Operating Income', 1)) * 100) if previous_quarter_financials.get('Operating Income') else np.nan
+        
+        # 현재 날짜를 기준으로 Finnhub에서 데이터 조회
+        
+        recent_earnings = finnhub_client.company_earnings(ticker, limit=1)
+        if recent_earnings:
+            eps_actual = recent_earnings[0].get('actual', np.nan)
+            eps_estimate = recent_earnings[0].get('estimate', np.nan)
+            eps_beat_miss_ratio = ((eps_actual - eps_estimate) / abs(eps_estimate) * 100) if eps_estimate and eps_actual is not None else np.nan
+        else:
+            eps_actual, eps_estimate, eps_beat_miss_ratio = np.nan, np.nan, np.nan
 
-    print(balance_sheet_annual.columns)
-
-#ytest()
+        return {
+            "latest_quarter_revenue": total_revenue,
+            "latest_quarter_operating_income": operating_income,
+            "revenue_yoy_percentage": revenue_yoy,
+            "operating_income_yoy_percentage": operating_income_yoy,
+            "revenue_qoq_percentage": revenue_qoq,
+            "operating_income_qoq_percentage": operating_income_qoq,
+            "eps_actual": eps_actual,
+            "eps_estimate": eps_estimate,
+            "eps_beat_miss_ratio": eps_beat_miss_ratio,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # 반환할 데이터 모델 정의
 class FinancialData(BaseModel):
@@ -710,7 +906,8 @@ class FinancialData(BaseModel):
     quarterly_income_statement: dict
     additional_info: dict
     charts_data: dict
-
+    
+#AI가 말해주는 주식 정보 [#2 종목 기본 정보] 호출용
 @app.get("/foreignStock/financials/{ticker}", response_model=FinancialData)
 def get_financials_and_metrics(ticker: str):
     stock = yf.Ticker(ticker)
@@ -718,7 +915,6 @@ def get_financials_and_metrics(ticker: str):
     try : 
         stock = yf.Ticker(ticker)
         info = stock.info
-        
         # 연간 재무제표 데이터
         income_statement = stock.financials.T.head(5).sort_index(ascending=True)
         balance_sheet = stock.balance_sheet.T.head(5).sort_index(ascending=True)
@@ -743,10 +939,8 @@ def get_financials_and_metrics(ticker: str):
         else:
             income_statement['EPS'] = np.nan  
             income_statement['ROE'] = np.nan  
-
         # 필요한 컬럼만 선택
         selected_columns = income_statement[required_columns]
-                
         # 분기별 데이터 계산
         if 'Total Revenue' in quarterly_income_statement.columns:
             # 분기별 매출 성장률 계산
@@ -760,21 +954,17 @@ def get_financials_and_metrics(ticker: str):
         else:
             quarterly_income_statement['Revenue Growth QoQ'] = np.nan  # 'Total Revenue' 컬럼이 없는 경우 처리
 
-
         # EPS, PBR 계산을 위한 유효성 검사
         current_price = info.get('currentPrice', np.nan)
         shares_outstanding = info.get('sharesOutstanding', np.nan)
-
         # EPS, PBR 계산
         eps = income_statement['EPS'].iloc[0] if 'EPS' in income_statement.columns and not income_statement['EPS'].empty else np.nan
         book_value_per_share = (balance_sheet['Stockholders Equity'].iloc[0] / shares_outstanding) if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty and shares_outstanding != 0 else np.nan
         per = current_price / eps if eps and not np.isnan(eps) and current_price else np.nan
         pbr = current_price / book_value_per_share if book_value_per_share and not np.isnan(book_value_per_share) and current_price else np.nan
-        
         # 데이터 추출 전 유효성 검사
         total_assets = balance_sheet['Total Assets'].iloc[0] if 'Total Assets' in balance_sheet.columns and not balance_sheet['Total Assets'].empty else np.nan
         shareholder_equity = balance_sheet['Stockholders Equity'].iloc[0] if 'Stockholders Equity' in balance_sheet.columns and not balance_sheet['Stockholders Equity'].empty else np.nan
-
         # 추가 정보 딕셔너리에 안전하게 값을 채워넣기
         financial_data = {
             'annual_data': income_statement.to_dict(),
@@ -806,24 +996,19 @@ def get_financials_and_metrics(ticker: str):
                 "net_income": list(income_statement['Net Income']) if 'Net Income' in income_statement.columns else [np.nan],
                 "eps": list(income_statement['EPS']),
                 "roe": list(income_statement['ROE']),
-                # PER와 PBR은 현재 직접 계산이 어려움. 시장 가격 기반 계산 필요하면 별도 로직 구현
             },
             "quarterly_growth": {
                 "quarters": list(quarterly_income_statement.index),
                 "revenue": list(quarterly_income_statement['Total Revenue']) if 'Total Revenue' in quarterly_income_statement.columns else [np.nan],
                 "revenue_growth": list(quarterly_income_statement['Revenue Growth QoQ']) if 'Revenue Growth QoQ' in quarterly_income_statement.columns else [np.nan],
             },
-            # PER, PBR 차트 데이터 구조도 비슷하게 추가 가능
         }
-        print(charts_data)
         return {
                 "income_statement": selected_columns.to_dict(),
                 "quarterly_income_statement": quarterly_income_statement.to_dict(),
                 "additional_info": financial_data,
                 "charts_data": charts_data
         }
-                    
-                    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))        
 
@@ -862,7 +1047,7 @@ def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-
+############ [1ST_GNB][1ST_MENU][GET EARNING INFO (실적발표)][본부장님 소스] #################
 def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)
     if len(news) > count :
@@ -889,17 +1074,26 @@ def get_prompt_earning (ticker):
     # find announce calendar 
     Start_date_calen = (datetime.strptime(curday, "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
     End_date_calen = (datetime.strptime(curday, "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d")  # 현재 시점 + 1개월 
-    announce_calendar= finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')[0]
-        
-    # get information from earning announcement
-    date_announce= announce_calendar.get('date')
-    eps_actual=announce_calendar.get('epsActual')
-    eps_estimate=announce_calendar.get('epsEstimate')
-    earning_y = announce_calendar.get('year')
-    earning_q = announce_calendar.get('quarter')
-    revenue_estimate=round(announce_calendar.get('revenueEstimate')/1000000)
+    # 데이터 안와서 에러나는 종목들이 있어서 로직 수정
+    finnhub_data = finnhub_client.earnings_calendar(_from=Start_date_calen, to=End_date_calen, symbol=ticker, international=False).get('earningsCalendar')
+    date_announce, eps_actual, eps_estimate, earning_y, earning_q, revenue_estimate = None, np.nan, np.nan, None, None, np.nan
+    # 데이터 있을때만 처리한다
+    if finnhub_data and len(finnhub_data) > 0:
+        announce_calendar = finnhub_data[0]
+        date_announce = announce_calendar.get('date')
+        eps_actual = announce_calendar.get('epsActual', np.nan)
+        eps_estimate = announce_calendar.get('epsEstimate', np.nan)
+        earning_y = announce_calendar.get('year')
+        earning_q = announce_calendar.get('quarter')
+        revenue_estimate_raw = announce_calendar.get('revenueEstimate')
+        if revenue_estimate_raw is not None:
+            revenue_estimate = round(revenue_estimate_raw / 1000000, 2)
+        else:
+            revenue_estimate = np.nan
+    else:
+        print("No earnings announcement data available for this ticker.")
        
-    if eps_actual == None : # [Case2] 실적발표 전 
+    if  eps_actual is None or np.isnan(eps_actual):  # [Case2] 실적발표 전 
         # create Prompt 
         head = "{}의 {}년 {}분기 실적 발표일은 {}으로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다. ".format(profile['name'], earning_y,earning_q, date_announce, revenue_estimate, eps_estimate)
         
@@ -1119,7 +1313,7 @@ def get_stockwave(ticker: str):
     stockwave_base64 = get_chart_base64(fig)
     return JSONResponse(content={"stockwave_data": stockwave_base64})
 
-#################################### FIN GPT 구현 부분 Ends (본부장님소스) ###################################
+##################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보 [본부장님소스+ 내꺼] ENDS ###############################
 
 ''' 테스트
 async def cccc():
@@ -1131,8 +1325,7 @@ asyncio.run(cccc())'''
     result = query_gpt4('AAPL')
     print(result)
 queryGPT4()'''
-
-############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 ################################
+############################## [2ND_GNB][1ST_MENU] 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 Starts ######################
 
 #1. 네이버 검색 API
 @app.get("/api/search-naver")
@@ -1309,9 +1502,9 @@ def fetch_news_detail(news_url: NewsURL):
             raise HTTPException(status_code=404, detail="News content not found")
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
-    
-############################## 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 끝 ################################
-############################## 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 시작   ################################
+
+############################## [2ND_GNB][1ST_MENU] 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 Ends ######################    
+############################## [2ND_GNB][2ND_MENU] 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 Starts   ################################
 #일단 종목코드 갖고오는것부터 구현하자
 @app.get("/stock-codes/")    
 async def stock_code_fetch():
@@ -1447,3 +1640,4 @@ async def find_similar_period(request: StockRequest):
     wow = await find_similar_period(request_data)
     await save_to_txt(wow, "wow.txt")
 asyncio.run(rapid())'''
+############################## [2ND_GNB][2ND_MENU] 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 Ends   ################################
