@@ -29,6 +29,9 @@
 .left-area .menu-wrap .menu-list li.page-menu:first-child{margin-top:0;}
 .left-area .menu-wrap .menu-list li.page-menu a{color:#fff;}
 .left-area .menu-wrap .menu-list li.page-menu.on a{color:#fad58c;}
+.left-area .menu-wrap .menu-list li.page-intro{margin-top:0px; margin-left:100px; font-size:18px; color:#ffffff;}
+.left-area .menu-wrap .menu-list li.page-intro a{color:#ffffff;}
+.left-area .menu-wrap .menu-list li.page-intro.on a{color:#e4504a;}
 .co-working-info {font-size: 13px; color: #ffffff; margin-bottom: 30px; text-align: center;}
 .highlight {color: orange;font-weight: bold;}
 
@@ -53,29 +56,35 @@
 .main-image-container img {width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease-out;}
 .scrollable-content img {width: 100%; min-height: 100%; display: block; transition: transform 0.3s ease-out;}
 .main-image-container:hover .scrollable-content img { transform: translateY(-20%);}
-.market_data_container { display: flex; flex-wrap: wrap; justify-content: space-between; }
+.main_summary_container { display: flex-start; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+.title_container {width: 100%; text-align: left; padding-bottom:8px;}
+.main_summary_title { font-size: 36px; font-family: 'Cursive', serif; font-weight: 900; font-style: italic; color: #000000; text-shadow: 6px 6px 8px rgba(0, 0, 0, 0.7); text-align: left; margin: 20px 0; padding: 10px; display: inline; }
+.morning_brief { font-size: 20px; font-family: Arial; color: #676767; text-shadow: none; display: inline; }
+.market_data_container { display: flex; flex-wrap: wrap; justify-content: space-between;}
 .market_table_container { width: 40%; }
 .main_summary_images { display: flex; flex-wrap: wrap; justify-content: space-between; width: 58%; }
 .market_table { width: 100%; border-collapse: collapse; text-align: center; }
-.market_table th, .market_table td { border: 1px solid #ddd; padding: 8px; text-align: center; height: 41px; }
-.market_chart { width: 48%; margin-bottom: 10px; }
+.market_table th, .market_table td { border: 1px solid #ddd; padding: 8px; text-align: center; height: 44px; }
+.market_chart { width: 48%; margin-bottom: 10px; align-items: center; text-align: center; display: flex; flex-direction: column; }
 .market_chart img { width: 100%; height: auto; border-radius: 5px; }
+.chart_labels_container {display: flex; justify-content: center; flex-wrap: nowrap;}
 .chart_label { text-align: center; margin-top: 5px; color: rgb(160, 15, 15); font-size: 0.9em; } 
-.chart_label2 { text-align: center; margin-top: 5px; color: black; font-size: 0.8em; } 
+.chart_label2 { text-align: center; margin-top: 7px; color: black; font-size: 0.8em; } 
 .gpt_summary { background-color: #fffee8; padding: 15px; margin-top: 20px; margin-bottom: 10px; border-top: solid 2px #ffaa00; } 
 .gpt_summary_title { background-color: #ffaa00; padding: 8px; margin-bottom: 10px; color:rgb(199, 0, 0); font-size:17px;} 
 .news_container, .additional_news_container { padding-top: 5px; }
-.news_item, .additional_news_item { background-color: #f9f9f9; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.news_item { background-color: #eeeeee; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.additional_news_item { background-color: #f7fff5; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .news_section { display: flex; align-items: center; margin-bottom: 20px; }
-.evidence_button { background-color: #ffffff; color: #000000; border: 2px solid #363636; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 15x; }
-.news_text { color: #000000; font-size: 15px; }
+.evidence_button { background-color: #ffffff; color: #000000; border: 2px solid #363636; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 16x !important; }
+.news_text { color: #000000; font-size: 16px; }
 .additional_news_section { display: flex; align-items: center; margin-bottom: 20px; }
-.additional_news_button { background-color: #363636; color: #ffffff; border: 1px solid #000000; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 16px; }
-.finnhub_text { color: #000000; font-size: 15px; }
+.additional_news_button { background-color: #363636; color: #ffffff; border: 1px solid #000000; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 16px !important; }
+.finnhub_text { color: #000000; font-size: 16px; }
 
 
 
-/* AI가 말해주는 주식정보(해외)  #1. Get Stock Info  #3. Get Earning Info*/
+/* AI가 말해주는 주식정보(해외)  #1. Get Earning Info  #3. Get Stock Info */
 .input-container {display: flex; flex-direction: column; align-items: center; margin-top: 10px;}
 .input-ticker {padding: 5px 10px; height: 30px; font-size: 14px; border: 2px solid #ddd; border-radius: 4px; outline: none; margin-bottom: 10px;}
 .foreign-buttons-container {margin-top: 10px; display: flex; justify-content: center;  gap: 20px;}
@@ -123,8 +132,19 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .stockBasic-gpt-chart-area, .stockBasic-earningsChart, .stockBasic-recommendationsChart { margin-top: 20px; width: 100%; height: auto; }
 .chartContainer { width: 600px; height: 600px; float: right; }
 .chartContainer .chart { width: 100%; height: 50%; }
-.stockBasicInfo-toggle-visibility-btn{background-color: #299e44; color: white; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center;}
-.stockBasicInfo-toggle-visibility-btn:hover {background-color: #9adf72;}
+.stockBasicInfo-toggle-visibility-btn { background-color: #646464; color: yellow; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center; display: block; width: fit-content; }
+.stockBasicInfo-toggle-visibility-btn:hover { background-color: #d4d4d4; color:#2e2e2e;}
+.isVisible-true { color: yellow; }
+.isVisible-false { color: white; }
+.stockEarningInfo-toggle-visibility-btn { background-color: #646464; color: yellow; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; display: block; width: fit-content; margin: 20px auto; text-align: center; transition: background-color 0.3s, color 0.3s; }
+.stockEarningInfo-toggle-visibility-btn:hover { background-color: #dfdfdf; color:#272727;}
+.stockEarningInfo-data-on { background-color: #646464; color: darkyellow; }
+.stockEarningInfo-data-off { background-color: #646464; color: white; }
+.fade-in { animation: fadeInAnimation ease 0.5s; animation-iteration-count: 1; animation-fill-mode: forwards; }
+.fade-out { animation: fadeOutAnimation ease 0.5s; animation-iteration-count: 1; animation-fill-mode: forwards; }
+@keyframes fadeInAnimation { 0% {opacity: 0;} 100% {opacity: 1;} }
+@keyframes fadeOutAnimation { 0% {opacity: 1;} 100% {opacity: 0;} }
+
 
 
 /* AI가 말해주는 주식정보(해외)  #2. News 데이터 보여주기 */
@@ -143,9 +163,9 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .foreignTickerNews-link {background-color: #007bff; color: white !important; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;}
 .foreignTickerNews-analysis {background: linear-gradient(135deg, #6e02af, #6e61b9); color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px;}
 .foreignTickerNews-buttons-container {display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px;}
-#toggleNewsButton {padding: 10px 20px; font-size: 16px; color: #fff; background-color: #1e7e34; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; outline: none; margin: 20px 0px 20px 0px; display: block;} 
-#toggleNewsButton:hover {background-color: #8cdf5d;}
-.hiddenNews {max-height: 0; opacity: 0;}
+#toggleNewsButton { padding: 10px 20px; font-size: 16px; color: #fffb03; background-color: #646464; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; outline: none; margin: 10px auto; display: block; width: fit-content; }
+#toggleNewsButton:hover { background-color: #d4d4d4; color:#2c2b2b }
+.hiddenNews { max-height: 0; opacity: 0; transition: opacity 0.3s ease, max-height 0.3s ease; }
 .analysisResultContainer {background-color: #fffdee; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
 .analysisTitle {font-size: 14px; font-weight: bold; margin-bottom: 5px; color:rgb(211, 24, 24);}
 .analysisContent {font-size: 14px;}
@@ -160,8 +180,8 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .fomc-release-item h3 {margin-bottom: 10px; color: #007bff; cursor: pointer;}
 .fomc-release-item p {margin: 5px 0; color: #666; font-size:12px;}
 .fomc-release-summary-btn {background-color: #055397; color: white; padding: 5px 10px; font-size: 13px; border-radius: 5px; cursor: pointer; margin-left: 10px; margin-top: 10px;}
-.fomc-toggle-visibility-btn {background-color: #299e44; color: white; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center;}
-.fomc-toggle-visibility-btn:hover {background-color: #9adf72;}
+.fomc-toggle-visibility-btn {background-color: #646464; color: yellow; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 10px auto; text-align: center; display: block; width: fit-content;}
+.fomc-toggle-visibility-btn:hover {background-color: #e7e7e7; color:#333333;}
 .fomc-release-detail {display: none; margin-top: 10px; max-height:none; overflow: visible;}
 .fomc-release-detail-content {padding: 15px; background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; line-height: 1.6;}
 .fomc-release-summary-btn:hover {background-color: #0056b3;}

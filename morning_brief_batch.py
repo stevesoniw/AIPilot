@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import os
 import asyncio
+import re
 #금융관련 APIs
 import finnhub
 import yfinance as yf
@@ -167,6 +168,13 @@ async def generate_market_summary():
     print(gpt_additional_news)
     return gpt_summary, market_data, images_name, naver_news_data, gpt_additional_news
 
+def format_text(input_text):
+    # 볼드 처리
+    formatted_text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", input_text)
+    # 파란색 별표 처리
+    formatted_text = re.sub(r"### (.*?)", r"★<span style='color: blue;'>\1</span>", formatted_text)
+    return formatted_text
+
 # 메인페이지 로딩때마다 부르면 속도이슈가 있어서, html 파일로 미리 떨궈놓자. 
 async def market_data():
     gpt_summary, market_data, images_name, naver_news_data, gpt_additional_news = await generate_market_summary()
@@ -174,7 +182,9 @@ async def market_data():
     # HTML 내용을 작성합니다.
     html_content = """
     <div class="main_summary_container">
-    <h1 class="main_summary_title">Market Summary</h1>
+        <div class="title_container">
+            <h1 class="main_summary_title">Market Summary<span class="morning_brief">   - Morning Brief</span></h1>        
+        </div>
         <div class="market_data_container">
             <div class="market_table_container">
                 <table class="market_table">
@@ -190,7 +200,7 @@ async def market_data():
         change_color = "blue" if "-" in data['change'] else "red"
         last_close_color = change_color
         # 특정 항목에 대한 배경색 설정
-        bg_color = "#fbd3aa" if data['name'] in ["다우지수", "나스닥종합", "S&P500", "KOSPI"] else "none"
+        bg_color = "#ebf5ff" if data['name'] in ["다우지수", "나스닥종합", "S&P500", "KOSPI"] else "none"
 
         html_content += f"""
                     <tr>
@@ -213,10 +223,11 @@ async def market_data():
         html_content += f"""
                 <div class="market_chart">
                     <img src='/static/main_chart/{path}' alt='Market Chart'>
-                    <span class="chart_label">{market_name}</span> <span class="chart_label2">(종가 : {last_close})</span>
+                    <div class="chart_labels_container">
+                    <span class="chart_label">{market_name}</span> <span class="chart_label2"> (종가: {last_close})</span>
+                    </div>
                 </div>
-        """
-
+        """   
     # gpt_summary 처리
     html_content += """
             </div>
@@ -224,7 +235,7 @@ async def market_data():
     html_content += f"""
         <div class="gpt_summary">
             <h2 class="gpt_summary_title">AI Market Analysis</h2>
-            <p>{gpt_summary.replace('\n', '<br/>')}</p>
+            <p>{format_text(gpt_summary.replace('\n', '<br/>'))}</p>
         </div>
         <div class="news_container">
            <div class="news_section">
@@ -244,7 +255,7 @@ async def market_data():
         </div> 
     """
         # gpt_additional_news 처리
-    temp_data = gpt_additional_news.replace('\n', '<br>')
+    temp_data = format_text(gpt_additional_news.replace('\n', '<br>'))
     html_content += f"""
         <div class="additional_news_container">
             <div class="additional_news_section">
