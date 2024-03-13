@@ -1,22 +1,15 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
-import json
 from io import StringIO
 import requests
 from dtaidistance import dtw
 import plotly.graph_objects as go
-from plotly.io import to_json
 from datetime import datetime
-from sklearn.preprocessing import MinMaxScaler
-from pydantic import BaseModel
-from fastapi import FastAPI, File, UploadFile, HTTPException, APIRouter, Request
-import logging
+import math
+st.set_option('deprecation.showPyplotGlobalUse', False)
 
-SECRET_KEY = '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'
-
-logging.basicConfig(level=logging.DEBUG)
-router = APIRouter()
+SECRET_KEY = ''
 
 def calculate_date_distance(dt, date_str1, date_str2):
     """
@@ -27,7 +20,15 @@ def calculate_date_distance(dt, date_str1, date_str2):
     """
     date_distance = len(dt.loc[date_str1: date_str2])
     return date_distance
-    
+
+def sigmoid(x):
+    """
+    Compute the sigmoid function
+    @param x: Input value
+    @return: Output value between 0 and 1
+    """
+    return 1 / (1 + math.exp(-x))
+
 def compute_distance(dt, users_target, users_compare, user_distance):
     """
     Compute a distance matrix using Dynamic Time Warping between a target and a comparison time series
@@ -96,14 +97,11 @@ def filter_overlaps(ranges):
 
 def normalize_df(df):
     """
-    Normalize the values of a pandas DataFrame using Min-Max scaling.
-    @param df: the dataFrame to be normalized
-    @return df_normalized: the normalized dataFrame
+    Normalize the values of a pandas DataFrame using z-score normalization.
+    @param df: the DataFrame to be normalized
+    @return df_normalized: the normalized DataFrame
     """
-    min_max_scaler = MinMaxScaler()
-    df_normalized = min_max_scaler.fit_transform(df)
-    df_normalized = pd.DataFrame(df_normalized, columns=df.columns)
-    df_normalized.index = df.index
+    df_normalized = (df - df.mean()) / df.std()
     return df_normalized
 
 def data_select(selected_data):
@@ -115,6 +113,19 @@ def data_select(selected_data):
         data = data[[selected_data]]
     data = data.dropna()
     return data
+
+def n_steps_ahead(sample_data, values_list, n_steps = 0, N = 5):
+    changes = []
+    for _, (_, end_date, _) in enumerate(values_list[:N], 1):
+        sliced_data = sample_data.loc[end_date:].iloc[:n_steps]
+        sliced_data.reset_index(drop = True, inplace = True)
+        change = sliced_data.iloc[-1] - sliced_data.iloc[0]
+        changes.append(change[0])
+    df = pd.DataFrame(changes)
+    df = df.T
+    df.columns = [f'Graph {i}' for i in range(1, len(df.columns) + 1)]
+    df.index = ['Change']
+    st.table(df)
 
 def create_figure(sample_data, target_date, selected_data, values_list, subtract=False, n_steps = 0, N = 5):
     """
@@ -131,12 +142,9 @@ def create_figure(sample_data, target_date, selected_data, values_list, subtract
     WIDTH, HEIGHT = 800, 600
 
     fig = go.Figure()
-    print("aaaaaaaaaaaaaaaaaaaaaaaa")
-    print(target_date[0])
+
     if n_steps > 0:
         get_length = len(sample_data.loc[target_date[0]: target_date[1]])
-        print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
-        print(target_date[0])
         target_data = sample_data[target_date[0]:][: get_length + n_steps]
         target_data.reset_index(drop=True, inplace=True)
         fig.add_vline(x=get_length, line_dash="dash", line_color="black", line_width=1.5)
@@ -148,8 +156,9 @@ def create_figure(sample_data, target_date, selected_data, values_list, subtract
         target_trace = target_data[selected_data] - target_data[selected_data].iloc[0]
     else:
         target_trace = target_data[selected_data]
-    print("target_tracetarget_tracetarget_tracetarget_tracetarget_tracetarget_tracetarget_trace")
-    print(target_trace)        
+    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+    print(target_data[selected_data])        
+    print(target_trace)
 
     fig.add_trace(go.Scatter(x=target_data.index, y=target_trace, mode='lines', name=f"Target: {target_date[0]} to {target_date[1]}"))
     
@@ -179,112 +188,23 @@ def create_figure(sample_data, target_date, selected_data, values_list, subtract
     fig.update_xaxes(showticklabels=False)
     return fig
 
-#streamlit으로 만든 plotly 차트를 fastapi형태로 변환하는게 자꾸에러남. 그냥 json 으로 바꿔서 클라로 내려주자. 
-def create_figure2(sample_data, target_date, selected_data, values_list, title, subtract=False, n_steps=0):
-    fig_data = {
-        "title": title,
-        "datasets": []
-    }
 
-    # Handle target data
-    target_data = sample_data.loc[target_date[0]:target_date[1]]
-    if subtract:
-        target_data[selected_data] -= target_data[selected_data].iloc[0]
-    fig_data["datasets"].append({
-        "label": "Target",
-        "data": [{"x": str(index.date()), "y": row} for index, row in target_data[selected_data].items()],
-        "borderColor": "#007bff", 
-        "fill": False
-    })
-
-    # Handle comparison periods
-    for start_date, end_date, _ in values_list:
-        additional_data = sample_data.loc[start_date: end_date]
-        if subtract:
-            additional_data[selected_data] -= additional_data[selected_data].iloc[0]
-        fig_data["datasets"].append({
-            "label": f"From {start_date} to {end_date}",  # Adjust this label as necessary
-            "data": [{"x": str(index.date()), "y": row} for index, row in additional_data[selected_data].items()],
-            "borderColor": "#28a745",  
-            "fill": False
-        })
-
-    return fig_data
-
-
-class AnalysisRequest(BaseModel):
-    selected_data: str
-    target_date_start: str
-    target_date_end: str
-    compare_date_start: str
-    compare_date_end: str
-    n_steps: int
-
-@router.post("/similarity/univariate-analyze/")
-def analyze(request: AnalysisRequest):
-    original_data = data_select(request.selected_data)
-    if original_data is None:
-        raise HTTPException(status_code=404, detail="Data not found")
-    original_data.index = pd.to_datetime(original_data.index)
-    original_data = original_data.sort_index(ascending=True)
-    
-    N = 5
-    sample_data = normalize_df(original_data)
-    sample_data.index = pd.to_datetime(sample_data.index)
-    sample_data = sample_data.sort_index(ascending=True)
-    
-    user_target_distance = calculate_date_distance(sample_data, request.target_date_start, request.target_date_end)
-    
-    similarity_score = compute_distance(sample_data, [request.target_date_start, request.target_date_end], [request.compare_date_start, request.compare_date_end], user_target_distance)
-    dates_score_list = dates_score(sample_data, similarity_score, user_target_distance)
-    sorted_dates_score_list = sorted(dates_score_list, key=lambda x: x[2], reverse=True)
-    filtered_dates = filter_overlaps(sorted_dates_score_list)
-    print("***************************")
-    print([request.target_date_start, request.target_date_end])
-    values_list = [(pd.to_datetime(start), pd.to_datetime(end), distance) for start, end, distance in filtered_dates]
-    print("values_listvalues_listvalues_listvalues_listvalues_listvalues_list")
-    print(values_list)
-    fig_superimpose_target_original = create_figure(original_data, [request.target_date_start, request.target_date_end], request.selected_data, values_list, subtract=False, n_steps = request.n_steps, N = N)
-    fig_superimpose_target_aligned = create_figure(original_data, [request.target_date_start, request.target_date_end], request.selected_data, values_list, subtract=True, n_steps = request.n_steps, N = N)
-    
-    print("finalllllllllllllllllllllllllllllllllllllllllllllllllllllll")
-    print(fig_superimpose_target_original)
-    chart_data = {
-        "original": fig_superimpose_target_original,
-        "aligned": fig_superimpose_target_aligned
-    }
-    
-    return {"chart_data": chart_data} 
-    
-test_request_data = AnalysisRequest(
-    selected_data="GT2 Govt",
-    target_date_start="2023-11-01",
-    target_date_end="2024-01-01",
-    compare_date_start="2021-10-07",
-    compare_date_end="2023-10-26",
-    n_steps=20
-)
-
-# analyze 함수를 하드코딩된 데이터로 테스트
-response = analyze(test_request_data)
-print("Response:", response  )
-  
-'''def main():
+def main():
     st.sidebar.title('단일 유사기간 분석툴')
     selected_data = st.sidebar.selectbox(
-        'Time Series Data:', 
-        ('GT2 Govt', 'GT5 Govt', 'GT10 Govt', 'GT30 Govt', 'USYC2Y10 Index', 'USYC5Y30 Index', 'USYC1030 Index',
-         'USGGBE10 Index', 'GTII10 Govt', 'GTDEM2Y Govt', 'GTDEM5Y Govt', 'GTDEM10Y Govt', 'DEYC2Y10 Index',
-         'DEYC5Y30 Index', 'DEGGBE10 Index', 'GTDEMII10Y Govt', 'GTESP10Y Govt', 'GTITL10Y Govt', 'GTGBP10Y Govt',
-         'GTCAD10Y Govt', 'GTAUD10Y Govt', 'GTJPY10Y Govt', 'CCSWNI5 BGN Curncy', 'IRSWNI5 BGN Curncy', 'ODF29 Comdty',
-         'MPSW5E BGN Curncy', 'GVSK3YR Index', 'GVSK10YR Index', 'DXY Index', 'KRW Curncy', 'EUR Curncy', 'JPY Curncy',
-         'CNH Curncy', 'BRL Curncy', 'INR Curncy', 'MXN Curncy', 'SPX Index', 'CCMP Index', 'DAX Index', 'BCOM Index',
-         'XAU Curncy', 'USCRWTIC Index', 'TSFR3M Index', 'USGG3M Index', 'US0003M Index', 'UREPTA30 Index', 'LQD US Equity',
-         'HYG US Equity', 'CDX IG CDSI GEN 5Y Corp', 'CDX HY CDSI GEN 5Y SPRD Corp', 'EMLC US Equity', 'EMB US Equity',
-         'VIX Index', 'MOVE Index', '.VIXVXN Index', 'GFSIFLOW Index', 'JLGPUSPH Index', 'JLGPEUPH Index', 'MRIEM Index',
-         'ACMTP10 Index', 'FWISUS55 Index', 'ILM3NAVG Index', 'ECRPUS 1Y Index', 'CESIUSD Index', 'CESIUSH Index', 'CESIUSS Index',
-         'CESIEUR Index', 'CESIEUH Index', 'CESIEUS Index', 'CESIEM Index', 'CESIEMXP Index', 'CESIEMFW Index'
-         )
+            'Time Series Data:', 
+            ('GT2 Govt', 'GT5 Govt', 'GT10 Govt', 'GT30 Govt', 'USYC2Y10 Index', 'USYC5Y30 Index', 'USYC1030 Index',
+            'USGGBE10 Index', 'GTII10 Govt', 'GTDEM2Y Govt', 'GTDEM5Y Govt', 'GTDEM10Y Govt', 'DEYC2Y10 Index',
+            'DEYC5Y30 Index', 'DEGGBE10 Index', 'GTDEMII10Y Govt', 'GTESP10Y Govt', 'GTITL10Y Govt', 'GTGBP10Y Govt',
+            'GTCAD10Y Govt', 'GTAUD10Y Govt', 'GTJPY10Y Govt', 'CCSWNI5 BGN Curncy', 'IRSWNI5 BGN Curncy', 'ODF29 Comdty',
+            'MPSW5E BGN Curncy', 'GVSK3YR Index', 'GVSK10YR Index', 'DXY Index', 'KRW Curncy', 'EUR Curncy', 'JPY Curncy',
+            'CNH Curncy', 'BRL Curncy', 'INR Curncy', 'MXN Curncy', 'SPX Index', 'CCMP Index', 'DAX Index', 'BCOM Index',
+            'XAU Curncy', 'USCRWTIC Index', 'TSFR3M Index', 'USGG3M Index', 'US0003M Index', 'UREPTA30 Index', 'LQD US Equity',
+            'HYG US Equity', 'CDX IG CDSI GEN 5Y Corp', 'CDX HY CDSI GEN 5Y SPRD Corp', 'EMLC US Equity', 'EMB US Equity',
+            'VIX Index', 'MOVE Index', '.VIXVXN Index', 'GFSIFLOW Index', 'JLGPUSPH Index', 'JLGPEUPH Index', 'MRIEM Index',
+            'ACMTP10 Index', 'FWISUS55 Index', 'ILM3NAVG Index', 'ECRPUS 1Y Index', 'CESIUSD Index', 'CESIUSH Index', 'CESIUSS Index',
+            'CESIEUR Index', 'CESIEUH Index', 'CESIEUS Index', 'CESIEM Index', 'CESIEMXP Index', 'CESIEMFW Index'
+            )
                                         )
     
     if selected_data is not None:
@@ -300,33 +220,49 @@ print("Response:", response  )
             (datetime(2023, 11, 1), datetime(2024, 1, 1)),
             format="YYYY/MM/DD"
         )
+        
         target_date = [date.strftime("%Y-%m-%d") for date in target_date]
         user_target_distance = calculate_date_distance(sample_data, target_date[0], target_date[1])
+        
+        print("*****************************")
+        print(target_date)
+        
 
         # max_year, max_month, max_day = sample_data.index[-1].year, sample_data.index[-1].month, sample_data.index[-1].day
         min_year, min_month, min_day = sample_data.index[0].year, sample_data.index[0].month, sample_data.index[0].day
 
         compare_date = st.sidebar.date_input(
-            "Date Range for Analysis",
+            "Date Range for Analysis (* Set To Auto Min Date)",
             (datetime(min_year, min_month, min_day), datetime(2023, 9, 30)),
             format="YYYY/MM/DD"
         )
         compare_date = [date.strftime("%Y-%m-%d") for date in compare_date]
 
+        print(compare_date)
         nsteps = st.sidebar.slider('N-Steps Ahead (in days)', min_value=0, max_value=100, value=0, step=10)
 
         if st.sidebar.button('Generate'):
-            similarity_distance = compute_distance(sample_data, target_date, compare_date, user_target_distance)
-            dates_score_list = dates_score(sample_data, similarity_distance, user_target_distance)
+            N = 5
+            similarity_score = compute_distance(sample_data, target_date, compare_date, user_target_distance)
+            dates_score_list = dates_score(sample_data, similarity_score, user_target_distance)
             sorted_dates_score_list = sorted(dates_score_list, key=lambda x: x[2], reverse = True)
             filtered_dates = filter_overlaps(sorted_dates_score_list)
             
             values_list = [(pd.to_datetime(start), pd.to_datetime(end), distance) for start, end, distance in filtered_dates]
-            
-            # Original
-            fig_superimpose_target_original = create_figure(original_data, target_date, selected_data, values_list, 'Original', subtract=False, n_steps = nsteps)
+            print("values_list=====")
+            print(values_list)
+            st.write("##### Original")
+            fig_superimpose_target_original = create_figure(original_data, target_date, selected_data, values_list, subtract=False, n_steps = nsteps, N = N)
+            print("fffffffffffffffffffff")
+            print(fig_superimpose_target_original)
             st.plotly_chart(fig_superimpose_target_original)
 
-            # Aligned
-            fig_superimpose_target_aligned = create_figure(original_data, target_date, selected_data, values_list, 'Aligned', subtract=True, n_steps = nsteps)
-            st.plotly_chart(fig_superimpose_target_aligned)'''
+            st.write("##### Aligned")
+            fig_superimpose_target_aligned = create_figure(original_data, target_date, selected_data, values_list, subtract=True, n_steps = nsteps, N = N)
+            st.plotly_chart(fig_superimpose_target_aligned)
+
+            if nsteps > 0:
+                st.write("##### 유사기간 이후 변화")
+                n_steps_ahead(original_data, values_list, n_steps = nsteps, N = N)
+if __name__ == "__main__":
+    main()

@@ -1808,17 +1808,18 @@
             return color;
         }          
         function processChartData(chartData) {
-            return chartData.datasets.map(dataset => ({
-                label: "aa",
-                data: dataset.data.map(item => ({
-                    x: new Date(item.x),
-                    y: item.y
+            return chartData.data.map(dataset => ({
+                label: dataset.name,
+                data: dataset.x.map((x, index) => ({
+                    x: x, // x 값으로 인덱스를 직접 사용합니다.
+                    y: dataset.y[index]
                 })),
-                borderColor: dataset.borderColor,
+                borderColor: dataset.borderColor || "#007bff", // 기본값 설정
                 backgroundColor: 'transparent', // 데이터셋의 배경색을 투명하게 설정
                 fill: false, // 데이터셋을 채우지 않음
             }));
         }
+        
         function sdrawChart(chartId, chartData, chartInstance) {
             if (chartInstance) {
                 chartInstance.destroy(); // 기존 차트 인스턴스가 있으면 제거
@@ -1832,14 +1833,11 @@
                 options: {
                     scales: {
                         x: {
-                            type: 'time',
-                            time: {
-                                unit: 'day'
-                            },
+                            type: 'linear', // x축을 선형 스케일로 설정합니다.
                             display: true,
                             title: {
                                 display: true,
-                                text: 'Date'
+                                text: 'Index'
                             }
                         },
                         y: {
@@ -1887,6 +1885,9 @@
             .then(data => {
                 const originalChartData = data.chart_data.original;
                 const alignedChartData = data.chart_data.aligned;
+
+                console.log(originalChartData);
+                console.log(alignedChartData);
                 
                 // 이전에 생성된 차트 인스턴스를 저장할 변수를 초기화합니다.
                 similarityOriginalChart = sdrawChart('similarityOriginalChart', originalChartData, similarityOriginalChart);
@@ -2235,7 +2236,7 @@
 
             window.scrollTo(0, document.body.scrollHeight);;
         }
-        //4. 유사국면 데이터 찾기 GOGO 
+        //4. 유사국면 데이터 찾기 GOGO  (by son , not jay)
         async function similarTimeSearch() {
             const fromDate = document.getElementById('fromDate').value;
             const toDate = document.getElementById('toDate').value;
