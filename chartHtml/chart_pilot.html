@@ -39,6 +39,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> 
     <!-- datepicker -->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
+    <!-- boots strap 결국씀-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
     <script>
         var g_news;
@@ -1125,8 +1127,31 @@
                 console.error('Error:', error);
             });
         }
-        
-
+        // 모든 버튼을 접는 함수 
+        function collapseAllButtons() {
+            const buttons = document.querySelectorAll('.toggle-visibility-btn'); // 공통 클래스가 필요
+            const elementsToHide = [
+                document.getElementById('fingptChartArea'), 
+                document.getElementById('gptEarningTableArea'), 
+                document.getElementById('gptMessageArea'), 
+                document.getElementById('gptStockwaveArea'), 
+                document.getElementById('stockBasic')
+            ];
+            buttons.forEach(button => {
+                button.innerText = button.innerText.includes('ON') ? button.innerText.replace('ON', 'OFF') : button.innerText;
+                button.setAttribute('data-visible', 'false');
+                if(button.id === 'toggleStockBasicButton' || button.id === 'toggleFomcButton') {
+                    button.style.color = 'white';
+                } else {
+                    button.style.color = '#fffb03'; 
+                }
+            });
+            elementsToHide.forEach(element => {
+                element.style.display = 'none';
+                element.classList.add('fade-out');
+                element.classList.remove('fade-in');
+            });
+        }
 
 //******************************** 글로벌 주요경제지표 함수 [#1.핵심지표] Starts ***********************************// 
 
@@ -1769,7 +1794,108 @@
             calendar.render();
         }
 
-        //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Ends *******************************//                
+        //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Ends *******************************//   
+        //****************************** [1ST GNB][7TH MENU]유사국면 함수 Starts *******************************//  
+        function updateSliderValue() {
+            document.getElementById('nStepsValue').textContent = document.getElementById('similarity-nSteps').value;
+        }       
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }          
+        function processChartData(chartData) {
+            return chartData.datasets.map(dataset => ({
+                label: "aa",
+                data: dataset.data.map(item => ({
+                    x: new Date(item.x),
+                    y: item.y
+                })),
+                borderColor: dataset.borderColor,
+                backgroundColor: 'transparent', // 데이터셋의 배경색을 투명하게 설정
+                fill: false, // 데이터셋을 채우지 않음
+            }));
+        }
+        function sdrawChart(chartId, chartData, chartInstance) {
+            if (chartInstance) {
+                chartInstance.destroy(); // 기존 차트 인스턴스가 있으면 제거
+            }
+            const ctx = document.getElementById(chartId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: processChartData(chartData) // 데이터 가공 함수 사용
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            },
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        let similarityOriginalChart;
+        let similarityAlignedChart;
+        function generateSimilarityAnalysis() {
+            const selectedData = document.getElementById('similarity-selectedData').value;
+            const targetDateStart = document.getElementById('similarity-targetDateStart').value;
+            const targetDateEnd = document.getElementById('similarity-targetDateEnd').value;
+            const compareDateStart = document.getElementById('similarity-compareDateStart').value;
+            const compareDateEnd = document.getElementById('similarity-compareDateEnd').value;
+            const nSteps = document.getElementById('similarity-nSteps').value;
+        
+            if (!targetDateStart || !targetDateEnd || !compareDateStart || !compareDateEnd) {
+                alert("날짜 범위를 꼭 지정해주세요!");
+                return;
+            }
+        
+            fetch('/similarity/univariate-analyze/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selected_data: selectedData,
+                    target_date_start: targetDateStart,
+                    target_date_end: targetDateEnd,
+                    compare_date_start: compareDateStart,
+                    compare_date_end: compareDateEnd,
+                    n_steps: parseInt(nSteps, 10),
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const originalChartData = data.chart_data.original;
+                const alignedChartData = data.chart_data.aligned;
+                
+                // 이전에 생성된 차트 인스턴스를 저장할 변수를 초기화합니다.
+                similarityOriginalChart = sdrawChart('similarityOriginalChart', originalChartData, similarityOriginalChart);
+                similarityAlignedChart = sdrawChart('similarityAlignedChart', alignedChartData, similarityAlignedChart);
+            })
+
+        }
+        
+        //********************************* [1ST GNB][7TH MENU]유사국면 함수 Ends ***************************************//                
         //******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Starts *************************************//
         // NAVER 뉴스 기본 정보 스크래핑해오기
         function naverScrapingNews(newsType) {
@@ -2257,6 +2383,7 @@
                         <li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>
                         <li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 주요 economic 캘린더</a></li>
                         <li class="page-menu" data-tab="menuf"><a href="javascript:void(0);">6. 해외 IPO 캘린더</a></li>
+                        <li class="page-menu" data-tab="menug"><a href="javascript:void(0);">7. 유사국면 분석</a></li>
                     </ul>
                 </div>
 
@@ -2726,7 +2853,8 @@
                     </div>     
                     <div id="calendar"></div>                        
                 </div> 
-                <!-- [#5 메뉴 끝] IPO 캘린더  -->   
+                <!-- [#5 메뉴 끝] 증시 캘린더  -->   
+                <!-- [#6 메뉴 시작] IPO 캘린더  -->   
                 <div id="menuf" class="menu-cont">
                     <h2 class="s-tit">해외 IPO 캘린더</h2>
                     <h3 class="s-tit">IPO 관련 economic calendar 입니다.<p>(※최근 6개월치 데이터만 보여줍니다.).</p></h3>
@@ -2737,7 +2865,133 @@
                     </div>     
                     <div id="ipo_calendar"></div>                        
                 </div> 
-                <!-- [#5 메뉴 끝] 증시캘린더  -->                   
+                <!-- [#6 메뉴 끝] IPO캘린더  -->        
+                <!-- [#7 메뉴 시작] 유사국면 분석 시스템 -->   
+                <div id="menug" class="menu-cont">
+                    <h2 class="s-tit">해외채권 유사국면 분석</h2>
+                    <h3 class="s-tit">채권데이터에 대한 유사국면 분석시스템입니다.</p></h3>
+                    <div id="loading_bar_ipoCalendar" class="loading_bar" style="margin-left: 0px;">
+                        <img src="/static/assets/images/LoadingBar_E.gif">
+                        <p>데이터 로딩중입니다.</p>
+                    </div>    
+                    <div class="similarity-container">
+                        <div class="similarity-title">
+                            <h2>Time Series Analysis Tool</h2>
+                        </div>
+                        <div class="similarity-section">
+                            <div class="similarity-form-group">
+                                <label for="similarity-selectedData" class="similarity-form-label">Time Series Data:</label>
+                                <select id="similarity-selectedData" class="similarity-form-input">
+                                    <option value="GT2 Govt">GT2 Govt</option>
+                                    <option value="GT5 Govt">GT5 Govt</option>
+                                    <option value="GT10 Govt">GT10 Govt</option>
+                                    <option value="GT30 Govt">GT30 Govt</option>
+                                    <option value="USYC2Y10 Index">USYC2Y10 Index</option>
+                                    <option value="USYC5Y30 Index">USYC5Y30 Index</option>
+                                    <option value="USYC1030 Index">USYC1030 Index</option>
+                                    <option value="USGGBE10 Index">USGGBE10 Index</option>
+                                    <option value="GTII10 Govt">GTII10 Govt</option>
+                                    <option value="GTDEM2Y Govt">GTDEM2Y Govt</option>
+                                    <option value="GTDEM5Y Govt">GTDEM5Y Govt</option>
+                                    <option value="GTDEM10Y Govt">GTDEM10Y Govt</option>
+                                    <option value="DEYC2Y10 Index">DEYC2Y10 Index</option>
+                                    <option value="DEYC5Y30 Index">DEYC5Y30 Index</option>
+                                    <option value="DEGGBE10 Index">DEGGBE10 Index</option>
+                                    <option value="GTDEMII10Y Govt">GTDEMII10Y Govt</option>
+                                    <option value="GTESP10Y Govt">GTESP10Y Govt</option>
+                                    <option value="GTITL10Y Govt">GTITL10Y Govt</option>
+                                    <option value="GTGBP10Y Govt">GTGBP10Y Govt</option>
+                                    <option value="GTCAD10Y Govt">GTCAD10Y Govt</option>
+                                    <option value="GTAUD10Y Govt">GTAUD10Y Govt</option>
+                                    <option value="GTJPY10Y Govt">GTJPY10Y Govt</option>
+                                    <option value="CCSWNI5 BGN Curncy">CCSWNI5 BGN Curncy</option>
+                                    <option value="IRSWNI5 BGN Curncy">IRSWNI5 BGN Curncy</option>
+                                    <option value="ODF29 Comdty">ODF29 Comdty</option>
+                                    <option value="MPSW5E BGN Curncy">MPSW5E BGN Curncy</option>
+                                    <option value="GVSK3YR Index">GVSK3YR Index</option>
+                                    <option value="GVSK10YR Index">GVSK10YR Index</option>
+                                    <option value="DXY Index">DXY Index</option>
+                                    <option value="KRW Curncy">KRW Curncy</option>
+                                    <option value="EUR Curncy">EUR Curncy</option>
+                                    <option value="JPY Curncy">JPY Curncy</option>
+                                    <option value="CNH Curncy">CNH Curncy</option>
+                                    <option value="BRL Curncy">BRL Curncy</option>
+                                    <option value="INR Curncy">INR Curncy</option>
+                                    <option value="MXN Curncy">MXN Curncy</option>
+                                    <option value="SPX Index">SPX Index</option>
+                                    <option value="CCMP Index">CCMP Index</option>
+                                    <option value="DAX Index">DAX Index</option>
+                                    <option value="BCOM Index">BCOM Index</option>
+                                    <option value="XAU Curncy">XAU Curncy</option>
+                                    <option value="USCRWTIC Index">USCRWTIC Index</option>
+                                    <option value="TSFR3M Index">TSFR3M Index</option>
+                                    <option value="USGG3M Index">USGG3M Index</option>
+                                    <option value="US0003M Index">US0003M Index</option>
+                                    <option value="UREPTA30 Index">UREPTA30 Index</option>
+                                    <option value="LQD US Equity">LQD US Equity</option>
+                                    <option value="HYG US Equity">HYG US Equity</option>
+                                    <option value="CDX IG CDSI GEN 5Y Corp">CDX IG CDSI GEN 5Y Corp</option>
+                                    <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY CDSI GEN 5Y SPRD Corp</option>
+                                    <option value="EMLC US Equity">EMLC US Equity</option>
+                                    <option value="EMB US Equity">EMB US Equity</option>
+                                    <option value="VIX Index">VIX Index</option>
+                                    <option value="MOVE Index">MOVE Index</option>
+                                    <option value=".VIXVXN Index">.VIXVXN Index</option>
+                                    <option value="GFSIFLOW Index">GFSIFLOW Index</option>
+                                    <option value="JLGPUSPH Index">JLGPUSPH Index</option>
+                                    <option value="JLGPEUPH Index">JLGPEUPH Index</option>
+                                    <option value="MRIEM Index">MRIEM Index</option>
+                                    <option value="ACMTP10 Index">ACMTP10 Index</option>
+                                    <option value="FWISUS55 Index">FWISUS55 Index</option>
+                                    <option value="ILM3NAVG Index">ILM3NAVG Index</option>
+                                    <option value="ECRPUS 1Y Index">ECRPUS 1Y Index</option>
+                                    <option value="CESIUSD Index">CESIUSD Index</option>
+                                    <option value="CESIUSH Index">CESIUSH Index</option>
+                                    <option value="CESIUSS Index">CESIUSS Index</option>
+                                    <option value="CESIEUR Index">CESIEUR Index</option>
+                                    <option value="CESIEUH Index">CESIEUH Index</option>
+                                    <option value="CESIEUS Index">CESIEUS Index</option>
+                                    <option value="CESIEM Index">CESIEM Index</option>
+                                    <option value="CESIEMXP Index">CESIEMXP Index</option>
+                                    <option value="CESIEMFW Index">CESIEMFW Index</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="similarity-section">
+                            <div class="similarity-form-group">
+                                <label class="similarity-form-label">Target Date Range:</label>
+                                <div style="display: flex; align-items: center; flex-grow: 1;">
+                                    <span style="margin-right: 5px;">From:</span>
+                                    <input type="date" id="similarity-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
+                                    <span style="margin: 0 5px;">To:</span>
+                                    <input type="date" id="similarity-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-03-11">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="similarity-section">
+                            <div class="similarity-form-group">
+                                <label class="similarity-form-label">Date Range for Analysis From:</label>
+                                <div style="display: flex; align-items: center; flex-grow: 1;">
+                                    <span style="margin-right: 5px;">From:</span>
+                                    <input type="date" id="similarity-compareDateStart" class="similarity-form-input similarity-range-input" value="2021-01-01">
+                                    <span style="margin: 0 5px;">To:</span>
+                                    <input type="date" id="similarity-compareDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
+                                </div>
+                            </div>                            
+                        </div>
+                        <div class="similarity-form-group">
+                            <label for="similarity-nSteps" class="similarity-form-label">N-Steps Ahead (in days):</label>
+                            <input type="range" id="similarity-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateSliderValue()">
+                            <span id="nStepsValue" class="similarity-nSteps-value">0</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateSimilarityAnalysis();">Generate</button>
+                        </div>
+                              
+                    <canvas id="similarityOriginalChart"></div>
+                    <canvas id="similarityAlignedChart"></div>
+                </div> 
+                <!-- [#7 메뉴 끝] 유사국면 분석 시스템  -->                                              
 <!--************************************ [[ GNB 2ND ]]  Starts ****************************************-->                 
 <!--******************************* [국내] 마켓데이터 분석 Starts ***************************************-->    
                 <!-- [#2-1 메뉴 시작] 국내 뉴스정보 -->             
@@ -2980,7 +3234,8 @@
                         '<li class="page-menu" data-tab="menuc"><a href="javascript:void(0);">3. 뉴스 데이터 분석 [해외]</a></li>',
                         '<li class="page-menu" data-tab="menud"><a href="javascript:void(0);">4. 마켓 PDF 분석</a></li>',
                         '<li class="page-menu" data-tab="menue"><a href="javascript:void(0);">5. 주요 economic 캘린더</a></li>',
-                        '<li class="page-menu" data-tab="menuf"><a href="javascript:void(0);">6. 해외 IPO 캘린더</a></li>'
+                        '<li class="page-menu" data-tab="menuf"><a href="javascript:void(0);">6. 해외 IPO 캘린더</a></li>',
+                        '<li class="page-menu" data-tab="menug"><a href="javascript:void(0);">7. 유사국면 분석</a></li>'
                     ];
                     $('.menu-list').append(menuItems.join(''));
                 } else if(menuType === 'menu2') {

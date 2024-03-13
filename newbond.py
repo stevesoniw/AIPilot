@@ -44,6 +44,7 @@ from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
 from ragControlTower import router
+from univariate_similarity import router
 #config 파일
 import config
 #FAST API 관련
@@ -138,124 +139,6 @@ async def read_root(request: Request):
 
 # Main 화면에서 보여줄 데이터 구하기. 일단 차트이미지로 서버에 저장시키고, 메인에서는 이미지만 읽게한다. 데이터도 gpt4에 요약요청하도록 만들어줌.
 # -->>  그냥 신규파일 (morning_brief_batch.py) 만들어서, 이걸 아침마다 배치로 돌려서 html 로 만들기로 함. 
-
-def get_main_marketdata():
-    yf.pdr_override()
-    start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
-    tickers = {'^GSPC': 'SP500', '^DJI': 'DOW', '^IXIC': 'NASDAQ', '^KS11': 'KOSPI'}
-    market_summary = []
-    summary_talk = []
-    images_name = []  
-    for ticker, name in tickers.items():
-        df = pdr.get_data_yahoo(ticker, start_date)
-        df.reset_index(inplace=True)
-        
-        # 일단 마지막 두 날짜 데이터만 가져와 변화량을 계산하자
-        last_day = df.iloc[-1]
-        prev_day = df.iloc[-2]
-        change = (last_day['Adj Close'] - prev_day['Adj Close']) / prev_day['Adj Close'] * 100
-        summary_for_gpt = f"{name} 지수는 전일 대비 {change:.2f}% 변화하였습니다. 전일 가격은 {prev_day['Adj Close']:.2f}이며, 오늘 가격은 {last_day['Adj Close']:.2f}입니다."
-        summary = {
-            "name": name,
-            "change": f"{change:.2f}%",
-            "prev_close": f"{prev_day['Adj Close']:.2f}",
-            "last_close": f"{last_day['Adj Close']:.2f}"
-        }        
-        market_summary.append(summary)
-        summary_talk.append(summary_for_gpt)
-
-        # 차트 생성 코드 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df['Date'], y=df['Adj Close'], mode='lines', line=dict(color='red'), name='Adj Close'))
-        fig.update_layout(
-            title=name,
-            xaxis_title='Date',
-            yaxis_title='Price',
-            template='plotly_dark',
-            autosize=False,
-            width=800,
-            height=600,
-            margin=dict(l=50, r=50, b=100, t=100, pad=4)
-        )
-        # 이미지 저장 로직 
-        image_path = f'chartHtml/main_chart/{name}_{datetime.now().strftime("%Y-%m-%d")}.png'
-        image_name = f'{name}_{datetime.now().strftime("%Y-%m-%d")}.png'
-        fig.write_image(image_path)
-        images_name.append(image_name)
-
-    return market_summary, images_name, summary_talk
-
-#GPT4에 요약시킬 어제 증시뉴스. 뭐써야될지 몰겠. 일단 Finnhub꺼 씀. 일단 summary는 네이버해외주요뉴스 크롤링이 날듯..
-def get_main_marketnews() :
-    market_news = finnhub_client.general_news('general', min_id=0)
-    return market_news
-
-async def generate_market_summary():
-    news_data = get_main_marketnews()  
-    market_data, images_name, summary_talk = get_main_marketdata()
-    
-    # gpt4_news_sum 함수에 전달할 데이터 준비
-    SYSTEM_PROMPT = "You are an exceptional news analyst and an expert in economics. Please systematically summarize the contents of the following news and share your forecast on the stock market. Specifically, explain succinctly how much the Dow Jones, NASDAQ, and S&P 500 indices have changed compared to the previous day."
-    gpt_summary = await gpt4_news_sum({"news": news_data, "market_summary": summary_talk}, SYSTEM_PROMPT)
-    print(gpt_summary)
-    return gpt_summary, market_data, images_name
-
-# 메인페이지 로딩때마다 부르면 속도이슈가 있어서, html 파일로 미리 떨궈놓자. 
-@app.get("/api/main/marketdata")
-async def market_data():
-    summary, market_data, images_name = await generate_market_summary()
-    html_content = """
-    <div class="main_summary_container">
-        <h1 class="main_summary_title">Market Summary</h1>
-        <div class="main_summary_content">
-            <div class="main_summary_table">
-                <table>
-                    <tr>
-                        <th>Market</th>
-                        <th>Change</th>
-                        <th>Previous Close</th>
-                        <th>Last Close</th>
-                    </tr>
-    """
-    for data in market_data:
-        change_color = "red" if "+" in data['change'] else "blue"
-        last_close_color = change_color
-        html_content += f"""
-                    <tr>
-                        <td>{data['name']}</td>
-                        <td style='color:{change_color};'>{data['change']}</td>
-                        <td>{data['prev_close']}</td>
-                        <td style='color:{last_close_color};'>{data['last_close']}</td>
-                        <td>{data['date']}</td>
-                    </tr>
-        """
-    html_content += """
-                </table>
-            </div>
-            <div class="main_summary_images">
-    """
-
-    for path in images_name:
-        html_content += f"""
-                <div class="main_summary_image">
-                    <img src='/static/main_chart/{path}' alt='Market Chart'>
-                </div>
-        """
-
-    html_content += f"""
-            </div>
-        </div>
-        <div class="main_summary_summary">
-            {summary}
-        </div>
-    </div>
-    """
-    # 결과를 HTML 파일로 저장
-    file_path = f'chartHtml/main_summary/summary_{datetime.now().strftime("%Y-%m-%d")}.html'
-    with open(file_path, "w") as file:
-        file.write(html_content)
-
-    return HTMLResponse(content=html_content, status_code=200, headers={'Content-Type': 'text/html; charset=utf-8'})
 
 
 ################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts #########################################

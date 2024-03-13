@@ -9,14 +9,16 @@ access_token = config.TWEETER_ACCESS_TOKEN
 access_token_secret = config.TWEETER_CLIENT_SECRET
 
 
-client = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key, consumer_secret=consumer_secret, access_token=access_token, access_token_secret=access_token_secret)
+client = tweepy.Client(consumer_key=consumer_key, consumer_secret=consumer_secret, access_token=access_token, access_token_secret=access_token_secret)
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
+auth2 = tweepy.OAuth2BearerHandler(bearer_token)
 api = tweepy.API(auth)
+api2 = tweepy.API(auth)
 
 try :
-    api.verify_credentials()
+    api2.verify_credentials()
     print("success")
 except :
     print("Failed auth")
