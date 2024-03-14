@@ -1799,61 +1799,89 @@
         function updateSliderValue() {
             document.getElementById('nStepsValue').textContent = document.getElementById('similarity-nSteps').value;
         }       
-        function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
+        function generateSimilarityHighCharts(chartDataArray, containerId) {
+            let container = document.getElementById(containerId);
+            if (!container) {
+                console.error('Container not found:', containerId);
+                return;
             }
-            return color;
-        }          
-        function processChartData(chartData) {
-            return chartData.data.map(dataset => ({
-                label: dataset.name,
-                data: dataset.x.map((x, index) => ({
-                    x: x, // x 값으로 인덱스를 직접 사용합니다.
-                    y: dataset.y[index]
-                })),
-                borderColor: dataset.borderColor || "#007bff", // 기본값 설정
-                backgroundColor: 'transparent', // 데이터셋의 배경색을 투명하게 설정
-                fill: false, // 데이터셋을 채우지 않음
-            }));
-        }
-        
-        function sdrawChart(chartId, chartData, chartInstance) {
-            if (chartInstance) {
-                chartInstance.destroy(); // 기존 차트 인스턴스가 있으면 제거
+            let chartTitle = '';
+            if (containerId === 'similarityOriginalChartContainer') {
+                chartTitle = 'Original Comparison';
+            } else if (containerId === 'similarityAlignedChartContainer') {
+                chartTitle = 'Aligned Comparison';
             }
-            const ctx = document.getElementById(chartId).getContext('2d');
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: processChartData(chartData) // 데이터 가공 함수 사용
+            
+            // nStepsValue 값 처리
+            const nStepsValue = parseInt(document.getElementById('nStepsValue').textContent, 10);
+            const maxXValue = Math.max(...chartDataArray.flatMap(dataset => dataset.x));
+            const plotLineValue = maxXValue - nStepsValue;
+            
+            Highcharts.chart(containerId, {
+                chart: {
+                    type: 'line',
+                    zoomType: 'x' // 줌 기능 활성화
                 },
-                options: {
-                    scales: {
-                        x: {
-                            type: 'linear', // x축을 선형 스케일로 설정합니다.
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'Index'
-                            }
+                title: {
+                    text: chartTitle
+                },
+                xAxis: {
+                    type: 'linear',
+                    title: {
+                        text: 'Index'
+                    },
+                    labels: {
+                        enabled: true // x축 라벨 활성화
+                    },
+                    plotLines: [{
+                        color: 'red', // 점선그리자. n-step ㅋ
+                        dashStyle: 'Dash', 
+                        value: plotLineValue, 
+                        width: 2, 
+                        label: {
+                            text: 'N Steps' 
+                        }
+                    }]
+                },
+                yAxis: {
+                    title: {
+                        text: 'Value'
+                    }
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle'
+                },
+                plotOptions: {
+                    series: {
+                        label: {
+                            connectorAllowed: false
                         },
-                        y: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'Value'
+                        pointStart: 0
+                    }
+                },
+                series: chartDataArray.map(dataset => ({
+                    name: dataset.name,
+                    data: dataset.y
+                })),
+                responsive: {
+                    rules: [{
+                        condition: {
+                            maxWidth: 500
+                        },
+                        chartOptions: {
+                            legend: {
+                                layout: 'horizontal',
+                                align: 'center',
+                                verticalAlign: 'bottom'
                             }
                         }
-                    }
+                    }]
                 }
             });
         }
         
-        let similarityOriginalChart;
-        let similarityAlignedChart;
         function generateSimilarityAnalysis() {
             const selectedData = document.getElementById('similarity-selectedData').value;
             const targetDateStart = document.getElementById('similarity-targetDateStart').value;
@@ -1866,7 +1894,6 @@
                 alert("날짜 범위를 꼭 지정해주세요!");
                 return;
             }
-        
             fetch('/similarity/univariate-analyze/', {
                 method: 'POST',
                 headers: {
@@ -1883,19 +1910,14 @@
             })
             .then(response => response.json())
             .then(data => {
-                const originalChartData = data.chart_data.original;
-                const alignedChartData = data.chart_data.aligned;
-
-                console.log(originalChartData);
-                console.log(alignedChartData);
-                
-                // 이전에 생성된 차트 인스턴스를 저장할 변수를 초기화합니다.
-                similarityOriginalChart = sdrawChart('similarityOriginalChart', originalChartData, similarityOriginalChart);
-                similarityAlignedChart = sdrawChart('similarityAlignedChart', alignedChartData, similarityAlignedChart);
-            })
-
+                const originalChartData = JSON.parse(data.chart_data.original).data;
+                const alignedChartData = JSON.parse(data.chart_data.aligned).data;
+                // 차트 생성 함수 호출
+                generateSimilarityHighCharts(originalChartData, 'similarityOriginalChartContainer');
+                generateSimilarityHighCharts(alignedChartData, 'similarityAlignedChartContainer');
+            });
         }
-        
+
         //********************************* [1ST GNB][7TH MENU]유사국면 함수 Ends ***************************************//                
         //******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Starts *************************************//
         // NAVER 뉴스 기본 정보 스크래핑해오기
@@ -2989,8 +3011,9 @@
                             <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateSimilarityAnalysis();">Generate</button>
                         </div>
                               
-                    <canvas id="similarityOriginalChart"></div>
-                    <canvas id="similarityAlignedChart"></div>
+                        <div id="similarityOriginalChartContainer"></div>
+                        <div id="similarityAlignedChartContainer"></div>
+                        
                 </div> 
                 <!-- [#7 메뉴 끝] 유사국면 분석 시스템  -->                                              
 <!--************************************ [[ GNB 2ND ]]  Starts ****************************************-->                 

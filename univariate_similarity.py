@@ -250,10 +250,10 @@ def analyze(request: AnalysisRequest):
     print("finalllllllllllllllllllllllllllllllllllllllllllllllllllllll")
     print(fig_superimpose_target_original)
     chart_data = {
-        "original": fig_superimpose_target_original,
-        "aligned": fig_superimpose_target_aligned
+        "original": fig_superimpose_target_original.to_json(),
+        "aligned": fig_superimpose_target_aligned.to_json()
     }
-    
+        
     return {"chart_data": chart_data} 
     
 test_request_data = AnalysisRequest(
