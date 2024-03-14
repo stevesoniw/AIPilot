@@ -1894,6 +1894,7 @@
                 alert("날짜 범위를 꼭 지정해주세요!");
                 return;
             }
+            document.getElementById('loading_bar_similarity').style.display = 'block';                                
             fetch('/similarity/univariate-analyze/', {
                 method: 'POST',
                 headers: {
@@ -1912,10 +1913,16 @@
             .then(data => {
                 const originalChartData = JSON.parse(data.chart_data.original).data;
                 const alignedChartData = JSON.parse(data.chart_data.aligned).data;
+                document.getElementById('loading_bar_similarity').style.display = 'none';    
                 // 차트 생성 함수 호출
                 generateSimilarityHighCharts(originalChartData, 'similarityOriginalChartContainer');
                 generateSimilarityHighCharts(alignedChartData, 'similarityAlignedChartContainer');
+            })
+            .catch(error => {
+                console.error('Error fetching similarity data:', error);
+                document.getElementById('loading_bar_similarity').style.display = 'none'; 
             });
+            
         }
 
         //********************************* [1ST GNB][7TH MENU]유사국면 함수 Ends ***************************************//                
@@ -2893,10 +2900,6 @@
                 <div id="menug" class="menu-cont">
                     <h2 class="s-tit">해외채권 유사국면 분석</h2>
                     <h3 class="s-tit">채권데이터에 대한 유사국면 분석시스템입니다.</p></h3>
-                    <div id="loading_bar_ipoCalendar" class="loading_bar" style="margin-left: 0px;">
-                        <img src="/static/assets/images/LoadingBar_E.gif">
-                        <p>데이터 로딩중입니다.</p>
-                    </div>    
                     <div class="similarity-container">
                         <div class="similarity-title">
                             <h2>Time Series Analysis Tool</h2>
@@ -3010,6 +3013,10 @@
                         <div style="text-align: center;">
                             <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateSimilarityAnalysis();">Generate</button>
                         </div>
+                        <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
+                            <img src="/static/assets/images/LoadingBar_E.gif">
+                            <p>유사국면 데이터 서치중입니다.</p>
+                        </div>                          
                               
                         <div id="similarityOriginalChartContainer"></div>
                         <div id="similarityAlignedChartContainer"></div>
