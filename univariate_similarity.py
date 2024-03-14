@@ -16,7 +16,7 @@ import logging
 SECRET_KEY = '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'
 
 logging.basicConfig(level=logging.DEBUG)
-router = APIRouter()
+router2 = APIRouter()
 
 def calculate_date_distance(dt, date_str1, date_str2):
     """
@@ -220,7 +220,7 @@ class AnalysisRequest(BaseModel):
     compare_date_end: str
     n_steps: int
 
-@router.post("/similarity/univariate-analyze/")
+@router2.post("/similarity/univariate-analyze/")
 def analyze(request: AnalysisRequest):
     original_data = data_select(request.selected_data)
     if original_data is None:

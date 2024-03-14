@@ -44,7 +44,7 @@ from dtaidistance import dtw
 #개인 클래스 파일 
 import fredAll
 from ragControlTower import router
-from univariate_similarity import router
+from univariate_similarity import router2
 #config 파일
 import config
 #FAST API 관련
@@ -58,6 +58,7 @@ from fastapi.responses import Response
 
 app = FastAPI()
 app.include_router(router)
+app.include_router(router2)
 logging.basicConfig(level=logging.DEBUG)
 
 ##############################################          공통          ################################################
