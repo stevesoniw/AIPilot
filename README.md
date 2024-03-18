@@ -4,7 +4,12 @@
  - newbond.py (FastAPI 환경. 현재 해당파일에 모든 로직이 존재) 
  - config.py (*openAI key 가 disable 되는 관계로 내용은 비워서 커밋함)
  - chartHtml\chart_pilot.html (클라이언트 화면) 
- - chartHtml\assets\css\chart-pilot.css (메인 css 파일) 
+ - chartHtml\assets\css\chart-pilot.css (메인 css 파일)
+
+ - 아침 배치파일 : morining_brief_batch.py (메인화면 데이터 html로 떨구는 용도)
+ - RAG 관련 : ragControlTower.py = 여기서 multiRAG.py, rag_openai.py 컨트롤 함 (router형태로 chart_pilot.html과 직접 연결)
+ - 나머지 .py들은 쓸데없는 파일이라 보면됨
+  
 
 # 해야할 일
   - 체계적으로 관리되도록 파일쪼개기
