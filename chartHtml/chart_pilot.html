@@ -1726,31 +1726,45 @@
         //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Ends *****************************//                
         //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Starts *****************************//                
         async function goIpoCalendar() {
-            document.getElementById('loading_bar_ipoCalendar').style.display = 'block';    
-            const response = await fetch('/calendar/ipo', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+            document.getElementById('loading_bar_ipoCalendar').style.display = 'block';
+            let ipoCalendarData;
+            try {
+                const response = await fetch('/calendar/ipo', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-            });
-            const ipoCalendarData = await response.json();
-            document.getElementById('loading_bar_ipoCalendar').style.display = 'none';    
-
-            // 데이터가 null 로 오는게 종종있다..
-            const defaultText = '[N/A]'; 
-            // 색상 하나로 하면 너무 안예뻐서 랜덤돌림ㅋㅋ
-            let colorIndex = 0;
+                ipoCalendarData = await response.json();
+            } catch (error) {
+                console.error("Failed to fetch IPO calendar data:", error);
+                document.getElementById('loading_bar_ipoCalendar').style.display = 'none';
+                alert('Failed to load IPO Calendar data. Please try again later.');
+                return;
+            } finally {
+                document.getElementById('loading_bar_ipoCalendar').style.display = 'none';
+            }
+        
+            // Check if the ipoCalendarData or ipoCalendarData.ipoCalendar is undefined or null
+            if (!ipoCalendarData || !ipoCalendarData.ipoCalendar) {
+                alert('No IPO Calendar data available.');
+                return;
+            }
+        
+            const defaultText = '[N/A]';
             const colors = ['#5b24da', '#9819ad', '#0c9d12'];
-            const ipoEvents = ipoCalendarData.ipoCalendar.map((event, index) => {
+            const ipoEvents = ipoCalendarData.ipoCalendar.map(event => {
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                colorIndex++; 
-
+        
                 return {
                     id: event.symbol || defaultText,
-                    title: `${event.name} (${event.symbol})${event.numberOfShares && event.numberOfShares > 1 ? ' +' : ''}`, // 2개 이상일 때 '+' 표시
-                    start: event.date,
-                    color: color, // 선택된 색상 사용
+                    title: `${event.name || defaultText} (${event.symbol || defaultText})${event.numberOfShares && event.numberOfShares > 1 ? ' +' : ''}`,
+                    start: event.date || new Date().toISOString().slice(0, 10), // Use current date as fallback
+                    color: color,
                     description: `
                         Exchange: ${event.exchange || defaultText}<br>
                         Shares: ${event.numberOfShares || defaultText}<br>
@@ -1760,29 +1774,29 @@
                     `
                 };
             });
-
+        
             var calendarEl = document.getElementById('ipo_calendar');
             if (!calendarEl) {
-                alert('Calendar element not found on the page.');
+                console.error('Calendar element not found on the page.');
                 return;
             }
             var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth', // 초기 뷰 설정
+                initialView: 'dayGridMonth',
                 headerToolbar: {
-                    left: 'prev,next today', // 이전, 다음, 오늘 버튼
-                    center: 'title', 
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay' // 오른쪽에 월, 주, 일 뷰 선택 버튼
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 timeZone: 'UTC',
-                expandRows: true, 
+                expandRows: true,
                 locale: "KO",
                 firstDay: 1,
-                navLinks: true, 
+                navLinks: true,
                 handleWindowResize: true,
                 windowResizeDelay: 100,
                 nowIndicator: true,
-                dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
-                eventLimit: true, // 더 보기 버튼 활성화
+                dayMaxEvents: true,
+                eventLimit: true,
                 events: ipoEvents,
                 eventContent: function(arg) {
                     var element = document.createElement('div');
@@ -1790,9 +1804,10 @@
                     return { domNodes: [element] };
                 }
             });
-
+        
             calendar.render();
         }
+        
 
         //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Ends *******************************//   
         //****************************** [1ST GNB][7TH MENU]유사국면 함수 Starts *******************************//  
@@ -3020,7 +3035,7 @@
                               
                         <div id="similarityOriginalChartContainer"></div>
                         <div id="similarityAlignedChartContainer"></div>
-                        
+                    </div>    
                 </div> 
                 <!-- [#7 메뉴 끝] 유사국면 분석 시스템  -->                                              
 <!--************************************ [[ GNB 2ND ]]  Starts ****************************************-->                 
