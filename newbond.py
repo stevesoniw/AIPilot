@@ -62,6 +62,21 @@ app.include_router(router2)
 logging.basicConfig(level=logging.DEBUG)
 
 ##############################################          공통          ################################################
+'''
+@app.middleware("http")
+async def check_ip_middleware(request: Request, call_next):
+    client_ip = request.client.host
+    print(f"Client IP: {client_ip}")
+
+    # 허용된 IP 대역 정의
+    allowed_ips = ["192.168.", "10.10.1.", "127.0.0.", "10.210."]  # 예시 대역
+    # 클라이언트 IP 주소 검사
+    if not any(client_ip.startswith(allowed_prefix) for allowed_prefix in allowed_ips):
+        # 허용되지 않은 IP 대역의 요청에 대해 403 Forbidden 응답. 근데 interal server로 떨어짐ㅠ
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    response = await call_next(request)
+    return response'''
 
 # FastAPI에서 정적 파일과 템플릿을 제공하기 위한 설정
 templates = Jinja2Templates(directory="chartHtml")
