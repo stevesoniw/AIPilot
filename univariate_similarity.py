@@ -131,12 +131,8 @@ def create_figure(sample_data, target_date, selected_data, values_list, subtract
     WIDTH, HEIGHT = 800, 600
 
     fig = go.Figure()
-    print("aaaaaaaaaaaaaaaaaaaaaaaa")
-    print(target_date[0])
     if n_steps > 0:
         get_length = len(sample_data.loc[target_date[0]: target_date[1]])
-        print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
-        print(target_date[0])
         target_data = sample_data[target_date[0]:][: get_length + n_steps]
         target_data.reset_index(drop=True, inplace=True)
         fig.add_vline(x=get_length, line_dash="dash", line_color="black", line_width=1.5)
@@ -239,15 +235,10 @@ def analyze(request: AnalysisRequest):
     dates_score_list = dates_score(sample_data, similarity_score, user_target_distance)
     sorted_dates_score_list = sorted(dates_score_list, key=lambda x: x[2], reverse=True)
     filtered_dates = filter_overlaps(sorted_dates_score_list)
-    print("***************************")
-    print([request.target_date_start, request.target_date_end])
     values_list = [(pd.to_datetime(start), pd.to_datetime(end), distance) for start, end, distance in filtered_dates]
-    print("values_listvalues_listvalues_listvalues_listvalues_listvalues_list")
-    print(values_list)
     fig_superimpose_target_original = create_figure(original_data, [request.target_date_start, request.target_date_end], request.selected_data, values_list, subtract=False, n_steps = request.n_steps, N = N)
     fig_superimpose_target_aligned = create_figure(original_data, [request.target_date_start, request.target_date_end], request.selected_data, values_list, subtract=True, n_steps = request.n_steps, N = N)
     
-    print("finalllllllllllllllllllllllllllllllllllllllllllllllllllllll")
     print(fig_superimpose_target_original)
     chart_data = {
         "original": fig_superimpose_target_original.to_json(),
@@ -256,6 +247,7 @@ def analyze(request: AnalysisRequest):
         
     return {"chart_data": chart_data} 
     
+'''
 test_request_data = AnalysisRequest(
     selected_data="GT2 Govt",
     target_date_start="2023-11-01",
@@ -267,7 +259,7 @@ test_request_data = AnalysisRequest(
 
 # analyze 함수를 하드코딩된 데이터로 테스트
 response = analyze(test_request_data)
-print("Response:", response  )
+print("Response:", response  )'''
   
 '''def main():
     st.sidebar.title('단일 유사기간 분석툴')

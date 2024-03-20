@@ -1804,10 +1804,8 @@
                     return { domNodes: [element] };
                 }
             });
-        
             calendar.render();
         }
-        
 
         //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Ends *******************************//   
         //****************************** [1ST GNB][7TH MENU]유사국면 함수 Starts *******************************//  
@@ -2386,7 +2384,112 @@
             messageWrapper.appendChild(messageTextDiv);
             messagesContainer.appendChild(messageWrapper);
             messagesContainer.scrollTop = messagesContainer.scrollHeight; 
-        }        
+        }       
+//******************************** 3RD GNB::  리서치RAG Ends   ***********************************************//   
+//******************************** 3RD GNB::  AI 투자비서 Starts **********************************************//      
+            //사번 넣고 확인버튼
+            function confirmEmployeeId() {
+                var employeeIdInput = document.getElementById('ai_invest_sec_employeeId');
+                var employeeId = employeeIdInput.value;
+                if (employeeId.length !== 7) {
+                    alert("사번을 제대로 입력해주세요");
+                } else {
+                    document.getElementById('ai_invest_sec_mainContent').style.opacity = "1";
+                }
+            }
+            // '적용' 버튼 클릭 시 웹사이트 및 YouTube URL 적용
+            function applyWeb() {
+                var url = document.getElementById('ai_invest_sec_websiteUrl').value;
+                appendData("웹사이트 주소", url);
+            }
+            function applyYT() {
+                var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
+                appendData("YouTube URL", url);
+            }
+            function appendData(type, value) {
+                var container = document.getElementById('ai_invest_sec_appliedData');
+                if(container.innerHTML === "") {
+                    container.innerHTML += "<p>◎ 적용 데이터</p>";
+                }
+                container.innerHTML += `<p class="ai_append_text">- ${type}: ${value}</p>`;
+            }             
+            
+            function triggerAiFileInput() {
+                document.getElementById('aiSecFileInput').click();
+            }
+            function handleAiFileUpload(files) {
+                const file = files[0]; 
+                appendData("나의 DB에 적용된 데이터", files[0].name);
+                uploadAiFileToServer(file);
+            }            
+            // 파일 서버로 업로드시키기
+            function uploadAiFileToServer(file) {
+                let formData = new FormData();
+                formData.append("file", file); 
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                formData.append("employeeId", employeeId);
+                fetch('/ai-sec-upload/', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            } 
+            async function aiSecTalk() {
+                const messageInput = document.getElementById('aiSecInput');
+                const message = messageInput.value;
+                messageInput.value = '';
+                aiSecChatDisplay(message, 'sent')
+                try {
+                    const response = await fetch('/process-message/', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({message: message}),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`RAG HTTP error! status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result.message) {
+                        console.log(result.message);
+                        // 답변온것 보여주는 영역
+                        const newMessage = document.createElement('div');
+                        newMessage.classList.add('rag-message', 'rag-received');
+                        const messageTextDiv = document.createElement('div');
+                        messageTextDiv.classList.add('rag-text');
+                        messageTextDiv.textContent = result.message;
+                        newMessage.appendChild(messageTextDiv);
+                        document.querySelector('.rag-messages').appendChild(newMessage);
+                    } else {
+                        console.error("No message received from the RAG server.");
+                        const defaultMsg = "No response from the RAG server.";
+                    }
+                } catch (error) {
+                    console.error("RAG Fetch error: " + error.message);
+                }            
+                //document.getElementById('response').innerText = result.message;
+            }
+            // 채팅 화면에 뿌려주기
+            function aiSecChatDisplay(messageText, sender = 'sent') {
+                const inputField = document.querySelector('.rag-chat-input input');
+                const messagesContainer = document.querySelector('.rag-messages');            
+                const messageWrapper = document.createElement('div');
+                messageWrapper.classList.add('rag-message', `rag-${sender}`);
+    
+                const messageTextDiv = document.createElement('div');
+                messageTextDiv.classList.add('rag-text');
+                messageTextDiv.textContent = messageText;
+    
+                messageWrapper.appendChild(messageTextDiv);
+                messagesContainer.appendChild(messageWrapper);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;   
+            }                   
+//******************************** 3RD GNB::  AI 투자비서 Ends **********************************************//                
     </script> 
     
     
@@ -3148,13 +3251,34 @@
 <!--******************************* [국내] 3RD GNB- RAG TESTING Starts ***************************************--> 
                 <!-- [#3-1 메뉴 시작] 리서치 RAG 테스트 -->                             
                 <div id="menu_3rd_b" class="menu-cont">
-                    <h2 class="s-tit">리서치 RAG 테스트</h2>
-                    <h3 class="s-tit">Research PDF Uploading TEST</h3>
-                    <div class="upload-container">
-                        <h2>Upload your PDF</h2>
-                        <input type="file" id="fileRagInput" accept=".pdf" hidden/>
-                        <label for="fileRagInput" class="file-label">Choose a file</label>
-                        <span id="fileRagName" class="file-name">[No file chosen yet]</span>
+                    <div class="ai_container">
+                        <h2 class="s-tit">AI 투자비서 테스트 화면</h2>
+                        <h3 class="s-tit">업로드 된 파일들, 오늘의 마켓데이터, Trending Stocks 를 중심으로 한 Q&A 시스템</h3>
+                        <input type="file" id="aiSecFileInput" style="display: none;" onchange="handleAiFileUpload(this.files)">
+                        <div id="ai_invest_sec_container" class="ai_invest_sec-container">
+                            <div style="display: flex; align-items: center;">
+                                ● 사번 입력 :  
+                                <input type="text" id="ai_invest_sec_employeeId" class="ai_invest_sec_input_field" placeholder="예) 3321130" maxlength="7">
+                                <button id="ai_invest_sec_confirmButton" onclick="javascript:confirmEmployeeId()">확인</button>
+                            </div>
+                            
+                            <div id="ai_invest_sec_mainContent" style="border: 1px solid #cccccc; padding: 10px; margin-top: 10px; opacity: 0.5;">
+                                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                    <button id="ai_invest_sec_uploadButton" class="ai_invest_sec_button" onClick="triggerAiFileInput();">파일 업로드</button>
+                                    <div id="ai_invest_sec_dragDropArea" class="ai_invest_sec_drag_drop_area">또는 파일 드래그</div>
+                                </div>
+                                
+                                <div style="align-items: center;">
+                                    <label style="flex-grow: 1;">✓ 웹사이트 주소 입력 : <input type="text" id="ai_invest_sec_websiteUrl" class="ai_invest_sec_url_input1" placeholder="http://www.naver.com/"></label>
+                                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWeb()">적용</button>
+                                </div>
+                                <div style="align-items: center;">
+                                    <label style="flex-grow: 1;">✓ YouTube URL 입력 : <input type="text" id="ai_invest_sec_youtubeUrl" class="ai_invest_sec_url_input2" placeholder="http://www.naver.com/"></label>
+                                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyYT()">적용</button>
+                                </div>
+                                <div id="ai_invest_sec_appliedData"></div>
+                            </div>
+                        </div>
                     </div>
                     <div id="loading_bar_rag" class="loading_bar">
                         <img src="/static/assets/images/LoadingBar_C.gif">
@@ -3174,8 +3298,8 @@
                                 <!-- Add more messages here -->
                             </div>
                             <div class="rag-chat-input">
-                                <input type="text" id="messageInput" placeholder="Type your message here..." />
-                                <button class="rag-send-button" onclick="ragSendMessage()">Send</button>
+                                <input type="text" id="aiSecInput" placeholder="Type your message here..." />
+                                <button class="rag-send-button" onclick="aiSecTalk()">Send</button>
                             </div>    
                         </div>
                     </div>
@@ -3293,16 +3417,24 @@
                     $('.menu-list').append(menuItems.join(''));
                 } else if(menuType === 'menu3') {
                     var menuItems = [
-                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 1. Research Report [RAG]</a></li>'
-                        //'<li class="page-menu" data-tab="menu_3rd_b"><a href="javascript:void(0);"> RAG TESTING </a></li>'
+                        '<li class="page-menu on" data-tab="menu_3rd_a"><a href="javascript:void(0);"> 1. Research Report (testDB만료됨)</a></li>',
+                        '<li class="page-menu" data-tab="menu_3rd_b"><a href="javascript:void(0);"> 2. AI 투자비서(개발중) </a></li>'
                     ];
                     $('.menu-list').append(menuItems.join(''));
-                }
+                } 
                 // GNB 클릭 시 첫 번째 하위 메뉴 활성화
-                if(menuType === 'menu2') {
+                if(menuType === 'menu1') {
+                    setTimeout(function() {
+                        setActiveTabDirectly('menua'); 
+                    }, 1);
+                }else if(menuType === 'menu2') {
                     // setTimeout 사용하여 DOM 업데이트가 완료된 후에 실행
                     setTimeout(function() {
                         setActiveTabDirectly('menu_2nd_a'); // 직접적으로 탭을 활성화
+                    }, 1);
+                }else if(menuType === 'menu3') {
+                    setTimeout(function() {
+                        setActiveTabDirectly('menu_3rd_a');
                     }, 1);
                 }
 
@@ -3447,7 +3579,6 @@
                     uploadRagFile(); // 파일 업로드 함수 호출
                 }
             };
-            // 
             const inputField = document.querySelector('.rag-chat-input input');
                          // 채팅 창에서 엔터먹이기
             inputField.addEventListener('keypress', function(e) {
@@ -3457,7 +3588,26 @@
                 }
             });            
             /*******************************************************************************/
+            /********* [3rd GNB] AI 투자비서 컨트롤 onChange *********/
+            // 드래그 앤 드롭 기능
+            var dragDropArea = document.getElementById('ai_invest_sec_dragDropArea');
+            dragDropArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = "#f0f0f0";
+            });
 
+            dragDropArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = "transparent";
+            });
+
+            dragDropArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = "transparent";
+                var files = e.dataTransfer.files;
+                appendData("나의 DB에 적용된 데이터", files[0].name); // 단순화를 위해 첫 번째 파일명만 표시
+                uploadAiFileToServer(files[0]);
+            });       
         });
 
   </script>

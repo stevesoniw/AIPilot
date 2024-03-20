@@ -1,45 +1,118 @@
 import tweepy
 import config
+import json
 import pandas as pd
 from tweepy import OAuthHandler
+from requests_oauthlib import OAuth1Session
+import requests
 
-
-consumer_key = config.TWEETER_CLIENT_ID
-consumer_secret = config.TWEETER_CLIENT_SECRET
+consumer_key = config.TWEETER_API_KEY
+consumer_secret = config.TWEETER_API_SECRET
+client_key = config.TWEETER_CLIENT_ID
+client_secret = config.TWEETER_CLIENT_SECRET
 bearer_token = config.TWEETER_BEARER_TOKEN
 access_token = config.TWEETER_ACCESS_TOKEN
 access_token_secret = config.TWEETER_CLIENT_SECRET
+payload = {"text": "Hello world!"}
 
 
-auth = tweepy.AppAuthHandler(
-    consumer_key, consumer_secret
-)
-auth.set_access_token(access_token, access_token_secret)
+def writeTweet():
+    # Get request token
+    request_token_url = "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write"
+    oauth = OAuth1Session(consumer_key, client_secret=consumer_secret)
 
-client = tweepy.Client(bearer_token=bearer_token)
-apiv2 = tweepy.Client(consumer_key=consumer_key, consumer_secret=consumer_secret, access_token=access_token, access_token_secret=access_token_secret)
-api = tweepy.API(auth)
-user = api.get_user(id="SteveSon194948" , screen_name="SteveSon194948")
 
-try :
-    print(user.screen_name)
-    print(user.followers_count)
-    print("success")
-except :
-    print("Failed auth")
 
-def get_trending_topics():
-    trends_available = api4.available_trends()
-    print(f"Number of Trends availables: {len(trends_available)}")
-    rj_trends = api4.get_place_trends(id =1132599) # WOEID of Seoul; 1132599
-    trends = []
-    for trend in rj_trends[0]['trends']:
-        if trend['tweet_volume'] is not None and trend['tweet_volume'] > 5000:
-            trends.append((trend['name'], trend['tweet_volume']))
+    try:
+        fetch_response = oauth.fetch_request_token(request_token_url)
+    except ValueError:
+        print(
+            "There may have been an issue with the consumer_key or consumer_secret you entered."
+        )
 
-    trends.sort(key=lambda x:-x[1])
-    print(trends)
-    return trends
+    resource_owner_key = fetch_response.get("oauth_token")
+    resource_owner_secret = fetch_response.get("oauth_token_secret")
+    print("Got OAuth token: %s" % resource_owner_key)
+
+    # Get authorization
+    base_authorization_url = "https://api.twitter.com/oauth/authorize"
+    authorization_url = oauth.authorization_url(base_authorization_url)
+    print("Please go here and authorize: %s" % authorization_url)
+    verifier = input("Paste the PIN here: ")
+
+    # Get the access token
+    access_token_url = "https://api.twitter.com/oauth/access_token"
+    oauth = OAuth1Session(
+        consumer_key,
+        client_secret=consumer_secret,
+        resource_owner_key=resource_owner_key,
+        resource_owner_secret=resource_owner_secret,
+        verifier=verifier,
+    )
+    oauth_tokens = oauth.fetch_access_token(access_token_url)
+
+    access_token = oauth_tokens["oauth_token"]
+    access_token_secret = oauth_tokens["oauth_token_secret"]
+
+    # Make the request
+    oauth = OAuth1Session(
+        consumer_key,
+        client_secret=consumer_secret,
+        resource_owner_key=access_token,
+        resource_owner_secret=access_token_secret,
+    )
+
+    # Making the request
+    response = oauth.post(
+        "https://api.twitter.com/2/tweets",
+        json=payload,
+    )
+
+    if response.status_code != 201:
+        raise Exception(
+            "Request returned an error: {} {}".format(response.status_code, response.text)
+        )
+
+    print("Response code: {}".format(response.status_code))
+
+    # Saving the response as JSON
+    json_response = response.json()
+    print(json.dumps(json_response, indent=4, sort_keys=True))
+
+def get_params():
+    return {"user.fields": "created_at"}
+
+def create_url():
+    tweet_fields = "tweet.fields=lang,author_id"
+    # Tweet fields are adjustable.
+    # Options include:
+    # attachments, author_id, context_annotations,
+    # conversation_id, created_at, entities, geo, id,
+    # in_reply_to_user_id, lang, non_public_metrics, organic_metrics,
+    # possibly_sensitive, promoted_metrics, public_metrics, referenced_tweets,
+    # source, text, and withheld
+    ids = "ids=1278747501642657792,1255542774432063488"
+    # You can adjust ids to include a single Tweets.
+    # Or you can add to up to 100 comma-separated IDs
+    url = "https://api.twitter.com/2/tweets?{}&{}".format(ids, tweet_fields)
+    return url
+
+def connect_to_endpoint(url):
+    response = requests.request("GET", url, auth=bearer_oauth)
+    print(response.status_code)
+    if response.status_code != 200:
+        raise Exception(
+            "Request returned an error: {} {}".format(
+                response.status_code, response.text
+            )
+        )
+    return response.json()
+
+def bearer_oauth(r):
+    r.headers["Authorization"] = f"Bearer {bearer_token}"
+    r.headers["User-Agent"] = "v2TweetLookupPython"
+    return r
+
 
 def get_test():
     query = 'COVID19 place_country:GB'
@@ -61,6 +134,10 @@ def get_test():
             print(place.full_name)
 
     
+def lookup_tweets():
+    url = create_url()
+    json_response = connect_to_endpoint(url)
+    print(json.dumps(json_response, indent=4, sort_keys=True))
 
 
-        
+lookup_tweets()        

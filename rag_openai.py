@@ -46,6 +46,7 @@ class ChatPDF:
         self.ES_USERNAME = config.ELASTIC_USER
         self.ES_PASSWORD = config.ELASTIC_PW
         self.es_client = Elasticsearch(hosts=[self.ES_URL], basic_auth=(self.ES_USERNAME, self.ES_PASSWORD))
+        self.vectordb = ""
 
         self.prompt = ChatPromptTemplate.from_messages(
             [
@@ -56,6 +57,8 @@ class ChatPDF:
                 ("human", "{question}"),
             ]
         )
+        # chroma DB 기본 디렉토리 정의 
+        self.persist_directory = './chroma_database/'
     # Unique ID 생성하기
     def generate_uuid_with_prefix(self):
         unique_id = "id_" + str(uuid.uuid4())
@@ -186,6 +189,57 @@ class ChatPDF:
         return relevant_answer[0].page_content
         print(response[0].page_content)
 
+   #########################################[(3RD GNB)(2ND LNB) AI 투자비서 화면 개발용 ]############################################    
+    # 클라에서 파일 데이터 넘어온것 저장시키기
+    async def ai_sec_file_control(self, file_path: str = None, file_type: str = None, file_name_itself: str = None, employeeId: str = None, chunks: list = None):
+        # 파일 읽어서 
+        if file_path and file_type:
+            if file_type == 'pdf':
+                loader = PyPDFLoader(file_path=file_path)
+                docs = loader.load()
+                print("***********************")
+                print(docs)
+                if isinstance(docs, list):
+                    text_list = [doc.page_content for doc in docs]
+                    docs = "\n".join(text_list)
+            elif file_type == 'docx':
+                loader = Docx2txtLoader(file_path=file_path)
+                docs = loader.load()
+                docs = "\n".join(docs) if isinstance(docs, list) else docs
+            else:
+                raise ValueError("File path and file type must be provided.")
+
+        doc =  Doc(page_content=docs, metadata={"source": file_name_itself})
+
+        ######## chunk & 복잡한 거 일단 정규화 및 제거 & 메타필드 추가
+        chunks = self.text_splitter.split_documents([doc])
+        chunks = filter_complex_metadata(chunks) 
+        print(chunks)
+            
+        ######## 여기까지 파일데이터 읽기 끝                 
+        ######## chroma DB에 넣기 시작
+        user_persist_directory = os.path.join(self.persist_directory, employeeId)
+        os.makedirs(user_persist_directory, exist_ok=True)
+        self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory)
+        
+    async def ai_sec_talk(self, query, employeeId):
+        user_persist_directory = os.path.join(self.persist_directory, employeeId)
+        vectordb = Chroma(persist_directory=user_persist_directory, embedding_function=self.embeddings)
+       
+        self.retriever = vectordb.as_retriever(
+            search_type="similarity_score_threshold",
+            search_kwargs={
+                "k": 3,
+                "score_threshold": 0.1,
+            },
+        )
+
+        self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
+                      | self.prompt
+                      | self.llmModel
+                      | StrOutputParser())
+        
+        return self.chain.invoke(query)                
 
     def clear(self):
         self.vector_store = None

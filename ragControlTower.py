@@ -1,9 +1,8 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, APIRouter, Request, Depends
+from fastapi import FastAPI, File, UploadFile, HTTPException, APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.requests import Request  
 from pydantic import BaseModel
-from typing import Dict, Any
-from typing import List
+from typing import Dict, Any, List, Optional
 import os
 import tempfile
 import logging
@@ -19,7 +18,7 @@ router = APIRouter()
 assistant = ChatPDF()
 askMulti = multiRAG()
 
-############################################[3RD GNB] 리서치 RAG 테스트쪽 ############################################
+############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
 @router.post("/upload-file/")
 async def create_upload_file(file: UploadFile = File(...)):
     try:
@@ -49,7 +48,34 @@ async def process_message(message_body: Message):
     response_message = await assistant.ask(message.strip())
     return {"message": response_message}
 
-############################################[3RD GNB] 리서치 RAG 테스트쪽 ############################################
+############################################[3RD GNB] [2ND LNB] AI 투자비서 테스트쪽 ############################################
+@router.post("/ai-sec-upload/")
+async def handle_ai_sec_file(
+    file: UploadFile = File(...), 
+    employeeId: Optional[str] = Form(None) # 사번을 Form 데이터로 받음
+):
+    try:
+        # 파일 확장자 확인
+        file_extension = file.filename.split('.')[-1].lower()
+        file_name_itself = '.'.join(file.filename.split('.')[:-1])
+        if file_extension not in ['pdf', 'docx']:
+            return {"error": "Unsupported file type."}
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix="." + file_extension) as temp_file:
+            temp_file.write(await file.read())
+            # 파일 타입과 사번에 따라 ingest 함수 호출
+            await assistant.ai_sec_file_control(
+                file_path=temp_file.name, 
+                file_type=file_extension, 
+                file_name_itself=file_name_itself, 
+                employeeId=employeeId  # 사번도 매개변수로 전달
+            )
+        return {"filename": file.filename, "employeeId": employeeId}
+    finally:
+        if temp_file:
+            os.remove(temp_file.name)
+
+
 
 #################################### [1ST GNB] AI가 말해주는 해외주식정보 채팅영역 #####################################
 
