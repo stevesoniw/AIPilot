@@ -49,7 +49,7 @@ async def process_message(message_body: Message):
     return {"message": response_message}
 
 ############################################[3RD GNB] [2ND LNB] AI 투자비서 테스트쪽 ############################################
-@router.post("/ai-sec-upload/")
+@router.post("/rag/ai-sec-upload/")
 async def handle_ai_sec_file(
     file: UploadFile = File(...), 
     employeeId: Optional[str] = Form(None) # 사번을 Form 데이터로 받음
@@ -75,6 +75,59 @@ async def handle_ai_sec_file(
         if temp_file:
             os.remove(temp_file.name)
 
+# AI 투자비서 [사번에 딸린 DB 조회하기]
+@router.post("/rag/ai-sec-viewmydb/")
+async def handle_ai_sec_viewmydb(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        employeeId = data.get('employeeId')
+        if not employeeId:
+            raise ValueError("No employeeId received")
+
+        response_message = await assistant.ai_sec_viewmydb(employeeId)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+# AI 투자비서 [사번에 딸린 DB 클리어하기] 
+@router.post("/rag/ai-sec-cleardb/")
+async def handle_ai_sec_clearmydb(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        employeeId = data.get('employeeId')
+        if not employeeId:
+            raise ValueError("No employeeId received")
+
+        response_message = await assistant.ai_sec_clearmydb(employeeId)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+        
+    
+# AI 투자비서 [질문에 대해 답변하기]
+@router.post("/rag/ai-sec-talk/")
+async def handle_ai_sec_talk(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        message = data.get('message') 
+        employeeId = data.get('employeeId')
+        if not message:
+            raise ValueError("No message received")
+
+        response_message = await assistant.ai_sec_talk(message, employeeId)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 #################################### [1ST GNB] AI가 말해주는 해외주식정보 채팅영역 #####################################

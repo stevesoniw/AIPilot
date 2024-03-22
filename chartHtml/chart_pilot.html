@@ -2395,21 +2395,88 @@
                     alert("사번을 제대로 입력해주세요");
                 } else {
                     document.getElementById('ai_invest_sec_mainContent').style.opacity = "1";
+                    aiSecViewMyDB();
                 }
             }
+            // 사번으로 생성된 벡터 DB 컬렉션 조회해오기 
+            async function aiSecViewMyDB() {
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                try {
+                    const response = await fetch('/rag/ai-sec-viewmydb/', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({employeeId: employeeId}),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    console.log(result);
+                    if (result.result && result.result.ids && result.result.ids.length > 0) {
+                        //clearDataDisplay(); 
+                        result.result.ids.forEach(id => {
+                            const [key, value] = id.split(': ').map(item => item.trim()); // Splits each id string into key and value
+                            appendData(key, value); 
+                        });
+                    } else {
+                        console.error("No IDs found or received from the server.");
+                    }
+                } catch (error) {
+                    console.error("Fetch error: " + error.message);
+                }            
+            }
+                  
+            // DB 클리어 시키기 함수
+            async function clearDB(){
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                if (employeeId.length !== 7) {
+                    alert("사번을 먼저 입력해주세요");
+                    return;
+                }
+                try {
+                    const response = await fetch('/rag/ai-sec-cleardb/', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({employeeId: employeeId}),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result.result === "success") {
+                        document.getElementById('ai_invest_sec_appliedData').innerHTML = `<div class="header-with-button"><p>◎ MY DB 적용 데이터</p><button onclick="clearDB()" class="db-clear-btn">DB 클리어</button></div>`;
+                    } else {
+                        console.error("No message received from the ai sec rag server.");
+                    }
+                } catch (error) {
+                    console.error("Fetch error: " + error.message);
+                }   
+            }
+            
+            
             // '적용' 버튼 클릭 시 웹사이트 및 YouTube URL 적용
             function applyWeb() {
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                if (employeeId.length !== 7) {
+                    alert("사번을 먼저 입력해주세요");
+                    return;
+                }
                 var url = document.getElementById('ai_invest_sec_websiteUrl').value;
                 appendData("웹사이트 주소", url);
             }
             function applyYT() {
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                if (employeeId.length !== 7) {
+                    alert("사번을 먼저 입력해주세요");
+                    return;
+                }
                 var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
                 appendData("YouTube URL", url);
             }
             function appendData(type, value) {
                 var container = document.getElementById('ai_invest_sec_appliedData');
                 if(container.innerHTML === "") {
-                    container.innerHTML += "<p>◎ 적용 데이터</p>";
+                    container.innerHTML += `<div class="header-with-button"><p>◎ MY DB 적용 데이터</p><button onclick="clearDB()" class="db-clear-btn">DB 클리어</button></div>`;
                 }
                 container.innerHTML += `<p class="ai_append_text">- ${type}: ${value}</p>`;
             }             
@@ -2418,6 +2485,11 @@
                 document.getElementById('aiSecFileInput').click();
             }
             function handleAiFileUpload(files) {
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                if (employeeId.length !== 7) {
+                    alert("사번을 먼저 입력해주세요");
+                    return;
+                }                
                 const file = files[0]; 
                 appendData("나의 DB에 적용된 데이터", files[0].name);
                 uploadAiFileToServer(file);
@@ -2428,7 +2500,7 @@
                 formData.append("file", file); 
                 const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
                 formData.append("employeeId", employeeId);
-                fetch('/ai-sec-upload/', {
+                fetch('/rag/ai-sec-upload/', {
                     method: 'POST',
                     body: formData,
                 })
@@ -2440,55 +2512,81 @@
                     console.error('Error:', error);
                 });
             } 
+            //채팅 질의 답변 함수 
             async function aiSecTalk() {
                 const messageInput = document.getElementById('aiSecInput');
                 const message = messageInput.value;
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
                 messageInput.value = '';
-                aiSecChatDisplay(message, 'sent')
+                if (employeeId.length !== 7) {
+                    alert("사번을 먼저 입력해주세요");
+                    return;
+                }
+                aiSecChatDisplay(message, 'sent');
+                const loadingDiv = displayTypingIndicator(); // 타이핑 인디케이터를 화면에 표시하고, 해당 div를 반환받음
                 try {
-                    const response = await fetch('/process-message/', {
+                    const response = await fetch('/rag/ai-sec-talk/', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({message: message}),
+                        body: JSON.stringify({message: message, employeeId: employeeId}),
                     });
+                    clearTypingIndicator(loadingDiv); // 응답이 오면 타이핑 인디케이터를 삭제
                     if (!response.ok) {
-                        throw new Error(`RAG HTTP error! status: ${response.status}`);
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     const result = await response.json();
                     if (result.message) {
-                        console.log(result.message);
-                        // 답변온것 보여주는 영역
-                        const newMessage = document.createElement('div');
-                        newMessage.classList.add('rag-message', 'rag-received');
-                        const messageTextDiv = document.createElement('div');
-                        messageTextDiv.classList.add('rag-text');
-                        messageTextDiv.textContent = result.message;
-                        newMessage.appendChild(messageTextDiv);
-                        document.querySelector('.rag-messages').appendChild(newMessage);
+                        aiSecChatDisplay(result.result, 'received'); 
                     } else {
-                        console.error("No message received from the RAG server.");
-                        const defaultMsg = "No response from the RAG server.";
+                        console.error("No message received from the ai sec rag server.");
                     }
                 } catch (error) {
-                    console.error("RAG Fetch error: " + error.message);
+                    console.error("Fetch error: " + error.message);
                 }            
-                //document.getElementById('response').innerText = result.message;
             }
-            // 채팅 화면에 뿌려주기
-            function aiSecChatDisplay(messageText, sender = 'sent') {
-                const inputField = document.querySelector('.rag-chat-input input');
-                const messagesContainer = document.querySelector('.rag-messages');            
+            // 챗 답변 보여주는 함수
+            function aiSecChatDisplay(messageText, sender) {
+                const messagesContainer = document.querySelector('.ai-sec-messages');            
                 const messageWrapper = document.createElement('div');
-                messageWrapper.classList.add('rag-message', `rag-${sender}`);
-    
+                messageWrapper.classList.add('ai-sec-message', `ai-sec-${sender}`);
+              
                 const messageTextDiv = document.createElement('div');
-                messageTextDiv.classList.add('rag-text');
+                messageTextDiv.classList.add('ai-sec-text');
                 messageTextDiv.textContent = messageText;
-    
+              
                 messageWrapper.appendChild(messageTextDiv);
                 messagesContainer.appendChild(messageWrapper);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;   
-            }                   
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            // 답변 생성중입니다 메시지 처리 함수 
+            function displayTypingIndicator() {
+                const messagesContainer = document.querySelector('.ai-sec-messages');
+                const loadingDiv = document.createElement('div');
+                loadingDiv.classList.add('ai-sec-message', 'ai-sec-received', 'loading');
+                loadingDiv.style.backgroundColor = '#FFF3CD'; // 연주황색 배경 설정
+                messagesContainer.appendChild(loadingDiv);
+                
+                const loadingSpan = document.createElement('span');
+                const loadingText = '열심히 답변 생성중입니다 ';
+                let loadingTextIndex = 0;
+                
+                loadingDiv.interval = setInterval(() => {
+                    loadingSpan.textContent = loadingText.substring(0, loadingTextIndex) + '_';
+                    loadingTextIndex++;
+                    if (loadingTextIndex > loadingText.length) loadingTextIndex = 0;
+                }, 150);
+                
+                loadingDiv.appendChild(loadingSpan);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+                return loadingDiv;
+            }
+            
+            function clearTypingIndicator(loadingDiv) {
+                clearInterval(loadingDiv.interval); 
+                loadingDiv.remove(); 
+            }  
 //******************************** 3RD GNB::  AI 투자비서 Ends **********************************************//                
     </script> 
     
@@ -3286,8 +3384,8 @@
                     </div>
                     <!-- 채팅영역 -->
                     <div class="box-instruction">
-                        <div id="ragResultArea" class="rag-chat-container">
-                            <div class="rag-messages">
+                        <div id="ai-sec-result-area" class="ai-sec-chat-container">
+                            <div class="ai-sec-messages">
                                 <div class="rag-message rag-received">
                                     <div class="rag-text">안녕하세요! 질문해주세요</div>
                                 </div>
@@ -3299,7 +3397,7 @@
                             </div>
                             <div class="rag-chat-input">
                                 <input type="text" id="aiSecInput" placeholder="Type your message here..." />
-                                <button class="rag-send-button" onclick="aiSecTalk()">Send</button>
+                                <button onclick="aiSecTalk()">Send</button>
                             </div>    
                         </div>
                     </div>
@@ -3580,13 +3678,28 @@
                 }
             };
             const inputField = document.querySelector('.rag-chat-input input');
-                         // 채팅 창에서 엔터먹이기
+            const inputField2 = document.getElementById('aiSecInput');
+            
+            // 채팅 창에서 엔터키 처리
             inputField.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && inputField.value.trim() !== '') {
-                    const messageText = inputField.value.trim();
-                    ragSendMessage();
-                }
-            });            
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    if (inputField.value.trim() !== '') {
+                        const messageText = inputField.value.trim();
+                        ragSendMessage(); 
+                    }
+                }                
+            });
+            inputField2.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    if (inputField2.value.trim() !== '') {
+                        const messageText = inputField2.value.trim();
+                        aiSecTalk(); 
+                    }
+                }                
+            });
+      
             /*******************************************************************************/
             /********* [3rd GNB] AI 투자비서 컨트롤 onChange *********/
             // 드래그 앤 드롭 기능
@@ -3605,6 +3718,11 @@
                 e.preventDefault();
                 this.style.backgroundColor = "transparent";
                 var files = e.dataTransfer.files;
+                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                if (employeeId.length !== 7) {
+                    alert("사번을 먼저 입력해주세요");
+                    return;
+                }                
                 appendData("나의 DB에 적용된 데이터", files[0].name); // 단순화를 위해 첫 번째 파일명만 표시
                 uploadAiFileToServer(files[0]);
             });       

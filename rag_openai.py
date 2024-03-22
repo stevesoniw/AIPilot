@@ -18,6 +18,8 @@ from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import MessagesPlaceholder
 from elasticsearch import Elasticsearch
+from korean_romanizer.romanizer import Romanizer
+import chromadb
 # 기본 유틸
 import config
 import os
@@ -220,11 +222,88 @@ class ChatPDF:
         ######## chroma DB에 넣기 시작
         user_persist_directory = os.path.join(self.persist_directory, employeeId)
         os.makedirs(user_persist_directory, exist_ok=True)
-        self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory)
         
+        # ChromaDB 클라이언트 초기화
+        client = chromadb.PersistentClient(path=user_persist_directory)   
+        
+        # 파일이름 잘 넣어주기
+        romanized_name = Romanizer(file_name_itself).romanize()
+        formatted_name = romanized_name.replace(" ", "")
+        formatted_name = ''.join(c if c.isalpha() else '_' for c in formatted_name)
+        formatted_name = file_type.upper() + "_" + formatted_name
+        print(formatted_name)
+                
+        # meta 값 만들어주기    
+        try:
+            collection = client.get_collection(employeeId)
+            collection_metadata = collection.metadata
+        except Exception as e:
+            collection_metadata = {}    
+        new_id_key = "id_1"  # 기본값
+        for i in range(1, 9):  
+            key = f"id_{i}"
+            if key not in collection_metadata:
+                new_id_key = key
+                break
+            elif i == 9:  
+                new_id_key = key   
+        new_metadata = {"hnsw:space": "cosine", new_id_key: formatted_name}                              
+        self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory, collection_name=employeeId, collection_metadata=new_metadata)
+
+    # 클라에서 사번 던졌을때, 사번으로 만들어진 DB 검색해서 리턴해주기
+    async def ai_sec_viewmydb(self, employeeId):
+        user_persist_directory = os.path.join(self.persist_directory, employeeId)
+        try:
+            client = chromadb.PersistentClient(path=user_persist_directory)
+            collection = client.get_collection(employeeId)
+            collection_metadata = collection.metadata
+            # 모든 id_x 값을 찾아서 리스트에 저장
+            ids_found = []
+            for i in range(1, 9):  # id_1부터 id_8까지만 탐색
+                key = f"id_{i}"
+                if key in collection_metadata:
+                    ids_found.append(f"{key}: {collection_metadata[key]}")
+
+            if ids_found:
+                return {"message": "Success", "ids": ids_found}
+            else:
+                return {"message": "No ID keys found in collection metadata."}
+        except Exception as e:
+            raise e 
+
+    # 클라에서 사번 던졌을때, 사번으로 만들어진 DB 클리어시키기
+    '''async def ai_sec_clearmydb(self, employeeId):
+        try:
+            print("********************************************")
+            user_persist_directory = os.path.join(self.persist_directory, employeeId)
+            client = chromadb.PersistentClient(path=user_persist_directory)
+            collections = client.list_collections()
+            for collection in collections:
+                client.delete_collection(name=collection.name)
+            return "success"
+        except Exception as e:
+            return f"Failed to clear database: {e}"'''  
+
+    async def ai_sec_clearmydb(self, employeeId):
+        try:
+            print("********************************************")
+            user_persist_directory = os.path.join(self.persist_directory, employeeId)
+            client = chromadb.PersistentClient(path=user_persist_directory)
+            collections = client.list_collections()
+            for collection in collections:
+                client.delete_collection(name=collection.name)
+            return "success"
+        except Exception as e:
+            return f"Failed to clear database: {e}"    
+        
+         
+    # 클라에서 질문 왔을때 DB에서 similarity score 조회해서 답변해주기
     async def ai_sec_talk(self, query, employeeId):
         user_persist_directory = os.path.join(self.persist_directory, employeeId)
-        vectordb = Chroma(persist_directory=user_persist_directory, embedding_function=self.embeddings)
+        client = chromadb.PersistentClient(path=user_persist_directory)
+        collections = client.list_collections()   
+        print(collections)     
+        vectordb = Chroma(persist_directory=user_persist_directory, embedding_function=self.embeddings, collection_metadata={"hnsw:space": "cosine"})
        
         self.retriever = vectordb.as_retriever(
             search_type="similarity_score_threshold",
@@ -233,13 +312,22 @@ class ChatPDF:
                 "score_threshold": 0.1,
             },
         )
-
+        print("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")       
+        print(self.retriever.get_relevant_documents('query'))
+        print(user_persist_directory)
+        print("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")       
+        
         self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
                       | self.prompt
                       | self.llmModel
                       | StrOutputParser())
         
-        return self.chain.invoke(query)                
+    # Assuming 'invoke' returns a result with a 'score' or similar metric
+        result = self.chain.invoke(query)
+        if not result :
+            return "I'm sorry, I don't have enough information to answer that question accurately."
+        else:
+            return result          
 
     def clear(self):
         self.vector_store = None
@@ -249,8 +337,10 @@ class ChatPDF:
 
 
         
-#chat_pdf_instance = ChatPDF()
-#chat_pdf_instance.test()
+chat_pdf_instance = ChatPDF()
+hello = chat_pdf_instance.ai_sec_viewmydb("3321130")
+print(hello)
+
     # 함수 실행
 #chat_pdf_instance.test_retrieve_document() 
 #print(chat_pdf_instance.ask("who is the author of this document?"))
