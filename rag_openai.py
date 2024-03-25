@@ -54,7 +54,7 @@ class ChatPDF:
             [
                 (
                     "system",
-                    "You are a helpful assistant. Answer questions using only the following context. If you don't know the answer just say you don't know, don't make it up:\n\n{context}",
+                    "You are a helpful assistant. Answer questions using only the following context(=page_content). If you don't know the answer just say you don't know, don't make it up:\n\n{context}",
                 ),
                 ("human", "{question}"),
             ]
@@ -227,49 +227,63 @@ class ChatPDF:
         client = chromadb.PersistentClient(path=user_persist_directory)   
         
         # 파일이름 잘 넣어주기
-        romanized_name = Romanizer(file_name_itself).romanize()
-        formatted_name = romanized_name.replace(" ", "")
-        formatted_name = ''.join(c if c.isalpha() else '_' for c in formatted_name)
+        #romanized_name = Romanizer(file_name_itself).romanize()
+        formatted_name = file_name_itself.replace(" ", "")
+        formatted_name = ''.join(c if c.isalnum() else '_' for c in formatted_name)  
         formatted_name = file_type.upper() + "_" + formatted_name
         print(formatted_name)
                 
+        
         # meta 값 만들어주기    
         try:
-            collection = client.get_collection(employeeId)
-            collection_metadata = collection.metadata
+            collection = client.get_or_create_collection(employeeId)
+            # Ensure collection.metadata is not None
+            collection_metadata = collection.metadata if collection.metadata is not None else {}
         except Exception as e:
-            collection_metadata = {}    
-        new_id_key = "id_1"  # 기본값
-        for i in range(1, 9):  
-            key = f"id_{i}"
-            if key not in collection_metadata:
-                new_id_key = key
-                break
-            elif i == 9:  
-                new_id_key = key   
-        new_metadata = {"hnsw:space": "cosine", new_id_key: formatted_name}                              
-        self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory, collection_name=employeeId, collection_metadata=new_metadata)
+            print(f"Error getting or creating collection: {e}")
+            collection_metadata = {}
+
+        existing_ids = [int(key.split('_')[1]) for key in collection_metadata.keys() if key.startswith("id_")]
+        new_id_number = max(existing_ids) + 1 if existing_ids else 1
+        new_id_key = f"id_{new_id_number}"
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        print(new_id_key)
+        print(formatted_name)
+        new_metadata = {"hnsw:space": "cosine", new_id_key: formatted_name}
+        try:
+            collection.upsert(ids=employeeId, documents=chunks, embeddings=self.embeddings, collection_name=employeeId, metatdatas=new_metadata)
+        except Exception as e:
+            print(f"An error occurred: {e}")                                
+        #self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory, collection_name=employeeId, collection_metadata=new_metadata)
 
     # 클라에서 사번 던졌을때, 사번으로 만들어진 DB 검색해서 리턴해주기
     async def ai_sec_viewmydb(self, employeeId):
         user_persist_directory = os.path.join(self.persist_directory, employeeId)
         try:
             client = chromadb.PersistentClient(path=user_persist_directory)
-            collection = client.get_collection(employeeId)
+            try:
+                collection = client.get_collection(employeeId)
+            except ValueError as e:
+                return {"message": f"Collection {employeeId} does not exist."}
+            
             collection_metadata = collection.metadata
-            # 모든 id_x 값을 찾아서 리스트에 저장
             ids_found = []
             for i in range(1, 9):  # id_1부터 id_8까지만 탐색
                 key = f"id_{i}"
                 if key in collection_metadata:
                     ids_found.append(f"{key}: {collection_metadata[key]}")
+                    print("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+                    print(key)
 
             if ids_found:
                 return {"message": "Success", "ids": ids_found}
             else:
                 return {"message": "No ID keys found in collection metadata."}
         except Exception as e:
-            raise e 
+            print(f"Server error: {e}")
+            return {"message": "An error occurred while processing your request."}
+
+
 
     # 클라에서 사번 던졌을때, 사번으로 만들어진 DB 클리어시키기
     '''async def ai_sec_clearmydb(self, employeeId):
@@ -303,12 +317,12 @@ class ChatPDF:
         client = chromadb.PersistentClient(path=user_persist_directory)
         collections = client.list_collections()   
         print(collections)     
-        vectordb = Chroma(persist_directory=user_persist_directory, embedding_function=self.embeddings, collection_metadata={"hnsw:space": "cosine"})
+        vectordb = Chroma(persist_directory=user_persist_directory, embedding_function=self.embeddings, collection_name=employeeId, collection_metadata={"hnsw:space": "cosine"})
        
         self.retriever = vectordb.as_retriever(
             search_type="similarity_score_threshold",
             search_kwargs={
-                "k": 3,
+                "k": 1,
                 "score_threshold": 0.1,
             },
         )

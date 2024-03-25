@@ -2412,20 +2412,22 @@
                     }
                     const result = await response.json();
                     console.log(result);
+                    const container = document.getElementById('ai_invest_sec_appliedData');
+                    container.innerHTML = ""; 
                     if (result.result && result.result.ids && result.result.ids.length > 0) {
-                        //clearDataDisplay(); 
-                        result.result.ids.forEach(id => {
-                            const [key, value] = id.split(': ').map(item => item.trim()); // Splits each id string into key and value
-                            appendData(key, value); 
+                        result.result.ids.forEach((id, index) => {
+                            const [type, ...rest] = id.replace(/^id_\d+:/, '').trim().split('_');
+                            const value = rest.join('_'); 
+                            appendData(index + 1, type, value);
                         });
                     } else {
-                        console.error("No IDs found or received from the server.");
+                        container.innerHTML = `<p class="ai_no_data">현재 적용된 데이터가 없습니다.</p>`;
                     }
                 } catch (error) {
                     console.error("Fetch error: " + error.message);
+                    document.getElementById('ai_invest_sec_appliedData').innerHTML = `<p class="ai_error_message">데이터를 불러오는 중 오류가 발생했습니다: ${error.message}</p>`;
                 }            
             }
-                  
             // DB 클리어 시키기 함수
             async function clearDB(){
                 const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
@@ -2473,14 +2475,14 @@
                 var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
                 appendData("YouTube URL", url);
             }
-            function appendData(type, value) {
+            function appendData(index, type, value) {
                 var container = document.getElementById('ai_invest_sec_appliedData');
+                const formattedType = type.split('_')[0];
                 if(container.innerHTML === "") {
                     container.innerHTML += `<div class="header-with-button"><p>◎ MY DB 적용 데이터</p><button onclick="clearDB()" class="db-clear-btn">DB 클리어</button></div>`;
-                }
-                container.innerHTML += `<p class="ai_append_text">- ${type}: ${value}</p>`;
-            }             
-            
+                }                
+                container.innerHTML += `<p class="ai_append_text">[나의 DB에 적용된 데이터 #${index}] ${type} - ${value}</p>`;
+            }            
             function triggerAiFileInput() {
                 document.getElementById('aiSecFileInput').click();
             }
@@ -2491,7 +2493,7 @@
                     return;
                 }                
                 const file = files[0]; 
-                appendData("나의 DB에 적용된 데이터", files[0].name);
+                //appendData("나의 DB에 적용된 데이터", files[0].name);
                 uploadAiFileToServer(file);
             }            
             // 파일 서버로 업로드시키기
@@ -2507,6 +2509,7 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('Success:', data);
+                    aiSecViewMyDB();
                 })
                 .catch((error) => {
                     console.error('Error:', error);
@@ -3723,7 +3726,7 @@
                     alert("사번을 먼저 입력해주세요");
                     return;
                 }                
-                appendData("나의 DB에 적용된 데이터", files[0].name); // 단순화를 위해 첫 번째 파일명만 표시
+                //appendData("나의 DB에 적용된 데이터", files[0].name); // 단순화를 위해 첫 번째 파일명만 표시
                 uploadAiFileToServer(files[0]);
             });       
         });
