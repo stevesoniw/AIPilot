@@ -23,6 +23,7 @@ import chromadb
 # 기본 유틸
 import config
 import os
+import re
 import uuid
 from pprint import pprint
 #https://research-test-ki113xk.svc.gcp-starter.pinecone.io
@@ -224,37 +225,37 @@ class ChatPDF:
         os.makedirs(user_persist_directory, exist_ok=True)
         
         # ChromaDB 클라이언트 초기화
-        client = chromadb.PersistentClient(path=user_persist_directory)   
+        #client = chromadb.PersistentClient(path=user_persist_directory)   
         
         # 파일이름 잘 넣어주기
-        #romanized_name = Romanizer(file_name_itself).romanize()
-        formatted_name = file_name_itself.replace(" ", "")
+        romanized_name = Romanizer(file_name_itself).romanize()
+        formatted_name = romanized_name.replace(" ", "")
         formatted_name = ''.join(c if c.isalnum() else '_' for c in formatted_name)  
-        formatted_name = file_type.upper() + "_" + formatted_name
-        print(formatted_name)
+        formatted_name = formatted_name
+        
+        collection_prefix = f"{employeeId}_{file_type.lower()}_"
+        new_collection_name = f"{collection_prefix}{formatted_name}"        
                 
         
         # meta 값 만들어주기    
-        try:
-            collection = client.get_or_create_collection(employeeId)
-            # Ensure collection.metadata is not None
+        '''try:
+            collection = client.get_or_create_collection(new_collection_name)
             collection_metadata = collection.metadata if collection.metadata is not None else {}
         except Exception as e:
             print(f"Error getting or creating collection: {e}")
-            collection_metadata = {}
+            collection_metadata = {"hnsw:space": "cosine", "new_id_key": formatted_name}
 
-        existing_ids = [int(key.split('_')[1]) for key in collection_metadata.keys() if key.startswith("id_")]
-        new_id_number = max(existing_ids) + 1 if existing_ids else 1
-        new_id_key = f"id_{new_id_number}"
-        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        print(new_id_key)
-        print(formatted_name)
-        new_metadata = {"hnsw:space": "cosine", new_id_key: formatted_name}
+        #existing_ids = [int(key.split('_')[1]) for key in collection_metadata.keys() if key.startswith("id_")]
+        #new_id_number = max(existing_ids) + 1 if existing_ids else 1
+        #new_id_key = f"id_{new_id_number}"'''
         try:
-            collection.upsert(ids=employeeId, documents=chunks, embeddings=self.embeddings, collection_name=employeeId, metatdatas=new_metadata)
+            #collection.add(ids=employeeId, documents=chunks,metadatas=new_metadata)
+            #collection.upsert(ids=employeeId, documents=chunks, embeddings=self.embeddings, collection_name=employeeId, metadatas=new_metadata)
+            self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory, collection_name=new_collection_name, collection_metadata={"hnsw:space": "cosine"})
+            self.vectordb.persist()
         except Exception as e:
             print(f"An error occurred: {e}")                                
-        #self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory, collection_name=employeeId, collection_metadata=new_metadata)
+        
 
     # 클라에서 사번 던졌을때, 사번으로 만들어진 DB 검색해서 리턴해주기
     async def ai_sec_viewmydb(self, employeeId):
@@ -262,27 +263,25 @@ class ChatPDF:
         try:
             client = chromadb.PersistentClient(path=user_persist_directory)
             try:
-                collection = client.get_collection(employeeId)
-            except ValueError as e:
-                return {"message": f"Collection {employeeId} does not exist."}
+                all_collections = client.list_collections()  # Assuming this method lists all collections
+                filtered_collections = [col for col in all_collections if col.name.startswith(employeeId)]
+            except AttributeError:
+                return {"message": "Unable to list collections. The method might not be supported."}
             
-            collection_metadata = collection.metadata
-            ids_found = []
-            for i in range(1, 9):  # id_1부터 id_8까지만 탐색
-                key = f"id_{i}"
-                if key in collection_metadata:
-                    ids_found.append(f"{key}: {collection_metadata[key]}")
-                    print("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
-                    print(key)
+            if not filtered_collections:
+                return {"message": f"No collections found starting with {employeeId}."}
 
-            if ids_found:
-                return {"message": "Success", "ids": ids_found}
-            else:
-                return {"message": "No ID keys found in collection metadata."}
+            collections_data = []
+            for collection_obj in filtered_collections:
+                collection_name = collection_obj.name  # Extract the name from the Collection object
+                collection = client.get_collection(collection_name)
+                collections_data.append({"collection_name": collection.name})
+                #collections_metadata.append({collection_name: collection.metadata})
+            return {"message": "Success", "collections": collections_data}
+
         except Exception as e:
             print(f"Server error: {e}")
             return {"message": "An error occurred while processing your request."}
-
 
 
     # 클라에서 사번 던졌을때, 사번으로 만들어진 DB 클리어시키기
@@ -300,33 +299,57 @@ class ChatPDF:
 
     async def ai_sec_clearmydb(self, employeeId):
         try:
-            print("********************************************")
             user_persist_directory = os.path.join(self.persist_directory, employeeId)
             client = chromadb.PersistentClient(path=user_persist_directory)
-            collections = client.list_collections()
-            for collection in collections:
-                client.delete_collection(name=collection.name)
+            
+            # Assuming list_collections returns a list of Collection objects
+            all_collections = client.list_collections()
+            
+            print(all_collections)
+            # Adjusted to use a property of the Collection object that contains its name, e.g., .name
+            filtered_collections = [col for col in all_collections if col.name.startswith(employeeId)]
+            
+            # Delete each filtered collection
+            for collection_name in filtered_collections:
+                client.delete_collection(name=collection_name.name)  # Assuming .name is the correct attribute
+                
             return "success"
         except Exception as e:
-            return f"Failed to clear database: {e}"    
+            return f"Failed to clear database: {e}"
         
          
     # 클라에서 질문 왔을때 DB에서 similarity score 조회해서 답변해주기
     async def ai_sec_talk(self, query, employeeId):
         user_persist_directory = os.path.join(self.persist_directory, employeeId)
         client = chromadb.PersistentClient(path=user_persist_directory)
-        collections = client.list_collections()   
-        print(collections)     
-        vectordb = Chroma(persist_directory=user_persist_directory, embedding_function=self.embeddings, collection_name=employeeId, collection_metadata={"hnsw:space": "cosine"})
-       
-        self.retriever = vectordb.as_retriever(
-            search_type="similarity_score_threshold",
-            search_kwargs={
-                "k": 1,
-                "score_threshold": 0.1,
-            },
-        )
-        print("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")       
+        all_collections = client.list_collections()
+        filtered_collections = [col for col in all_collections if col.name.startswith(employeeId)]
+        print(filtered_collections)
+        results = []
+        for collection_obj in filtered_collections:
+            collection_name = collection_obj.name  
+            print("**********")
+            print(collection_name)
+            vectordb = Chroma(
+                persist_directory=user_persist_directory,
+                embedding_function=self.embeddings,
+                collection_name=collection_name,  
+                collection_metadata={"hnsw:space": "cosine"}
+            )
+            self.retriever = vectordb.as_retriever(
+                #search_type="similarity_score_threshold",
+                search_kwargs={
+                    "k": 1,
+                    #"score_threshold": 0.4,
+                }
+            )
+           
+            retrieved_docs = self.retriever.get_relevant_documents(query)
+            if retrieved_docs:
+                results.extend(retrieved_docs) 
+                
+        print("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")    
+        print(vectordb.similarity_search(query))   
         print(self.retriever.get_relevant_documents('query'))
         print(user_persist_directory)
         print("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")       
@@ -351,9 +374,9 @@ class ChatPDF:
 
 
         
-chat_pdf_instance = ChatPDF()
-hello = chat_pdf_instance.ai_sec_viewmydb("3321130")
-print(hello)
+#chat_pdf_instance = ChatPDF()
+#hello = chat_pdf_instance.ai_sec_viewmydb("3321130")
+#print(hello)
 
     # 함수 실행
 #chat_pdf_instance.test_retrieve_document() 

@@ -2414,10 +2414,12 @@
                     console.log(result);
                     const container = document.getElementById('ai_invest_sec_appliedData');
                     container.innerHTML = ""; 
-                    if (result.result && result.result.ids && result.result.ids.length > 0) {
-                        result.result.ids.forEach((id, index) => {
-                            const [type, ...rest] = id.replace(/^id_\d+:/, '').trim().split('_');
-                            const value = rest.join('_'); 
+                    if (result.result && result.result.collections) {
+                        result.result.collections.forEach((collectionObj, index) => {
+                            const collectionName = collectionObj.collection_name;
+                            const splitName = collectionName.split('_');
+                            const type = splitName[1]; // 예: 'PDF'
+                            const value = splitName.slice(2).join('_'); // 예: '1', 'BQE_EquityBase'
                             appendData(index + 1, type, value);
                         });
                     } else {
@@ -2477,12 +2479,12 @@
             }
             function appendData(index, type, value) {
                 var container = document.getElementById('ai_invest_sec_appliedData');
-                const formattedType = type.split('_')[0];
+                const displayValue = value !== "1" ? `${type} - ${value}` : type;
                 if(container.innerHTML === "") {
                     container.innerHTML += `<div class="header-with-button"><p>◎ MY DB 적용 데이터</p><button onclick="clearDB()" class="db-clear-btn">DB 클리어</button></div>`;
                 }                
-                container.innerHTML += `<p class="ai_append_text">[나의 DB에 적용된 데이터 #${index}] ${type} - ${value}</p>`;
-            }            
+                container.innerHTML += `<p class="ai_append_text">[나의 DB에 적용된 데이터 #${index}] ${displayValue}</p>`;
+            }           
             function triggerAiFileInput() {
                 document.getElementById('aiSecFileInput').click();
             }
