@@ -17,6 +17,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import MessagesPlaceholder
+from langchain.chains.question_answering import load_qa_chain
 from elasticsearch import Elasticsearch
 from korean_romanizer.romanizer import Romanizer
 import chromadb
@@ -352,20 +353,22 @@ class ChatPDF:
         print(vectordb.similarity_search(query))   
         print(self.retriever.get_relevant_documents('query'))
         print(user_persist_directory)
-        print("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")       
+        print("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") 
+            
+        chain = load_qa_chain(self.llmModel, chain_type="stuff",verbose=True)
+        matching_docs = vectordb.similarity_search(query)
+        answer =  chain.run(input_documents=matching_docs, question=query)         
         
-        self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
+        '''self.chain = ({"context": self.retriever, "question": RunnablePassthrough()}
                       | self.prompt
                       | self.llmModel
                       | StrOutputParser())
-        
-    # Assuming 'invoke' returns a result with a 'score' or similar metric
         result = self.chain.invoke(query)
         if not result :
             return "I'm sorry, I don't have enough information to answer that question accurately."
         else:
-            return result          
-
+            return result '''         
+        return answer
     def clear(self):
         self.vector_store = None
         self.retriever = None
