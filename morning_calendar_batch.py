@@ -2,112 +2,165 @@
 import asyncio
 import logging
 from pathlib import Path
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse, ParserError
+from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Query, Form, HTTPException, Request, File, UploadFile
 import json
+import httpx
 #금융관련 APIs
-import fredpy as fp
-from fredapi import Fred
 from openai import OpenAI
-#config 파일
+import finnhub
+#private made 파일
 import config
-
+import utilTool
 
 # API KEY 설정
-fp.api_key =config.FRED_API_KEY
-fred = Fred(api_key=config.FRED_API_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
+rapidAPI = config.RAPID_API_KEY
+finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 logging.basicConfig(level=logging.DEBUG)
 
-# json 파일 저장할 경로 설정
-base_path = Path("batch/fred_indicators")
-
-##################################################################################################################
-#@@ 기능정의 : 해외주요경제지표들에 대해 API를 활용하여 미리 차트 json및 AI 의견을 생성해놓는 배치파일 by son (24.03.30)
-#@@ Logic   : 1. Fred API로 주요지수 데이터를 얻어옴
-#@@            - CPI(소비자물가지수), 개인소비지출(PCE), 생산자물가지수(PPI), 연방기금금리, 주택가격지수
-#@@            - 실질 GDP, 명목 GDP, 고용비용지수(ECI), 실업률, 조정된 통화기초, 재정스트레스지수
-#@@            - 미국 금리변동 추이, 국채선물이자율 (3개월, 2년, 10년)
-#@@         : 2. 해당 지수 흐름에 대한 GPT 의견 호출. 요약 정리. 
-#@@         ** → 최종적으로 이것을 fsIndicator.js 에서 불러와서 aiMain.html 에 넣어준다.     
-##################################################################################################################
-
-# 지표 목록
-indicators = {
-    "CPIAUCSL": "미국 소비자물가지수",
-    "PCEPI": "미국 개인소비지출지수",
-    "PPIFID": "미국 생산자물가지수",
-    "DFEDTARU": "미국 연방기금금리",
-    "CSUSHPISA": "미국 주택가격지수",
-    "GDPC1": "미국 실질국내총생산",
-    "ECIWAG": "미국 고용비용지수",
-    "STLFSI4": "미국 금융스트레스지수",
-    "NGDPSAXDCUSQ": "미국 명목 국내총생산",
-    "DCOILBRENTEU": "crude oil 가격",
-    "GFDEGDQ188S": "미국 GDP 대비 공공부채 비율",
-    "MEHOINUSA672N": "미국 실질 중위 가구소득",
-    "INDPRO": "미국 산업생산지수",
-    "SP500": "S&P500 지수",
-    "UNRATE": "미국 실업률",
-    "FEDFUNDS": "미국 금리",
-    "DGS10": "미국채 10년이자율",
-    "DGS2": "미국채 2년이자율",
-    "DGS3MO": "미국채 3개월이자율"
-}
-
+########################################################################################################################
+#@@ 기능정의 : rapid API 와 finnhub calendar api 를 활용하여 미리 캘린더 데이터를 생성해놓는 배치파일 by son (24.03.31)
+#@@ Logic   : 1. rapid API로 economic calendar 데이터를 얻어옴
+#@@           2. gpt 를 이용하여 이에 대한 한국어 번역 데이터도 따로 얻어옴
+#@@           3. gpt 를 이용하여 이번 달 주요 내용을 번역,요약시킴
+#@@           4. finnhub ipo calendar API를 활용하여 ipo calendar 데이터를 얻어옴
+#@@         ** → 이들을 각각 파일로 저장함
+#@@         ** → 최종적으로 파일들을  frCalendar.js 에서 불러와서 aiMain.html 에 넣어준다.     
+#@@         ** 파일명 :: eco_calendar_eng.json, eco_calendar_kor.json, eco_calendar_aisummary.txt, ipo_calendar_eng.json
+########################################################################################################################
 
 # GPT4 에 뉴스요약을 요청하는 공통함수
-async def gpt4_chart_talk(response_data, series_name):
+async def gpt4_chart_talk(system_prompt, prompt):
     try:
-        SYSTEM_PROMPT = "You are an outstanding economist and chart data analyst. I'm going to show you annual chart data for specific economic indicators. Please explain in as much detail as possible and share your opinion on the chart trends. It would be even better if you could explain the future market outlook based on facts. And analyze the patterns of the data and its impact on society or the market, and share your opinion on it. Please mark the part you think is the most important with a red tag so that it appears in red."
-        prompt = "다음이 system 이 이야기한 json형식의 " + str(series_name)+" 차트 데이터야. system prompt가 말한대로 분석해줘. 단 답변을 꼭 한국어로 해줘. 시계열 차트데이터 : " + str(response_data)
         completion = client.chat.completions.create(
             model="gpt-4-0125-preview",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
                 ]
         )
         return completion.choices[0].message.content
     except Exception as e:
-        logging.error("An error occurred in gpt4_news_function: %s", str(e))
+        logging.error("An error occurred in gpt4_chart_talk function: %s", str(e))
         return None
+                        
+async def rapidapi_calendar():
+    url = "https://trader-calendar.p.rapidapi.com/api/calendar"
+    Start_date_calen = (datetime.strptime(utilTool.get_curday(), "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d") # 최근 6개월 
+    payload = { "country": "USA", "start": str(Start_date_calen)}
+    headers = {
+	    "content-type": "application/json",
+	    "X-RapidAPI-Key": rapidAPI,
+	    "X-RapidAPI-Host": "trader-calendar.p.rapidapi.com"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json=payload, headers=headers)
+    return response.json()
 
-# series id 받아서 데이터 갖고오는 공통함수 
-async def fetch_and_save_series_data(series_id, series_name):
+async def get_ipo_calendar():
     try:
-        # FRED에서 데이터 가져오기
-        data = fred.get_series(series_id)
-        
-        # 데이터를 Highcharts가 읽을 수 있는 형식으로 변환
-        formatted_data = [{"date": date.strftime('%Y-%m-%d'), "value": value} for date, value in data.items()]
-        
-        # JSON 파일로 저장
-        file_path = base_path / f"{series_id}.json"
-        with file_path.open("w") as f:
-            json.dump(formatted_data, f)
-        
-        # 추가적인 분석을 위해 gpt4_chart_talk 함수 사용
-        analysis_result = await gpt4_chart_talk(formatted_data, series_name)
-        # 분석 결과를 JSON 파일로 저장
-        analysis_file_path = base_path / f"{series_id}_aitalk.txt"
-        with analysis_file_path.open("w", encoding='utf-8') as f:
-            f.write(analysis_result)            
+        # 현재 날짜를 기준으로 계산
+        Start_date_calen = (datetime.now() - timedelta(days=100)).strftime("%Y-%m-%d")  # 현재 시점 - 100일
+        End_date_calen = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")  # 현재 시점 + 90일
+        recent_ipos = finnhub_client.ipo_calendar(_from=Start_date_calen, to=End_date_calen)
+        base_path = Path("batch/calendar")  
+        base_path.mkdir(parents=True, exist_ok=True)
+        file_path = base_path / "ipo_calendar_eng.json"
+        with file_path.open("w") as file:
+            json.dump(recent_ipos, file, ensure_ascii=False)
             
     except Exception as e:
-        logging.error(f"Error fetching or saving data for {series_name}: {e}")
+        print(f"An error occurred: {str(e)}")
+    
+       
+async def translate_calendar_data(data):
+    # 데이터를 한국어로 번역하는 함수
+    SYSTEM_PROMPT = (
+        "You are a highly skilled translator fluent in both English and Korean. "
+        "Translate the following economic calendar data from English to Korean, "
+        "keeping any specific terms related to the US stock market or company names in English. Do not provide any other response besides the JSON format"
+    )
+    #다 던지면 gpt토큰 수 제한에 걸리므로 최근 일부만 번역하자
+    current_date = datetime.now()
+    three_months_ago = current_date - relativedelta(months=3)
+    filtered_data = []
+    for event in data:
+        try:
+            event_start = parse(event['start']).replace(tzinfo=None)
+            if three_months_ago <= event_start <= current_date:
+                filtered_data.append(event)
+        except ParserError:
+            print(f"날짜 형식 오류: {event['start']}")
+    prompt = f"{SYSTEM_PROMPT}\n\n{json.dumps(filtered_data, ensure_ascii=False)}"
+    try:
+        translate_result = await gpt4_chart_talk(SYSTEM_PROMPT, prompt)
+        print("*******************************************")
+        print(translate_result)
+    except Exception as e:
+        logging.error("An error occurred during summarization: %s", e)
+        return None    
+    return translate_result
 
-# 모든 지표에 대해 함수 실행
+async def summarize_this_month_calendar(data):
+    # 이번 달 캘린더 데이터를 요약 정리하는 함수
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    filtered_data = []
+    # 날짜 파싱 시 ParserError 처리
+    for event in data:
+        try:
+            if parse(event['start']).month == current_month and parse(event['start']).year == current_year:
+                filtered_data.append(event)
+        except ParserError as e:
+            logging.error(f"날짜 파싱 오류: {e} - 이벤트 '{event['start']}' 는 무시됩니다.")
+            continue
+        
+    SYSTEM_PROMPT = "You are an expert in summarizing economic data."
+    prompt = (
+        "You are an expert in summarizing economic data. Please provide a concise summary in Korean "
+        "of the following key economic events for this month, highlighting their potential impact on the market. "
+        "Keep specific US stock market or company names in English.\n\n"
+        f"{json.dumps(filtered_data, ensure_ascii=False)}"
+    )
+    try:
+        summary_result = await gpt4_chart_talk(SYSTEM_PROMPT, prompt)
+    except Exception as e:
+        logging.error("요약 작업 중 오류 발생: %s", e)
+        return None
+    return summary_result
+    
 async def main():
-    tasks = []
-    for series_id, series_name in indicators.items():
-        task = asyncio.ensure_future(fetch_and_save_series_data(series_id, series_name))
-        tasks.append(task)
-    await asyncio.gather(*tasks)
+    # 데이터 가져오기
+    base_path = Path("batch/calendar")
+    base_path.mkdir(parents=True, exist_ok=True)    
+    calendar_data = await rapidapi_calendar()
+    ipo_calendar = await get_ipo_calendar() 
+    
+    # 영어 데이터 저장
+    eng_path = base_path / "eco_calendar_eng.json"
+    with eng_path.open("w") as file:
+        json.dump(calendar_data, file, ensure_ascii=False)
+    
+    # 데이터를 한국어로 번역
+    try:
+        kor_data = await translate_calendar_data(calendar_data)
+        # 파일 저장 시 예외 처리
+        kor_path = f"{base_path}/eco_calendar_kor.json"
+        with open(kor_path, "w", encoding="utf-8") as file:
+            json.dump(kor_data, file, ensure_ascii=False)
+    except Exception as e:
+        logging.error("파일 저장 중 오류 발생: %s", e)
+    
+    # 이번 달 데이터 요약
+    summary = await summarize_this_month_calendar(calendar_data)
+    summary_path = base_path / "eco_calendar_aisummary.txt"
+    with summary_path.open("w") as file:
+        file.write(summary)
 
 if __name__ == "__main__":
     asyncio.run(main())
-    
-'''async def test():
-    figData = await get_economic_indicators2()
-    print(figData)
-asyncio.run(test())'''
-
