@@ -1,0 +1,146 @@
+<!-- [#3 메뉴 시작] 뉴스데이터 분석(해외) -->
+<div id="menuc" class="menu-cont">
+<h2 class="s-tit">뉴스 카테고리</h2>
+<h3 class="s-tit">주요 시장뉴스를 확인해보세요!</h3>
+<div class="category-selection">
+    <h3>Choose News Categories</h3>
+    <form id="categoryForm" class="category-form">
+        <!-- Example of a category -->
+        <div class="category" title="주식 시장 전반에 걸친 모든 소식이 여기에 속합니다.">
+            <input type="checkbox" id="all" name="categories" value="market-news::all" checked>
+            <label for="all">All Market News</label>
+        </div>  
+        <div class="category" title="시장에서 가장 중요하거나 영향력 있는 상위 뉴스를 다룹니다.">
+            <input type="checkbox" id="top-news" name="categories" value="market-news::top-news">
+            <label for="top-news">주요 Top News</label>
+        </div>
+        <div class="category" title="주목할 만한 주가 변동이나 시장 움직임에 관한 뉴스입니다.">
+            <input type="checkbox" id="on-the-move" name="categories" value="market-news::on-the-move">
+            <label for="on-the-move">주가변동</label>
+        </div>
+        <div class="category" title="시장의 전반적인 분위기나 트렌드를 반영하는 뉴스입니다.">
+            <input type="checkbox" id="market-pulse" name="categories" value="market-news::market-pulse">
+            <label for="market-pulse">시장 전반</label>
+        </div>
+        <div class="category" title="애널리스트들의 주목할 만한 의견이나 평가에 관한 뉴스입니다.">
+            <input type="checkbox" id="notable-calls" name="categories" value="market-news::notable-calls">
+            <label for="notable-calls">Notable Calls</label>
+        </div>
+        <div class="category" title="기업의 자사주 매입에 관한 뉴스입니다.">
+            <input type="checkbox" id="buybacks" name="categories" value="market-news::buybacks">
+            <label for="buybacks">자사주 매입</label>
+        </div>
+        <div class="category" title="원자재 시장에 관한 뉴스입니다. 금, 석유와 같은 상품의 가격 변동이나 시장 동향을 다룹니다.">
+            <input type="checkbox" id="commodities" name="categories" value="market-news::commodities">
+            <label for="commodities">Commodities</label>
+        </div>
+        <div class="category" title="새로운 주식 발행이나 채권 발행에 관한 뉴스입니다.">
+            <input type="checkbox" id="issuance" name="categories" value="market-news::issuance">
+            <label for="issuance">주식/채권 발행</label>
+        </div>
+        <div class="category" title="배당금을 지급하는 주식에 관한 뉴스입니다.">
+            <input type="checkbox" id="dividend-stocks" name="categories" value="market-news::dividend-stocks">
+            <label for="dividend-stocks">배당금 주식뉴스</label>
+        </div>
+        <div class="category" title="기업의 실적 발표에 관한 뉴스입니다.">
+            <input type="checkbox" id="earnings" name="categories" value="market-news::earnings">
+            <label for="earnings">기업 실적발표</label>
+        </div>
+        <div class="category" title="전 세계 시장에 관한 뉴스입니다.">
+            <input type="checkbox" id="global" name="categories" value="market-news::global">
+            <label for="global">세계시장 뉴스</label>
+        </div>
+        <div class="category" title="기업이 제공하는 장래 실적 예측에 관한 뉴스입니다.">
+            <input type="checkbox" id="guidance" name="categories" value="market-news::guidance">
+            <label for="guidance">장래실적예측</label>
+        </div>
+        <div class="category" title="새로운 기업의 주식시장 상장(IPO)에 관한 뉴스입니다.">
+            <input type="checkbox" id="ipos" name="categories" value="market-news::ipos">
+            <label for="ipos">IPO 뉴스</label>
+        </div>
+        <div class="category" title="정치적 이슈가 시장에 미치는 영향에 관한 뉴스입니다.">
+            <input type="checkbox" id="politics" name="categories" value="market-news::politics">
+            <label for="politics">정치적 뉴스</label>
+        </div>
+        <div class="category" title="인수합병(M&A)에 관한 뉴스입니다.">
+            <input type="checkbox" id="m-a" name="categories" value="market-news::m-a">
+            <label for="m-a">M&A</label>
+        </div>
+        <div class="category" title="미국 경제에 관한 뉴스입니다.">
+            <input type="checkbox" id="us-economy" name="categories" value="market-news::us-economy">
+            <label for="us-economy">US Economy</label>
+        </div>
+        <div class="category" title="소비자 시장과 관련된 뉴스입니다.">
+            <input type="checkbox" id="consumer" name="categories" value="market-news::consumer">
+            <label for="consumer">소비자 시장</label>
+        </div>
+        <div class="category" title="에너지 시장에 관한 뉴스입니다.">
+            <input type="checkbox" id="energy" name="categories" value="market-news::energy">
+            <label for="energy">에너지 시장</label>
+        </div>
+        <div class="category" title="금융 시장에 관한 뉴스입니다.">
+            <input type="checkbox" id="financials" name="categories" value="market-news::financials">
+            <label for="financials">금융 전반</label>
+        </div>
+        <div class="category" title="건강 관리 및 의료 산업에 관한 뉴스입니다.">
+            <input type="checkbox" id="healthcare" name="categories" value="market-news::healthcare">
+            <label for="healthcare">Healthcare</label>
+        </div>
+        <div class="category" title="MLP는 주로 에너지 인프라 분야에서 활동하는 투자 구조입니다.">
+            <input type="checkbox" id="mlps" name="categories" value="market-news::mlps">
+            <label for="mlps">에너지 인프라</label>
+        </div>
+        <div class="category" title="REIT는 부동산에 직접 투자하는 회사입니다.">
+            <input type="checkbox" id="reits" name="categories" value="market-news::reits">
+            <label for="reits">REITs</label>
+        </div>
+        <div class="category" title="기술 산업에 관한 뉴스입니다.">
+            <input type="checkbox" id="technology" name="categories" value="market-news::technology">
+            <label for="technology">Technology</label>
+        </div>
+        <div class="category" title="특수목적인수회사(SPAC)와 관련된 뉴스입니다.">
+            <input type="checkbox" id="spacs" name="categories" value="market-news::spacs">
+            <label for="spacs">SPACs</label>
+        </div>     
+    </form>
+    <div class="form-action">
+        <button type="button" class="load-news-btn" onclick="javascript:goNews()">News Call</button>
+    </div>                            
+</div>
+    <div class="buttons-container">
+    <!--<button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>-->
+    <button class="btn" onclick="javascript:gptRequest('opinions')">AI 의견보기</button>
+    <button class="btn" onclick="javascript:gptRequest('summarize')">내용 요약하기</button>
+</div>
+<div id="gpt-thoughts-container" style="display:none;">
+    <h3 class="gpt_t">GPT Thoughts</h3>
+    <div class="ai-box">
+        <ul class="list-dep">
+            <li><div id="gpt_opinion"></div></li>
+        </ul>
+    </div>
+</div>
+<div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
+    <img src="/static/assets/images/LoadingBar_B.gif">
+    <p class="loading-text">데이터 로딩중입니다.</p>
+</div>                    
+<div id="gpt-summary-container" style="display:none;">
+    <h3 class="gpt_t">GPT Summary</h3>     
+    <div class="ai-box">
+        <ul class="list-dep">
+            <li><div id="gpt_summary"></div></li>
+        </ul>
+    </div>
+</div>                       
+<div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
+    <img src="/static/assets/images/LoadingBar_B.gif">
+    <p style="color: red;">데이터 로딩중입니다.</p>
+</div>                      
+<div id="news">
+</div>
+<div id="loading_bar_news" class="loading_bar" style="margin-left: 0px;">
+    <img src="/static/assets/images/LoadingBar_C.gif">
+    <p style="color: red;">데이터 로딩중입니다.</p>
+</div>                       
+</div>
+<!-- [#3 메뉴 끝] 뉴스데이터 분석(해외) -->

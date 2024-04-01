@@ -1,0 +1,95 @@
+<!-- [#2 메뉴 시작] 글로벌 주요 경제지표 --> 
+<div id="menub" class="menu-cont">
+<h2 class="s-tit">글로벌 주요 경제지표</h2>
+<h3 class="s-tit">1> 핵심지표 분석</h3>
+<div class="form-container">
+    <p class="form-header">분석을 원하는 지표들을 선택해주세요.</p>
+    <form id="indicatorForm">
+        <div class="checkbox-row">
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="CPIAUCSL" id="CPIAUCSL">
+                <label for="CPIAUCSL">소비자물가지수 (CPI)</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="PCEPI" id="PCEPI">
+                <label for="PCEPI">개인소비지출 (PCE)</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="PPIFID" id="PPIFID">
+                <label for="PPIFID">생산자물가지수 (PPI)</label>
+            </div>
+        </div>
+        <div class="checkbox-row">
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="DFEDTARU" id="DFEDTARU">
+                <label for="DFEDTARU">연방기금금리</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="CSUSHPISA" id="CSUSHPISA">
+                <label for="CSUSHPISA">주택가격지수</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="A191RL1Q225SBEA" id="A191RL1Q225SBEA">
+                <label for="A191RL1Q225SBEA">실질 국내총생산(GDP)</label>
+            </div>
+        </div>
+        <div class="form-actions">
+            <div class="ai-opinion-checkbox">
+                <input type="checkbox" id="aiOpinionCheck" name="aiOpinionCheck">
+                <label for="aiOpinionCheck" class="ai-opinion-label">AI의견 함께보기</label>
+            </div>
+            <div class="center-button">
+                <button type="button" id="indicatorButton" class="indicatorButton" onclick="fetchAndDisplayIndicators();">Show Chart</button>
+            </div>                        
+            <button type="button" id="clearButton" onclick="clearData();">데이터 클리어</button>
+        </div> 
+        <div class="ai-opinion-warning">
+            *AI의견 함께보기 체크시 응답 속도가 늦어질수 있습니다.
+        </div>                                                      
+    </form>
+</div>
+
+<div id="loading_bar_economics" class="loading_bar" style="display: none;">
+    <img src="/static/assets/images/LoadingBar_A.gif">
+    <p class="loading-text-economics">핵심지표 분석중입니다.<br/>(AI 분석은 시간이 오래 걸릴 수 있습니다)</p>
+</div>                   
+<div id="chartContainer" style="display: none;">
+    <canvas id="myEconomicChart" width="1200" height="600"></canvas>
+</div>
+<!--<div class="economic-chart-area" id="economicChartArea" style="display:none;">
+    <div>
+        <img id="economicIndicators" alt="Economic Indicators Chart">
+    </div>
+</div>-->                  
+<div class="box-instruction" id="chart-anal-area" style="display: none;">
+    <p class="chart-analysis-title">차트 데이터 분석</p> 
+    <ul class="list-dep">
+        <div id="chartAnalysis"></div>
+    </ul>
+</div>
+<h3 class="nth-menu">2> 미국 채권 데이터 분석</h3>
+<div class="bond-chart-area">
+    <div id="loading_bar_bonds" class="loading_bar" style="margin-left: 0px;">
+        <img src="/static/assets/images/LoadingBar_C.gif">
+        <p>데이터 로딩중입니다.</p>
+    </div>   
+    <div id="bonds_chart_div"></div>           
+    <div id="interest_chart_div"></div>  
+</div>
+<div class="bond-area" id="bond-area" style="display:none;">
+    <div class="center-button">
+        <button type="button" id="bondNewsButton" class="indicatorButton" onclick="fetchAndDisplayBondsNews('market-news::financials|market-news::issuance|market-news::us-economy');">채권관련 최근뉴스 보기</button>
+    </div>
+    <div id="loading_bar_bondsNews" class="loading_bar" style="margin-left: 0px;">
+        <img src="/static/assets/images/LoadingBar_A.gif">
+        <p class="loading-text">데이터 로딩중입니다.</p>
+    </div>                                                   
+    <div class="bondNews-instruction">
+        <ul class="news-dep">
+            <div id="bonds_news_div"></div>  
+        </ul>
+    </div>   
+</div>                                     
+
+</div>
+<!-- [#2 메뉴 끝] 글로벌 주요 경제지표 -->

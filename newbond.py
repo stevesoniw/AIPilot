@@ -686,7 +686,7 @@ def calculate_beat_miss_ratio(actual, estimate):
 ############ [1ST_GNB][1ST_MENU][GET NEWS INFO (해외뉴스정보) 및 (소셜정보)] #################
 # Finnhub 해외 종목뉴스 
 @app.get("/foreignStock/financials/news/{ticker}")
-async def get_financial_earningTable(ticker: str):
+async def get_financial_stockNews(ticker: str):
     try:
         #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
         Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 

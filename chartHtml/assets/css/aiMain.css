@@ -1,0 +1,80 @@
+/* 헤더 영역 추가 */
+#chartPilot .right-area{overflow-y:auto;width:calc(100% - 280px);height:calc(100% - 81px);padding:0 50px 40px;}
+#chartPilot.wrap {width: 100%; height: 100%; position: relative; color: #111;}
+/*#chartPilot .header{position:relative;display:flex;align-items:center;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #e1e1e1;}*/
+#chartPilot .myHeader{position: sticky; top: 0; width:100%;height:80px;padding:0 20px 0 315px;border-bottom:1px solid #21e1e1;background:#fff;z-index: 1000;}
+#chartPilot .myHeader h1{position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:25px;}
+#chartPilot .myHeader h1 span{color:#ffc045;font-weight:500;}
+#chartPilot .myHeader .menux{display:flex;align-items:center;height:100%;}
+#chartPilot .myHeader .menux ul li{display:inline-block;padding:0 15px;}
+#chartPilot .myHeader .menux ul li a{display:block;}
+#chartPilot .myHeader .menux ul li a.on{color:#4066ef;}
+
+#chartPilot mainx, .mainx {display: flex; height: 100%;}
+
+/* left 메뉴 */
+/* PROMPT */
+.left-area{overflow-y:scroll;position:fixed;width:300px;height:100%;background-image:linear-gradient(-20deg, #090832 0%, #061f6a 100%);}
+.left-area .menu-wrap{padding-top:50px;}
+.left-area::before{content:'';position:absolute;top:0;left:0;width:300px;height:286px;background:url('/static/assets/images/left_bg.png') no-repeat center;opacity:.5;}
+.left-area::-webkit-scrollbar{width:0px;}
+.left-area .title-wrap{overflow:hidden;position:relative;padding:20px 50px;font-size:22px;color:#fff;}
+.left-area span{color:#ffc045;font-weight:500;}
+
+.left-area .menu-wrap{position:relative;padding:0px 20px 0;}
+.left-area .menu-wrap .menu-list li.page-menu{margin-top:20px;}
+.left-area .menu-wrap .menu-list li.page-menu:first-child{margin-top:0;}
+.left-area .menu-wrap .menu-list li.page-menu a{color:#fff;}
+.left-area .menu-wrap .menu-list li.page-menu.on a{color:#fad58c;}
+.left-area .menu-wrap .menu-list li.page-intro{margin-top:0px; margin-left:100px; font-size:18px; color:#ffffff;}
+.left-area .menu-wrap .menu-list li.page-intro a{color:#ffffff;}
+.left-area .menu-wrap .menu-list li.page-intro.on a{color:#e4504a;}
+.co-working-info {font-size: 13px; color: #ffffff; margin-bottom: 30px; text-align: center;}
+.highlight {color: orange;font-weight: bold;}
+
+/* 우측 영역 */
+#chartPilot .right-area{position: relative;overflow-y:auto;width:calc(100% - 280px);height:100%;padding:0 50px; margin-left: 300px;}
+#chartPilot .right-area::-webkit-scrollbar{width:0px;}
+#chartPilot .right-area div[id^=menu]{margin:40px 0;}
+#chartPilot .menu-cont{display:none;}
+#chartPilot .menu-cont.on{display:block;}
+#chartPilot h2.s-tit{position:relative;display:inline-block;margin-bottom:24px;font-size:24px;line-height:24px;}
+#chartPilot h2.s-tit::before{content:'';position:absolute;bottom:0px;left:0;width:100%;height:7px;background:#fad58c;z-index:-1;}
+#chartPilot h3.s-tit{margin-bottom:30px;color:#333;font-weight:400;}
+#chartPilot h3.s-tit p{margin-bottom:30px;color:#333;font-weight:400; font-size:13px;}
+#chartPilot .chart-area{width:100%;height:550px;border:1px solid #ccc;}
+#chartPilot .box-instruction{margin-top:50px;padding:15px;border:1px solid #ccc;}
+#chartPilot .list-dep li{position:relative;margin-top:7px;padding-left:12px;}
+#chartPilot .list-dep li:first-child{margin-top:0;}
+#chartPilot .list-dep li::before{content:'';position:absolute;left:0;top:9px;width:4px;height:4px;background:#313daa;border-radius:50%;}
+
+/* Main INfo 화면 구성*/
+.main-image-container {width:100%; max-height:270px; overflow:hidden; display:flex; justify-content:center; clip-path: url(#doubleSmoothWaveClipPath);}
+.main-image-container img {width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease-out;}
+.scrollable-content img {width: 100%; min-height: 100%; display: block; transition: transform 0.3s ease-out;}
+.main-image-container:hover .scrollable-content img { transform: translateY(-20%);}
+.main_summary_container { display: flex-start; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+.title_container {width: 100%; text-align: left; padding-bottom:8px;}
+.main_summary_title { font-size: 36px; font-family: 'Cursive', serif; font-weight: 900; font-style: italic; color: #000000; text-shadow: 6px 6px 8px rgba(0, 0, 0, 0.7); text-align: left; margin: 20px 0; padding: 10px; display: inline; }
+.morning_brief { font-size: 20px; font-family: Arial; color: #676767; text-shadow: none; display: inline; }
+.market_data_container { display: flex; flex-wrap: wrap; justify-content: space-between;}
+.market_table_container { width: 40%; }
+.main_summary_images { display: flex; flex-wrap: wrap; justify-content: space-between; width: 58%; }
+.market_table { width: 100%; border-collapse: collapse; text-align: center; }
+.market_table th, .market_table td { border: 1px solid #ddd; padding: 8px; text-align: center; height: 44px; }
+.market_chart { width: 48%; margin-bottom: 10px; align-items: center; text-align: center; display: flex; flex-direction: column; }
+.market_chart img { width: 100%; height: auto; border-radius: 5px; }
+.chart_labels_container {display: flex; justify-content: center; flex-wrap: nowrap;}
+.chart_label { text-align: center; margin-top: 5px; color: rgb(160, 15, 15); font-size: 0.9em; } 
+.chart_label2 { text-align: center; margin-top: 7px; color: black; font-size: 0.8em; } 
+.gpt_summary { background-color: #fffee8; padding: 15px; margin-top: 20px; margin-bottom: 10px; border-top: solid 2px #ffaa00; } 
+.gpt_summary_title { background-color: #ffaa00; padding: 8px; margin-bottom: 10px; color:rgb(199, 0, 0); font-size:17px;} 
+.news_container, .additional_news_container { padding-top: 5px; }
+.news_item { background-color: #eeeeee; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.additional_news_item { background-color: #f7fff5; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.news_section { display: flex; align-items: center; margin-bottom: 20px; }
+.evidence_button { background-color: #ffffff; color: #000000; border: 2px solid #363636; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 16x !important; }
+.news_text { color: #000000; font-size: 16px; }
+.additional_news_section { display: flex; align-items: center; margin-bottom: 20px; }
+.additional_news_button { background-color: #363636; color: #ffffff; border: 1px solid #000000; padding: 5px 10px; cursor: pointer; margin-right: 10px; border-radius: 5px; font-size: 16px !important; }
+.finnhub_text { color: #000000; font-size: 16px; }

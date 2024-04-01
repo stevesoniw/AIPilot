@@ -1,0 +1,275 @@
+/* AI가 말해주는 주식정보(해외)  #1. Get Earning Info  #3. Get Stock Info */
+.input-container {display: flex; flex-direction: column; align-items: center; margin-top: 10px;}
+.input-ticker {padding: 5px 10px; height: 30px; font-size: 14px; border: 2px solid #ddd; border-radius: 4px; outline: none; margin-bottom: 10px;}
+.foreign-buttons-container {margin-top: 10px; display: flex; justify-content: center;  gap: 20px;}
+.basicInfoBtn {padding: 5px 20px; font-size: 14px; background-color: #6ea6e2; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.basicInfoBtn:hover {background-color: #4452d8;}
+.earningBtn {padding: 5px 20px; font-size: 14px; background-color: #4969d3; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.earningBtn:hover {background-color: #1626bb;}
+.foreignNewsBtn {padding: 5px 20px; font-size: 14px; background-color: #2f2dad; color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.foreignNewsBtn:hover {background-color: #08158b;}
+.aiChatBtn {padding: 5px 20px; font-size: 14px; background-image: linear-gradient(to right, #f5c263, #f58b00); color: white; border: none; border-radius: 4px; cursor: pointer; outline: none;}
+.aiChatBtn:hover {background-image: linear-gradient(to right, #f58b00, #eca445); }
+.dotted-line {border-top: 1px dotted rgb(20, 30, 173); margin: 20px 0;}
+.gpt-chart-area {width:100%; height:auto; border:1px solid #ccc;}
+.gpt-chart-area img {width: 60%; height: auto; display: block; margin: 10px auto;}
+.gpt-message-area {max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
+.result-box {margin-top: 20px; padding: 15px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px; font-size: 15px;}
+.result-box:nth-child(odd) {background-color: #f0f0f0}
+.info-header {margin-bottom: 10px; font-weight: bold;}
+.highlight {color: #ff6600;}
+#tickerInput {width: calc(100% - 90px); padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;}
+.foreign-search-box{margin: 20px auto; text-align: center; width: 80%; max-width: 800px;}
+.earning-title-container {color: #333; text-align: center; padding: 10px; margin-bottom: 10px; padding-top: 35px;}
+.earning-table {width: 90%; margin: 20px auto; border-collapse: collapse; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding-top:1px; border-radius: 8px; overflow: hidden;}
+.earning-table th, .earning-table td {border: 1px solid #ddd; padding: 12px 15px; text-align: center; font-size: 16px;}
+.earning-table th {background-color: #5da1ce; color: white; font-weight: normal;}
+.earning-header-content {background-color: #74adbb;}
+.earning-table tr:nth-child(even) {background-color: #f2f2f2;}
+.earning-table td:first-child {font-weight: bold; color: #333;}
+.stockBasic-input-container { display: flex; flex-wrap: wrap; width: 1200px; margin: 0 auto; }
+.infoSection { flex: 0 0 600px; padding: 20px; box-sizing: border-box; }
+.chartSection { flex: 0 0 600px; display: flex; flex-direction: column; padding: 45px 20px 20px; box-sizing: border-box; }
+.financialSection { width: 100%; padding: 20px; padding-bottom: 100px; box-sizing: border-box; margin: 0 auto; display: flex; justify-content: center; flex-direction: column; }
+#annualFinancialsChart, #quarterlyGrowthChart { width: 100%; flex: 1; }
+#annualFinancialsChart, #quarterlyGrowthChart { flex: 1; }
+.stockBasicInfoTable, .stockAnnualFinancialsTable { width: 100%; border-collapse: collapse; }
+.stockBasicInfoTable, .stockAnnualFinancialsTable, th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+.stockBasicInfoTable caption, .stockAnnualFinancialsTable caption { font-size: 1.5em; margin: 16px 0; color: #333; }
+th { background-color: #576388; color: white; }
+tr:nth-child(even) { background-color: #f2f2f2; }
+.stockBasicInfoTable tr:hover, .stockAnnualFinancialsTable tr:hover { background-color: #ddd; }
+.stockBasicInfoTable th:first-child, .stockBasicInfoTable td:first-child { background-color: #71959b; color: white; } 
+.loading_bar_stockbasic { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
+.loading_bar_stockbasic > img { max-width: 100px; max-height: 100px; }
+.loading-text-stockbasic { background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
+.stockBasic-gpt-chart-area, .stockBasic-earningsChart, .stockBasic-recommendationsChart { margin-top: 20px; width: 100%; height: auto; }
+.chartContainer { width: 600px; height: 600px; float: right; }
+.chartContainer .chart { width: 100%; height: 50%; }
+.stockBasicInfo-toggle-visibility-btn { background-color: #646464; color: yellow; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 20px auto; text-align: center; display: block; width: fit-content; }
+.stockBasicInfo-toggle-visibility-btn:hover { background-color: #d4d4d4; color:#2e2e2e;}
+.isVisible-true { color: yellow; }
+.isVisible-false { color: white; }
+.stockEarningInfo-toggle-visibility-btn { background-color: #646464; color: yellow; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; display: block; width: fit-content; margin: 20px auto; text-align: center; transition: background-color 0.3s, color 0.3s; }
+.stockEarningInfo-toggle-visibility-btn:hover { background-color: #dfdfdf; color:#272727;}
+.stockEarningInfo-data-on { background-color: #646464; color: darkyellow; }
+.stockEarningInfo-data-off { background-color: #646464; color: white; }
+.fade-in { animation: fadeInAnimation ease 0.5s; animation-iteration-count: 1; animation-fill-mode: forwards; }
+.fade-out { animation: fadeOutAnimation ease 0.5s; animation-iteration-count: 1; animation-fill-mode: forwards; }
+@keyframes fadeInAnimation { 0% {opacity: 0;} 100% {opacity: 1;} }
+@keyframes fadeOutAnimation { 0% {opacity: 1;} 100% {opacity: 0;} }
+
+/* AI가 말해주는 주식정보(해외)  #2. News 데이터 보여주기 */
+.loading_bar_foreignnews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
+.loading_bar_foreignnews > img { max-width: 100px; max-height: 100px; }
+.loading-text-foreignnews { background-color: rgb(236, 252, 221); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
+.foreignTickerNews-container {display: flex; background-color: #f8ecec; border-radius: 8px; overflow: hidden; margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
+.foreignTickerNews-image {padding: 10px; padding-right: 0; padding-top:65px; padding-left:15px; align-self: flex-start;}
+.foreignTickerNews-image img {width: 200px; height: auto; display: block; border-radius: 4px;}
+.foreignTickerNews-content {padding: 10px 20px; display: flex; flex-direction: column; justify-content: space-between; align-items:baseline;}
+.foreignTickerNews-header {display: flex; flex-direction: column; gap: 10px;}
+.foreignTickerNews-datetime {background-color: #4bab08; color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; position: absolute; top: 25px; left: 15px;}
+.foreignTickerNews-headline {font-size: 18px; color: #333; margin-top: 20px;}
+.foreignTickerNews-source {font-size: 14px; color: #666;}
+.foreignTickerNews-summary {font-size: 14px; color: #555; line-height: 1.4; margin-bottom: 10px;}
+.foreignTickerNews-link {background-color: #007bff; color: white !important; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px;}
+.foreignTickerNews-analysis {background: linear-gradient(135deg, #6e02af, #6e61b9); color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px;}
+.foreignTickerNews-buttons-container {display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px;}
+#toggleNewsButton { padding: 10px 20px; font-size: 16px; color: #fffb03; background-color: #646464; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; outline: none; margin: 10px auto; display: block; width: fit-content; }
+#toggleNewsButton:hover { background-color: #d4d4d4; color:#2c2b2b }
+.hiddenNews { max-height: 0; opacity: 0; transition: opacity 0.3s ease, max-height 0.3s ease; }
+.analysisResultContainer {background-color: #fffdee; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
+.analysisTitle {font-size: 14px; font-weight: bold; margin-bottom: 5px; color:rgb(211, 24, 24);}
+.analysisContent {font-size: 14px;}
+.webUrl {color: rgb(79, 16, 150);}
+.foreignTickerNews-container, .analysisResultContainer {overflow: hidden; transition: max-height 0.5s ease-out;}
+#stockBasic {transition: max-height 0.5s ease-out, opacity 0.5s ease-out;overflow: hidden;}
+.hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: all 0.5s ease;}
+.shownNews {max-height: 2000px; opacity: 1; max-height: none;  padding: 20px; transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;}
+.release-item h3 {margin: 0; color: #007bff; cursor: pointer;}
+.release-item p {margin: 5px 0;}
+#fomc-press-releases .fomc-release-item {margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s ease-in-out; max-height: none;}
+.fomc-release-item h3 {margin-bottom: 10px; color: #007bff; cursor: pointer;}
+.fomc-release-item p {margin: 5px 0; color: #666; font-size:12px;}
+.fomc-release-summary-btn {background-color: #055397; color: white; padding: 5px 10px; font-size: 13px; border-radius: 5px; cursor: pointer; margin-left: 10px; margin-top: 10px;}
+.fomc-toggle-visibility-btn {background-color: #646464; color: yellow; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 10px auto; text-align: center; display: block; width: fit-content;}
+.fomc-toggle-visibility-btn:hover {background-color: #e7e7e7; color:#333333;}
+.fomc-release-detail {display: none; margin-top: 10px; max-height:none; overflow: visible;}
+.fomc-release-detail-content {padding: 15px; background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; line-height: 1.6;}
+.fomc-release-summary-btn:hover {background-color: #0056b3;}
+.fomc-detail-hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: opacity 0.5s ease, max-height 0.5s ease, padding 0.5s ease;}
+.fomc-detail-shownNews {max-height: 1000px; opacity: 1; padding: 20px; transition: opacity 0.5s ease, max-height 0.5s ease, padding 0.5s ease;}
+.fomc-detail-content {background-color: #ffffe0; padding: 20px; margin-top: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.5s ease;}
+.highlight_news { color: red; } 
+
+/* AI가 말해주는 주식정보(해외)  #4. Ask AI Anything **/
+#chatApp {box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; width: 1000px; margin: 0 auto; margin-bottom: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; position: relative; justify-content: space-between; height: 600px;}
+#chatTitle {background: linear-gradient(120deg, #007bff, #6610f2); color: white; font-weight: bold; font-size: 19px; display: flex; align-items: center; justify-content: start; padding: 15px; gap: 5px;} 
+#chatTitle > span, .current-status-container, .setting-buttons-container {margin-right: 8px;} 
+.current-status-container {display: flex; align-items: center; white-space: nowrap;}
+#currentModeButton {background-color: #8a2be2; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: normal;} 
+#settingsButton, #closeButton, #resetButton {cursor: pointer; transition: transform 0.3s ease; max-height: 30px; max-width: 30px;} 
+#settingsButton {margin-left: 1px;} 
+#settingsButton:hover, #closeButton:hover, #resetButton:hover {transform: scale(1.1);} 
+.setting-buttons-container {display: flex; align-items: center; margin-left: auto; gap: 14px;}
+#chatMessages {flex-grow: 1; overflow-y: auto; background-color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px;}
+#chatMessages .message {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #f5eed6; border: 1px solid #e0e0e0; word-wrap: break-word;}
+#chatMessages .message.system {padding: 10px; border-radius: 20px; max-width: 80%; align-self: flex-start; background-color: #eaf8dc; border: 1px solid #e0e0e0; word-wrap: break-word;}
+#chatMessages .message.user {align-self: flex-end; background-color: #007bff; color: white; border: none;}
+#chatInput {box-sizing: border-box; width: 100%; padding: 15px 20px; border: none; border-top: 1px solid #ccc; font-size: 14px; outline: none; background: #f9f9f9; color: #555;}
+#chatInput:focus {background: #e8e8e8;}
+#currentMode {background-color: #8a2be2; color: white; padding: 5px 10px; border-radius: 5px; font-weight: normal; font-size: 14px;}
+#chatMessages .loading {background-color: #FFF3CD; color: #856404; padding: 10px; border-radius: 20px; max-width: 80%; word-wrap: break-word;}
+#settingsModal {position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 70%; max-width: 850px; min-height: 500px; max-height: 90%; background-color: transparent; display: flex; justify-content: center; align-items: center;}
+.modal-content {position: relative; background: #ffffff; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); overflow: hidden; padding-bottom: 20px;}
+.modal-header {padding: 15px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; height: 50px;}
+.modal-header img {width: 38px; height: 38px; cursor: pointer;}
+.modal-body {padding: 20px; overflow-y: auto;}
+.modal-footer {position: absolute; right: 20px; bottom: 20px;}
+.custom-radio {display: block; margin-bottom: 20px; font-size: 16px; font-weight: bold; color: #333; border-bottom: 1px solid #eee; padding-bottom: 15px;}
+.custom-radio:last-child {border-bottom: none;}
+.custom-radio input[type="radio"] {margin-right: 10px; -webkit-appearance: none; appearance: none; outline: 2px solid #007bff; width: 18px; height: 18px; border-radius: 50%; background-color: #fff; cursor: pointer; vertical-align: middle;}
+.custom-radio input[type="radio"]:checked {background-color: #007bff;}
+.hint, .url-input {display: block; margin-top: 5px;}
+.hint {font-size: 14px; color: #555; font-weight: bold;}
+.url-input {width: 100%; max-width: 420px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; background-color: #c6f7bf; color: #2b2929; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+#saveButton {padding: 6px 24px; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;  font-size: 14px; transition: background-color 0.3s ease;}
+#saveButton:hover {background: linear-gradient(135deg, #5d6dcb, #896bc3);}
+.loading_bar_chatting { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
+.loading_bar_chatting > img { max-width: 200px; max-height: 200px; }
+.loading-text-chatting { background-color: rgb(209, 247, 228); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
+
+/* 글로벌 주요 경제지표 1.[핵심지표] 영역 */
+.form-container {background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px auto; width: 80%; max-width: 960px;}
+.form-header {margin-bottom: 20px; font-weight: bold; color: #0056b3; text-align: center;}
+.form-actions {display: flex; justify-content: space-between; align-items: center; margin-top: 20px;}
+.checkbox-row {display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;}
+.checkbox-group {flex: 0 1 30%; display: flex; align-items: center; margin: 5px; min-width: 250px;}
+.checkbox-group label {white-space: nowrap;}
+.checkbox-group input[type="checkbox"] {margin-right: 10px;}
+.indicatorButton {display: block; margin: 20px auto; background-color: #74a6e7; border: none; color: white; padding: 10px 20px; font-size: 15px; cursor: pointer; border-radius: 5px;}
+.indicatorButton:hover {background-color: #5476e9;}
+#loading_bar_economics {text-align: center; margin-top: 20px;}
+.loading-text-economics {background-color: rgb(237, 246, 253); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
+#myEconomicChart {display: block; margin: 20px auto; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); border-radius: 5px; width: 1200px; height: 700px;}
+#clearButton {background-color: white; border: 1px solid #ccc; color: #333; padding: 5px 10px; font-size: 12px; margin-top: 10px; cursor: pointer; border-radius: 5px;}
+#clearButton:hover {background-color: #f9f9f9;}
+#chartAnalysis{margin-top: 20px; margin-bottom: 20px; padding: 10px; background-color: #f1f1f1; border-radius: 5px;}
+.chart-analysis-title {color: #003366; font-weight: bold; margin-bottom: 10px; font-size: 16px;}
+.ai-opinion-checkbox {display: flex; align-items: center;}
+.ai-opinion-label {margin-left: 0px; color: #0a06e7 !important; font-size: 13px; width:100px;}
+.ai-opinion-warning {color: #000; font-size: 13px; margin-top: 10px; text-align: left; width: 100%;}
+#h3.nth-menu{margin-bottom:30px; margin-top:30px; color:#333;font-weight:400;} 
+input[type="date"] {appearance: auto;-webkit-appearance: auto;}
+.date-range-container .date {margin-bottom: 20px;}
+.date-range-container {margin-bottom: 20px;display: flex;align-items: center;justify-content: center;}
+.date-range-container label {margin-right: 10px;color: #3366ff;}
+.date-range-container input[type="date"] {padding: 6px 8px;border-radius: 3px;border: 1px solid #ccc;font-size: 14px;outline: none;width: 160px;color: #3366ff; margin-right: 45px;  color: rgba(32, 31, 31, 0.637);}
+.date-range-container input[type="date"]:focus {border-color: #555;box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);}
+
+/* 글로벌 주요 경제지표 2.[채권데이터 분석] 및 [뉴스] 영역 */
+.bond-chart-area {width:100%; height:auto; border:1px solid #ccc;}
+.bond-area {background-color: #f7f7f7;padding:20px;margin:20px 0;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;align-items:center;}
+.bondNews-container {display:flex;flex-direction:column;align-items:center;text-align:center;background-color: #fff;margin-bottom: 20px;padding: 15px;border-radius: 8px;box-shadow: 0 2px 4px rgba(0,0,0,0.12);}
+.bondNews-image { max-width: 230px; max-height: 170px; width: auto; height: auto; border-radius: 8px; margin-bottom: 15px; }
+.bondNews-title { font-weight: bold; color: #333; margin-bottom: 10px; }
+.bondNews-content { color: #666; font-size: 14px; line-height: 1.6; }
+.news-link { color: #f06; text-decoration: underline; }
+.bondNews-instruction { width: 100%; }
+.news-dep { padding: 0; list-style: none; }
+.translate-button { background-color: #666; color: #fff; border: none; padding: 12px 12px; font-size: 13px; cursor: pointer; border-radius: 4px; margin-top: 10px; margin-bottom: 15px; }
+.translate-button:hover { background-color: #555; }
+.no-news-message { color: #666; font-size: 16px; text-align: center; padding: 20px; }
+#loading_bar_bondsNews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
+.loading_bar_translate { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
+.loading_bar_translate > img {max-width: 100px; max-height: 100px;}
+
+/* [1ST GNB][4,5TH LNB] 캘린더 영역 */
+#chartPilot .event {border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9;}
+#chartPilot .event .title { color: #333; font-weight: bold; }
+#chartPilot .event .details {font-size: 14px;}
+#chartPilot .event[style*="F50B01"] { border-left-color: #F50B01; }
+#chartPilot .event[style*="f80909"] { border-left-color: #f80909; }
+#chartPilot .event[style*="fd0303"] { border-left-color: #fd0303; }
+#chartPilot .event[style*="d4085e"] { border-left-color: #d4085e; }
+.fc-header-toolbar {padding-top: 1em; padding-left: 1em; padding-right: 1em;}
+.fc-event-title, .fc-event-extended-description {white-space: normal;}
+.fc-day-sun a {color: red; text-decoration: none;}
+.fc-day-sat a {color: blue; text-decoration: none;}
+.fc-col-header-cell-cushion {color: #000;}
+.fc-col-header-cell-cushion:hover {text-decoration: none; color:#000;}
+.fc-daygrid-day-number{color: #000; font-size:1em;}
+.fc-daygrid-more-link.fc-more-link{color: #000;}
+.fc-daygrid-event {font-size:10px; white-space:normal !important;}
+.fc-daygrid-event > .fc-event-time{color:#000; }
+.fc-day-grid-event > .fc-content {white-space: normal;}
+.fc-daygrid-dot-event > .fc-event-title{color:#000 !important;}
+.fc-button-active{border-color: #ffc107 !important; background-color: #ffc107 !important; color: #000 !important; font-weight: bold !important;}
+.fc-today-button{border-color: #ffc107 !important; background-color: #ffc107 !important; color: #000 !important; font-weight: bold !important;} 
+.fc-event-desc,.fc-event-title {white-space: break-spaces;}
+.btn-warning{font-weight: bold;}
+.modal-footer{display:inline-block;}
+
+/* [1ST GNB][7TH LNB] 유사국면 시스템 분석 */
+.similarity-container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #FFFFFF; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px; }
+.similarity-section { border-bottom: 1px solid #EEE; padding-bottom: 20px; margin-bottom: 20px; background-color: #FAFAFA; }
+.similarity-form-group { display: flex; align-items: center; margin-bottom: 10px; }
+.similarity-form-group > div { display: flex; align-items: center; }
+.similarity-form-group:last-child { margin-bottom: 0; }
+.similarity-form-label { flex-basis: 20%; min-width: 150px; margin-right: 10px; color: #FFA726; }
+.similarity-form-input, .similarity-select, .similarity-button { padding: 10px; border-radius: 5px; border: 1px solid #FFCCBC; box-sizing: border-box; }
+.similarity-form-input, .similarity-select { flex-grow: 1;} 
+.similarity-range-input { width: auto; margin-left: 10px; } 
+.similarity-title { background-color: #2c068b; color: #FFFFFF; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; text-align: center; font-size:20px; }
+.similarity-button { background-color: #FFA726; color: white; cursor: pointer; border: none; width: auto; margin-top: 10px; align-self: flex-start; }
+.similarity-button:hover { background-color: #FB8C00; }
+.similarity-nSteps-value { margin-left: 10px; font-size: 16px; color: #fda744; }
+.similarity-select, .similarity-form-input { height: 38px; margin-right:10px; } 
+
+
+/* 뉴스 영역 */
+/* 뉴스 체크박스 */
+.category-selection {max-width: 1200px;margin: 20px auto;background: #f1efef;padding: 20px;border-radius: 10px;box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.category-form {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 15px;}
+.category {display: flex; align-items: center; background: #ffffff; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);transition: transform 0.2s ease-in-out;}
+.category:hover { transform: translateY(-2px);}
+/*input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}*/
+label {font-size: 16px; cursor: pointer;}
+label:hover {color: #fa7508;}
+#all + label {color: red;}
+.form-action {grid-column: span 4; display: flex; justify-content: center; padding: 20px;  margin-top: 20px;  margin-left: auto; margin-right: auto;}
+.load-news-btn {background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 18px; transition: background-color 0.3s ease;}
+.load-news-btn:hover {background-color: #0056b3;}
+/* 뉴스 데이터 */
+.news-board {display: flex; flex-direction: column; margin: 20px;}
+.news-item {border: 1px solid #ddd; margin-bottom: 10px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.news-item img {max-width: 100px; margin-right: 10px; border: 1px solid #ccc;}
+.news-content {display: flex; align-items: flex-start;}
+.news-title {font-size: 18px; margin: 0 0 10px 0; color: orange;}
+.news-body {font-size: 15px;}
+.publish-date {font-size: 14px; color: white; background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px; display: inline-block;}
+
+/* 뉴스 버튼 스타일 */
+.buttons-container {display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;}
+.btn {background: linear-gradient(90deg, rgba(180, 180, 180, 1) 0%, rgba(150, 150, 150, 1) 100%);color: #000; border: none; padding: 8px 16px; margin: 0 10px; border-radius: 5px;
+    cursor: pointer; font-size: 14px; transition: background 0.3s ease;}
+.btn:hover {background: linear-gradient(90deg, rgba(150, 150, 150, 1) 0%, rgba(180, 180, 180, 1) 100%);}
+.newstrans-button {background-color: #FF4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 10px; cursor: pointer; display: inline-block;}
+/* 뉴스 AI 답변 */
+.ai-box {background-color: #ffffe0; border:1px solid #ccc; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 0;}
+.list-dep {list-style-type: none; padding: 0;}
+.list-dep li {margin-bottom: 10px;}
+.gpt_t {margin-bottom: 10px;}
+
+/* 로딩 바 */
+.loading_bar {position: absolute; top: 80%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 99; text-align: center;}
+.loading_bar > img {max-width: 100px; max-height: 100px;}
+.loading-text {background-color: white;}
+
+/*마켓 PDF 분석*/
+.upload-container { text-align: center; padding: 40px 40px 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+.file-label {display: inline-block; padding: 10px 30px; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;}
+.file-label:hover {background-color: #00BFFF;}
+.file-name {display: block; margin-top: 10px; color: #666;}
+.ocrButton {display: inline-block; margin: 20px 10px; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;}
+.ocrButton:hover {background-color: #7487f1;}

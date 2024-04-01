@@ -1,0 +1,370 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">
+    <head>
+        <title>AI Solution Division pilot</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="-1" />
+        <meta http-equiv="Cache-Control" content="no-cache" />
+        <meta content="M.Assistant Platform" name="description" />
+        <meta content="M.Assistant Platform" name="keywords" />
+        <!-- Favicons -->
+        <link rel="shortcut icon" href="/static/assets/images/favicon.ico" />
+        <link href="/apple-touch-icon.png" rel="apple-touch-icon" />
+        <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
+        <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/static/assets/js/aos.js"></script>
+        <link href="/static/assets/css/jquery-ui.min.css" rel="stylesheet" type="text/css">
+        <link href="/static/assets/css/newFont.css" rel="stylesheet" type="text/css">
+        <link href="/static/assets/css/common.css" rel="stylesheet" type="text/css">
+        <link href="/static/assets/css/aos.css" rel="stylesheet" type="text/css">
+        <link href="/static/assets/css/aiMain.css" rel="stylesheet" type="text/css" />
+        <link href="/static/assets/css/fsControl.css" rel="stylesheet" type="text/css" />
+        <link href="/static/assets/css/dmControl.css" rel="stylesheet" type="text/css" />
+        <link href="/static/assets/css/etcControl.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body class="main">
+        <div class="wrap" id="chartPilot">
+            <header class="myHeader">
+                <h1 class="title-wrap">
+                    <a href="#" onclick="window.location.href = window.location.origin;">
+                        <img src="/static/assets/images/logo.png" alt="AI솔루션본부 PILOT" />
+                    </a>
+                </h1>
+                <nav class="menux">
+                    <ul>
+                        <li data-menu="menu1">
+                            <a href="/static/aiReal.html">[해외]마켓데이터 분석</a>
+                        </li>
+                        <li data-menu="menu2">
+                            <a href="#">[국내]마켓데이터 분석</a>
+                        </li>
+                        <li data-menu="menu3">
+                            <a href="#">리서치 리포트 분석</a>
+                        </li>
+                    </ul>
+                </nav>
+            </header>
+
+            <main class="clear">
+                <section class="fixed-cont v01">
+                    <div class="overlay"></div>
+                    <div class="tit-wrap" data-aos="fade-down" data-aos-duration="500">
+                        <h2 class="main-tit">MiraeAsset <span>M</span>orning <span>B</span>riefing</h2>
+                        <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equtiy솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
+                    </div>
+                    <div class="scroll-ic" data-aos="fade-right" data-aos-delay="500"></div>
+                </section>
+
+                <section class="general-cont bg-lightgrey">
+                    <h4 class="cont-tit" data-aos="fade-up">Market Summary</h4>
+                        <table data-aos="fade-up">
+                            <caption>market summary morning brief</caption>
+                            <colgroup>
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                                <col />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="bg-white" scope="col"></th>
+                                    <th scope="col">다우지수</th>
+                                    <th scope="col">나스닥종합</th>
+                                    <th scope="col">S&amp;P500</th>
+                                    <th scope="col">KOSPI</th>
+                                    <th scope="col">영국 FTSE100</th>
+                                    <th scope="col">프랑스 CAC40</th>
+                                    <th scope="col">독일 DAX</th>
+                                    <th scope="col">니케이225</th>
+                                    <th scope="col">상해종합</th>
+                                    <th scope="col">항셍</th>
+                                    <th scope="col">미국 USD</th>
+                                    <th scope="col">필라델피아 반도체</th>
+                                    <th scope="col">WTI 지수</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Change</td>
+                                    <td style="color:red;">1.22%</td>
+                                    <td style="color:red;">0.51%</td>
+                                    <td style="color:red;">0.86%</td>
+                                    <td style="color:blue;">-0.07%</td>
+                                    <td style="color:red;">0.01%</td>
+                                    <td style="color:red;">0.25%</td>
+                                    <td style="color:red;">0.50%</td>
+                                    <td style="color:red;">0.08%</td>
+                                    <td style="color:red;">0.99%</td>
+                                    <td style="color:red;">0.07%</td>
+                                    <td style="color:red;">0.07%</td>
+                                    <td style="color:red;">0.07%</td>
+                                    <td style="color:red;">0.07%</td>
+                                </tr>
+                                <tr>
+                                    <td>Previous Close</td>
+                                    <td>39282.33</td>
+                                    <td>16315.70</td>
+                                    <td>5203.58</td>
+                                    <td>2757.09</td>
+                                    <td>7931.00</td>
+                                    <td>8184.75</td>
+                                    <td>18384.35</td>
+                                    <td>104.29</td>
+                                    <td>4851.88</td>
+                                    <td>81.62</td>
+                                    <td>4851.88</td>
+                                    <td>4851.88</td>
+                                    <td>4851.88</td>
+                                </tr>
+                                <tr>
+                                    <td>Last Close</td>
+                                    <td style="color:red;">39760.08</td>
+                                    <td style="color:red;">16399.52</td>
+                                    <td style="color:red;">5248.49</td>
+                                    <td style="color:blue;">2755.11</td>
+                                    <td style="color:red;">7931.98</td>
+                                    <td style="color:red;">8204.81</td>
+                                    <td style="color:red;">18477.09</td>
+                                    <td style="color:red;">104.37</td>
+                                    <td style="color:red;">4899.95</td>
+                                    <td style="color:red;">81.68</td>
+                                    <td style="color:red;">4899.95</td>
+                                    <td style="color:red;">4899.95</td>
+                                    <td style="color:red;">4899.95</td>
+                                </tr>
+                                <tr>
+                                    <td>Date</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                    <td>2024-03-27</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <ul class="main-graph-wrap" data-aos="fade-up">
+                            <li>
+                                <img src='/static/assets/images/test01.png' alt='Market Chart'>
+                                <div class="chart-label-wrap">
+                                    <p>다우지수</p>
+                                    <p>(종가: 39313.64)</p>
+                                </div>
+                            </li>
+                            <li>
+                                <img src='/static/assets/images/test01.png' alt='Market Chart'>
+                                <div class="chart-label-wrap">
+                                    <p>나스닥종합</p>
+                                    <p>(종가: 39313.64)</p>
+                                </div>
+                            </li>
+                            <li>
+                                <img src='/static/assets/images/test01.png' alt='Market Chart'>
+                                <div class="chart-label-wrap">
+                                    <p>S&amp;P500</p>
+                                    <p>(종가: 39313.64)</p>
+                                </div>
+                            </li>
+                            <li>
+                                <img src='/static/assets/images/test01.png' alt='Market Chart'>
+                                <div class="chart-label-wrap">
+                                    <p>KOSPI</p>
+                                    <p>(종가: 39313.64)</p>
+                                </div>
+                            </li>
+                        </ul>
+                </section>
+
+                <section class="general-cont fixed-cont v02">
+                    <div class="overlay v02"></div>
+                    <div class="analysis-wrap">
+                        <div class="analysis-area">
+                            <div class="analysis-tit-wrap">
+                                <h4 class="cont-tit" data-aos="fade-right">AI Market <span>Analysis</span></h4>
+                                <div class="analysis-bg" data-aos="fade-right"></div>
+                            </div>
+                            <div class="analysis-text" data-aos="fade-left">
+                                분석된 뉴스 데이터와 시장 요약을 바탕으로, 현재 시장 상황 및 향후 전망에 대해 분석해보겠습니다.
+                                <br/><br/>
+                                먼저 레딧의 IPO로 인한 주가 급등은 올해 IPO 시장에 대한 긍정적인 기대감을 나타냅니다. 이는 시장에 활력을 불어넣고, 특히 기술 관련 종목에 대한 관심을 증가시킬 수 있습니다. 하지만 반대로 중국 당국의 미국산 반도체와 소프트웨어 통제 조치로 인한 기술주 중심의 하락은 시장에 부정적인 영향을 미칠 수 있음을 시사합니다. 이런 상황은 미중 무역 긴장의 심화와 기술 국가 간 분쟁 가능성을 시사하며, 이는 향후 시장의 변동성을 증가시킬 수 있습니다.
+                                <br/><br/>
+                                트럼프 전 대통령의 '트루스소셜' 관련 소식은 특정 종목 또는 섹터에 대한 투자자들의 관심을 이끌 수 있으나, 전반적인 시장 성과에 미치는 영향은 제한적일 것으로 보입니다.
+                                <br/><br/>
+                                현재 시장 요약 데이터에 따르면, 다우지수, 나스닥종합, S&P500, 그리고 KOSPI 지수가 모두 하락했습니다. 이러한 하락은 중국의 제재 소식, 기술주 압박, 그리고 고점 부담감으로 인한 것으로 보입니다. 특히 반도체 및 기술주의 하락은 이러한 추세에 핵심적인 역할을 하고 있습니다.
+                                <br/><br/>
+                                <!-- 미래 예측을 위해, 중요한 요소는 다음과 같습니다:
+                                <br/><br/>
+                                1. <b>미중 간 긴장의 지속 여부</b>: 미중 간 긴장이 고조되면 더 많은 기술주가 영향을 받을 수 있으며, 이는 전반적인 시장의 하락세를 초래할 수 있습니다.
+                                <br/>
+                                2. <b>기술주의 회복 가능성</b>: 중국의 조치에도 불구하고 기술주가 회복할 수 있는 동력이 있는지 여부는 중요한 관심사입니다.
+                                <br/>
+                                3. <b>IPO 시장의 활성화</b>: 레딧과 같은 IPO의 성공은 다른 기업들의 IPO를 촉진할 수 있으며, 이는 시장에 긍정적인 영향을 미칠 수 있습니다.
+                                <br/><br/> -->
+                                <span>결론적으로, 단기적으로는 기술주 중심의 하락세와 미중 간 긴장으로 인해 시장 변동성이 증가할 것으로 보입니다. 하지만 IPO 시장의 활성화와 특정 종목에 대한 긍정적인 움직임은 시장에 활력을 불어넣을 수 있습니다. 중장기적 관점에서는 기술주들의 회복 여부와 글로벌 정치 경제적 상황이 시장 방향성을 결정할 핵심 요소가 될 것입니다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="general-cont bg-lightgrey">
+                    <div class="news-wrap">
+                        <h4 class="cont-tit" data-aos="fade-up">근거자료<br />Market Major News</h4>
+                        <ul class="new-list" data-aos="fade-up">
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                            <li>
+                                <p>레딧, 상장후 주가 27% 급등…IPO 시장에 활력</p>
+                                <p>미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목 미국 소셜미디어(SNS) 플랫폼 레딧의 주가가 기업공개(IPO) 이후 30% 가까이 급등했다. 올해 IPO 시장에 활력을 불어넣어줄 것인지 주목</p>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+
+                <section class="general-cont bg-green">
+                    <div class="finnhub-wrap">
+                        <h4 class="cont-tit" data-aos="fade-left">기타 해외뉴스<br />Finnhub News</h4>
+                        <div class="finnhub-list" data-aos="fade-right">
+                            부동산 중개수수료 6% 종료, 주택 구매자에게는 '비너스 플라이트랩 상황'될 수 있다. 경제학자가 말해<br />
+                            <br />
+                            국립부동산 협회가 발표한 제안된 협의안은 주택 구매자에게 추가 비용을 빠르게 부과할 수 있다고 한 교수가 말했다.
+                            <br /><br />
+                            <font color="red">부동산 시장의 중개 수수료 구조 변경은 주택 구매자와 판매자 양측에 심각한 영향을 미칠 수 있습니다. 이러한 변화는 주택 구매 비용을 증가시키고, 주택 시장의 접근성을 낮출 수 있습니다. 주택 구매 과정에서 발생하는 추가적인 비용은 특히 주택 구매 초보자나 예산이 제한된 구매자에게 부담이 될 수 있습니다.</font>
+                            <hr>
+                            부동산 중개수수료 6% 종료, 주택 구매자에게는 '비너스 플라이트랩 상황'될 수 있다. 경제학자가 말해<br />
+                            <br />
+                            국립부동산 협회가 발표한 제안된 협의안은 주택 구매자에게 추가 비용을 빠르게 부과할 수 있다고 한 교수가 말했다.
+                            <br /><br />
+                            <font color="red">부동산 시장의 중개 수수료 구조 변경은 주택 구매자와 판매자 양측에 심각한 영향을 미칠 수 있습니다. 이러한 변화는 주택 구매 비용을 증가시키고, 주택 시장의 접근성을 낮출 수 있습니다. 주택 구매 과정에서 발생하는 추가적인 비용은 특히 주택 구매 초보자나 예산이 제한된 구매자에게 부담이 될 수 있습니다.</font>
+                            <hr>
+                            부동산 중개수수료 6% 종료, 주택 구매자에게는 '비너스 플라이트랩 상황'될 수 있다. 경제학자가 말해<br />
+                            <br />
+                            국립부동산 협회가 발표한 제안된 협의안은 주택 구매자에게 추가 비용을 빠르게 부과할 수 있다고 한 교수가 말했다.
+                            <br /><br />
+                            <font color="red">부동산 시장의 중개 수수료 구조 변경은 주택 구매자와 판매자 양측에 심각한 영향을 미칠 수 있습니다. 이러한 변화는 주택 구매 비용을 증가시키고, 주택 시장의 접근성을 낮출 수 있습니다. 주택 구매 과정에서 발생하는 추가적인 비용은 특히 주택 구매 초보자나 예산이 제한된 구매자에게 부담이 될 수 있습니다.</font>
+                            <hr>
+                            부동산 중개수수료 6% 종료, 주택 구매자에게는 '비너스 플라이트랩 상황'될 수 있다. 경제학자가 말해<br />
+                            <br />
+                            국립부동산 협회가 발표한 제안된 협의안은 주택 구매자에게 추가 비용을 빠르게 부과할 수 있다고 한 교수가 말했다.
+                            <br /><br />
+                            <font color="red">부동산 시장의 중개 수수료 구조 변경은 주택 구매자와 판매자 양측에 심각한 영향을 미칠 수 있습니다. 이러한 변화는 주택 구매 비용을 증가시키고, 주택 시장의 접근성을 낮출 수 있습니다. 주택 구매 과정에서 발생하는 추가적인 비용은 특히 주택 구매 초보자나 예산이 제한된 구매자에게 부담이 될 수 있습니다.</font>
+                            <hr>
+                            부동산 중개수수료 6% 종료, 주택 구매자에게는 '비너스 플라이트랩 상황'될 수 있다. 경제학자가 말해<br />
+                            <br />
+                            국립부동산 협회가 발표한 제안된 협의안은 주택 구매자에게 추가 비용을 빠르게 부과할 수 있다고 한 교수가 말했다.
+                            <br /><br />
+                            <font color="red">부동산 시장의 중개 수수료 구조 변경은 주택 구매자와 판매자 양측에 심각한 영향을 미칠 수 있습니다. 이러한 변화는 주택 구매 비용을 증가시키고, 주택 시장의 접근성을 낮출 수 있습니다. 주택 구매 과정에서 발생하는 추가적인 비용은 특히 주택 구매 초보자나 예산이 제한된 구매자에게 부담이 될 수 있습니다.</font>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <script>
+            $(document).ready(function(){
+                // AOS.init();
+                AOS.init({
+                    duration: 1000,
+                    once: false, // 모든 요소에 대해 스크롤할 때마다 애니메이션 반복 실행
+                });
+            });
+    
+        </script>
+
+    </body>
+</html>

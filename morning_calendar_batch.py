@@ -133,6 +133,17 @@ async def summarize_this_month_calendar(data):
         logging.error("요약 작업 중 오류 발생: %s", e)
         return None
     return summary_result
+
+async def get_financial_stockNews(ticker: str):
+    try:
+        #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
+        Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
+        End_date_calen = get_curday()     
+        recent_news = finnhub_client.company_news(ticker, _from=Start_date_calen, to=End_date_calen)
+        return recent_news
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
     
 async def main():
     # 데이터 가져오기
