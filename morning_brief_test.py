@@ -59,15 +59,15 @@ def get_main_marketdata():
     yf.pdr_override()
     start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     tickers = {
-        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^KS11': 'KOSPI', '^FTSE': '영국 FTSE100',
-        '^FCHI': '프랑스 CAC40', '^GDAXI': '독일 DAX', '^N225': '니케이 225', '000001.SS': '상해종합', 
-        '^HSI': '항셍', 'DX-Y.NYB': '미국 USD', '^SOX': '필라델피아 반도체', 'CL=F': 'WTI 지수'
+        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^KS11': 'KOSPI',
+        '^FTSE': '영국 FTSE100', '^FCHI': '프랑스 CAC40', '^GDAXI': '독일 DAX', 'DX-Y.NYB': '미국 USD',
+        '^SOX': '필라델피아 반도체', 'CL=F': 'WTI 지수'
     }
     market_summary = []
     summary_talk = []
     images_name = []  
     
-    image_dir = 'mainHtml/main_chart'
+    image_dir = 'chartHtml/main_chart'
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
             
@@ -179,114 +179,97 @@ def format_text(input_text):
 async def market_data():
     gpt_summary, market_data, images_name, naver_news_data, gpt_additional_news = await generate_market_summary()
     
-    # Initialize the HTML content with the main structure
-    html_content = f"""
-    <main class="clear">
-        <section class="fixed-cont v01">
-            <div class="overlay"></div>
-            <div class="tit-wrap" data-aos="fade-down" data-aos-duration="500">
-                <h2 class="main-tit">MiraeAsset <span>M</span>orning <span>B</span>riefing</h2>
-                <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equtiy솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
-            </div>
-            <div class="scroll-ic" data-aos="fade-right" data-aos-delay="500"></div>
-        </section>
-        
-        <section class="general-cont bg-lightgrey">
-            <h4 class="cont-tit" data-aos="fade-up">Market Summary</h4>
-                <table data-aos="fade-up">
-                    <caption>market summary morning brief</caption>
-                    <thead>
-                        <tr>
-                            <th class="bg-white" scope="col"></th>"""
+    # HTML 내용을 작성합니다.
+    html_content = """
+    <div class="main_summary_container">
+        <div class="title_container">
+            <h1 class="main_summary_title">Market Summary<span class="morning_brief">   - Morning Brief</span></h1>        
+        </div>
+        <div class="market_data_container">
+            <div class="market_table_container">
+                <table class="market_table">
+                    <tr>
+                        <th>Market</th>
+                        <th>Change</th>
+                        <th>Previous Close</th>
+                        <th>Last Close</th>
+                        <th>Date</th>
+                    </tr>
+    """
+    for data in market_data:
+        change_color = "blue" if "-" in data['change'] else "red"
+        last_close_color = change_color
+        # 특정 항목에 대한 배경색 설정
+        bg_color = "#ebf5ff" if data['name'] in ["다우지수", "나스닥종합", "S&P500", "KOSPI"] else "none"
 
-    # Dynamically add market names to the table header
-    market_names = [data["name"] for data in market_data]  # Extract market names
-    for name in market_names:
-        html_content += f'<th scope="col">{name}</th>'
-    html_content += "</tr></thead><tbody>"
-
-    # Assuming all market_data entries have 'change', 'prev_close', 'last_close', 'date'
-    keys = ["change", "prev_close", "last_close", "date"]
-    for key in keys:
-        html_content += f"<tr><td>{key.capitalize()}</td>"
-        for data in market_data:
-            value = data[key]
-            color = "black"  # Default color
-            if key == "change":
-                if "-" in value:
-                    color = "blue"
-                elif value != "0.00%":
-                    color = "red"
-            if key == "last_close" and "change" in data:
-                color = "blue" if "-" in data["change"] else "red" if data["change"] != "0.00%" else "black"
-            html_content += f'<td style="color:{color};">{value}</td>'
-        html_content += "</tr>"
-    
-    html_content += """
-                    </tbody>
-                </table>"""
-
-    # Dynamically add images
-    html_content += '<ul class="main-graph-wrap" data-aos="fade-up">'
-    for name, image in zip(market_data, images_name):
         html_content += f"""
-                        <li>
-                            <img src="/static/main_chart/{image}" alt="Market Chart">
-                            <div class="chart-label-wrap">
-                                <p>{name["name"]}</p>
-                                <p>(종가: {name["last_close"]})</p>
-                            </div>
-                        </li>"""
+                    <tr>
+                        <td style='background-color:{bg_color};'>{data['name']}</td>
+                        <td style='color:{change_color};'>{data['change']}</td>
+                        <td>{data['prev_close']}</td>
+                        <td style='color:{last_close_color};'>{data['last_close']}</td>
+                        <td>{data['date']}</td>
+                    </tr>
+        """
     html_content += """
-                    </ul>
-            </section>"""
-
-    # Add AI Market Analysis
-    html_content += f"""
-            <section class="general-cont fixed-cont v02">
-                <div class="overlay v02"></div>
-                <div class="analysis-wrap">
-                    <div class="analysis-area">
-                        <div class="analysis-tit-wrap">
-                            <h4 class="cont-tit" data-aos="fade-right">AI Market <span>Analysis</span></h4>
-                        </div>
-                        <div class="analysis-text" data-aos="fade-left">
-                            {gpt_summary}
-                        </div>
+                </table>
+            </div>
+            <div class="main_summary_images">
+    """
+    # images_name 처리
+    for path in images_name:
+        market_name = path.split('_')[0]  # 파일 이름에서 시장 이름 추출
+        last_close = next((item for item in market_data if item['name'] == market_name), {}).get('last_close', 'N/A')
+        html_content += f"""
+                <div class="market_chart">
+                    <img src='/static/main_chart/{path}' alt='Market Chart'>
+                    <div class="chart_labels_container">
+                    <span class="chart_label">{market_name}</span> <span class="chart_label2"> (종가: {last_close})</span>
                     </div>
                 </div>
-            </section>"""
-
-    # Add News Section
+        """   
+    # gpt_summary 처리
     html_content += """
-            <section class="general-cont bg-lightgrey">
-                <div class="news-wrap">
-                    <h4 class="cont-tit" data-aos="fade-up">근거자료<br />Market Major News</h4>
-                    <ul class="new-list" data-aos="fade-up">"""
+            </div>
+        </div> """
+    html_content += f"""
+        <div class="gpt_summary">
+            <h2 class="gpt_summary_title">AI Market Analysis</h2>
+            <p>{format_text(gpt_summary.replace('\n', '<br/>'))}</p>
+        </div>
+        <div class="news_container">
+           <div class="news_section">
+            <button class="evidence_button">근거자료</button>
+            <span class="news_text">- Market Major News</span>
+           </div>
+        """        
+    # naver_news_data 처리
     for news in naver_news_data:
         html_content += f"""
-                        <li>
-                            <p>{news['title']}</p>
-                            <p>{news['summary']}</p>
-                        </li>"""
+            <div class="news_item">
+                <p>{news['title']}</p>
+                <p>{news['summary']}</p>
+            </div>
+        """
     html_content += """
-                    </ul>
-                </div>
-            </section>"""
-
-    # Add Additional News Section
+        </div> 
+    """
+        # gpt_additional_news 처리
+    temp_data = format_text(gpt_additional_news.replace('\n', '<br>'))
     html_content += f"""
-            <section class="general-cont bg-green">
-                <div class="finnhub-wrap">
-                    <h4 class="cont-tit" data-aos="fade-left">기타 해외뉴스<br />Finnhub News</h4>
-                    <div class="finnhub-list" data-aos="fade-right">
-                        {gpt_additional_news}
-                    </div>
-                </div>
-            </section>
-        </main>"""
+        <div class="additional_news_container">
+            <div class="additional_news_section">
+                <button class="additional_news_button">기타 해외뉴스</button>
+                <span class="finnhub_text">- From Finnhub news</span>
+            </div>
+            <div class="additional_news_item">
+                {temp_data}
+            </div>
+        </div>
+    </div>
+    """
 
-    # Save the HTML content to a file
+    # 결과를 HTML 파일로 저장
     file_path = f'mainHtml/main_summary/summary_{datetime.now().strftime("%Y-%m-%d")}.html'
     with open(file_path, "w", encoding='utf-8') as file:
         file.write(html_content)
