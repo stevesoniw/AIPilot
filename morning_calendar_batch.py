@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Query, Form, HTTPException, Request, File, UploadFile
 import json
 import httpx
+import re
 #금융관련 APIs
 from openai import OpenAI
 import finnhub
@@ -83,7 +84,7 @@ async def translate_calendar_data(data):
     SYSTEM_PROMPT = (
         "You are a highly skilled translator fluent in both English and Korean. "
         "Translate the following economic calendar data from English to Korean, "
-        "keeping any specific terms related to the US stock market or company names in English. Do not provide any other response besides the JSON format"
+        "keeping any specific terms related to the US stock market or company names in English. Do not provide any other response besides the JSON format. If it seems like the token count will exceed the limit and cut off in the middle, ensure that the JSON data finishes without any errors by showing data only up to the previous ID and properly closing the JSON."
     )
     #다 던지면 gpt토큰 수 제한에 걸리므로 최근 일부만 번역하자
     current_date = datetime.now()
@@ -96,7 +97,8 @@ async def translate_calendar_data(data):
                 filtered_data.append(event)
         except ParserError:
             print(f"날짜 형식 오류: {event['start']}")
-    prompt = f"{SYSTEM_PROMPT}\n\n{json.dumps(filtered_data, ensure_ascii=False)}"
+    pre_prompt = "Do not provide any other response besides the JSON format. Even if the request token size is too large, don't mention it, just return the JSON data. Ensure to properly close the JSON data to prevent it from becoming unstable due to being cut off in the middle."
+    prompt = f"{pre_prompt}\n\n{json.dumps(filtered_data, ensure_ascii=False)}"
     try:
         translate_result = await gpt4_chart_talk(SYSTEM_PROMPT, prompt)
         print("*******************************************")
@@ -120,7 +122,7 @@ async def summarize_this_month_calendar(data):
             logging.error(f"날짜 파싱 오류: {e} - 이벤트 '{event['start']}' 는 무시됩니다.")
             continue
         
-    SYSTEM_PROMPT = "You are an expert in summarizing economic data."
+    SYSTEM_PROMPT = "You are an expert in summarizing economic data. To make the data readable on the screen, add appropriate <br> tags or color tags."
     prompt = (
         "You are an expert in summarizing economic data. Please provide a concise summary in Korean "
         "of the following key economic events for this month, highlighting their potential impact on the market. "
@@ -137,8 +139,8 @@ async def summarize_this_month_calendar(data):
 async def get_financial_stockNews(ticker: str):
     try:
         #현재 날짜를 기준으로 Finnhub에서 데이터 조회 (일단 데이터없는 종목들이 많아서 3개월치 가져온다)
-        Start_date_calen = (datetime.strptime(get_curday(), "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
-        End_date_calen = get_curday()     
+        Start_date_calen = (datetime.strptime(utilTool.get_curday(), "%Y-%m-%d") - timedelta(days=90)).strftime("%Y-%m-%d") # 현재 시점 - 3개월 
+        End_date_calen = utilTool.get_curday()     
         recent_news = finnhub_client.company_news(ticker, _from=Start_date_calen, to=End_date_calen)
         return recent_news
     except Exception as e:
@@ -157,21 +159,35 @@ async def main():
     with eng_path.open("w") as file:
         json.dump(calendar_data, file, ensure_ascii=False)
     
-    # 데이터를 한국어로 번역
-    try:
+    # 데이터를 한국어로 번역. 생성된 json이 에러도 많고 번역 토큰도 많이 필요. 
+    # 일단 막아놓고, 영문json 을 수기로 번역해서 사용한다. 
+    '''try:
         kor_data = await translate_calendar_data(calendar_data)
-        # 파일 저장 시 예외 처리
+
+        kor_data = kor_data.strip("`json\n```")
+        processed_data = kor_data.replace('\\"', '"')
+     
+        print(processed_data)
         kor_path = f"{base_path}/eco_calendar_kor.json"
         with open(kor_path, "w", encoding="utf-8") as file:
-            json.dump(kor_data, file, ensure_ascii=False)
+            file.write(processed_data)
     except Exception as e:
-        logging.error("파일 저장 중 오류 발생: %s", e)
+        logging.error("파일 저장 중 오류 발생: %s", e)'''
     
     # 이번 달 데이터 요약
-    summary = await summarize_this_month_calendar(calendar_data)
-    summary_path = base_path / "eco_calendar_aisummary.txt"
-    with summary_path.open("w") as file:
-        file.write(summary)
+    try:
+        summary = await summarize_this_month_calendar(calendar_data)  
+        print("**********")
+        print(summary)
+        # 데이터 가공: "-"를 "<br>"로, "**내용**"을 스타일이 적용된 "<b style='color: darkgray;'>내용</b>"으로
+        formatted_summary = summary.replace("-", "<br>")
+        formatted_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b style='color:#181818;'>\1</b> ", summary)
+        formatted_summary = re.sub(r"(\d+)\.", r"<br>\1.", formatted_summary)
+        summary_path = base_path / "eco_calendar_aisummary.html" 
+        with summary_path.open("w", encoding="utf-8") as file:
+            file.write(formatted_summary)
+    except Exception as e:
+        logging.error("요약 파일 저장 중 오류 발생: %s", e)
 
 if __name__ == "__main__":
     asyncio.run(main())

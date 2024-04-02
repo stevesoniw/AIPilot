@@ -207,8 +207,13 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .fc-button-active{border-color: #ffc107 !important; background-color: #ffc107 !important; color: #000 !important; font-weight: bold !important;}
 .fc-today-button{border-color: #ffc107 !important; background-color: #ffc107 !important; color: #000 !important; font-weight: bold !important;} 
 .fc-event-desc,.fc-event-title {white-space: break-spaces;}
+.loading_bar_calendar { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
+.loading_bar_calendar > img { max-width: 100px; max-height: 100px; }
 .btn-warning{font-weight: bold;}
 .modal-footer{display:inline-block;}
+.calendar_ai_box {border: 1px solid #ffc107; background-color: #fff3cd; color: #856404; border-radius: 4px; padding: 15px; margin: 15px 0; font-size: 14px; line-height: 1.5;}
+.fc-daygrid-event-harness {margin-top: 5px !important;}
+.fc-daygrid-day-events .fc-daygrid-event-harness:first-child {margin-top: 0 !important;}
 
 /* [1ST GNB][7TH LNB] 유사국면 시스템 분석 */
 .similarity-container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #FFFFFF; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px; }

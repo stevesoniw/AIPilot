@@ -1,57 +1,66 @@
 //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Starts *****************************//
 async function goCalendar() {
-    document.getElementById('loading_bar_calendar').style.display = 'block';    
-    const response = await fetch('/calendar', {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+    document.getElementById('loading_bar_calendar').style.display = 'block';
+
+    try {
+        // 'batch/calendars/eco_calendar_eng.json' 파일에서 데이터를 불러옴
+        const response = await fetch('/batch/calendar/eco_calendar_kor.json');
+        if (!response.ok) {
+            throw new Error('Calendar data could not be loaded.');
         }
-    });
-    const calendarData = await response.json(); 
-    document.getElementById('loading_bar_calendar').style.display = 'none';    
+        const calendarData = await response.json();
+        console.log(calendarData);
 
-    console.log(calendarData);
+        // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
+        //const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
 
-    // "start" 날짜가 "2024-01-01" 이후인 데이터만 필터링
-    const filteredData = calendarData.filter(event => new Date(event.start) >= new Date("2024-01-01"));
-
-    // FullCalendar 초기화 및 데이터 표시
-    var calendarEl = document.getElementById('calendar');
-    if (!calendarEl) {
-        // 달력 컨테이너가 아직 페이지에 없는 경우
-        alert('Calendar element not found on the page.');
-        return;
-    }
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
-        timeZone: 'UTC',
-        expandRows: true, 
-        locale : "KO",
-        firstDay: 1,
-        navLinks: true, 
-        ihandleWindowResize : true,
-        windowResizeDelay : 100,
-        nowIndicator: true,
-        dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
-        eventLimit: true, // 더 보기 버튼 활성화              
-        events: filteredData.map(event => ({
-            id: event.id.toString(),
-            title: event.title,
-            start: event.start,
-            end: event.end,
-            color: `#${event.hexColor}`, // 색상 설정
-            description: event.shortDesc // 설명 추가
-        })),
-
-        eventContent: function(arg) { // 이벤트 내용 커스터마이징
-            var element = document.createElement('div');
-            element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
-            return { domNodes: [element] };
+        var calendarEl = document.getElementById('calendar');
+        if (!calendarEl) {
+            alert('Calendar element not found on the page.');
+            return;
         }
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            eventLimit: true,
+            initialView: 'dayGridMonth',
+            headerToolbar: { left: 'prev,next today', center: 'title',  right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
+            timeZone: 'UTC',
+            expandRows: true,
+            locale: "KO",
+            firstDay: 1,
+            navLinks: true,
+            handleWindowResize: true,
+            windowResizeDelay: 100,
+            nowIndicator: true,
+            dayMaxEvents: true, // 이벤트가 오버되면 높이 제한 (+ 몇 개식으로 표현)
+            events: calendarData.map(event => ({
+                id: event.id?.toString() || 'default-id',
+                title: event.title,
+                start: event.start,
+                end: event.end,
+                color: `#${event.hexColor}`, // 색상 설정
+                description: event.shortDesc // 설명 추가
+            })),
+            eventContent: function(arg) { // 이벤트 내용 커스터마이징
+                var element = document.createElement('div');
+                element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
+                return { domNodes: [element] };
+            }
         });
-    calendar.render();
+        calendar.render();
+        //txt 파일을 읽어서 calendar_ai_box에 AI 요약내용 채워넣는 코드 추가
+        const responseSummary = await fetch('/batch/calendar/eco_calendar_aisummary.html');
+        if (!responseSummary.ok) {
+            throw new Error('AI summary could not be loaded.');
+        }
+        const summaryText = await responseSummary.text();
+        document.getElementById('calendar_ai_box').innerHTML = summaryText; 
+
+    } catch (error) {
+        console.error('Error loading calendar data:', error);
+        alert('Error loading calendar data.');
+    } finally {
+        document.getElementById('loading_bar_calendar').style.display = 'none';
+    }
 }
 //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Ends *****************************//                
 //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Starts *****************************//                

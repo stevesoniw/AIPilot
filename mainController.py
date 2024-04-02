@@ -31,6 +31,9 @@ logging.basicConfig(level=logging.DEBUG)
 templates = Jinja2Templates(directory="mainHtml")
 app.mount("/static", StaticFiles(directory="mainHtml"), name="static")
 
+# batch 폴더를 정적 파일로 제공하는 설정 추가
+app.mount("/batch", StaticFiles(directory="batch"), name="batch")
+
 ##############################################          MAIN  설정        ################################################
 # 루트 경로에 대한 GET 요청 처리
 @app.get("/", response_class=HTMLResponse)

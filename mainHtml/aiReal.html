@@ -41,9 +41,10 @@
         <script src="/static/assets/js/researchRAG.js"></script>
         <script src="/static/assets/js/newEx.js"></script>
         <!-----------  PRODUCT  JS        ----------->
+        <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
+        <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
         <!-- fullcalendar Lib-->  
-        <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.js'></script>  
-        <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/locales-all.min.js'></script>
+        <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
         <!--       차트       -->  
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
@@ -54,12 +55,10 @@
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
         <script src="https://code.highcharts.com/modules/export-data.js"></script>
         <script src="https://code.highcharts.com/modules/accessibility.js"></script>
-        <!--      Select      -->  
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script> 
         <!--     datepicker    -->
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
-        <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
-        <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+        <!--      Select      -->  
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>         
     </head>
     <body>
         <div class="wrap" id="chartPilot">
@@ -87,7 +86,7 @@
                                     <a href="#">소셜 데이터 분석</a>
                                 </li>
                                 <li class="list-dep" data-tab="menue" data-html="/static/frCalendar.html">
-                                    <a href="#">주요 economic 캘린더</a>
+                                    <a href="#">Economic 캘린더</a>
                                 </li>
                                 <li class="list-dep" data-tab="menuf" data-html="/static/frPhaseAnalysis.html">
                                     <a href="#">유사국면 분석</a>
@@ -105,10 +104,10 @@
                                 </li>
                             </ul>
                         </div>
-                        <h3 class="menu03"><a href="#" class="acc-tit" data-html="/static/researchRAG.html">리서치 리포트 분석</a></h3>
+                        <h3 class="menu03"><a href="#" class="acc-tit">리서치 리포트 분석</a></h3>
                         <div>
                             <ul>
-                                <li class="list-dep" data-tab="menu_3rd_a">
+                                <li class="list-dep" data-tab="menu_3rd_a" data-html="/static/researchRAG.html">
                                     <a href="#">Research Report [RAG]</a>
                                 </li>
                             </ul>
@@ -147,6 +146,7 @@
                     $('.list-dep').removeClass('on');
                     $(this).addClass('on');
                     $('.menu-cont').removeClass('on');
+                    console.log(htmlPath);
                     if(htmlPath) {
                         fetch(htmlPath)
                             .then(response => response.text())
@@ -161,6 +161,20 @@
                     }
                 });
             }
+            function initializeSelect2(selector, placeholderText) {
+                $(selector).select2({
+                    placeholder: placeholderText,
+                    language: {
+                        noResults: function() {
+                            return "종목을 찾을 수 없습니다.";
+                        },
+                        searching: function() {
+                            return "종목 로딩중..";
+                        }
+                    },
+                    minimumResultsForSearch: Infinity
+                }).val(null).trigger("change");
+            }            
              //html 로드 되어야만 제어할수 있는 자바스크립트 처리를 위한 함수 
             function executeScriptsByTabId(tabId) {
                 switch (tabId) {
@@ -241,8 +255,12 @@
                             });
                         });
                         break;
+                    case 'menue': 
+                        goCalendar();                    
+                        break;
                     case 'menu_2nd_a':
                         // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
+                        naverScrapingNews(1);
                         const buttons = document.querySelectorAll('.news-btn');
                         buttons.forEach(button => {
                             button.addEventListener('click', function() {
@@ -253,20 +271,6 @@
                         break;
                     case 'menu_2nd_b':
                         //국내 유사국면 분석에서 종목코드 검색 모듈 컨트롤
-                        function initializeSelect2(selector, placeholderText) {
-                            $(selector).select2({
-                                placeholder: placeholderText,
-                                language: {
-                                    noResults: function() {
-                                        return "종목을 찾을 수 없습니다.";
-                                    },
-                                    searching: function() {
-                                        return "종목 로딩중..";
-                                    }
-                                },
-                                minimumResultsForSearch: Infinity
-                            }).val(null).trigger("change");
-                        }
                         fetchStockCodes();
                         initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");
                         /********* [2nd GNB] 국내마켓데이터 - 유사국면분석에서 데이트피커 컨트롤 ************/
