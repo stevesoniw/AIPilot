@@ -371,8 +371,9 @@ def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)
     if len(news) > count :
         news = random.sample(news, count)
-    sum_news = ["[헤드라인]: {} \n [요약]: {} \n".format(
-        n['headline'], n['summary']) for n in news]
+    sum_news = ["<li><h4>[헤드라인]: {} </h4>\n <p>[요약]: {}</p></li> \n".format(n['headline'], n['summary']) for n in news]
+    sum_news.insert(0, "<ul class='newsanalysis-list'>")
+    sum_news.append("</ul>")  
     return sum_news 
 
 def gen_term_stock (ticker, Start_date, End_date):
@@ -500,7 +501,7 @@ def query_gpt4(ticker: str):
 
     # OpenAI GPT-4 호출
     completion = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-0125-preview",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt}

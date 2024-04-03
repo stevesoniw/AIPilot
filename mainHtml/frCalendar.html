@@ -2,13 +2,14 @@
 <div id="menue" class="menu-cont">
     <h2 class="s-tit">증시 캘린더</h2>
     <h3 class="s-tit">Official Source등을 통해서 생성한 economic calendar 입니다.</h3>
-
     <div class="calendar_ai_box" id="calendar_ai_box">
     </div>
     <div id="loading_bar_calendar" class="loading_bar_calendar" style="margin-left: 0px;">
         <img src="/static/assets/images/LoadingBar_D.gif">
         <p>데이터 로딩중입니다.</p>
     </div>     
+    <button class="calendar-opt-btn" id="transCalOpt" onclick="translateCalendar();">Economic 한글번역</button>     
+    <button class="calendar-opt-btn" id="ipoCalOpt" onclick="ipoCalendar();">IPO Clendar</button>
     <div id="calendar"></div>                        
 </div> 
 <!-- [#5 메뉴 끝] 증시 캘린더  -->   

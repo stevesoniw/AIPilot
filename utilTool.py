@@ -79,3 +79,30 @@ async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     except Exception as e:
         logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
         return None
+    
+# 데이터를 JSON 파일로 저장 (종목코드 save에서 사용)
+def save_data_to_file(data, filename):
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+        
+# 데이터를 JSON 파일로 로드 (종목코드 read에서 사용)
+def read_data_from_file(filename):
+    with open(filename, 'r') as f:
+        return json.load(f)        
+
+# 천단위 이상 숫자에 콤마 붙여주는 함수    
+def format_number_with_comma(number):
+    # 숫자와 문자를 분리
+    if isinstance(number, str) and '%' in number:
+        num_part, percent_sign = number.rstrip('%'), '%'
+    else:
+        num_part, percent_sign = str(number), ''
+    try:
+        num_part_float = float(num_part)
+        formatted_num = f"{num_part_float:,.2f}"
+    except ValueError:
+        return number
+    if num_part_float >= 1000:
+        return formatted_num + percent_sign
+    else:
+        return str(number)    

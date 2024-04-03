@@ -168,7 +168,7 @@ async def main():
         processed_data = kor_data.replace('\\"', '"')
      
         print(processed_data)
-        kor_path = f"{base_path}/eco_calendar_kor.json"
+        kor_path = f"{base_path}/eco_calendar_kor2.json"
         with open(kor_path, "w", encoding="utf-8") as file:
             file.write(processed_data)
     except Exception as e:
@@ -181,7 +181,7 @@ async def main():
         print(summary)
         # 데이터 가공: "-"를 "<br>"로, "**내용**"을 스타일이 적용된 "<b style='color: darkgray;'>내용</b>"으로
         formatted_summary = summary.replace("-", "<br>")
-        formatted_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b style='color:#181818;'>\1</b> ", summary)
+        formatted_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b style='color:#181818;'>\1</b> ", formatted_summary)
         formatted_summary = re.sub(r"(\d+)\.", r"<br>\1.", formatted_summary)
         summary_path = base_path / "eco_calendar_aisummary.html" 
         with summary_path.open("w", encoding="utf-8") as file:

@@ -16,8 +16,8 @@ import finnhub
 import yfinance as yf
 from openai import OpenAI
 #개인 클래스 파일 
-#config 파일
 import config
+import utilTool
 #FAST API 관련
 import logging
 
@@ -26,7 +26,7 @@ import logging
 finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 
-####################################################################################
+####################################################################################################################################
 #@@ 기능정의 : AI솔루션 PILOT웹사이트의 메인화면에서 부를 html 을 생성하는 파일 by son (24.03.10)
 #@@ Logic   : 1. yfinance 로부터 주요지수(dow,nasdqa등) 데이터를 얻어옴
 #@@         : 2. 해당 데이터들로부터 차트를 생성해 이미지로 떨궈놓음
@@ -35,14 +35,15 @@ client = OpenAI(api_key = config.OPENAI_API_KEY)
 #@@         : 5. Finnhub로 부터 밤 사이 뉴스를 따로 받아옴
 #@@         : 6. Finnhub 뉴스를 gpt 에 던져서 요약. 정리함
 #@@         : 7. a)주요지수 b)차트이미지 c)AI briefing, d)네이버뉴스타이틀요약
-#@@              d)Finnhub 뉴스  e) Finnhub 요약 데이터들을 모아 html로 생성
-#@@          ** → 최종적으로 이것을 chat_pilot.html 에서 불러와 div에 꽂아준다.     
-####################################################################################
+#@@              d)Finnhub 뉴스  e) Finnhub 요약 데이터들을 모아 html로 생성 (*파일형식 :mainHtml\main_summary\summary_2024-03-30.html)
+#@@          ** → 최종적으로 이것을 chat_pilot.html 에서 불러와 div에 꽂아준다.
+#@@         : 8. 추가적으로 해외주식 종목코드를 finnhub(*stock_symbols) 통해서 가져와 파일로 떨궈놓는다.(batch\stockcode\US_symbols.json)
+#####################################################################################################################################
 
 # GPT4 에 뉴스요약을 요청하는 공통함수
 async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
+        prompt = "This is the 'news data' mentioned by the system. Execute as instructed by the system prompt. However, please make sure to respond in Korean. Your response will be displayed on an HTML screen. Therefore, include appropriate <br> tags and other useful tags to make it easy for people to read. Please provide your perspective with a <span> tag. Also, you can insert a special icon(e.g., ★) when the subject of the content changes. 'News data':" + str(newsData)
         completion = client.chat.completions.create(
             model="gpt-4-0125-preview",
             messages=[
@@ -162,11 +163,16 @@ async def generate_market_summary():
     SYSTEM_PROMPT_1 = "You are an exceptionally talented news analyst and a finance expert. Here is the financial news from the past few hours. Also, I will provide you with data on the changes in the Dow Jones, NASDAQ, and S&P 500 indices. Based on this financial news and index data, please analyze the current stock market and deeply consider and explain your forecast for the future."
     # (이런형태임):: 너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.  또 나는 너에게 다우존스, 나스닥, S&P 500 지수의 변화 데이터도 같이 알려줄거야.  이 금융뉴스와 지수 데이터를 기반으로해서 현재 주식시장에 대해 분석해주고, 앞으로의 너의 전망에 대해서도 심도있게 고민해서 설명해줘. 
     gpt_summary = await gpt4_news_sum({"news": naver_news_data, "market_summary": summary_talk}, SYSTEM_PROMPT_1)
+    #formatted_gpt_summary = gpt_summary.replace("-", "<br>")
+    formatted_gpt_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", gpt_summary)
     SYSTEM_PROMPT_2 = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
     gpt_additional_news = await gpt4_news_sum({"news": finnhub_news_data}, SYSTEM_PROMPT_2)
+    #formatted_additional_news = gpt_additional_news.replace("-", "<br>")
+    formatted_additional_news = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", gpt_additional_news)
+    formatted_additional_news = re.sub(r"(\d+)\.", r"<br>\1.", formatted_additional_news)    
     
     print(gpt_additional_news)
-    return gpt_summary, market_data, images_name, naver_news_data, gpt_additional_news
+    return formatted_gpt_summary, market_data, images_name, naver_news_data, formatted_additional_news
 
 def format_text(input_text):
     # 볼드 처리
@@ -199,13 +205,11 @@ async def market_data():
                         <tr>
                             <th class="bg-white" scope="col"></th>"""
 
-    # Dynamically add market names to the table header
     market_names = [data["name"] for data in market_data]  # Extract market names
     for name in market_names:
         html_content += f'<th scope="col">{name}</th>'
     html_content += "</tr></thead><tbody>"
 
-    # Assuming all market_data entries have 'change', 'prev_close', 'last_close', 'date'
     keys = ["change", "prev_close", "last_close", "date"]
     for key in keys:
         html_content += f"<tr><td>{key.capitalize()}</td>"
@@ -219,7 +223,7 @@ async def market_data():
                     color = "red"
             if key == "last_close" and "change" in data:
                 color = "blue" if "-" in data["change"] else "red" if data["change"] != "0.00%" else "black"
-            html_content += f'<td style="color:{color};">{value}</td>'
+            html_content += f'<td style="color:{color};">{utilTool.format_number_with_comma(value)}</td>'
         html_content += "</tr>"
     
     html_content += """
@@ -234,7 +238,7 @@ async def market_data():
                             <img src="/static/main_chart/{image}" alt="Market Chart">
                             <div class="chart-label-wrap">
                                 <p>{name["name"]}</p>
-                                <p>(종가: {name["last_close"]})</p>
+                                <p>(종가: {utilTool.format_number_with_comma(name["last_close"])})</p>
                             </div>
                         </li>"""
     html_content += """
@@ -249,6 +253,7 @@ async def market_data():
                     <div class="analysis-area">
                         <div class="analysis-tit-wrap">
                             <h4 class="cont-tit" data-aos="fade-right">AI Market <span>Analysis</span></h4>
+                            <div class="analysis-bg" data-aos="fade-right"></div>
                         </div>
                         <div class="analysis-text" data-aos="fade-left">
                             {gpt_summary}
@@ -291,8 +296,25 @@ async def market_data():
     with open(file_path, "w", encoding='utf-8') as file:
         file.write(html_content)
 
-
-async def cccc():
-    earnings_chart = await market_data()
-    print(earnings_chart)
-asyncio.run(cccc())
+# 아침마다 Finnhub에서 종목리스트 읽어온 후 파일로 저장시킨다.
+async def get_foreign_stock_symbols():
+    try:
+        exchange = "US"
+        mic = ""  #Market Identifier Code
+        code_dir = 'batch/stockcode'
+        if not os.path.exists(code_dir):
+            os.makedirs(code_dir)
+        filename = f"{code_dir}/{exchange}_symbols.json"
+        symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+        symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
+        utilTool.save_data_to_file(symbols_filtered, filename)
+    except Exception as e:
+        logging.error("An error occurred in making finnhub stock code file: %s", str(e))
+        return None
+    
+async def morning_batch():
+    make_morning_batch = await market_data()
+    make_stock_symbols = await get_foreign_stock_symbols()
+    print(make_morning_batch)
+    print(make_stock_symbols)
+asyncio.run(morning_batch())

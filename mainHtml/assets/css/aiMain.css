@@ -127,7 +127,7 @@ table caption{display:none;}
 .fixed-cont.v02{background:url('/static/assets/images/fixed_bg02.jpg') no-repeat center;}
 .fixed-cont .overlay.v02{background-color:rgb(0, 88, 179, .8);}
 .main .analysis-wrap{position:relative;z-index:2;}
-.main .analysis-wrap .cont-tit{/*margin-top:50px;*/margin-top:0px;font-size:45px;font-weight:100;}
+.main .analysis-wrap .cont-tit{margin-top:0px;font-size:45px;font-weight:100;}
 .main .analysis-wrap .cont-tit span{color:#673AB7;font-weight:500;}
 .main .analysis-wrap .analysis-bg{position:absolute;left:0px;bottom:0px;width:270px;height:260px;background:url('/static/assets/images/analysis_bg.png') no-repeat center;background-size:100%;}
 .main .analysis-wrap .analysis-area{display:flex;gap:100px;margin:30px 0 40px;padding:70px 50px;background:#f5f7f9;font-family:'Spoqa Han Sans Neo';box-shadow:30px 30px 30px rgb(0 0 0 / 16%)}
@@ -146,7 +146,8 @@ table caption{display:none;}
 /* new main 끝 */
 
 /* new left menu 시작 */
-#chartPilot .right-area{width:calc(100% - 338px);margin-left:358px;}
+main{width:100%;height:100%;}
+#chartPilot .right-area{width:auto;margin-left:338px;padding:0 70px;}
 .ui-widget{font-family:'Spoqa Han Sans Neo';font-size:16px;}
 .ui-helper-reset{line-height:inherit;}
 .ui-accordion .ui-accordion-header{margin:0;padding:0;font-size:inherit;}
@@ -157,6 +158,7 @@ table caption{display:none;}
 .ui-state-active a, .ui-state-active a:link, .ui-state-active a:visited{color:inherit;}
 .ui-accordion .ui-accordion-content{padding:0;}
 .ui-widget-content{border:0;color:inherit;background:inherit;}
+
 .left-area{width:338px;background:#fff;padding:30px;border-right:1px solid #d8d8d8;box-sizing:border-box;}
 .left-area::before{display:none;}
 .left-area .title-wrap{width:230px;height:60px;padding:0;}

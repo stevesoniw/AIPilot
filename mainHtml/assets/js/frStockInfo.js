@@ -3,12 +3,30 @@
 
 //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
 async function loadEarningData() {
+    const button = document.getElementById('getEarningInfo');
+    if (button.classList.contains('on')) {
+        return; 
+    }
+    button.classList.add('on'); 
     const ticker = document.getElementById('foreign_ticker').value;             
     try {
-        document.getElementById('loading_bar_fingpt').style.top = '50%';                 
+        //로딩바
+        document.getElementById('loading_bar_fingpt').style.top = '50%';  
         document.getElementById('loading_bar_fingpt').style.display = 'block';                    
-        document.getElementById('fingptChartArea').style.display = 'none';                
+        //실적
+        document.getElementById('loading_bar_fingpt').style.display = 'none';
+        document.getElementById('fingptChartArea').style.display = 'none';
+        document.getElementById('gptEarningTableArea').style.display = 'none';
         document.getElementById('gptMessageArea').style.display = 'none';
+        document.getElementById('gptStockwaveArea').style.display = 'none';
+        //뉴스
+        document.getElementById('loading_bar_foreignnews').style.display = 'none';
+        document.getElementById('foreignTickerNewsArea').style.display = 'none';
+        document.getElementById('fomc-press-releases').style.display = 'none';
+        //기본정보
+        document.getElementById('loading_bar_stockbasic').style.display = 'none';
+        document.getElementById('stockBasic').style.display = 'none';
+        //챗
         document.getElementById('chatApp').style.dispaly = 'none';
 
         if (!ticker) {
@@ -26,7 +44,6 @@ async function loadEarningData() {
         // 차트 영역을 보이게 설정
         document.getElementById('fingptChartArea').style.display = 'block';
         document.getElementById('loading_bar_fingpt').style.display = 'none';  
-        makeEarningToggleButton() //접힘,펼침 버튼도 일단 보이게
         fetchEarningsAnnouncement(ticker);
 
     } catch (error) {
@@ -36,33 +53,12 @@ async function loadEarningData() {
         document.getElementById('loading_bar_fingpt').style.display = 'none'; 
     }
 }
-//접고 펼침 버튼만들어 넣기 
-function makeEarningToggleButton(){
-    var btn = document.createElement('button');
-    btn.textContent = '실적데이터 ON'; // 초기 상태는 모든 데이터가 보여지므로 OFF로 설정
-    btn.classList.add('stockEarningInfo-toggle-visibility-btn', 'stockEarningInfo-data-on');
-    
-    btn.onclick = function() {
-        var elements = [document.getElementById('fingptChartArea'), document.getElementById('gptEarningTableArea'), document.getElementById('gptMessageArea'), document.getElementById('gptStockwaveArea')];
-        var isHidden = elements.some(el => el.style.display === '' || el.style.display === 'block');
-        
-        elements.forEach(function(el) {
-            el.style.display = isHidden ? 'none' : 'block';
-            el.classList.toggle('fade-in', !isHidden);
-            el.classList.toggle('fade-out', isHidden);
-        });
-        if (isHidden) {
-            btn.textContent = '실적데이터 OFF';
-            btn.classList.replace('stockEarningInfo-data-on', 'stockEarningInfo-data-off');
-        } else {
-            btn.textContent = '실적데이터 ON';
-            btn.classList.replace('stockEarningInfo-data-off', 'stockEarningInfo-data-on');
-        }
-    };
-    // 버튼추가하기
-    var container = document.getElementById('fingptChartArea').parentNode;
-    container.insertBefore(btn, document.getElementById('fingptChartArea'));
+
+function releaseButtonState() {
+    const button = document.getElementById('getEarningInfo');
+    button.classList.remove('on'); // 'on' 클래스 제거
 }
+
 //실적발표 테이블 표 만들어서 보여주기
 async function fetchEarningsAnnouncement(ticker) {
     const apiUrl = `/foreignStock/financials/earningTable/${ticker}`;

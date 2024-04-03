@@ -59,6 +59,57 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 @keyframes fadeInAnimation { 0% {opacity: 0;} 100% {opacity: 1;} }
 @keyframes fadeOutAnimation { 0% {opacity: 1;} 100% {opacity: 0;} }
 
+/* AI가 말해주는 주식 정보 [해외] 리뉴얼버젼 시작 */
+.input-container .select2-container--default .select2-selection--single .select2-selection__rendered{color:#333;font-size:18px;line-height:50px;border:1px solid #777;}
+.input-container .select2-container--default .select2-selection--single{border:none;}
+.input-container .select2-container .select2-selection--single{height:50px;}
+.input-container .select2-container--default .select2-selection--single .select2-selection__arrow{top:50%;transform:translateY(-50%);}
+.input-container .select2-container--default .select2-selection--single .select2-selection__placeholder{color:#333;}
+.input-container .select2-container--default .select2-selection--single .select2-selection__rendered{background:#fff;}
+.input-container .select2-container--default .select2-search--dropdown .select2-search__field{border:1px solid #ccc;}
+
+.input-container{display:block;}
+.input-container .foreign-buttons-container{justify-content:space-between;}
+.input-container .foreign-search-box{width:100%;max-width:inherit;}
+.slt-search-opt-btn{width:100%;padding:15px;background:#fafaff;color:#333;font-size:15px;font-family:'Spoqa Han Sans Neo';border:1px solid #ccc;font-weight:700;}
+.slt-search-opt-btn:hover{background:inherit;}
+.slt-search-opt-btn.on {background-color: #2970ff; color:white; pointer-events: none;}
+.stockEarningInfo-toggle-visibility-btn{margin:40px auto 0;padding:15px 50px;font-size:16px;background:#2970ff;color:#fff;border:1px solid #2970ff;border-radius:4px;font-family:'Spoqa Han Sans Neo';transition:none;}
+.stockEarningInfo-toggle-visibility-btn:hover{background:inherit;color:#2970ff;}
+
+.gpt-chart-area{margin-top:50px;border:1px solid #d8d8d8;}
+.gpt-chart-area .gpt-chart-flex{display:flex;justify-content:center;align-items:center;gap:30px;padding:25px;}
+.gpt-chart-area img{width:100%;height:auto;}
+
+.earning-title-container{padding-top:50px;text-align:left;}
+.earning-title-container h2{font-size:20px;font-family:'Spoqa Han Sans Neo';}
+
+.earning-table{width:100%;padding-top:0;border-radius:0;box-shadow:inherit;border:0;font-family:'Spoqa Han Sans Neo';}
+.earning-table th{background:#fff;}
+.earning-table th, .main td{color:#666;text-align:center;border:1px solid #d8d8d8;letter-spacing:-.5px;}
+.earning-table tr:nth-child(even){background:#fff;}
+.earning-table th{background:#fafaff;color:#333;font-weight:700;}
+.earning-table th, .earning-table td{padding:15px 15px;border:1px solid #d8d8d8;}
+
+.highlight{color:#0082ff;}
+.gpt-message-area{max-width:inherit;margin:50px auto;padding:0;background:#fff;border-radius:0;box-shadow:none;}
+#analysisResultBox{line-height:35px;}
+.info-header{/*margin-bottom:20px;padding-bottom:7px;*/font-size:17px;/*border-bottom:1px solid #aaa;*/}
+.result-box{margin-top:50px;padding:40px;border:1px solid #d8d8d8;border-radius:0;}
+.result-box:nth-child(odd){background:#fafaff;}
+
+.newsanalysis-list li{margin-top:20px;padding:15px 20px;background:#fafaff;line-height:24px;border:1px solid #d8d8d8;border-radius:5px;box-sizing:border-box;}
+.newsanalysis-list li:first-child{margin-top:40px;}
+.newsanalysis-list li h4{position:relative;padding-left:73px;}
+.newsanalysis-list li h4::before{content:'[헤드라인]';position:absolute;left:0;top:0px;}
+.newsanalysis-list li p{position:relative;padding:10px 0 0 45px;color:#777;}
+.newsanalysis-list li p::before{content:'[요약]';position:absolute;left:0;top:10px;}
+
+#gptStockwaveArea{padding:40px !important;}
+#gptStockwaveArea div{margin-top:30px;padding:30px 0 10px;border:1px solid #d8d8d8;text-align:center;}
+#gptStockwaveArea div img{width:90%}
+/* AI가 말해주는 주식 정보 [해외] 리뉴얼버젼 끝 */
+
 /* AI가 말해주는 주식정보(해외)  #2. News 데이터 보여주기 */
 .loading_bar_foreignnews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
 .loading_bar_foreignnews > img { max-width: 100px; max-height: 100px; }
@@ -214,6 +265,9 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .calendar_ai_box {border: 1px solid #ffc107; background-color: #fff3cd; color: #856404; border-radius: 4px; padding: 15px; margin: 15px 0; font-size: 14px; line-height: 1.5;}
 .fc-daygrid-event-harness {margin-top: 5px !important;}
 .fc-daygrid-day-events .fc-daygrid-event-harness:first-child {margin-top: 0 !important;}
+.calendar-opt-btn {padding: 10px; background: #fafaff; color: #333; font-size: 15px; font-family: 'Spoqa Han Sans Neo'; border: 1px solid #ccc; font-weight: 700; display: inline-block; margin-right: 10px;}
+.calendar-opt-btn:last-child {margin-right: 0;}
+.calendar-opt-btn:hover {background: inherit;}
 
 /* [1ST GNB][7TH LNB] 유사국면 시스템 분석 */
 .similarity-container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #FFFFFF; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px; }
@@ -278,3 +332,4 @@ label:hover {color: #fa7508;}
 .file-name {display: block; margin-top: 10px; color: #666;}
 .ocrButton {display: inline-block; margin: 20px 10px; padding: 10px 20px; background-color: #87CEFA; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;}
 .ocrButton:hover {background-color: #7487f1;}
+

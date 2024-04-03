@@ -22,7 +22,7 @@
         <link href="/static/assets/css/common.css" rel="stylesheet" type="text/css">
         <link href="/static/assets/css/aos.css" rel="stylesheet" type="text/css">
         <link href="/static/assets/css/aiMain.css" rel="stylesheet" type="text/css" />
-        <link href="/static/assets/css/fsControl.css" rel="stylesheet" type="text/css" />
+        <link href="/static/assets/css/frControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/dmControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/etcControl.css" rel="stylesheet" type="text/css" />
         <!-----------  PRODUCT  CSS       ----------->
@@ -179,7 +179,6 @@
             function executeScriptsByTabId(tabId) {
                 switch (tabId) {
                     case 'menua':
-                        // AI가 말해주는 주식정보 :: 종목검색 쪽 initialize 하기 
                         $('#foreign_ticker').select2({
                             ajax: {
                                 url: '/api/get_foreign_stock_symbols', 
@@ -206,7 +205,42 @@
                                     return "검색 결과가 없습니다."; 
                                 }
                             }
-                        });   
+                        });                      
+                        /** FILE READ 가 속도가 더 느려서 일단 보류
+                        function fetchDataAndInitialize() {
+                            var data = localStorage.getItem('us_symbols');
+                            if (data) {
+                                // 캐시된 데이터가 있으면 바로 초기화
+                                initializeSelect2(JSON.parse(data));
+                            } else {
+                                // 캐시된 데이터가 없으면 서버에서 가져와서 초기화
+                                $.getJSON('/batch/stockcode/US_symbols.json', function(json) {
+                                    localStorage.setItem('us_symbols', JSON.stringify(json)); // 데이터를 로컬 스토리지에 저장
+                                    initializeSelect2(json); // Select2 초기화
+                                });
+                            }
+                        }
+                        function initializeSelect2(data) {
+                            var formattedData = data.map(stock => ({
+                                id: stock.symbol,
+                                text: `${stock.description} (${stock.symbol})`
+                            }));
+                            formattedData.unshift({id: "", text: "원하시는 종목을 검색해주세요!"}); // 기본 플레이스홀더 항목 추가
+                    
+                            $('#foreign_ticker').select2({
+                                data: formattedData,
+                                minimumInputLength: 2,
+                                allowClear: true,
+                                language: {
+                                    noResults: function() {
+                                        return "검색 결과가 없습니다.";
+                                    }
+                                }
+                            });
+                        }
+                        // 페이지 로드 시 데이터를 가져오고 Select2를 초기화
+                        fetchDataAndInitialize();     **/           
+            
                         /********* AI가 말해주는 주식정보(해외) - #4. Ask AI Anything 채팅영역 ************/
                         document.getElementById('chatInput').addEventListener('keypress', function(e) { //엔터쳤을때 메시지보이게하고, 데이터요청 함수콜한다
                             if (e.key === 'Enter' && this.value.trim() !== '') {

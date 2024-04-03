@@ -1,10 +1,10 @@
 //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Starts *****************************//
-async function goCalendar() {
+async function goCalendar(calendarFile = '/batch/calendar/eco_calendar_eng.json') {
     document.getElementById('loading_bar_calendar').style.display = 'block';
 
     try {
         // 'batch/calendars/eco_calendar_eng.json' 파일에서 데이터를 불러옴
-        const response = await fetch('/batch/calendar/eco_calendar_kor.json');
+        const response = await fetch(calendarFile);
         if (!response.ok) {
             throw new Error('Calendar data could not be loaded.');
         }
@@ -60,6 +60,17 @@ async function goCalendar() {
         alert('Error loading calendar data.');
     } finally {
         document.getElementById('loading_bar_calendar').style.display = 'none';
+    }
+}
+
+function translateCalendar() {
+    const btn = document.getElementById('transCalOpt');
+    if (btn.innerText.includes('한글번역')) {
+        goCalendar('/batch/calendar/eco_calendar_kor.json');
+        btn.innerText = 'Economic 영문번역';
+    } else {
+        goCalendar('/batch/calendar/eco_calendar_eng.json');
+        btn.innerText = 'Economic 한글번역';
     }
 }
 //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Ends *****************************//                
