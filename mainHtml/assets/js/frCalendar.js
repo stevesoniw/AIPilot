@@ -6,7 +6,7 @@ async function goCalendar(calendarFile = '/batch/calendar/eco_calendar_eng.json'
         // 'batch/calendars/eco_calendar_eng.json' 파일에서 데이터를 불러옴
         const response = await fetch(calendarFile);
         if (!response.ok) {
-            throw new Error('Calendar data could not be loaded.');
+            throw new Error('Economic Calendar data could not be loaded.');
         }
         const calendarData = await response.json();
         console.log(calendarData);
@@ -44,7 +44,22 @@ async function goCalendar(calendarFile = '/batch/calendar/eco_calendar_eng.json'
                 var element = document.createElement('div');
                 element.innerHTML = `<b>${arg.event.title}</b><br>${arg.event.extendedProps.description}`;
                 return { domNodes: [element] };
-            }
+            },
+            // 날짜 클릭 이벤트 처리기 추가
+            dateClick: function(info) {
+                console.log("Selected date:", info.dateStr);
+
+                // 해당 날짜에 예정된 모든 이벤트의 title 출력
+                let events = calendar.getEvents().filter(event => {
+                    // 이벤트 시작과 종료 날짜를 "YYYY-MM-DD" 포맷으로 변환
+                    let eventStartDate = event.startStr.split("T")[0];
+                    let eventEndDate = event.endStr ? event.endStr.split("T")[0] : eventStartDate;
+                    return info.dateStr >= eventStartDate && info.dateStr <= eventEndDate;
+                }).map(event => event.title);
+            
+                console.log("Events on this day:", events);
+                alert(`Selected date: ${info.dateStr}\nEvents: ${events.join(", ")}`);
+            }            
         });
         calendar.render();
         //txt 파일을 읽어서 calendar_ai_box에 AI 요약내용 채워넣는 코드 추가
@@ -65,20 +80,21 @@ async function goCalendar(calendarFile = '/batch/calendar/eco_calendar_eng.json'
 
 function translateCalendar() {
     const btn = document.getElementById('transCalOpt');
-    if (btn.innerText.includes('한글번역')) {
+    if (btn.innerText.includes('한글')) {
         goCalendar('/batch/calendar/eco_calendar_kor.json');
-        btn.innerText = 'Economic 영문번역';
+        btn.innerText = 'Economic Calendar(영문)';
     } else {
         goCalendar('/batch/calendar/eco_calendar_eng.json');
-        btn.innerText = 'Economic 한글번역';
+        btn.innerText = 'Economic Calendar(영문)';
     }
 }
 //****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Ends *****************************//                
 //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Starts *****************************//                
-async function goIpoCalendar() {
-    document.getElementById('loading_bar_ipoCalendar').style.display = 'block';
+async function ipoCalendar() {
+    document.getElementById('loading_bar_calendar').style.display = 'block';
     let ipoCalendarData;
     try {
+        /**
         const response = await fetch('/calendar/ipo', {
             method: 'POST',
             headers: {
@@ -89,14 +105,21 @@ async function goIpoCalendar() {
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        ipoCalendarData = await response.json(); **/
+        const response = await fetch('/batch/calendar/ipo_calendar_eng.json');
+        if (!response.ok) {
+            throw new Error('IPO Calendar data could not be loaded.');
+        }
         ipoCalendarData = await response.json();
+        console.log(ipoCalendarData);
+
     } catch (error) {
         console.error("Failed to fetch IPO calendar data:", error);
-        document.getElementById('loading_bar_ipoCalendar').style.display = 'none';
+        document.getElementById('loading_bar_calendar').style.display = 'none';
         alert('Failed to load IPO Calendar data. Please try again later.');
         return;
     } finally {
-        document.getElementById('loading_bar_ipoCalendar').style.display = 'none';
+        document.getElementById('loading_bar_calendar').style.display = 'none';
     }
 
     // Check if the ipoCalendarData or ipoCalendarData.ipoCalendar is undefined or null
@@ -125,7 +148,7 @@ async function goIpoCalendar() {
         };
     });
 
-    var calendarEl = document.getElementById('ipo_calendar');
+    var calendarEl = document.getElementById('calendar');
     if (!calendarEl) {
         console.error('Calendar element not found on the page.');
         return;
