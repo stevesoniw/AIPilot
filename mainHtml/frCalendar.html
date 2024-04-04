@@ -9,7 +9,15 @@
         <p>데이터 로딩중입니다.</p>
     </div>     
     <button class="calendar-opt-btn" id="transCalOpt" onclick="translateCalendar();">Economic Calendar(한글)</button>     
-    <button class="calendar-opt-btn" id="ipoCalOpt" onclick="ipoCalendar();">IPO Clendar</button>
-    <div id="calendar"></div>                        
+    <button class="calendar-opt-btn" id="ipoCalOpt" onclick="ipoCalendar();">IPO Calendar</button>
+    <div id="calendar"></div>    
+    <div id="popupEventCon" class="popupHidden"></div>
+    <div id="fancyCalendarDetails"></div> 
+    <div id="calendarChartContainer" class="cal-chart-container"></div>       
+    <!-- 차트 그려지는 영역-->
+    <div id="loading_bar_calchart" class="loading_bar">
+        <img src="/static/assets/images/LoadingBar_C.gif">
+        <p class="loading-text">차트 로딩중입니다.</p>
+    </div>    
 </div> 
 <!-- [#5 메뉴 끝] 증시 캘린더  -->   

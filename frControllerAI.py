@@ -371,7 +371,7 @@ def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)
     if len(news) > count :
         news = random.sample(news, count)
-    sum_news = ["<li><h4>[헤드라인]: {} </h4>\n <p>[요약]: {}</p></li> \n".format(n['headline'], n['summary']) for n in news]
+    sum_news = ["<li><h4>{} </h4><p>{}</p></li> \n".format(n['headline'], n['summary']) for n in news]
     sum_news.insert(0, "<ul class='newsanalysis-list'>")
     sum_news.append("</ul>")  
     return sum_news 

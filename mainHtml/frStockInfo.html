@@ -20,12 +20,14 @@
     <!-- AI가 말해주는 주식 정보 [#1 실적 데이터]-->
     <div id="loading_bar_fingpt" class="loading_bar" style="margin-left: 0px;">
         <img src="/static/assets/images/LoadingBar_C.gif">
-        <p>데이터 로딩중입니다.</p>
+        <p class="loading-text-foreignnews">데이터 로딩중입니다.</p>
     </div>                      
     <div class="gpt-chart-area" id="fingptChartArea" style="display: none;">
         <div class="gpt-chart-flex">        
             <div>
                 <img id="earningsChart" alt="Earnings Chart">
+            </div>
+            <div>
                 <img id="recommendationsChart" alt="Recommendations Chart">
             </div>
         </div>            
@@ -92,15 +94,18 @@
         <img src="/static/assets/images/LoadingBar_C.gif">
         <p class="loading-text-stockbasic">데이터 로딩중입니다.</p>
     </div>    
-    <div class="stockBasic-input-container" id="stockBasic">
+    <div class="stockBasic-input-container" id="stockBasic" style="max-height: 1165px;">
         <div class="infoSection">
             <div id="stockBasic_company_info"></div>
         </div>
         <div class="chartSection">
-            <div id="annualFinancialsChart" style="height:50%;"></div>
-            <div id="quarterlyGrowthChart" style="height:50%;"></div>
+            <div id="annualFinancialsChart" style="height: 50%; overflow: hidden;"></div>
+            <div id="quarterlyGrowthChart" style="height: 50%; overflow: hidden;"></div>
         </div>
         <div class="financialSection">
+            <div class="financial-title">
+                <h2></h2>
+            </div>
             <div id="stockBasic_finance_info"></div>
         </div>
     </div>

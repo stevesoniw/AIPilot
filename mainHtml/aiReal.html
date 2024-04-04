@@ -249,6 +249,7 @@
                                 document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
                             }
                         });
+                        /*
                         document.getElementById('aiStockChat').addEventListener('click', function() { //채팅창 숨기고 보이게 하는기능
                             var chatApp = document.getElementById('chatApp');
                             if (chatApp.style.display === 'none') {
@@ -257,7 +258,7 @@
                             } else {
                                 chatApp.style.display = 'none'; 
                             }
-                        });            
+                        }); */     
                         /** 디폴트 메시지 보여주기 **/
                         function addServerMessage(message) {
                             const responseDiv = document.createElement('div');
@@ -290,8 +291,8 @@
                         });
                         break;
                     case 'menue': 
-                        goCalendar();                    
-                        break;
+                            goCalendar(); 
+                         break;
                     case 'menu_2nd_a':
                         // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
                         naverScrapingNews(1);

@@ -19,6 +19,7 @@ import finnhub
 import fredpy as fp
 from fredapi import Fred
 from openai import OpenAI
+import yfinance as yf
 #personal 파일
 import config
 import utilTool
@@ -311,7 +312,7 @@ async def translate_text(request: TranslateRequest):
 
 
 ##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Ends ##################################
-##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 Starts #####################################################
+##################################[1ST_GNB][5TH_MENU] CALENDAR 보여주기 Starts #####################################################
 # 증시 캘린더 관련 함수 
 @frControllerETC.post("/calendar", response_class=JSONResponse)
 async def get_calendar(request: Request):
@@ -332,8 +333,6 @@ async def rapidapi_calendar():
         response = await client.post(url, json=payload, headers=headers)
     calendar_data = response.json()
     return calendar_data
-##################################[1ST_GNB][5TH_MENU] 증시 CALENDAR 보여주기 ENDS #####################################################
-##################################[1ST_GNB][6TH_MENU] IPO CALENDAR 보여주기 STARTS #####################################################
 
 @frControllerETC.post("/calendar/ipo", response_class=JSONResponse)
 async def get_ipo_calendar():
@@ -346,8 +345,40 @@ async def get_ipo_calendar():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+#다우 차트 데이터 만들어서 돌려주자
+class CalendarChartRequest(BaseModel):
+    fromDate: str
+    toDate: str
+@frControllerETC.post("/calendar-us-chart")
+async def get_calendar_dowchart_data(request: CalendarChartRequest):
+    try:
+        stock = yf.Ticker("^DJI")
+        hist = stock.history(start=request.fromDate, end=request.toDate)
+        # pandas DataFrame의 인덱스(날짜)를 'Date' 컬럼으로 변환
+        hist.reset_index(inplace=True)
+        # 'Date' 컬럼을 확인하고 필요한 경우 datetime 타입으로 변환
+        if not pd.api.types.is_datetime64_any_dtype(hist['Date']):
+            hist['Date'] = pd.to_datetime(hist['Date'])
+        # 'Date' 컬럼을 문자열로 변환
+        hist['Date'] = hist['Date'].dt.strftime('%Y-%m-%d')
+        # 차트 데이터 구성
+        chart_data = {
+            'labels': hist['Date'].tolist(),
+            'datasets': [
+                {'label': 'Open', 'data': hist['Open'].tolist()},
+                {'label': 'High', 'data': hist['High'].tolist()},
+                {'label': 'Low', 'data': hist['Low'].tolist()},
+                {'label': 'Close', 'data': hist['Close'].tolist()},
+            ]
+        }
+        #await save_to_txt(chart_data, "chart_data2.txt")
+        return {"chartData": chart_data}
+    except Exception as e:
+        print(f"Error fetching stock chart data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching stock chart data")    
+    
 #print(get_ipo_calendar())
-##################################[1ST_GNB][6TH_MENU] IPO CALENDAR 보여주기 ENDS #####################################################
+##################################[1ST_GNB][6TH_MENU] CALENDAR 보여주기 ENDS #####################################################
 ##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 Starts ###################################################
 
 # Seeking Alpha 관련 뉴스 호출 함수

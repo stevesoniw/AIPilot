@@ -15,10 +15,10 @@ async function loadEarningData() {
         document.getElementById('loading_bar_fingpt').style.display = 'block';                    
         //실적
         document.getElementById('loading_bar_fingpt').style.display = 'none';
-        document.getElementById('fingptChartArea').style.display = 'none';
-        document.getElementById('gptEarningTableArea').style.display = 'none';
-        document.getElementById('gptMessageArea').style.display = 'none';
-        document.getElementById('gptStockwaveArea').style.display = 'none';
+        document.getElementById('fingptChartArea').style.display = 'block';
+        document.getElementById('gptEarningTableArea').style.display = 'block';
+        document.getElementById('gptMessageArea').style.display = 'block';
+        document.getElementById('gptStockwaveArea').style.display = 'block';
         //뉴스
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         document.getElementById('foreignTickerNewsArea').style.display = 'none';
@@ -142,6 +142,20 @@ async function gptStockWave(ticker) {
 //********************************** AI가 말해주는 주식정보 함수 Starts [#2.Get ForeignStockNewsInfo]**************************************//
 //Finnhub에서 해외 종목 뉴스데이터 가져오기 
 async function loadForeignStockNews() {
+    //실적
+    document.getElementById('loading_bar_fingpt').style.display = 'none';
+    document.getElementById('fingptChartArea').style.display = 'none';
+    document.getElementById('gptEarningTableArea').style.display = 'none';
+    document.getElementById('gptMessageArea').style.display = 'none';
+    document.getElementById('gptStockwaveArea').style.display = 'none';
+    //뉴스
+    //document.getElementById('loading_bar_foreignnews').style.display = 'none';
+    //document.getElementById('foreignTickerNewsArea').style.display = 'none';
+    //document.getElementById('fomc-press-releases').style.display = 'none';    
+    //기본정보
+    document.getElementById('loading_bar_stockbasic').style.display = 'none';
+    document.getElementById('stockBasic').style.display = 'none';
+
     const ticker = document.getElementById('foreign_ticker').value;
     if (!ticker) {
         alert('종목을 먼저 선택해주세요!');
@@ -165,7 +179,7 @@ async function loadForeignStockNews() {
             const newsDate = new Date(news.datetime * 1000).toISOString().slice(0, 10);
             const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 5) + 1}.jpg`;
             const newsElement = `
-                <div class="foreignTickerNews-container" data-news-id="${news.id}">
+                    <div class="foreignTickerNews-container" data-news-id="${news.id}">
                     <span class="foreignTickerNews-datetime">${newsDate}</span>
                     <div class="foreignTickerNews-image">
                         <img src="${imageSrc}" alt="${news.related}">
@@ -179,46 +193,13 @@ async function loadForeignStockNews() {
                         <div class="foreignTickerNews-buttons-container">
                             <a class="foreignTickerNews-link" href="${news.url}" target="_blank">read more</a>
                             <button class="foreignTickerNews-analysis" onclick="analyzeArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석</button>
-
                         </div>
                     </div>
                 </div>
             `;
             newsContainer.insertAdjacentHTML('beforeend', newsElement);
+            document.getElementById('foreignTickerNewsArea').style.display = 'block';
         });
-        // 해외종목 뉴스 내용 접기/펼치기 버튼 추가
-        if (!document.getElementById('toggleNewsButton')) {
-            const toggleButton = document.createElement('button');
-            toggleButton.id = 'toggleNewsButton';
-            // 초기 상태를 'true'로 설정하여 뉴스가 표시되고 있음을 나타냄
-            toggleButton.setAttribute('data-visible', 'true');
-            toggleButton.innerText = '종목뉴스 ON';
-            
-            toggleButton.onclick = function() {
-                const isVisible = toggleButton.getAttribute('data-visible') === 'true';
-                const newsContent = document.querySelectorAll('.foreignTickerNews-container');
-                newsContent.forEach(content => {
-                    toggleVisibility(content);
-                    const nextElement = content.nextElementSibling;
-                    if (nextElement && nextElement.classList.contains('analysisResultContainer')) {
-                        // analysisContainer도 토글
-                        toggleVisibility(nextElement);
-                    }
-                });
-                
-                // 토글 상태에 따라 버튼 텍스트와 data-visible 속성 업데이트
-                if (isVisible) {
-                    toggleButton.innerText = '종목뉴스 OFF'; 
-                    toggleButton.style.color = 'white'; 
-                    toggleButton.setAttribute('data-visible', 'false');
-                } else {
-                    toggleButton.innerText = '종목뉴스 ON'; 
-                    toggleButton.style.color = '#fffb03'; 
-                    toggleButton.setAttribute('data-visible', 'true');
-                }
-            };
-            newsContainer.before(toggleButton);
-        }
     } catch (error) {
         console.error('Error fetching stock info:', error);
     } finally {
@@ -309,12 +290,15 @@ function displayFomcData(data) {
         div.className = 'fomc-release-item'; 
         div.innerHTML = `
             <h3 data-link="${item.link}">${item.title}</h3>
+            <div class="dis-flex">
+                <p>Date: ${item.datetime}</p>
+                <p>Press Type: ${item.press_type}</p>
+            </div>
             <button class="fomc-release-summary-btn" onclick="fetchFomcReleaseDetail('${item.link}', this.parentElement.querySelector('.fomc-release-detail'))">Press Release AI 요약내용 보기</button>
-            <p>Date: ${item.datetime}</p>
-            <p>Press Type: ${item.press_type}</p>
             <div class="fomc-release-detail"></div>
         `;
         container.appendChild(div);
+        document.getElementById('fomc-press-releases').style.display = 'block';   
     });
     addGlobalToggle();
 }
@@ -452,6 +436,19 @@ async function fetchForeignStockCodes() {
 }
 //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 (Get Stock Info)
 async function loadBasicInfo() {
+    //실적
+    document.getElementById('loading_bar_fingpt').style.display = 'none';
+    document.getElementById('fingptChartArea').style.display = 'none';
+    document.getElementById('gptEarningTableArea').style.display = 'none';
+    document.getElementById('gptMessageArea').style.display = 'none';
+    document.getElementById('gptStockwaveArea').style.display = 'none';
+    //뉴스
+    document.getElementById('loading_bar_foreignnews').style.display = 'none';
+    document.getElementById('foreignTickerNewsArea').style.display = 'none';
+    document.getElementById('fomc-press-releases').style.display = 'none';
+    //기본정보
+    document.getElementById('stockBasic').style.display = 'block';
+
     const ticker = document.getElementById('foreign_ticker').value;
     if (!ticker) {
         alert('종목을 먼저 선택해주세요!');
@@ -466,33 +463,6 @@ async function loadBasicInfo() {
 
         const data = await response.json();
         displayFinancialData(data);
-
-        // 종목 기본정보 접기/펼치기 버튼 추가
-        if (!document.getElementById('toggleStockBasicButton')) {
-            const toggleButton = document.createElement('button');
-            toggleButton.id = 'toggleStockBasicButton';
-            toggleButton.setAttribute('data-visible', 'true'); // 초기 상태를 true로 설정
-            toggleButton.innerText = '종목 기본정보 ON';
-            toggleButton.classList.add('stockBasicInfo-toggle-visibility-btn');
-
-            toggleButton.onclick = function() {
-                const stockBasicContainer = document.getElementById('stockBasic');
-                toggleStockBasicVisibility(stockBasicContainer); 
-
-                const isVisible = toggleButton.getAttribute('data-visible') === 'true';
-                if (isVisible) {
-                    toggleButton.innerText = '종목 기본정보 OFF';
-                    toggleButton.style.color = 'white'; 
-                    toggleButton.setAttribute('data-visible', 'false');
-                } else {
-                    toggleButton.innerText = '종목 기본정보 ON';
-                    toggleButton.style.color = 'yellow'; 
-                    toggleButton.setAttribute('data-visible', 'true');
-                }
-            };
-
-            document.getElementById('loading_bar_stockbasic').after(toggleButton);
-        }
     } catch (error) {
         console.error('Error fetching stock info:', error);
     } finally {
@@ -580,6 +550,8 @@ function displayFinancialData(data) {
         const formatCurrency = (num) => `${(num / 100000000).toFixed(2)} 억 달러`;
         const formatEPS = (num) => `${num.toFixed(3)} 달러`;
 
+        const titleElement = document.querySelector('.financial-title h2');
+        titleElement.textContent = "연간 재무 데이터";
         let htmlContent = `<table class="stockAnnualFinancialsTable"><caption>연간 재무 데이터</caption><thead><tr><th>년도</th>`;
         Object.keys(keyMapping).forEach(key => {
             htmlContent += `<th>${keyMapping[key]}</th>`;
@@ -763,6 +735,8 @@ function displayQuarterlyGrowthChart(chartData) {
 //************************************** AI가 말해주는 주식정보 함수 Ends [#3.Get StockInfo]********************************************//
 //********************************* AI가 말해주는 주식정보 함수 Starts [#4.Ask AI Anything]****************************************//
 function loadAiChat() {
+    alert("기능 준비중입니다.");
+    return
     try {
         //앞선 데이터들 모두 클리어(?!) 기획을.. 어케할지 고민
             /**
@@ -1045,30 +1019,5 @@ function handleWebBasedQuery(webUrl) {
     .catch(error => {
         clearInterval(loadingInterval);
         console.error('Error:', error);
-    });
-}
-// 모든 버튼을 접는 함수 
-function collapseAllButtons() {
-    const buttons = document.querySelectorAll('.toggle-visibility-btn'); // 공통 클래스가 필요
-    const elementsToHide = [
-        document.getElementById('fingptChartArea'), 
-        document.getElementById('gptEarningTableArea'), 
-        document.getElementById('gptMessageArea'), 
-        document.getElementById('gptStockwaveArea'), 
-        document.getElementById('stockBasic')
-    ];
-    buttons.forEach(button => {
-        button.innerText = button.innerText.includes('ON') ? button.innerText.replace('ON', 'OFF') : button.innerText;
-        button.setAttribute('data-visible', 'false');
-        if(button.id === 'toggleStockBasicButton' || button.id === 'toggleFomcButton') {
-            button.style.color = 'white';
-        } else {
-            button.style.color = '#fffb03'; 
-        }
-    });
-    elementsToHide.forEach(element => {
-        element.style.display = 'none';
-        element.classList.add('fade-out');
-        element.classList.remove('fade-in');
     });
 }
