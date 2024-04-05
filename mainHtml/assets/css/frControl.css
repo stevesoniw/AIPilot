@@ -28,7 +28,7 @@
 .earning-table tr:nth-child(even) {background-color: #f2f2f2;}
 .earning-table td:first-child {font-weight: bold; color: #333;}
 .infoSection { flex: 0 0 600px; padding: 20px; box-sizing: border-box; }
-.chartSection { flex: 0 0 600px !important; display: flex; flex-direction: column; padding: 45px 20px 20px; box-sizing: border-box; }
+.chartSection { flex: 0 0 700px !important; display: flex; flex-direction: column; padding: 45px 20px 20px; box-sizing: border-box; }
 .financialSection { width: 100%; padding: 20px; padding-bottom: 100px; box-sizing: border-box; margin: 0 auto; display: flex; justify-content: center; flex-direction: column; }
 #annualFinancialsChart, #quarterlyGrowthChart { width: 100%; flex: 1; }
 #annualFinancialsChart, #quarterlyGrowthChart { flex: 1; }
@@ -70,6 +70,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .input-container .foreign-search-box{width:100%;max-width:inherit;}
 .slt-search-opt-btn{width:100%;padding:15px;background:#fafaff;color:#333;font-size:15px;font-family:'Spoqa Han Sans Neo';border:1px solid #ccc;font-weight:700;}
 .slt-search-opt-btn:hover{background:inherit;}
+.slt-search-opt-btn.on {background-color: #2970ff; color:white; pointer-events: none;}
 .stockEarningInfo-toggle-visibility-btn{margin:40px auto 0;padding:15px 50px;font-size:16px;background:#2970ff;color:#fff;border:1px solid #2970ff;border-radius:4px;font-family:'Spoqa Han Sans Neo';transition:none;}
 .stockEarningInfo-toggle-visibility-btn:hover{background:inherit;color:#2970ff;}
 
@@ -185,7 +186,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 /*AI가 말해주는 주식 정보 [해외] 리뉴얼 버젼 종목 기본정보 시작 */
 .stockBasicInfo-toggle-visibility-btn{margin:40px auto 0;padding:15px 50px;font-size:16px;background:#2970ff;color:#fff;border:1px solid #2970ff;border-radius:4px;font-family:'Spoqa Han Sans Neo';transition:none;}
 .stockBasicInfo-toggle-visibility-btn:hover{background:inherit;color:#2970ff;}
-.stockBasic-input-container{width:100%;justify-content:space-between !important;}
+.stockBasic-input-container{width:100%;justify-content:space-between !important;flex-wrap:wrap;margin:0 auto;}
 .infoSection{flex:0 0 700px;margin-top:50px;padding:0;}
 .stockBasicInfoTable{border:0;}
 .stockBasicInfoTable th{font-weight:500;}

@@ -189,14 +189,11 @@ function calendarEventPopup(date, titles) {
         // titles 데이터가 없으면 함수 실행 중지
         return;
     }
-
     let titleStr = titles.split(", "); // titlesStr를 배열로 변환
-
     // titles 데이터가 없거나 빈 문자열인 경우 함수 실행 중지
     if (titleStr.length === 0 || (titleStr.length === 1 && titleStr[0] === '')) {
         return;
     }
-
     let popupHTML = `<div id="fancyCalendarPopup" class="fancy-calendar-popup">
       <span>검색할 이벤트를 선택해주세요.</span>
       <h2>${date} 스케쥴</h2>
