@@ -2,7 +2,9 @@
 import asyncio
 import logging
 from pathlib import Path
+from datetime import datetime
 import json
+import math
 #금융관련 APIs
 import fredpy as fp
 from fredapi import Fred
@@ -34,27 +36,26 @@ base_path = Path("batch/fred_indicators")
 
 # 지표 목록
 indicators = {
-    "CPIAUCSL": "미국 소비자물가지수",
-    "PCEPI": "미국 개인소비지출지수",
-    "PPIFID": "미국 생산자물가지수",
-    "DFEDTARU": "미국 연방기금금리",
-    "CSUSHPISA": "미국 주택가격지수",
-    "GDPC1": "미국 실질국내총생산",
-    "ECIWAG": "미국 고용비용지수",
-    "STLFSI4": "미국 금융스트레스지수",
-    "NGDPSAXDCUSQ": "미국 명목 국내총생산",
-    "DCOILBRENTEU": "crude oil 가격",
-    "GFDEGDQ188S": "미국 GDP 대비 공공부채 비율",
-    "MEHOINUSA672N": "미국 실질 중위 가구소득",
-    "INDPRO": "미국 산업생산지수",
-    "SP500": "S&P500 지수",
-    "UNRATE": "미국 실업률",
-    "FEDFUNDS": "미국 금리",
-    "DGS10": "미국채 10년이자율",
-    "DGS2": "미국채 2년이자율",
-    "DGS3MO": "미국채 3개월이자율"
+    "DGS10": {"name": "미국채 10년이자율", "start_date": "2010-01-01"},
+    "DGS2": {"name": "미국채 2년이자율", "start_date": "2010-01-01"},
+    "DGS3MO": {"name": "미국채 3개월이자율", "start_date": "2010-01-01"},    
+    "CPIAUCSL": {"name": "미국 소비자물가지수", "start_date": None},
+    "PCEPI": {"name": "미국 개인소비지출지수", "start_date": None},
+    "PPIFID": {"name": "미국 생산자물가지수", "start_date": None},
+    "DFEDTARU": {"name": "미국 연방기금금리", "start_date": None},
+    "CSUSHPISA": {"name": "미국 주택가격지수", "start_date": "1987-01-01"},
+    "GDPC1": {"name": "미국 실질국내총생산", "start_date": "2000-01-01"},
+    "ECIWAG": {"name": "미국 고용비용지수", "start_date": "2001-01-1"},
+    "STLFSI4": {"name": "미국 금융스트레스지수", "start_date": None},
+    "NGDPSAXDCUSQ": {"name": "미국 명목 국내총생산", "start_date": None},
+    #"DCOILBRENTEU": {"name": "crude oil 가격", "start_date": "2000-01-01"},
+    "GFDEGDQ188S": {"name": "미국 GDP 대비 공공부채 비율", "start_date": None},
+    "MEHOINUSA672N": {"name": "미국 실질 중위 가구소득", "start_date": None},
+    "INDPRO": {"name": "미국 산업생산지수", "start_date": None},
+    #"SP500": {"name": "S&P500 지수", "start_date": "2000-01-01"},
+    "UNRATE": {"name": "미국 실업률", "start_date": None},
+    "FEDFUNDS": {"name": "미국 금리", "start_date": None}
 }
-
 
 # GPT4 에 뉴스요약을 요청하는 공통함수
 async def gpt4_chart_talk(response_data, series_name):
@@ -74,10 +75,18 @@ async def gpt4_chart_talk(response_data, series_name):
         return None
 
 # series id 받아서 데이터 갖고오는 공통함수 
-async def fetch_and_save_series_data(series_id, series_name):
+async def fetch_and_save_series_data(series_id, series_name, start_date=None):
     try:
         # FRED에서 데이터 가져오기
         data = fred.get_series(series_id)
+        
+        # 특정 시점부터 최근 데이터까지만 가져오기
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d') if isinstance(start_date, str) else start_date
+            data = {date: value for date, value in data.items() if date >= start_date and not math.isnan(value)}
+        else:
+            # NaN 값이 있는 경우 해당 항목을 제외하고 저장
+            data = {date: value for date, value in data.items() if not math.isnan(value)}
         
         # 데이터를 Highcharts가 읽을 수 있는 형식으로 변환
         formatted_data = [{"date": date.strftime('%Y-%m-%d'), "value": value} for date, value in data.items()]
@@ -97,11 +106,13 @@ async def fetch_and_save_series_data(series_id, series_name):
     except Exception as e:
         logging.error(f"Error fetching or saving data for {series_name}: {e}")
 
+
 # 모든 지표에 대해 함수 실행
 async def main():
     tasks = []
-    for series_id, series_name in indicators.items():
-        task = asyncio.ensure_future(fetch_and_save_series_data(series_id, series_name))
+    for series_id, series_info in indicators.items():
+        start_date = series_info["start_date"]
+        task = asyncio.ensure_future(fetch_and_save_series_data(series_id, series_info["name"], start_date))
         tasks.append(task)
     await asyncio.gather(*tasks)
 
@@ -109,7 +120,7 @@ if __name__ == "__main__":
     asyncio.run(main())
     
 '''async def test():
-    figData = await get_economic_indicators2()
+    figData = await fetch_and_save_series_data("GDPC1", "미국 실질국내총생산", "2010-01-01")
     print(figData)
 asyncio.run(test())'''
 

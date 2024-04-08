@@ -24,113 +24,99 @@ async function fetchAndDisplayIndicators() {
         const form = document.getElementById('indicatorForm');
         const formData = new FormData(form);
         const selectedIndicators = formData.getAll('indicators');
-        const aiOpinionCheck = document.getElementById('aiOpinionCheck').checked;
-
         document.getElementById('loading_bar_economics').style.display = 'block';
 
-        const url = `/api/economic-indicators?indicators=${selectedIndicators.join(',')}&aiOpinion=${aiOpinionCheck}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        document.getElementById('loading_bar_economics').style.display = 'none';
-
-        // 차트 및 분석 데이터의 표시 여부를 결정
-        const chartContainer = document.getElementById('chartContainer');
-        const chartAnalysisArea = document.getElementById('chart-anal-area');
-        if (data && data.datasets.length > 0) {
-            chartContainer.style.display = 'block';
-            if(data.chart_talk){
-                chartAnalysisArea.style.display = 'block';
-                document.getElementById('chartAnalysis').innerText = data.chart_talk;
-            }else{
-                chartAnalysisArea.style.display = 'none';
-            }
-        } else {
-            chartContainer.style.display = 'none';
-            chartAnalysisArea.style.display = 'none';
-        }
-
-        const backgroundColors = [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(255, 206, 86, 0.2)',
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(153, 102, 255, 0.2)',
-        'rgba(255, 159, 64, 0.2)'
-        ];
-        const borderColors = [
-            'rgba(255,99,132,1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)'
-        ];
-        const indicatorLabels = {
-            "CPIAUCSL": "소비자물가지수 (CPI)",
-            "PCEPI": "개인소비지출 (PCE)",
-            "PPIFID": "생산자물가지수 (PPI)",
-            "DFEDTARU": "연방기금금리",
-            "CSUSHPISA": "주택가격지수",
-            "A191RL1Q225SBEA": "실질 국내총생산 (GDP)"
-        };
-
-        // 데이터셋 설정
-        const transformedDatasets = data.datasets.map((dataset, i) => ({
-            ...dataset,
-            data: dataset.data.map((value, index) => ({ t: data.labels[index], y: value })),
-            backgroundColor: backgroundColors[i % backgroundColors.length],
-            borderColor: borderColors[i % borderColors.length],
-            borderWidth: 3,
-            pointBackgroundColor: borderColors[i % borderColors.length],
-            pointBorderColor: "#fff",
-            pointHoverBackgroundColor: "#fff",
-            pointHoverBorderColor: borderColors[i % borderColors.length],
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            label: indicatorLabels[dataset.label] || dataset.label,
-            fill: false,
-            spanGaps: true,
-        }));
-        
-
-        // 차트 생성
-        const ctx = document.getElementById('myEconomicChart').getContext('2d');
-        if (window.myEconomicChart instanceof Chart) {
-            window.myEconomicChart.destroy();
-        }
-        window.myEconomicChart = new Chart(ctx, {
-            type: 'line',
-            data: { datasets: transformedDatasets },
-            options: {
-                responsive: true,
-                spanGaps: true,
-                title: { display: true, text: 'Economic Indicators Over Time' },
-                scales: {
-                    xAxes: [{ type: 'time', time: { parser: 'YYYY-MM-DD', tooltipFormat: 'll', unit: 'day',
-                                                        displayFormats: {
-                                                            day: 'MMM D, YYYY',
-                                                            month: 'MMM YYYY',
-                                                            year: 'YYYY'
-                                                        }
-                                                    },
-                                scaleLabel: { display: true, labelString: 'Date' },
-                                ticks: {
-                                    autoSkip: true,
-                                    maxTicksLimit: 20 // X축에 표시할 최대 눈금 수를 조정하여 레이블이 겹치지 않도록 함
-                                }
-                            }],
-                    yAxes: [{ ticks: { beginAtZero: false }, scaleLabel: { display: true, labelString: 'Value' } }]
-                },
-                legend: { position: 'top' },
-                tooltips: { mode: 'index', intersect: false },
-                hover: { mode: 'nearest', intersect: true }
-            }
+        // 각 인디케이터에 대해 파일에서 데이터를 읽어옴
+        const promises = selectedIndicators.map(async (series_id) => {
+            const response = await fetch(`/batch/fred_indicators/${series_id}.json`);
+            const data = await response.json();
+            const textDataResponse = await fetch(`/batch/fred_indicators/${series_id}_aitalk.txt`);
+            const textData = await textDataResponse.text();            
+            return { series_id, data , textData};
         });
+
+        // 모든 데이터를 한꺼번에 가져옴
+        const results = await Promise.all(promises);
+
+        document.getElementById('loading_bar_economics').style.display = 'none';
+        const chartAnalysisArea = document.getElementById('chart-anal-area');
+        const chartContainer = document.getElementById('chartContainer');
+
+        if (results.length > 0) {
+            document.getElementById('chartAnalysis').innerHTML = "";
+            chartAnalysisArea.style.display = 'block';
+            chartContainer.style.display = 'block';
+
+            // 차트 렌더링
+            renderHighchart(results);
+            results.forEach(({ series_id, textData }) => {
+                const chartAnalysisElement = document.createElement('div');
+                textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
+                textData = textData.replace(/- \s*/g, '<br>');
+                textData = textData.replace(/###\s*/g, '<br><br>');
+                textData = textData.replace(/(\d+\.\s+)/g, '<br>$1');
+                chartAnalysisElement.innerHTML = textData;
+                document.getElementById('chartAnalysis').appendChild(chartAnalysisElement);
+            });           
+            
+        } else {
+            chartAnalysisArea.style.display = 'none';
+            chartContainer.style.display = 'none';
+            document.getElementById('chartContainer').innerHTML = '<p>No data available</p>';
+        }
     } catch (error) {
         console.error('Error loading economic indicators data:', error);
         document.getElementById('loading_bar_economics').style.display = 'none';
+        chartContainer.style.display = 'none';
     }
 }
+
+function renderHighchart(datasets) {
+    let series = [];
+    // 각 데이터셋에서 데이터 처리
+    datasets.forEach((dataset) => {
+        const data = dataset.data.map((entry) => {
+            const date = new Date(entry.date).getTime(); // timestamp로 변환
+            let value = entry.value;
+            // 값이 "NaN"인 경우 null로 처리
+            value = value === "NaN" ? null : parseFloat(value);
+            return [date, isNaN(value) ? null : value]; 
+        }).filter((entry) => entry[1] !== null); // null인 항목 제거
+
+
+        if (data.length > 0) {
+            series.push({
+                name: dataset.series_id,
+                data: data,
+            });
+        }
+    });
+    // 차트 렌더링
+    Highcharts.chart('chartContainer', {
+        chart: {
+            type: 'line',
+            zoomType: 'x', // x축 방향으로만 확대/축소 가능            
+        },
+        title: {
+            text: 'Economic Indicators Over Time',
+        },
+        xAxis: {
+            type: 'datetime',
+        },
+        yAxis: {
+            title: {
+                text: 'Value',
+            },
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+        },
+        series: series,
+    });
+}
+
 
 function clearData() {
     // 모든 체크박스 선택 해제

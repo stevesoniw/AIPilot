@@ -1,73 +1,130 @@
 <!-- [#2 메뉴 시작] 글로벌 주요 경제지표 --> 
 <div id="menub" class="menu-cont">
 <h2 class="s-tit">글로벌 주요 경제지표</h2>
-<h3 class="s-tit">1> 핵심지표 분석</h3>
+<h3 class="s-tit new-sub-tit">핵심지표 분석</h3>
 <div class="form-container">
-    <p class="form-header">분석을 원하는 지표들을 선택해주세요.</p>
+    <p class="form-header">분석을 원하는 <span>지표들</span>을 선택해주세요.</p>
     <form id="indicatorForm">
         <div class="checkbox-row">
+            <!-- 기존 체크박스 -->
             <div class="checkbox-group">
                 <input type="checkbox" name="indicators" value="CPIAUCSL" id="CPIAUCSL">
-                <label for="CPIAUCSL">소비자물가지수 (CPI)</label>
+                <label for="CPIAUCSL">미국 소비자물가지수 (CPI)</label>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" name="indicators" value="PCEPI" id="PCEPI">
-                <label for="PCEPI">개인소비지출 (PCE)</label>
+                <label for="PCEPI">미국 개인소비지출 (PCE)</label>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" name="indicators" value="PPIFID" id="PPIFID">
-                <label for="PPIFID">생산자물가지수 (PPI)</label>
+                <label for="PPIFID">미국 생산자물가지수(PPI)</label>
             </div>
-        </div>
-        <div class="checkbox-row">
             <div class="checkbox-group">
                 <input type="checkbox" name="indicators" value="DFEDTARU" id="DFEDTARU">
-                <label for="DFEDTARU">연방기금금리</label>
+                <label for="DFEDTARU">미국 연방기금금리(DFEDTARU)</label>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" name="indicators" value="CSUSHPISA" id="CSUSHPISA">
-                <label for="CSUSHPISA">주택가격지수</label>
+                <label for="CSUSHPISA">미국 주택가격지수(CSUSHPISA)</label>
             </div>
             <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="A191RL1Q225SBEA" id="A191RL1Q225SBEA">
-                <label for="A191RL1Q225SBEA">실질 국내총생산(GDP)</label>
+                <input type="checkbox" name="indicators" value="GDPC1" id="GDPC1">
+                <label for="GDPC1">미국 실질 국내총생산(GDP)</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="ECIWAG" id="ECIWAG">
+                <label for="ECIWAG">미국 고용비용지수(ECIWAG)</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="STLFSI4" id="STLFSI4">
+                <label for="STLFSI4">미국 금융스트레스지수</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="NGDPSAXDCUSQ" id="NGDPSAXDCUSQ">
+                <label for="NGDPSAXDCUSQ">미국 명목 국내총생산</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="GFDEGDQ188S" id="GFDEGDQ188S">
+                <label for="GFDEGDQ188S">미국 GDP 대비 공공부채 비율</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="MEHOINUSA672N" id="MEHOINUSA672N">
+                <label for="MEHOINUSA672N">미국 실질 중위 가구소득</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="INDPRO" id="INDPRO">
+                <label for="INDPRO">미국 산업생산지수</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="UNRATE" id="UNRATE">
+                <label for="UNRATE">미국 실업률</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="FEDFUNDS" id="FEDFUNDS">
+                <label for="FEDFUNDS">미국 금리</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="DGS10" id="DGS10">
+                <label for="DGS10">미국채 10년이자율</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="DGS2" id="DGS2">
+                <label for="DGS2">미국채 2년이자율</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="indicators" value="DGS3MO" id="DGS3MO">
+                <label for="DGS3MO">미국채 3개월이자율</label>
             </div>
         </div>
+        
         <div class="form-actions">
-            <div class="ai-opinion-checkbox">
+            <!-- <div class="ai-opinion-checkbox">
                 <input type="checkbox" id="aiOpinionCheck" name="aiOpinionCheck">
                 <label for="aiOpinionCheck" class="ai-opinion-label">AI의견 함께보기</label>
-            </div>
+            </div> -->
             <div class="center-button">
-                <button type="button" id="indicatorButton" class="indicatorButton" onclick="fetchAndDisplayIndicators();">Show Chart</button>
+
+                <!-- 2024-04-05 new-show-chart-btn 클래스 추가 -->
+                <button type="button" id="indicatorButton" class="indicatorButton new-show-chart-btn" onclick="fetchAndDisplayIndicators();">Show Chart</button>
+                <!-- 2024-04-05 수정 끝 -->
+
             </div>                        
             <button type="button" id="clearButton" onclick="clearData();">데이터 클리어</button>
         </div> 
-        <div class="ai-opinion-warning">
+        <!-- <div class="ai-opinion-warning">
             *AI의견 함께보기 체크시 응답 속도가 늦어질수 있습니다.
-        </div>                                                      
+        </div>        -->                                              
     </form>
 </div>
 
 <div id="loading_bar_economics" class="loading_bar" style="display: none;">
     <img src="/static/assets/images/LoadingBar_A.gif">
-    <p class="loading-text-economics">핵심지표 분석중입니다.<br/>(AI 분석은 시간이 오래 걸릴 수 있습니다)</p>
+    <p class="loading-text-economics">핵심지표 분석중입니다.</p>
 </div>                   
-<div id="chartContainer" style="display: none;">
-    <canvas id="myEconomicChart" width="1200" height="600"></canvas>
+<div id="chartContainer" style="display: block;">
+    <div class="chartjs-size-monitor">
+        <div class="chartjs-size-monitor-expand">
+            <div class=""></div>
+        </div>
+        <div class="chartjs-size-monitor-shrink">
+            <div class=""></div>
+        </div>
+    </div>
+    <canvas id="myEconomicChart" width="1135" height="567" style="display: block; width: 1135px; height: 567px;" class="chartjs-render-monitor"></canvas>
 </div>
 <!--<div class="economic-chart-area" id="economicChartArea" style="display:none;">
     <div>
         <img id="economicIndicators" alt="Economic Indicators Chart">
     </div>
 </div>-->                  
-<div class="box-instruction" id="chart-anal-area" style="display: none;">
+<div class="box-instruction new-chart-analysis-wrap" id="chart-anal-area" style="display: block;">
     <p class="chart-analysis-title">차트 데이터 분석</p> 
-    <ul class="list-dep">
+    <div>
         <div id="chartAnalysis"></div>
-    </ul>
-</div>
-<h3 class="nth-menu">2> 미국 채권 데이터 분석</h3>
+        </div>
+    </div>
+</div>   
+<h3 class="nth-menu">2> 관련 뉴스</h3>
 <div class="bond-chart-area">
     <div id="loading_bar_bonds" class="loading_bar" style="margin-left: 0px;">
         <img src="/static/assets/images/LoadingBar_C.gif">
