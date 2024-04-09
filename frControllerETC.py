@@ -3,10 +3,9 @@ import json
 import requests
 import httpx
 import asyncio
-from typing import Optional
+from typing import Optional, List
 import base64
 from datetime import datetime, timedelta
-from typing import Optional
 # 기존 Util 함수들
 from google.cloud import vision
 from google.oauth2 import service_account
@@ -248,6 +247,8 @@ def rapidapi_bond_news(category):
     response = requests.get(url, headers=headers, params=querystring)
     return response.json()
 
+#print(rapidapi_bond_news('market-news::financials|market-news::issuance|market-news::us-economy'))
+
 # seeking alpha 뉴스에서 쓸데없는 파라미터들 없애기
 def extract_news_data(news_json):
     extracted_data = []
@@ -262,25 +263,37 @@ def extract_news_data(news_json):
         extracted_data.append(extracted_item)
     return json.dumps(extracted_data, indent=4, ensure_ascii=False)
 
-def filter_bond_news(news_json): 
-    # 이 부분이 문제네..
-    bond_keywords = ['bonds', 'treasury', 'FOMC', 'fixed income', 'interest rate', 'inflation', 'yield', 'credit rating', 'default risk', 'duration']
+def filter_bond_news(news_json, selected_eng_names):
     filtered_news = {"data": []}
 
     for item in news_json['data']:
         title = item['attributes'].get('content', '').lower()
-        if any(keyword in title for keyword in bond_keywords):
+        if any(keyword in title for keyword in selected_eng_names):
             filtered_news["data"].append(item)
 
     return filtered_news
 
 # 채권관련 뉴스만 뽑아오도록 해보자 ㅠ
-@frControllerETC.get("/bond-news/{category}")
-async def fetch_bond_news(category: str):
-    news_json = rapidapi_bond_news(category)
-    filtered_news_json = filter_bond_news(news_json)
-    extracted_data = json.loads(extract_news_data(filtered_news_json))
-    return extracted_data
+@frControllerETC.get("/bond-news")
+def fetch_bond_news(selected_eng_names: List[str]):
+    try:
+        # selectedEngNames를 사용하여 뉴스를 가져오는 작업 수행
+        print("***********************************")
+        print(selected_eng_names)
+        news_json = rapidapi_bond_news('market-news::financials|market-news::issuance|market-news::us-economy')
+        print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+        print(news_json)
+        filtered_news_json = filter_bond_news(news_json, selected_eng_names)
+        print("****************************************************")
+        print(filtered_news_json)
+        extracted_data = json.loads(extract_news_data(filtered_news_json))
+        return extracted_data
+    except Exception as e:
+        # 오류 처리
+        print("Error fetching bond news:", e)
+        return {"error": "Failed to fetch bond news"}
+    
+fetch_bond_news(['GDP'])
 
 # 채권뉴스 GPT 이용해서 번역해보기 //메뉴3 일반뉴스 번역에서도 씀
 def translate_gpt(text):

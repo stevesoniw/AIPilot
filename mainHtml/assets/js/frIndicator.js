@@ -18,7 +18,6 @@ async function loadEconomicIndicators() {
         document.getElementById('economicChartArea').style.display = 'none';             
     }     
 }**/
-
 async function fetchAndDisplayIndicators() {
     try {
         const form = document.getElementById('indicatorForm');
@@ -72,6 +71,29 @@ async function fetchAndDisplayIndicators() {
 }
 
 function renderHighchart(datasets) {
+    const indicators = {
+        "DGS10": {"name": "미국채 10년이자율", "engname": "Treasury Yield"},
+        "DGS2": {"name": "미국채 2년이자율", "engname": "Treasury Yield"},
+        "DGS3MO": {"name": "미국채 3개월이자율", "engname": "Treasury Yield"},
+        "CPIAUCSL": {"name": "미국 소비자물가지수", "engname": "Consumer Price Index"},
+        "PCEPI": {"name": "미국 개인소비지출지수", "engname": "Personal Consumption Expenditures"},
+        "PPIFID": {"name": "미국 생산자물가지수", "engname": "Producer Price Index"},
+        "DFEDTARU": {"name": "미국 연방기금금리", "engname": "Federal Funds Rate"},
+        "CSUSHPISA": {"name": "미국 주택가격지수", "engname": "Housing Price Index"},
+        "GDPC1": {"name": "미국 실질국내총생산", "engname": "GDP"},
+        "ECIWAG": {"name": "미국 고용비용지수", "engname": "Employment Cost Index"},
+        "STLFSI4": {"name": "미국 금융스트레스지수", "engname": "Financial Stress Index"},
+        "NGDPSAXDCUSQ": {"name": "미국 명목 국내총생산", "engname": "GDP"},
+        "DCOILBRENTEU": {"name": "crude oil 가격", "engname": "Crude Oil Price"},
+        "GFDEGDQ188S": {"name": "미국 GDP 대비 공공부채 비율", "engname": "Public Debt"},
+        "MEHOINUSA672N": {"name": "미국 실질 중위 가구소득", "engname": "Real Median Household Income"},
+        "INDPRO": {"name": "미국 산업생산지수", "engname": "Industrial Production Index"},
+        "SP500": {"name": "S&P500 지수", "engname": "S&P 500"},
+        "UNRATE": {"name": "미국 실업률", "engname": "Unemployment Rate"},
+        "FEDFUNDS": {"name": "미국 금리", "engname": "interest rate"}
+    }   
+     
+    const selectedEngNames = datasets.map(dataset => indicators[dataset.series_id].engname);    
     let series = [];
     // 각 데이터셋에서 데이터 처리
     datasets.forEach((dataset) => {
@@ -86,7 +108,7 @@ function renderHighchart(datasets) {
 
         if (data.length > 0) {
             series.push({
-                name: dataset.series_id,
+                name: indicators[dataset.series_id].name,
                 data: data,
             });
         }
@@ -115,6 +137,8 @@ function renderHighchart(datasets) {
         },
         series: series,
     });
+    console.log(selectedEngNames);
+    fetchAndDisplayBondsNews(selectedEngNames);
 }
 
 
@@ -134,57 +158,19 @@ function clearData() {
 }        
 
 //****************************** 글로벌 주요경제지표 함수 [#1.핵심지표] Ends *******************************// 
-//****************************** 글로벌 주요경제지표 함수 [#2.채권가격] Start ******************************// 
+//****************************** 글로벌 주요경제지표 함수 [#2.indicators] Start ******************************// 
 
-async function fetchBondsData() {
-    // 'bonds_chart_div'에 이미 차트 데이터가 있으면 요청 중단(=메뉴이동 시에 한번 호출한적 있으면 하지말자)
-    const bondsChartDiv = document.getElementById('bonds_chart_div');
-    if (Plotly.d3.select(bondsChartDiv).select('.plot-container').node()) {
-        // 차트가 이미 그려져 있다면 함수 종료
-        console.log('Chart already drawn. Skipping fetch.');
-        return;
-    }
-    try {
-        // 'loading_bar_bonds'을 표시
-        document.getElementById('loading_bar_bonds').style.display = 'block';
-
-        // 서버에서 차트 구성 데이터와 레이아웃 설정을 가져오기
-        const response = await fetch('/get_bonds_data', {
+//indicators 뉴스 가져오기
+async function fetchAndDisplayBondsNews(selectedEngNames) {
+    try{
+        document.getElementById('loading_bar_bondsNews').style.display = 'block';
+        const response = await fetch(`/bond-news`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ selectedEngNames: selectedEngNames }),
         });
-        
-        // JSON으로 데이터 변환
-        const data = await response.json();
-        
-        // 기준금리 차트 데이터 및 레이아웃 설정
-        const baseRateData = data.base_rate_chart.data;
-        const baseRateLayout = data.base_rate_chart.layout;
-
-        // 이자율 차트 데이터 및 레이아웃 설정
-        const interestRateData = data.interest_rate_chart.data;
-        const interestRateLayout = data.interest_rate_chart.layout;
-        
-        // Plotly 차트를 생성
-        Plotly.newPlot('bonds_chart_div', baseRateData, baseRateLayout);
-        Plotly.newPlot('interest_chart_div', interestRateData, interestRateLayout);
-        // 'loading_bar_bonds' 숨기기
-        document.getElementById('loading_bar_bonds').style.display = 'none';
-        var bondArea = document.getElementById('bond-area').style.display = 'block';
-    }catch (error) {
-        console.error('Error loading fetchBondsData(chart):', error);
-        document.getElementById('loading_bar_bonds').style.display = 'none';
-    }
-    
-}
-
-//채권 뉴스 가져오기
-async function fetchAndDisplayBondsNews(category) {
-    try{
-        document.getElementById('loading_bar_bondsNews').style.display = 'block';
-        const response = await fetch(`/bond-news/${category}`);
         const bondNews = await response.json();
     
         document.getElementById('loading_bar_bondsNews').style.display = 'none';
@@ -282,4 +268,4 @@ async function fetchAndDisplayBondsNews(category) {
             document.getElementById('loading_bar_bondsNews').style.display = 'none';
     }
 }
-//****************************** 글로벌 주요경제지표 함수 [#2.채권가격] Ends ******************************// 
+//****************************** 글로벌 주요경제지표 함수 [#2.indicators 뉴스] Ends ******************************// 
