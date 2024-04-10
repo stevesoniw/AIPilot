@@ -23,14 +23,8 @@ async function loadEarningData() {
     const ticker = document.getElementById('foreign_ticker').value;             
     try {
         //로딩바
-        document.getElementById('loading_bar_fingpt').style.top = '50%';  
+        document.getElementById('loading_bar_fingpt').style.top = '30%';  
         document.getElementById('loading_bar_fingpt').style.display = 'block';                    
-        //실적
-        document.getElementById('loading_bar_fingpt').style.display = 'none';
-        document.getElementById('fingptChartArea').style.display = 'block';
-        document.getElementById('gptEarningTableArea').style.display = 'block';
-        document.getElementById('gptMessageArea').style.display = 'block';
-        document.getElementById('gptStockwaveArea').style.display = 'block';
         //뉴스
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         document.getElementById('foreignTickerNewsArea').style.display = 'none';
@@ -46,9 +40,21 @@ async function loadEarningData() {
             document.getElementById('loading_bar_fingpt').style.display = 'none';  
             return;
         }
-        const response = await fetch(`/api/charts/both/${ticker}`);
-        const data = await response.json();
 
+        const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        const fileUrl = `/batch/earning_data/${ticker}/earningChart_${ticker}_${todayDate}.json`;
+        let data;
+
+        try {
+            // 먼저 파일에서 데이터를 읽어보기
+            const fileResponse = await fetch(fileUrl);
+            if (!fileResponse.ok) throw new Error('File not found, fetching from server...');
+            data = await fileResponse.json();
+        } catch (error) {
+            // 파일이 없으면 서버에서 데이터 가져오기
+            const response = await fetch(`/api/charts/both/${ticker}`);
+            data = await response.json();
+        }
         // Base64 인코딩된 이미지 데이터를 이미지 태그의 src 속성에 할당
         document.getElementById('earningsChart').src = 'data:image/png;base64,' + data.earnings_chart;
         document.getElementById('recommendationsChart').src = 'data:image/png;base64,' + data.recommendations_chart;
@@ -56,11 +62,13 @@ async function loadEarningData() {
         // 차트 영역을 보이게 설정
         document.getElementById('fingptChartArea').style.display = 'block';
         document.getElementById('loading_bar_fingpt').style.display = 'none';  
-        fetchEarningsAnnouncement(ticker);
+        //fetchEarningsAnnouncement(ticker);
+        gptAnalysis(ticker);
 
     } catch (error) {
         console.error('Error loading chart data:', error);
-        fetchEarningsAnnouncement(ticker);
+        //fetchEarningsAnnouncement(ticker);
+        gptAnalysis(ticker);
         document.getElementById('fingptChartArea').style.display = 'none';
         document.getElementById('loading_bar_fingpt').style.display = 'none'; 
     }
@@ -106,12 +114,20 @@ async function gptAnalysis(ticker) {
         document.getElementById('analysisResult').innerHTML = "";    
         document.getElementById('newsAnalysis').innerHTML = "";                     
         document.getElementById('gptMessageArea').style.display = 'block';
-        document.getElementById('loading_bar_fingpt').style.top = '130%';  
+        document.getElementById('loading_bar_fingpt').style.top = '80%';  
         document.getElementById('loading_bar_fingpt').style.display = 'block';  
 
-
-        const response = await fetch(`/api/analysis/${ticker}`);
-        const data = await response.json();
+        const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        const fileUrl = `/batch/earning_data/${ticker}/gptAnalysis_${ticker}_${todayDate}.json`;        
+        const checkResponse = await fetch(fileUrl);
+        let data;
+        //File 이 있으면 File에서 먼저 읽는다. for 속도개선. 
+        if (checkResponse.ok) {
+            data = await checkResponse.json();
+        } else {
+            const response = await fetch(`/api/analysis/${ticker}`);
+            data = await response.json();
+        }     
         if(data){
             const formattedCompletion = data.completion.replace(/\n/g, '<br>');
             const formattedPrompt = data.prompt_news.replace(/\n/g, '<br>');
@@ -127,28 +143,102 @@ async function gptAnalysis(ticker) {
         document.getElementById('loading_bar_fingpt').style.display = 'none'; 
     }                
 }
-//FinGPT 최근 1년 주가 흐름과 거래량 추이 보여주기 (이미지 호출)
+//FinGPT 최근 1년 주가 흐름과 거래량 추이 보여주기 (이미지 호출->하이차트로 변경 2024.04.10)
+
 async function gptStockWave(ticker) {
     try {
-        document.getElementById('loading_bar_fingpt').style.bottom = '10%';
         document.getElementById('loading_bar_fingpt').style.display = 'block';  
-        document.getElementById('gptStockwaveArea').style.display = 'none';                
+        document.getElementById('gptStockwaveArea').style.display = 'none';
 
         const response = await fetch(`/api/stockwave/${ticker}`);
         const data = await response.json();
 
-        // Base64 인코딩된 이미지 데이터를 이미지 태그의 src 속성에 할당
-        document.getElementById('stockwaveChart').src = 'data:image/png;base64,' + data.stockwave_data;
-        // 주가흐름 영역을 보이게 설정
-        document.getElementById('gptStockwaveArea').style.display = 'block';   
-        document.getElementById('loading_bar_fingpt').style.display = 'none';  
+        // 현재 날짜와 1년 전 날짜 계산
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        const minDate = oneYearAgo.getTime();
 
+        // 최신 날짜(데이터의 마지막 날짜) 계산
+        const maxDate = new Date(data.dates[data.dates.length - 1]).getTime();
+
+        var selectedData = $('#foreign_ticker').select2('data');
+        if (selectedData.length > 0) {
+            var description = selectedData[0].text; 
+        }
+
+        Highcharts.stockChart('gptStockwaveArea', {
+            chart: {
+                zoomType: 'xy'
+            },
+            rangeSelector: {
+                selected: 5, // 'All' 범위 선택. 실제 범위는 xAxis의 min, max로 제어됩니다.
+                inputEnabled: false,
+            },
+            navigator: {
+                enabled: true
+            },
+            title: {
+                //text: `${ticker} 1년 주가 데이터와 거래량`,
+                text: `${description} 1년 주가 데이터와 거래량`,
+                style: {
+                    color: '#13064e', // 진남색
+                    fontSize: '17px' // 글자 크기
+                }
+            },
+            xAxis: {
+                min: minDate,
+                max: maxDate,
+            },
+            series: [{
+                name: `${ticker} Price`,
+                data: data.dates.map((date, index) => [new Date(date).getTime(), data.prices[index]]),
+            }, {
+                name: 'Volume',
+                type: 'column',
+                data: data.dates.map((date, index) => [new Date(date).getTime(), data.volumes[index]]),
+                yAxis: 1,
+            }],
+            yAxis: [{
+                title: {
+                    text: 'Stock Price'
+                },
+                height: '60%',
+                resize: {
+                    enabled: true
+                },
+                labels: {
+                    align: 'right',
+                    x: -3
+                }
+            }, {
+                title: {
+                    text: 'Volume'
+                },
+                top: '65%',
+                height: '35%',
+                offset: 0,
+                lineWidth: 2,
+                opposite: true, // 거래량을 오른쪽에 배치
+                labels: {
+                    align: 'right',
+                    x: -3
+                }
+            }],
+            credits: {
+                enabled: false
+            }
+        });
+
+        document.getElementById('loading_bar_fingpt').style.display = 'none';  
+        document.getElementById('gptStockwaveArea').style.display = 'block';
     } catch (error) {
         console.error('Error loading stockwave data:', error);
-        document.getElementById('gptStockwaveArea').style.display = 'none';                
         document.getElementById('loading_bar_fingpt').style.display = 'none'; 
-    }         
+        document.getElementById('gptStockwaveArea').style.display = 'none';                
+    }
 }
+
+
 
 //*********************************** AI가 말해주는 주식정보 함수 Ends [#1.Get EarningIfno]****************************************//        
 //********************************** AI가 말해주는 주식정보 함수 Starts [#2.Get ForeignStockNewsInfo]**************************************//

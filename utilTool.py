@@ -106,3 +106,7 @@ def format_number_with_comma(number):
         return formatted_num + percent_sign
     else:
         return str(number)    
+    
+# 1년전 날짜 구하기    
+def get_one_year_before(end_date):
+    return end_date - timedelta(days=365)

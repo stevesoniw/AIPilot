@@ -51,7 +51,7 @@ async def scrape_and_save_stocks(client):
         soup = BeautifulSoup(response.text, 'html.parser')
         symbols = [link.text.strip() for link in soup.select('a[data-test="quoteLink"]')]
 
-        async with aiofiles.open('batch/hostocks.txt', 'w') as file:
+        async with aiofiles.open('batch/hotstocks.txt', 'w') as file:
             await file.write('\n'.join(symbols))
         print("Stocks data saved successfully.")
         return True
@@ -62,7 +62,7 @@ async def scrape_and_save_stocks(client):
 # 혹시 수동으로 종목을 입력해서 가져와야될 경우도 있을것 같아, 파일로 먼저 저장하고, 이후 읽어오는 2단계로 변경함. 
 async def load_stocks_from_file():
     try:
-        async with aiofiles.open('batch/hostocks.txt', 'r') as file:
+        async with aiofiles.open('batch/hotstocks.txt', 'r') as file:
             symbols = await file.read()
             symbols = symbols.splitlines()
             print("Stocks data loaded successfully.")
@@ -161,8 +161,7 @@ async def process_stock_detail_news(symbols):
             directory = f'batch/stocknews/{symbol}'
             os.makedirs(directory, exist_ok=True)
             try:
-                async with aiofiles.open(f'{directory}/news_{symbol}.json', 'r', encoding='utf-8') as f:
-
+                async with aiofiles.open(f'{directory}/news_{symbol}.json', 'r', encoding='utf-8', errors='ignore') as f:
                     data = await f.read()
                     news_data = json.loads(data)
             except FileNotFoundError:
@@ -216,7 +215,7 @@ async def main():
 async def handle_main_news(client):
     success = await scrape_and_save_stocks(client)
     symbols = await load_stocks_from_file()
-    #await process_stock_main_news(symbols)
+    await process_stock_main_news(symbols)
     await process_stock_detail_news(symbols)
 
 loop = asyncio.get_event_loop()

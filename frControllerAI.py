@@ -1,9 +1,11 @@
 #Basic 함수
+import asyncio
 import json
 import random
 import requests
 import os
 import numpy as np 
+import aiofiles
 from datetime import datetime, timedelta
 # 상용 Util 함수들
 from pydantic import BaseModel
@@ -515,7 +517,7 @@ def query_gpt4(ticker: str):
         "completion": completion_content
     }
     
-def get_historical_eps(ticker, limit=4):
+async def get_historical_eps(ticker, limit=4):
     earnings = finnhub_client.company_earnings(ticker, limit)
     earnings_json = [
         {
@@ -542,7 +544,7 @@ def get_historical_eps(ticker, limit=4):
                 color='black' if df_earnings['surprisePercent'][i] <0 else 'red' , fontsize=11, ha='left', va='bottom')
     return fig
     
-def get_recommend_trend (ticker) : 
+async def get_recommend_trend (ticker) : 
     recommend_trend = finnhub_client.recommendation_trends(ticker)
     df_recommend_trend = pd.DataFrame(recommend_trend).set_index('period').drop('symbol', axis=1).sort_index()
 
@@ -576,59 +578,68 @@ def get_recommend_trend (ticker) :
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1))
     return fig
 
-
-def get_one_year_before(end_date):
-  end_date = datetime.strptime(end_date, "%Y-%m-%d")
-  one_year_before = end_date - timedelta(days=365)
-  return one_year_before.strftime("%Y-%m-%d")
-
-def get_stock_data_daily(symbol):
-  EndDate = utilTool.get_curday()
-  StartDate = get_one_year_before(EndDate)
-  stock_data = yf.download(symbol, StartDate, EndDate)
-  return stock_data[["Adj Close", "Volume"]]
-
-def get_stock_data_fig (ticker):
-    data = get_stock_data_daily(ticker)
-    fig, ax1 = plt.subplots(figsize=(14, 5))
-    ax1.plot(data['Adj Close'], label='Price(USD)', color='blue')
-    ax1.set_xlabel('date')
-    ax1.set_ylabel('Price(USD)', color='blue')
-    ax1.tick_params('y', colors='blue')
-    ax1.set_title(f'{ticker} Stock price and Volume Chart (recent 1 year)')
-    ax2 = ax1.twinx()
-    ax2.bar(data.index, data['Volume'], label='Volume', alpha=0.2, color='green')
-    ax2.set_ylabel('Volume', color='green')
-    ax2.tick_params('y', colors='green')
-    return fig 
+async def get_stock_data_daily(symbol):
+    EndDate = datetime.now()
+    StartDate = utilTool.get_one_year_before(EndDate)
+    stock_data = yf.download(symbol, start=StartDate.strftime('%Y-%m-%d'), end=EndDate.strftime('%Y-%m-%d'))
+    return stock_data[["Adj Close", "Volume"]]
 
 @frControllerAI.get("/api/charts/both/{ticker}")
 async def get_both_charts(ticker: str):
     # 주식 실적 이력 차트 생성 및 Base64 인코딩
-    fig1 = get_historical_eps(ticker)
+    fig1 = await get_historical_eps(ticker)
     earnings_chart_base64 = utilTool.get_chart_base64(fig1)
     
-    #print(earnings_chart_base64)
     # 애널리스트 추천 트렌드 차트 생성 및 Base64 인코딩
-    fig2 = get_recommend_trend(ticker)
+    fig2 = await get_recommend_trend(ticker)
     recommendations_chart_base64 = utilTool.get_chart_base64(fig2)
+    todayDate = datetime.now().strftime("%Y%m%d")
 
-    # 두 차트의 Base64 인코딩된 이미지 데이터를 JSON으로 반환
-    return JSONResponse(content={
+    # 저장할 데이터 구성
+    data_to_save = {
         "earnings_chart": earnings_chart_base64,
         "recommendations_chart": recommendations_chart_base64
-    })
+    }
+    # 파일 저장 디렉토리 경로 생성
+    directory = f'batch/earning_data/{ticker}'
+    os.makedirs(directory, exist_ok=True)
+
+    # 데이터를 JSON 파일로 비동기적으로 저장
+    file_path = f'{directory}/earningChart_{ticker}_{todayDate}.json'
+    async with aiofiles.open(file_path, 'w') as file:
+        await file.write(json.dumps(data_to_save))
+
+    # 동일한 데이터를 클라이언트로 반환
+    return JSONResponse(content=data_to_save)
   
 @frControllerAI.get("/api/analysis/{ticker}")
-def get_analysis(ticker: str):
+async def get_analysis(ticker: str):
     result = query_gpt4(ticker)
+    todayDate = datetime.now().strftime("%Y%m%d")
+    #파일로도 한번 저장시킨다 (클라에서 파일 있으면 파일먼저 읽게)
+    directory = f'batch/earning_data/{ticker}'
+    os.makedirs(directory, exist_ok=True)
+    file_path = f'{directory}/gptAnalysis_{ticker}_{todayDate}.json'
+    async with aiofiles.open(file_path, 'w') as file:
+        await file.write(json.dumps(result))
+
     return JSONResponse(content=result)
  
 @frControllerAI.get("/api/stockwave/{ticker}")
-def get_stockwave(ticker: str):
-    fig = get_stock_data_fig(ticker)
-    logging.debug(fig)
-    stockwave_base64 = utilTool.get_chart_base64(fig)
-    return JSONResponse(content={"stockwave_data": stockwave_base64})
+async def get_stockwave(ticker: str):
+    data = await get_stock_data_daily(ticker)
+    print("******************************")
+    print(data)
+    # 날짜, 가격, 거래량을 각각 리스트로 변환
+    dates = data.index.strftime('%Y-%m-%d').tolist()
+    prices = data['Adj Close'].round(2).tolist()  # 소수점 두 자리로 반올림
+    volumes = data['Volume'].tolist()
+
+    return JSONResponse(content={
+        "dates": dates,
+        "prices": prices,
+        "volumes": volumes,
+    })
 
 ##################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보 ENDS ###############################
+

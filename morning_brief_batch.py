@@ -168,7 +168,8 @@ async def generate_market_summary():
     SYSTEM_PROMPT_2 = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
     gpt_additional_news = await gpt4_news_sum({"news": finnhub_news_data}, SYSTEM_PROMPT_2)
     #formatted_additional_news = gpt_additional_news.replace("-", "<br>")
-    formatted_additional_news = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", gpt_additional_news)
+    formatted_additional_news = re.sub(r"```html\s*(.*?)\s*```", r"\1", gpt_additional_news)
+    formatted_additional_news = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", formatted_additional_news)
     formatted_additional_news = re.sub(r"(\d+)\.", r"<br>\1.", formatted_additional_news)    
     
     print(gpt_additional_news)
