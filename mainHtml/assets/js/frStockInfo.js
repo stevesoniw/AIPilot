@@ -45,12 +45,11 @@ async function loadEarningData() {
         const fileUrl = `/batch/earning_data/${ticker}/earningChart_${ticker}_${todayDate}.json`;
         let data;
 
-        try {
-            // 먼저 파일에서 데이터를 읽어보기
-            const fileResponse = await fetch(fileUrl);
-            if (!fileResponse.ok) throw new Error('File not found, fetching from server...');
+        // 먼저 파일에서 데이터를 읽어보기
+        const fileResponse = await fetch(fileUrl);
+        if (fileResponse.ok) {
             data = await fileResponse.json();
-        } catch (error) {
+        } else {
             // 파일이 없으면 서버에서 데이터 가져오기
             const response = await fetch(`/api/charts/both/${ticker}`);
             data = await response.json();
@@ -67,6 +66,7 @@ async function loadEarningData() {
 
     } catch (error) {
         console.error('Error loading chart data:', error);
+        alert("해당 종목의 데이터가 존재하지 않습니다.");
         //fetchEarningsAnnouncement(ticker);
         gptAnalysis(ticker);
         document.getElementById('fingptChartArea').style.display = 'none';
@@ -129,9 +129,11 @@ async function gptAnalysis(ticker) {
             data = await response.json();
         }     
         if(data){
+            const formattedInfo = data.info.replace(/\n/g, '<br>');
             const formattedCompletion = data.completion.replace(/\n/g, '<br>');
             const formattedPrompt = data.prompt_news.replace(/\n/g, '<br>');
             document.getElementById('analysisResult').innerHTML = formattedCompletion;
+            document.getElementById('companyInfo').innerHTML = formattedInfo;
             document.getElementById('newsAnalysis').innerHTML = formattedPrompt;
             document.getElementById('loading_bar_fingpt').style.display = 'none';   
             gptStockWave(ticker)                      

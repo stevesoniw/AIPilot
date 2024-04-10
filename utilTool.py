@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 import matplotlib.pyplot as plt
 from pandas import Timestamp
 from io import BytesIO
+import math
 import base64
 import json 
 import logging
@@ -110,3 +111,11 @@ def format_number_with_comma(number):
 # 1년전 날짜 구하기    
 def get_one_year_before(end_date):
     return end_date - timedelta(days=365)
+
+# Nan 또는 None 값 체크 함수
+def is_valid(value):
+    if value is None:
+        return False
+    if isinstance(value, (float, int)) and math.isnan(value):
+        return False
+    return True

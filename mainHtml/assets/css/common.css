@@ -274,3 +274,5 @@ select{height:30px;padding:0px 5px;font-size:13px;color:#555;border:1px solid #c
 textarea{width:100%;padding:5px 10px;font-size:13px;color:#555;border:1px solid #cfcfcf;border-radius:5px;resize:none;}
 textarea::-webkit-scrollbar{width:3px;}
 textarea::-webkit-scrollbar-thumb{background:#cfcfcf;}
+
+div[aria-hidden="true"] {display: none !important;}

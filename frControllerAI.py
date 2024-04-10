@@ -390,7 +390,7 @@ def get_prompt_earning (ticker):
     prompt_news_after7 = ''
     curday = utilTool.get_curday()
     profile = finnhub_client.company_profile2(symbol=ticker)
-    company_template = "[기업소개]:\n\n{name}은 {ipo}에 상장한 {finnhubIndustry}섹터의 기업입니다. "
+    company_template = "[기업소개]:\n{name}은 {ipo}에 상장한 {finnhubIndustry}섹터의 기업입니다.\n"
     intro_company = company_template.format(**profile)    
     
     # find announce calendar 
@@ -418,7 +418,10 @@ def get_prompt_earning (ticker):
     if  eps_actual is None or np.isnan(eps_actual):  # [Case2] 실적발표 전 
         # create Prompt 
         head = "{}의 {}년 {}분기 실적 발표일은 {}으로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다. ".format(profile['name'], earning_y,earning_q, date_announce, revenue_estimate, eps_estimate)
-        
+        if all(utilTool.is_valid(value) for value in [earning_y, earning_q, date_announce, revenue_estimate, eps_estimate]):
+            head2 = "{}의 {}년 {}분기 실적 발표일은 {}으로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다. ".format(profile['name'], earning_y,earning_q, date_announce, revenue_estimate, eps_estimate)
+        else : head2 = ""
+            
         # [case2] 최근 3주간 데이터 수집  
         Start_date=(datetime.strptime(curday, "%Y-%m-%d") - timedelta(days=21)).strftime("%Y-%m-%d")
         End_date=curday
@@ -431,6 +434,7 @@ def get_prompt_earning (ticker):
             prompt_news += "\n" + i 
         
         info = intro_company + '\n' + head 
+        cliInfo = intro_company + '\n' + head2
         prompt = info + '\n' + prompt_news + '\n' + f"\n\n Based on all the information (from {Start_date} to {End_date}), let's first analyze the positive developments, potential concerns and stock price predictions for {ticker}. Come up with 5-7 most important factors respectively and keep them concise. Most factors should be inferred from company related news. " \
         f"Finally, make your prediction of the {ticker} stock price movement for next month. Provide a summary analysis to support your prediction."    
         SYSTEM_PROMPT = "You are a seasoned stock market analyst working in South Korea. Your task is to list the positive developments and potential concerns for companies based on relevant news and stock price of target companies, \
@@ -448,6 +452,10 @@ def get_prompt_earning (ticker):
         term1 = '상회하였으며' if revenue_actual > revenue_estimate else '하회하였으며'
         term2 = '상회하였습니다.' if eps_actual > eps_estimate else '하회하였습니다'
         head = "\n [실적발표 요약]: \n {}에 {}년{}분기 {}의 실적이 발표되었습니다. 실적(매출)은 ${}M으로 당초 예측한 ${}M 대비 {}% {}, eps는 예측한 {}대비 {}으로 eps는 {}% {} ".format(date_announce,earning_y,earning_q, profile['name'], revenue_actual, revenue_estimate,excess_revenue,term1,eps_estimate, eps_actual, excess_eps, term2)
+        if all(utilTool.is_valid(value) for value in [date_announce, earning_y, earning_q, profile['name'], revenue_actual, revenue_estimate, excess_revenue, term1, eps_estimate, eps_actual, excess_eps, term2]):
+            head = "\n [실적발표 요약]: \n {}에 {}년{}분기 {}의 실적이 발표되었습니다. 실적(매출)은 ${}M으로 당초 예측한 ${}M 대비 {}% {}, eps는 예측한 {}대비 {}으로 eps는 {}% {}".format(date_announce, earning_y, earning_q, profile['name'], revenue_actual, revenue_estimate, excess_revenue, term1, eps_estimate, eps_actual, excess_eps, term2)
+        else:
+            head = ""
         
         
         # 기준점 산출 (세가지 시점)
@@ -487,6 +495,7 @@ def get_prompt_earning (ticker):
             
         
         info = intro_company + '\n' + head 
+        cliInfo = intro_company + '\n' + head2
         prompt_news = prompt_news_before + '\n' + prompt_news_after + '\n' + prompt_news_after7  
         prompt = info + '\n' +  prompt_news + '\n' + f"\n\n Based on all the information before earning call (from {Start_date_before} to {End_date_before}), let's first analyze the positive developments, potential concerns and stock price predictions for {ticker}. Come up with 5-7 most important factors respectively and keep them concise. Most factors should be inferred from company related news. " \
         f"Then, based on all the information after earning call (from {date_announce} to {curday}), let's find 5-6 points that meet expectations and points that fall short of expectations when compared before the earning call. " \
@@ -495,11 +504,11 @@ def get_prompt_earning (ticker):
         SYSTEM_PROMPT = "You are a seasoned stock market analyst working in South Korea. Your task is to list the positive developments and potential concerns for companies based on relevant news and stock price before an earning call of target companies, \
             then provide an market reaction with respect to the earning call. Finally, make analysis and prediction for the companies' stock price movement for the upcoming month. Your answer format should be as follows:\n\n[Positive Developments]:\n1. ...\n\n[Potential Concerns]:\n1. ...\n\n[Market Reaction After Earning Aall]:\n[Prediction & Analysis]:\n...\n\n  Because you are working in South Korea, all responses should be done in Korean not in English. \n "
 
-    return info, prompt_news, prompt, SYSTEM_PROMPT
+    return cliInfo, info, prompt_news, prompt, SYSTEM_PROMPT
 
 def query_gpt4(ticker: str):
     # get_prompt_earning 함수로부터 4개의 값을 올바르게 받음
-    info, prompt_news, prompt, SYSTEM_PROMPT = get_prompt_earning(ticker)
+    cliInfo, info, prompt_news, prompt, SYSTEM_PROMPT = get_prompt_earning(ticker)
 
     # OpenAI GPT-4 호출
     completion = client.chat.completions.create(
@@ -512,7 +521,7 @@ def query_gpt4(ticker: str):
     completion_content = completion.choices[0].message.content if completion.choices else "No completion found."
     # FastAPI 클라로 보내기 위해 JSON으로 변환하여 반환
     return {
-        "info": info,
+        "info": cliInfo,
         "prompt_news": prompt_news,
         "completion": completion_content
     }
