@@ -192,8 +192,8 @@
                                 },
                                 processResults: function (data, params) {
                                     return {
-                                        results: data.map(stock => ({ id: stock.symbol, text: `${stock.description} (${stock.symbol})` }))
-                                    };
+                                        results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
+                                    };                                    
                                 },
                                 cache: true
                             },
@@ -271,6 +271,7 @@
                         addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
                         break;
                     case 'menub':
+                        $('#indicator_select').select2();
                         break;
                     case 'menuc':
                         // News영역 컨트롤 ::'All Market News' 체크박스 관련 스크립트

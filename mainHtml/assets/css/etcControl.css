@@ -41,3 +41,57 @@
 .db-clear-btn:hover {background-image: linear-gradient(to right, #29a329, #006400);}
 .ai_no_data { display: inline-block; padding: 10px; background: linear-gradient(145deg, #a7a7a9, #a7a7a2); color: #fff; text-align: center; border-radius: 10px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: bold; margin: 10px auto; max-width: 80%; }
 
+
+/* 리서치 리포트 분석 시작 */
+.tooltip-wrap{display:flex;align-items:flex-start;gap:5px;}
+.chat-info{width:17px;height:17px;margin-top:3px;font-size:0;line-height:0;background:url('/static/assets/images/info_ic.png') no-repeat center;background-size:100%;vertical-align:middle;cursor:pointer;opacity:.7;}
+.mb0{margin-bottom:0 !important;}
+/* 툴팁 */
+.ui-tooltip{padding:10px 10px;color:#fff;border:none;border-radius:5px;font-size:13px;background-color:#2970ff;box-shadow:none;}
+.ui-widget.ui-widget-content{border:none;}
+.arrow::after{content:'';position:absolute;left:10px;bottom:-4px;width:8px;height:8px;transform:rotate(45deg);background:#2970ff;}
+
+.select-wrap{display:flex;flex-direction:column;gap:15px;}
+.select-wrap label:hover{color:inherit;cursor:auto;}
+.select-wrap .research-select{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;height:40px;padding:0 40px 0 15px;font-size:15px;background:url('/static/assets/images/research_select_arr.png') no-repeat right 10px center;background-size:24px;border:1px solid #d8d8d8;border-radius:0;appearance:none;-webkit-appearance:none;}
+.select-wrap .research-select option{width:100px;}
+
+.upload-file-wrap{display:flex;flex-direction:row;margin:30px auto;}
+.upload-file-wrap .upload-box{display:flex;flex-direction:column;justify-content:center;align-items:center;width:calc(35% - 15px);margin-right:30px;}
+.upload-file-wrap .upload-box .drag-file{width:100%;height:145px;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px dashed #d8d8d8;}
+.upload-file-wrap .upload-box .drag-file .image{width:35px;}
+.upload-file-wrap .upload-box .drag-file .message{margin:8px 0 0;}
+.upload-label{width:145px;margin-top:8px;padding:5px 0;font-size:15px;background-color:#2970ff;color:#fff;border:1px solid #2970ff;text-align:center;border-radius:4px;cursor:pointer;}
+.upload-label:hover{background:inherit;color:#2970ff;border:1px solid #2970ff;}
+.file{display:none;}
+
+.upload-file-wrap .files{overflow:auto;display:flex;justify-content:space-between;flex-wrap:wrap;align-items:flex-start;gap:0 10px;width:calc(65% - 15px);height:150px;padding:0 20px 15px;border:1px solid #d8d8d8;box-sizing:border-box;}
+.upload-file-wrap .files .file{position:relative;display:flex;width:240px;padding:10px 30px 10px 0px;}
+.upload-file-wrap .files .file .thumbnail{display:flex;flex:none;width:30px;margin-right:10px;align-items:center;}
+.upload-file-wrap .files .file .thumbnail .image{width:100%;}
+.upload-file-wrap .files .file .details{flex:1;display:flex;flex-direction:column;}
+.upload-file-wrap .files .file .details .file-tit{overflow:hidden;width:200px;white-space:nowrap;text-overflow:ellipsis;}
+.upload-file-wrap .files .file .progress{overflow:hidden;margin:3px 0;position:relative;height:6px;background-color:#ddd;border-radius:10px;}
+.upload-file-wrap .files .file .progress .bar{position:absolute;top:0;left:0;width:100%;height:100%;background-color:#2970ff;}
+.upload-file-wrap .files .file .status{display:flex;width:100%;font-size:13px;}
+.upload-file-wrap .files .file .status .percent{}
+.upload-file-wrap .files .file .status .speed{margin-left:auto;}
+.upload-file-wrap .files .file .upload-delete{position:absolute;top:50%;right:0px;transform:translateY(-50%);width:15px;height:15px;font-size:0;line-height:0;background:url('/static/assets/images/s_close.png') no-repeat center;border-radius:50%;background-size:7px;border:1px solid #999;}
+
+.chat-list-wrap{overflow-y:auto;display:flex;flex-direction:column;gap:20px;height:100%;padding:30px 0 130px;font-size:15px;}
+.chat-list-wrap .question-wrap{position:relative;padding:20px 20px 20px 60px;background:#f5f7f9;line-height:25px;}
+.chat-list-wrap .question-wrap::before{content:'';position:absolute;left:15px;top:17px;width:30px;height:30px;background:url('/static/assets/images/question_ic.png') no-repeat center;background-size:100%;border:1px solid #aaa;border-radius:50%;}
+.chat-list-wrap .answer-wrap{position:relative;padding:20px 20px 20px 60px;background:#f5f5ff;line-height:25px;}
+.chat-list-wrap .answer-wrap::before{content:'';position:absolute;left:15px;top:17px;width:30px;height:30px;background:url('/static/assets/images/answer_ic.png') no-repeat center;background-size:100%;border:1px solid #aaa;border-radius:50%;}
+
+.answer-wrap table{margin:20px 0;}
+.answer-wrap table th{background:#f3f5f7;color:#333;}
+.answer-wrap table tr{background:#fff;}
+.answer-wrap table th, .answer-wrap table td{padding:12px 20px;}
+
+.chat-ipt-wrap{position:fixed;left:408px;right:70px;bottom:0;padding:30px 0;background:#fff;box-shadow:rgb(255 255 255) 0px 10px 20px 20px;}
+.pr{position:relative;}
+.chat-ipt-wrap .chat-ipt{padding-right:65px;font-size:15px;border:1px solid #2970ff;box-sizing: border-box;}
+.chat-ipt-wrap .send-btn{position:absolute;right:15px;top:50%;transform:translateY(-50%);width:32px;height:32px;background:url(/static/assets/images/send_ic.png) no-repeat center;background-size:100%;font-size:0;line-height:0;vertical-align:middle;}
+
+/* 리서치 리포트 분석 끝 */

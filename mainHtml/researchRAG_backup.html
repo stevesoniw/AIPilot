@@ -1,0 +1,34 @@
+<!-- [#3-1 메뉴 시작] 리서치 RAG 테스트 -->                             
+<div id="menu_3rd_a" class="menu-cont">
+    <h2 class="s-tit">리서치 RAG 테스트</h2>
+    <h3 class="s-tit">Research PDF Uploading TEST</h3>
+    <div class="upload-container">
+        <h2>Upload your PDF</h2>
+        <input type="file" id="fileRagInput" accept=".pdf" hidden/>
+        <label for="fileRagInput" class="file-label">Choose a file</label>
+        <span id="fileRagName" class="file-name">[No file chosen yet]</span>
+    </div>
+    <div id="loading_bar_rag" class="loading_bar">
+        <img src="/static/assets/images/LoadingBar_C.gif">
+        <p class="loading-text">데이터 로딩중입니다.</p>
+    </div>
+    <!-- 채팅영역 -->
+    <div class="box-instruction">
+        <div id="ragResultArea" class="rag-chat-container">
+            <div class="rag-messages">
+                <div class="rag-message rag-received">
+                    <div class="rag-text">안녕하세요! 파일을 업로드 후 질문해주세요.<p>(※현재는 단순한 텍스트 위주의 파일에 대해서만 잘 대답해요)</p></div>
+                </div>
+                <!-- Example of a sent message -->
+                <div class="rag-message rag-sent">
+                    <div class="rag-text"></div>
+                </div>
+                <!-- Add more messages here -->
+            </div>
+            <div class="rag-chat-input">
+                <input type="text" id="messageInput" placeholder="Type your message here..." />
+                <button class="rag-send-button" onclick="ragSendMessage()">Send</button>
+            </div>    
+        </div>
+    </div>
+</div> 

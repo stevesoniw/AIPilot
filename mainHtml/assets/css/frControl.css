@@ -96,7 +96,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .result-box{margin-top:50px;padding:40px;border:1px solid #d8d8d8;border-radius:0;}
 .result-box:nth-child(odd){background:#fafaff;}
 
-.newsanalysis-list li{margin-top:5px;padding:15px 20px;background:#fafaff;line-height:24px;border:1px solid #efefef;border-radius:5px;box-sizing:border-box;}
+.newsanalysis-list li{margin-top:20px;padding:15px 20px;background:#fafaff;line-height:24px;border:1px solid #efefef;border-radius:5px;box-sizing:border-box;}
 .newsanalysis-list li:first-child{margin-top:40px;}
 .newsanalysis-list li h4{position:relative;padding-left:73px;}
 .newsanalysis-list li h4::before{content:'[헤드라인]';position:absolute;left:0;top:0px;}
@@ -206,7 +206,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .stockBasicInfoTable tr:nth-child(odd):hover{background:#fff;}
 .stockAnnualFinancialsTable tr:nth-child(even){background:#fff;}
 .stockAnnualFinancialsTable tr:nth-child(odd):hover{background:#fff;}
-.financialSection{padding:10px;}
+.financialSection{padding:10px; margin-top: 50px;}
 .financial-title{padding-top:0px;color:#333;margin-bottom:10px;}
 .financial-title h2{font-size:20px;}
 .stockAnnualFinancialsTable{margin-top:10px;}
@@ -309,6 +309,7 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .chart-analysis-title{font-size:17px;color:#111;line-height:30px;}
 #chartAnalysis{margin-bottom:0;padding:0;background:transparent;}
 .nth-menu{margin-top:50px;font-size:20px;margin-bottom:20px;font-weight:500;}
+.indicator-custom-select {width: 450px;}
 .bond-chart-area{border:1px solid #efefef;}
 .bond-area{margin:30px 0;padding:0;background:#fff;border-radius:0;box-shadow:none;}
 .indicatorButton{margin:40px auto 40px;padding:15px 50px;font-size:16px;background:#2970ff;border:1px solid #2970ff;border-radius:4px;}

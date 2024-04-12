@@ -419,7 +419,8 @@ def get_prompt_earning (ticker):
         # create Prompt 
         head = "{}의 {}년 {}분기 실적 발표일은 {}으로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다. ".format(profile['name'], earning_y,earning_q, date_announce, revenue_estimate, eps_estimate)
         if all(utilTool.is_valid(value) for value in [earning_y, earning_q, date_announce, revenue_estimate, eps_estimate]):
-            head2 = "{}의 {}년 {}분기 실적 발표일은 {}으로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다. ".format(profile['name'], earning_y,earning_q, date_announce, revenue_estimate, eps_estimate)
+            head2 = "{}의 {}년 {}분기 실적 발표일은 <span style='color: #e7536d'>{}</span>일로 예정되어 있습니다. 시장에서 예측하는 실적은 매출 ${}M, eps {}입니다.".format(profile['name'], earning_y, earning_q, date_announce, revenue_estimate, eps_estimate)
+
         else : head2 = ""
             
         # [case2] 최근 3주간 데이터 수집  
@@ -429,12 +430,12 @@ def get_prompt_earning (ticker):
         # 뉴스 수집 및 추출 
         news = get_news (ticker, Start_date, End_date)
         terms_ = gen_term_stock(ticker, Start_date, End_date)
-        prompt_news = "최근 3주간 {}: \n\n ".format(terms_)
+        prompt_news = "최근 3주간 {}: ".format(terms_)
         for i in news:
             prompt_news += "\n" + i 
         
         info = intro_company + '\n' + head 
-        cliInfo = intro_company + '\n' + head2
+        cliInfo = intro_company + '\n' + head2 +'\n'
         prompt = info + '\n' + prompt_news + '\n' + f"\n\n Based on all the information (from {Start_date} to {End_date}), let's first analyze the positive developments, potential concerns and stock price predictions for {ticker}. Come up with 5-7 most important factors respectively and keep them concise. Most factors should be inferred from company related news. " \
         f"Finally, make your prediction of the {ticker} stock price movement for next month. Provide a summary analysis to support your prediction."    
         SYSTEM_PROMPT = "You are a seasoned stock market analyst working in South Korea. Your task is to list the positive developments and potential concerns for companies based on relevant news and stock price of target companies, \

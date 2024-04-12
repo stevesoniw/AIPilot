@@ -1,9 +1,9 @@
 <!-- [#2 메뉴 시작] 글로벌 주요 경제지표 --> 
 <div id="menub" class="menu-cont">
 <h2 class="s-tit">글로벌 주요 경제지표</h2>
-<h3 class="s-tit new-sub-tit">핵심지표 분석</h3>
+<h3 class="s-tit new-sub-tit">핵심지표 데이터 보기</h3>
 <div class="form-container">
-    <p class="form-header">분석을 원하는 <span>지표들</span>을 선택해주세요.</p>
+    <p class="form-header">데이터 확인을 원하는 <span>지표들</span>을 선택해주세요.</p>
     <form id="indicatorForm">
         <div class="checkbox-row">
             <!-- 기존 체크박스 -->
@@ -101,7 +101,7 @@
     <img src="/static/assets/images/LoadingBar_A.gif">
     <p class="loading-text-economics">핵심지표 분석중입니다.</p>
 </div>                   
-<div id="chartContainer" style="display: block;">
+<div id="chartContainer" style="display: none;">
     <div class="chartjs-size-monitor">
         <div class="chartjs-size-monitor-expand">
             <div class=""></div>
@@ -117,13 +117,24 @@
         <img id="economicIndicators" alt="Economic Indicators Chart">
     </div>
 </div>-->                  
-<div class="box-instruction new-chart-analysis-wrap" id="chart-anal-area" style="display: block;">
+<div class="box-instruction new-chart-analysis-wrap" id="chart-anal-area" style="display:none;">
     <p class="chart-analysis-title">차트 데이터 분석</p> 
     <div>
         <div id="chartAnalysis"></div>
         </div>
     </div>
-</div>   
+</div>  
+<h3 class="nth-menu">핵심지표 분석</h3>
+<div class="indicator-anal-area">
+    <div id="indicator_anal_div">
+        <select class="indicator-custom-select" id="indicator_select">
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+          </select>
+    </div>               
+</div>
+ 
 <h3 class="nth-menu">2> 관련 뉴스</h3>
 <div class="bond-chart-area">
     <div id="loading_bar_bonds" class="loading_bar" style="margin-left: 0px;">
