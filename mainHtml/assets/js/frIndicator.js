@@ -158,114 +158,154 @@ function clearData() {
 }        
 
 //****************************** 글로벌 주요경제지표 함수 [#1.핵심지표] Ends *******************************// 
-//****************************** 글로벌 주요경제지표 함수 [#2.indicators] Start ******************************// 
+//****************************** 글로벌 주요경제지표 함수 [#2.indicators 분석] Start ******************************// 
+//고유상품전략팀에서 요청한 예시 차트들 보여주기 (*차트+GPT토크)
+async function fetchIndicatorAnal() {
+    const selectBox = document.getElementById("indicator_select");
+    const selectedValue = selectBox.value;
+    if (selectedValue === "") {
+        document.getElementById("fred_anal_area").innerHTML = "";
+        return;
+    }
+
+    const image = `/batch/fred_indicators/${selectedValue}_chart.png`;
+    const txt = `/batch/fred_indicators/${selectedValue}_gpt4.txt`;
+
+    fetch(image).then(response => {
+        if (response.ok) {
+            const imgElement = `<img src="${image}" alt="${selectedValue}" class="fred_indicator_img">`;
+            document.getElementById("fred_chart_area").innerHTML = imgElement;
+        } else {
+            throw new Error('Image not found');
+        }
+    }).catch(error => {
+        console.error("Error loading image:", error);
+        document.getElementById("fred_chart_area").innerHTML = "Image not available.";
+    });
+
+    fetch(txt).then(response => response.text()).then(text => {
+        const textArea = document.getElementById("fred_anal_area");
+        let formatData = text.replace(/\*\*(.*?)\*\*/g, '<span class="fred_anal_highlight">$1</span>');
+        formatData = formatData.replace(/###/g, '■');
+        if (textArea) {
+            textArea.innerHTML = `<pre class="fred_indicator_text">${formatData}</pre>`;
+        } else {
+            console.error("Text area element not found");
+        }
+    }).catch(error => {
+        console.error("Error loading text:", error);
+        document.getElementById("fred_anal_area").innerHTML = "Analysis text not available.";
+    });
+}
+
+//뉴스검색을 위해 날짜를 timestamp로 변환 (seekingalpha 인풋값이 timestamp다)
+function convertDateToTimestamp(dateString) {
+    var date = new Date(dateString);
+    // 타임스탬프 반환 (밀리초 단위)
+    var timestamp = date.getTime();
+    return timestamp / 1000;
+}
 
 //indicators 뉴스 가져오기
-async function fetchAndDisplayBondsNews(selectedEngNames) {
+async function fetchIndicatorNews() {
     try{
-        document.getElementById('loading_bar_bondsNews').style.display = 'block';
-        const response = await fetch(`/bond-news`, {
+        document.getElementById('loading_bar_indicatorNews').style.display = 'block';
+        const fromDate = document.getElementById('indicatorFromDate').value;
+        const toDate = document.getElementById('indicatorToDate').value;   
+        
+        const fromTimestamp = convertDateToTimestamp(fromDate);
+        const toTimestamp = convertDateToTimestamp(toDate);
+        const response = await fetch(`/indicator-news`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ selectedEngNames: selectedEngNames }),
+            body: JSON.stringify({ 
+                from_date: fromTimestamp, // 클라이언트에서 fromDate -> from_date 로 변경
+                to_date: toTimestamp // 클라이언트에서 toDate -> to_date 로 변경
+            }),
         });
-        const bondNews = await response.json();
+        const indicatorNews = await response.json();
     
-        document.getElementById('loading_bar_bondsNews').style.display = 'none';
+        document.getElementById('loading_bar_indicatorNews').style.display = 'none';
 
-        console.log(bondNews);
+        console.log(indicatorNews);
+        console.log(Array.isArray(indicatorNews)); 
 
-        const bondsNewsContainer = document.getElementById('bonds_news_div');
+        if (!Array.isArray(indicatorNews)) {
+            console.error('Expected an array but received:', indicatorNews);
+            return; // Exit if not an array to prevent further errors
+        }
+        const indicatorNewsContainer = document.getElementById('indicator_news_div');
 
-        if (bondNews.length === 0) {
+        if (indicatorNews.length === 0) {
             // 뉴스 데이터가 없을 경우 표시할 메시지
             const noNewsMessage = document.createElement('div');
             noNewsMessage.textContent = '관련 뉴스가 없습니다.';
             noNewsMessage.className = 'no-news-message'; // 스타일 적용을 위한 클래스 추가
-            bondsNewsContainer.appendChild(noNewsMessage);
+            indicatorNewsContainer.appendChild(noNewsMessage);
         } else {
 
-            bondsNewsContainer.innerHTML = ''; // 기존 내용을 지우고 새로운 뉴스로 업데이트
-            bondNews.forEach(news => {
+            indicatorNewsContainer.innerHTML = ''; // 기존 내용을 지우고 새로운 뉴스로 업데이트
+            indicatorNews.forEach(news => {
                 const newsDiv = document.createElement('div');
-                newsDiv.className = 'bondNews-container';
-
-                console.log(news.title)
-                const imageUrl = news.gettyImageUrl || "/static/assets/images/nature.jpg"; // 기본 이미지 경로 설정
+                newsDiv.className = 'indicatorNews-container';
+    
+                const imageUrl = news.gettyImageUrl || "/static/assets/images/nature.jpg"; // Default image
                 const image = document.createElement('img');
                 image.src = imageUrl;
                 image.alt = "News Image";
-                image.className = 'bondNews-image';
-        
+                image.className = 'indicatorNews-image';
+    
                 const title = document.createElement('div');
-                title.className = 'bondNews-title';
+                title.className = 'indicatorNews-title';
                 title.textContent = news.title;
-        
+    
                 const content = document.createElement('div');
-                content.className = 'bondNews-content';
-                content.innerHTML = news.content; 
-
-                // '한국어로 번역하기' 버튼 추가
+                content.className = 'indicatorNews-content';
+                content.innerHTML = news.content;
+    
                 const translateButton = document.createElement('button');
                 translateButton.textContent = '한국어로 번역하기';
-                translateButton.className = 'translate-button'; // 스타일 적용을 위한 클래스 추가
-
-                translateButton.addEventListener('click', function() {
-                    const newsItem = this.parentNode; // 뉴스 항목의 컨테이너 참조
-                    const newsTitle = newsItem.querySelector('.bondNews-title').textContent;
-                    const newsContent = newsItem.querySelector('.bondNews-content').innerHTML;
-                
-                    // 로딩바 HTML 문자열
-                    const loadingBarHtml = `
-                        <div id="loading_bar_bondsTranslate" class="loading_bar_translate">
-                            <img src="/static/assets/images/LoadingBar_A.gif">
-                            <p class="loading-text">데이터 로딩중입니다.</p>
-                        </div>`;
-                
-                    // 로딩바를 뉴스 항목에 추가
-                    newsItem.insertAdjacentHTML('beforeend', loadingBarHtml);
-                    const loadingBar = newsItem.querySelector('.loading_bar_translate');
-                    loadingBar.style.display = 'block'; // 로딩바 표시
-                
-                    fetch('/translate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ title: newsTitle, content: newsContent })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // 번역된 내용으로 업데이트
-                        newsItem.querySelector('.bondNews-title').textContent = data.title;
-                        newsItem.querySelector('.bondNews-content').innerHTML = data.content;
-                        
-                        // 로딩바 제거
-                        loadingBar.style.display = 'none'; 
-                        loadingBar.remove();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // 오류 발생 시 로딩바도 제거
-                        loadingBar.style.display = 'none';
-                        loadingBar.remove();
-                    });
-                });
-            
-        
+                translateButton.className = 'translate-button';
+                translateButton.onclick = () => translateNewsContent(newsDiv);
+    
                 newsDiv.appendChild(image);
-                newsDiv.appendChild(translateButton);                     
                 newsDiv.appendChild(title);
                 newsDiv.appendChild(content);
-
-                bondsNewsContainer.appendChild(newsDiv);
+                newsDiv.appendChild(translateButton);
+    
+                indicatorNewsContainer.appendChild(newsDiv);
             });
         }
     }catch (error) {
-            console.error('Error loading fetchAndDisplayBondsNews[news]:', error);
-            document.getElementById('loading_bar_bondsNews').style.display = 'none';
+            console.error('Error loading fetchAndDisplayIndicatorNews').style.display = 'none';
     }
+}
+
+function translateNewsContent(newsDiv) {
+    const title = newsDiv.querySelector('.indicatorNews-title').textContent;
+    const content = newsDiv.querySelector('.indicatorNews-content').innerHTML;
+
+    const loadingText = document.createElement('div');
+    loadingText.className = 'loading-text';
+    loadingText.textContent = '데이터 로딩중입니다...';
+    newsDiv.appendChild(loadingText);
+
+    fetch('/translate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title, content})
+    })
+    .then(response => response.json())
+    .then(data => {
+        newsDiv.querySelector('.indicatorNews-title').textContent = data.title;
+        newsDiv.querySelector('.indicatorNews-content').innerHTML = data.content;
+        loadingText.remove();
+    })
+    .catch(error => {
+        console.error('Translation error:', error);
+        loadingText.textContent = 'Translation failed.';
+    });
 }
 //****************************** 글로벌 주요경제지표 함수 [#2.indicators 뉴스] Ends ******************************// 

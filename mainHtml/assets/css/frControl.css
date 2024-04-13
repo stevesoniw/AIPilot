@@ -276,20 +276,30 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .date-range-container label {margin-right: 10px;color: #3366ff;}
 .date-range-container input[type="date"] {padding: 6px 8px;border-radius: 3px;border: 1px solid #ccc;font-size: 14px;outline: none;width: 160px;color: #3366ff; margin-right: 45px;  color: rgba(32, 31, 31, 0.637);}
 .date-range-container input[type="date"]:focus {border-color: #555;box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);}
+.fred_indicator_img {width: 100%; max-height: 590px; object-fit: contain; border: 1px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+#fred_chart_area {margin-bottom: 20px;}
+.fred_indicator_text {white-space: pre-wrap; background-color: #f4f4f8; padding: 15px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
+#fred_anal_area {margin-top: 20px;}
+.fred_anal_highlight{ color: rgb(222, 6, 230); font-weight:bold;} 
+
 
 /* 글로벌 주요 경제지표 2.[채권데이터 분석] 및 [뉴스] 영역 */
 .bond-chart-area {width:100%; height:auto; border:1px solid #ccc;}
-.bond-area {background-color: #f7f7f7;padding:20px;margin:20px 0;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;align-items:center;}
-.bondNews-container {display:flex;flex-direction:column;align-items:center;text-align:center;background-color: #fff;margin-bottom: 20px;padding: 15px;border-radius: 8px;box-shadow: 0 2px 4px rgba(0,0,0,0.12);}
-.bondNews-image { max-width: 230px; max-height: 170px; width: auto; height: auto; border-radius: 8px; margin-bottom: 15px; }
-.bondNews-title { font-weight: bold; color: #333; margin-bottom: 10px; }
-.bondNews-content { color: #666; font-size: 14px; line-height: 1.6; }
-.news-link { color: #f06; text-decoration: underline; }
-.bondNews-instruction { width: 100%; }
-.news-dep { padding: 0; list-style: none; }
-.translate-button { background-color: #666; color: #fff; border: none; padding: 12px 12px; font-size: 13px; cursor: pointer; border-radius: 4px; margin-top: 10px; margin-bottom: 15px; }
-.translate-button:hover { background-color: #555; }
-.no-news-message { color: #666; font-size: 16px; text-align: center; padding: 20px; }
+.indicator-news-area{background-color: #ffffff;padding:10px;margin:5px 0;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;align-items:center;}
+.indicator-date-selection {text-align: center; margin-top: 20px;} 
+.indicator-date-instruction {margin-bottom: 10px; font-size: 15px; color: #0000007e;} 
+#indicatorFromDate, #indicatorToDate {margin: 0 20px; padding: 8px; border-radius: 20px;} 
+.indicatorNewsSearch {padding: 5px 20px; background-color: #2970ff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px;} 
+.indicatorNewsSearch:hover{background:inherit;color:#2970ff; border-color:#2970ff; border:1px !important;}
+.indicatorNews-container {display: flex; flex-direction: column; align-items: center; text-align: center; background-color: #fff; margin-bottom: 20px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.12);}
+.indicatorNews-image {max-width: 230px; max-height: 170px; width: auto; height: auto; border-radius: 8px; margin-bottom: 15px;}
+.indicatorNews-title {font-weight: bold; color: #333; margin-bottom: 10px;}
+.indicatorNews-content {color: #666; font-size: 14px; line-height: 1.6;}
+.translate-button {background-color: #0f2f99; color: #fff; border: none; padding: 12px 12px; font-size: 13px; cursor: pointer; border-radius: 4px; margin-top: 10px; margin-bottom: 15px;}
+.translate-button:hover {background-color: #a7b3eb;}
+.loading-text {font-size: 14px; color: #666; padding: 10px; text-align: center;}
+.no-news-message {color: #666; font-size: 16px; text-align: center; padding: 20px;}
+
 #loading_bar_bondsNews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
 .loading_bar_translate { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
 .loading_bar_translate > img {max-width: 100px; max-height: 100px;}
@@ -310,7 +320,6 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 #chartAnalysis{margin-bottom:0;padding:0;background:transparent;}
 .nth-menu{margin-top:50px;font-size:20px;margin-bottom:20px;font-weight:500;}
 .indicator-custom-select {width: 450px;}
-.bond-chart-area{border:1px solid #efefef;}
 .bond-area{margin:30px 0;padding:0;background:#fff;border-radius:0;box-shadow:none;}
 .indicatorButton{margin:40px auto 40px;padding:15px 50px;font-size:16px;background:#2970ff;border:1px solid #2970ff;border-radius:4px;}
 .indicatorButton:hover{background:inherit;color:#2970ff;}

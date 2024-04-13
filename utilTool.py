@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from pandas import Timestamp
 from io import BytesIO
 import math
+import numpy as np
 import base64
 import json 
 import logging
@@ -119,3 +120,9 @@ def is_valid(value):
     if isinstance(value, (float, int)) and math.isnan(value):
         return False
     return True
+
+# Convert NaN to None 
+def handle_nan(obj):
+    if isinstance(obj, float) and np.isnan(obj):
+        return None
+    return obj

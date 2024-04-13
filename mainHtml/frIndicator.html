@@ -124,37 +124,39 @@
         </div>
     </div>
 </div>  
-<h3 class="nth-menu">핵심지표 분석</h3>
+<h3 class="nth-menu">SPECIAL 지표 분석</h3>
 <div class="indicator-anal-area">
     <div id="indicator_anal_div">
-        <select class="indicator-custom-select" id="indicator_select">
-            <option value="1">Option 1</option>
-            <option value="2">Option 2</option>
-            <option value="3">Option 3</option>
-          </select>
-    </div>               
+        <select class="indicator-custom-select" id="indicator_select" onchange="fetchIndicatorAnal();">
+            <option value="">데이터를 선택해주세요</option>
+            <option value="UNRATE1">실업률데이터 기반 투자수익률 분포 #1</option>
+            <option value="UNRATE2">실업률데이터 기반 투자수익률 분포 #2</option>
+            <option value="PAYEMS">고용데이터 기반 주자지수 수익률 분포</option>
+            <option value="T10Y2Y">미국국채 수익률 차이기반 Nasdaq 지수 수익률 분포</option>
+            <option value="SP500_VS_CPI">소비자물가지수 기반 S&P500 지수 데이터분석</option>
+        </select>
+    </div>
+    <div id="fred_chart_area"></div> 
+    <div id="fred_anal_area"></div> 
 </div>
  
-<h3 class="nth-menu">2> 관련 뉴스</h3>
-<div class="bond-chart-area">
-    <div id="loading_bar_bonds" class="loading_bar" style="margin-left: 0px;">
-        <img src="/static/assets/images/LoadingBar_C.gif">
-        <p>데이터 로딩중입니다.</p>
+<h3 class="nth-menu">특정시점의 과거 경제뉴스 검색하기</h3>
+<div class="indicator-news-area" id="bond-area" style="display:block;">
+    <div class="indicator-date-selection">
+        <p class="indicator-date-instruction">"과거 경제뉴스 검색 기간을 선택해주세요"</p>
+        <label for="indicatorFromDate">From</label>
+        <input type="text" id="indicatorFromDate" name="indicatorFromDate">
+        <label for="indicatorToDate">To</label>
+        <input type="text" id="indicatorToDate" name="indicatorToDate"><br/>
+        <button id="indicatorNewsSearch" class="indicatorNewsSearch" onclick="fetchIndicatorNews()">검색</button>
     </div>   
-    <div id="bonds_chart_div"></div>           
-    <div id="interest_chart_div"></div>  
-</div>
-<div class="bond-area" id="bond-area" style="display:none;">
-    <div class="center-button">
-        <button type="button" id="bondNewsButton" class="indicatorButton" onclick="fetchAndDisplayBondsNews('market-news::financials|market-news::issuance|market-news::us-economy');">채권관련 최근뉴스 보기</button>
-    </div>
-    <div id="loading_bar_bondsNews" class="loading_bar" style="margin-left: 0px;">
-        <img src="/static/assets/images/LoadingBar_A.gif">
+    <div id="loading_bar_indicatorNews" class="loading_bar" style="margin-left: 0px;">
+        <img src="/static/assets/images/LoadingBar_C.gif">
         <p class="loading-text">데이터 로딩중입니다.</p>
     </div>                                                   
-    <div class="bondNews-instruction">
+    <div class="indicatorNews-instruction">
         <ul class="news-dep">
-            <div id="bonds_news_div"></div>  
+            <div id="indicator_news_div"></div>  
         </ul>
     </div>   
 </div>                                     

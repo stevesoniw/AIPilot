@@ -272,6 +272,13 @@
                         break;
                     case 'menub':
                         $('#indicator_select').select2();
+                        $("#indicatorFromDate, #indicatorToDate").datepicker({
+                            dateFormat: "yy-mm-dd",
+                            changeMonth: true,
+                            changeYear: true
+                        });
+                        $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정
+                        $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                        
                         break;
                     case 'menuc':
                         // News영역 컨트롤 ::'All Market News' 체크박스 관련 스크립트

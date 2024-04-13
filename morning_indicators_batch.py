@@ -31,7 +31,7 @@ base_path = Path("batch/fred_indicators")
 #@@         : 2. 해당 지수 흐름에 대한 GPT 의견 호출. 요약 정리. 
 #@@         ** → 최종적으로 이것을 fsIndicator.js 에서 불러와서 aiMain.html 에 넣어준다.     
 #@@         ** → 폴더위치:: /batch/fred_indicators
-#@@         ** → 파일이름:: indicators.json , indicators_aitalk.txt  
+#@@         ** → 파일이름:: {indicator_id}.json , {indicator_id}_aitalk.txt  
 ##################################################################################################################
 
 # 지표 목록
@@ -57,7 +57,7 @@ indicators = {
     "FEDFUNDS": {"name": "미국 금리", "start_date": None}
 }
 
-# GPT4 에 뉴스요약을 요청하는 공통함수
+# GPT4 에 차트데이터 분석을 요청하는 공통함수
 async def gpt4_chart_talk(response_data, series_name):
     try:
         SYSTEM_PROMPT = "You are an outstanding economist and chart data analyst. I'm going to show you annual chart data for specific economic indicators. Please explain in as much detail as possible and share your opinion on the chart trends. It would be even better if you could explain the future market outlook based on facts. And analyze the patterns of the data and its impact on society or the market, and share your opinion on it. Please mark the part you think is the most important with a red tag so that it appears in red."

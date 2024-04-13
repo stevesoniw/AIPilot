@@ -141,110 +141,21 @@ async def gpt4_chart_talk(response_data):
         logging.error("An error occurred in gpt4_news_function: %s", str(e))
         return None
 ##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Ends #########################################
-
-##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Starts ##################################
-# 기준금리 데이터를 가져오는 함수
-def get_base_rate(start_date, end_date):
-    df1 = fp.series('FEDFUNDS', end_date)
-    data = df1.data.loc[(df1.data.index>=start_date) & (df1.data.index<=end_date)]
-    return data
-
-# 미국채 이자율 데이터를 가져와 보여주는 함수
-def create_interest_rate_chart():
-    rate_10Y = fred.get_series('DGS10').fillna(0)
-    rate_2Y = fred.get_series('DGS2').fillna(0)
-    rate_3M = fred.get_series('DGS3MO').fillna(0)
-
-    # 현재 날짜에서 20년을 빼서 시작 날짜 계산
-    twenty_years_ago = pd.to_datetime('today') - pd.DateOffset(years=20)
-    
-    # 데이터를 최근 20년간으로 필터링
-    rate_10Y = rate_10Y[twenty_years_ago:]
-    rate_2Y = rate_2Y[twenty_years_ago:]
-    rate_3M = rate_3M[twenty_years_ago:]
-
-    # Timestamp 객체를 문자열로 변환
-    rate_10Y_dates = rate_10Y.index.strftime('%Y-%m-%d').tolist()
-    rate_2Y_dates = rate_2Y.index.strftime('%Y-%m-%d').tolist()
-    rate_3M_dates = rate_3M.index.strftime('%Y-%m-%d').tolist()
-
-    # 차트 데이터 준비
-    chart_data = [
-        {'x': rate_10Y_dates, 'y': rate_10Y.values.tolist(), 'type': 'scatter', 'mode': 'lines', 'name': '10Y'},
-        {'x': rate_2Y_dates, 'y': rate_2Y.values.tolist(), 'type': 'scatter', 'mode': 'lines', 'name': '2Y'},
-        {'x': rate_3M_dates, 'y': rate_3M.values.tolist(), 'type': 'scatter', 'mode': 'lines', 'name': '3M'}
-    ]
-    # 차트 레이아웃 설정
-    chart_layout = {
-        'title': {
-            'text': 'Market Yield on U.S. Treasury Securities',
-            'font': {
-                'color': 'orange',  # 제목 색상 설정
-                'size': 24          # 제목 글꼴 크기 설정 (옵션)
-            }
-        },
-        'xaxis': {'title': '날짜'},
-        'yaxis': {'title': '이자율(%)'}
-    }
-    return {'data': chart_data, 'layout': chart_layout}
-
-def show_base_rate():
-    # 데이터 가져오기 및 변환   #날짜 입력받는 건 나중에 하자
-    start_date = '2000-01-01'
-    end_date = '2023-02-01'
-    data = get_base_rate(start_date, end_date)
-
-    dates_converted, values = utilTool.convert_data_for_json(data)
-
-    # 변환된 데이터를 사용하여 차트 데이터 구성
-    chart_data = [{
-        'x': dates_converted,
-        'y': values,
-        'type': 'scatter',
-        'name': '기준금리'
-    }]
-
-    chart_layout = {
-        'title': {
-            'text': '미국 금리 변동 추이',
-            'font': {
-                'color': 'black',  # 제목 색상 설정
-                'size': 24          # 제목 글꼴 크기 설정 (옵션)
-            }
-        },        
-        'xaxis': {'title': '날짜'},
-        'yaxis': {'title': '금리 (%)'}
-    }
-
-    return {'data': chart_data, 'layout': chart_layout}
-
-# 채권 차트요청 처리
-@frControllerETC.post("/get_bonds_data")
-async def get_bonds_data():
-    base_rate_chart = show_base_rate()
-    interest_rate_chart = create_interest_rate_chart()
-
-    return JSONResponse({
-        "base_rate_chart": base_rate_chart,
-        "interest_rate_chart": interest_rate_chart
-    })
-
-#test 
-'''async def rapid():
-    get_bonds_data_data = await get_bonds_data()
-    print(get_bonds_data_data)
-asyncio.run(rapid())'''
-
-#### 채권 관련 뉴스 뽑아내기
-def rapidapi_bond_news(category):
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.지표분석 차트] Starts ##################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.지표분석 차트] Ends ##################################
+##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.뉴스분석 ] Starts ##################################
+#### 경제지표 관련 뉴스 뽑아내기
+def rapidapi_indicator_news(selected_eng_names, from_date, to_date ):
     url = "https://seeking-alpha.p.rapidapi.com/news/v2/list"
-    querystring = {"category": category, "size": "100", "number": "1"}
+    querystring = {"category": selected_eng_names, "until": to_date, "since" : from_date, "size": "20", "number": "1"}
     headers = {
 	    "X-RapidAPI-Key": rapidAPI,
 	    "X-RapidAPI-Host": "seeking-alpha.p.rapidapi.com"
     }    
         
     response = requests.get(url, headers=headers, params=querystring)
+    print(response.json())
+    print("********************************")
     return response.json()
 
 #print(rapidapi_bond_news('market-news::financials|market-news::issuance|market-news::us-economy'))
@@ -261,9 +172,9 @@ def extract_news_data(news_json):
             'content': news_item.get('content', None)
         }
         extracted_data.append(extracted_item)
-    return json.dumps(extracted_data, indent=4, ensure_ascii=False)
+    return extracted_data
 
-def filter_bond_news(news_json, selected_eng_names):
+def filter_indicator_news(news_json, selected_eng_names):
     filtered_news = {"data": []}
 
     for item in news_json['data']:
@@ -273,27 +184,28 @@ def filter_bond_news(news_json, selected_eng_names):
 
     return filtered_news
 
-# 채권관련 뉴스만 뽑아오도록 해보자 ㅠ
-@frControllerETC.get("/bond-news")
-def fetch_bond_news(selected_eng_names: List[str]):
+# 경제지표 관련 뉴스만 뽑아오도록 해보자 ㅠ
+class DateRange(BaseModel):
+    from_date: int
+    to_date: int
+@frControllerETC.post("/indicator-news")
+async def fetch_indicator_news(date_range: DateRange):
     try:
-        # selectedEngNames를 사용하여 뉴스를 가져오는 작업 수행
-        print("***********************************")
-        print(selected_eng_names)
-        news_json = rapidapi_bond_news('market-news::financials|market-news::issuance|market-news::us-economy')
-        print("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+        from_date = date_range.from_date
+        to_date = date_range.to_date        
+        print(from_date)
+        selected_eng_names = ['market-news::financials', 'market-news::issuance', 'market-news::us-economy']
+        news_json = rapidapi_indicator_news(selected_eng_names, from_date, to_date)
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         print(news_json)
-        filtered_news_json = filter_bond_news(news_json, selected_eng_names)
-        print("****************************************************")
-        print(filtered_news_json)
-        extracted_data = json.loads(extract_news_data(filtered_news_json))
+        extracted_data = extract_news_data(news_json) 
+        print("ccccccccccccccccccccccccccc")
+        print(extracted_data)
         return extracted_data
     except Exception as e:
         # 오류 처리
         print("Error fetching bond news:", e)
         return {"error": "Failed to fetch bond news"}
-    
-fetch_bond_news(['GDP'])
 
 # 채권뉴스 GPT 이용해서 번역해보기 //메뉴3 일반뉴스 번역에서도 씀
 def translate_gpt(text):
