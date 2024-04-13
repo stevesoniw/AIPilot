@@ -117,9 +117,11 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 /* AI가 말해주는 주식 정보 [해외] 리뉴얼버젼 끝 */
 
 /* AI가 말해주는 주식정보(해외)  #2. News 데이터 보여주기 */
-.loading_bar_foreignnews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; }
-.loading_bar_foreignnews > img { max-width: 100px; max-height: 100px; }
-.loading-text-foreignnews { background-color: rgb(236, 252, 221); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; }
+.loading_bar_foreignnews { position: fixed; bottom: 200px; left: 50%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; width: 300px; background-color: #fff; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;}
+.loading_content > img { max-width: 150px; max-height: 150px; }
+.loading_content { padding: 20px;}
+.loading-text-foreignnews { font-size:14px; background-color: rgb(255, 255, 255); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; margin-top: 10px;}
+
 .foreignTickerNews-container {display: flex; background-color: #f8ecec; border-radius: 8px; overflow: hidden; margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
 .foreignTickerNews-image {padding: 10px; padding-right: 0; padding-top:65px; padding-left:15px; align-self: flex-start;}
 .foreignTickerNews-image img {width: 200px; height: auto; display: block; border-radius: 4px;}
@@ -135,10 +137,12 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 #toggleNewsButton { padding: 10px 20px; font-size: 16px; color: #fffb03; background-color: #646464; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease; outline: none; margin: 10px auto; display: block; width: fit-content; }
 #toggleNewsButton:hover { background-color: #d4d4d4; color:#2c2b2b }
 .hiddenNews { max-height: 0; opacity: 0; transition: opacity 0.3s ease, max-height 0.3s ease; }
-.analysisResultContainer {background-color: #fffdee; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; transition: max-height 0.5s ease-out, opacity 0.5s ease-out; max-height: 500px; opacity: 1;}
-.analysisTitle {font-size: 14px; font-weight: bold; margin-bottom: 5px; color:rgb(211, 24, 24);}
-.analysisContent {font-size: 14px;}
-.webUrl {color: rgb(79, 16, 150);}
+.analysisResultContainer { padding: 10px; margin-top: 10px; background-color: #f1f1f1; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.frNewsAnalysisTitle { font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #221e1e; }
+.frNewsAnalysisContent { font-size: 14px; line-height: 1.6; }
+.frNewsWebUrl { color: #1e47a0; text-decoration: underline; font-size:14px; }
+.frNews-html-content { padding: 15px; margin: 10px 0; background-color: #f7f7f7; border-left: 5px solid #007BFF; font-family: 'Courier New', Courier, monospace; color: #333; overflow: auto; }
+.highlight_news { background-color: yellow; font-weight: bold; }
 .foreignTickerNews-container, .analysisResultContainer {overflow: hidden; transition: max-height 0.5s ease-out;}
 #stockBasic {transition: max-height 0.5s ease-out, opacity 0.5s ease-out;overflow: hidden;}
 .hiddenNews {max-height: 0 !important; opacity: 0; padding: 0 20px; margin: 0 20px; overflow: hidden; transition: all 0.5s ease;}
@@ -291,14 +295,16 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 #indicatorFromDate, #indicatorToDate {margin: 0 20px; padding: 8px; border-radius: 20px;} 
 .indicatorNewsSearch {padding: 5px 20px; background-color: #2970ff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px;} 
 .indicatorNewsSearch:hover{background:inherit;color:#2970ff; border-color:#2970ff; border:1px !important;}
-.indicatorNews-container {display: flex; flex-direction: column; align-items: center; text-align: center; background-color: #fff; margin-bottom: 20px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.12);}
-.indicatorNews-image {max-width: 230px; max-height: 170px; width: auto; height: auto; border-radius: 8px; margin-bottom: 15px;}
-.indicatorNews-title {font-weight: bold; color: #333; margin-bottom: 10px;}
-.indicatorNews-content {color: #666; font-size: 14px; line-height: 1.6;}
-.translate-button {background-color: #0f2f99; color: #fff; border: none; padding: 12px 12px; font-size: 13px; cursor: pointer; border-radius: 4px; margin-top: 10px; margin-bottom: 15px;}
+.indicatorNews-container {display: flex; flex-direction: column; align-items: flex-start; text-align: left; background-color: #E3F2FD; margin-bottom: 20px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.12); width: 100%;}
+.indicatorNews-image {width: 100%; max-width: 300px; height: auto; border-radius: 8px; margin-bottom: 15px;}
+.indicatorNews-title {font-weight: bold; color: #333; margin-bottom: 5px; font-size: 18px;}
+.indicatorNews-date {color: #777; margin-bottom: 5px;}
+.indicatorNews-content {color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 10px;}
+.translate-button {background-color: #0f2f99; color: #fff; border: none; padding: 8px 16px; font-size: 14px; cursor: pointer; border-radius: 4px; margin-top: 5px;}
 .translate-button:hover {background-color: #a7b3eb;}
 .loading-text {font-size: 14px; color: #666; padding: 10px; text-align: center;}
 .no-news-message {color: #666; font-size: 16px; text-align: center; padding: 20px;}
+
 
 #loading_bar_bondsNews { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
 .loading_bar_translate { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 

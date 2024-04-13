@@ -15,6 +15,11 @@ function removeButtonOn(buttonId) {
     }
 }
 
+//종목검색 한글로 했을때 구글 검색해와서 맞는종목 세팅해주기
+function getEngNameFromGoogle() {
+    console.log("Calling getEngNameFromGoogle()");
+}
+
 //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
 async function loadEarningData() {
     addButtonOn('getEarningInfo');
@@ -146,7 +151,6 @@ async function gptAnalysis(ticker) {
     }                
 }
 //FinGPT 최근 1년 주가 흐름과 거래량 추이 보여주기 (이미지 호출->하이차트로 변경 2024.04.10)
-
 async function gptStockWave(ticker) {
     try {
         document.getElementById('loading_bar_fingpt').style.display = 'block';  
@@ -299,7 +303,7 @@ async function loadForeignStockNews() {
                         <p class="foreignTickerNews-summary">${news.summary}</p>
                         <div class="foreignTickerNews-buttons-container">
                             <a class="foreignTickerNews-link" href="${news.url}" target="_blank">read more</a>
-                            <button class="foreignTickerNews-analysis" onclick="analyzeStockArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석</button>
+                            <button class="foreignTickerNews-analysis" onclick="analyzeStockArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석 보기</button>
                         </div>
                     </div>
                 </div>
@@ -330,8 +334,18 @@ function toggleVisibility(element) {
 
 function analyzeStockArticle(webUrl, newsId) {
     var loadingText = document.getElementById('loading-text-foreignnews');
-    loadingText.textContent = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다. (*Finnhub뉴스는 차단당하는 경우가 존재하여 조치중입니다.)';
+    loadingText.innerHTML  = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.<br/>(※Finnhub뉴스는 차단당하는 경우가 존재하여 조치중입니다.)';
     document.getElementById('loading_bar_foreignnews').style.display = 'block';
+
+    const existingAnalysisContainer = document.querySelector(`.analysisResultContainer[data-news-id="${newsId}"]`);
+    if (existingAnalysisContainer) {
+        // Toggle visibility of the existing analysis container
+        existingAnalysisContainer.style.display = existingAnalysisContainer.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('loading_bar_foreignnews').style.display = 'none';
+        loadingText.textContent = '데이터 로딩중입니다.';
+        return; // Exit the function to prevent reloading the data
+    }
+
 
     const ticker = document.getElementById('foreign_ticker').value;
     // 배치로 떨궈놓은 파일 있으면 일단 읽게한다. 
@@ -351,7 +365,7 @@ function analyzeStockArticle(webUrl, newsId) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url: webUrl })
+                body: JSON.stringify({ url: webUrl, ticker: ticker, newsId: newsId })
             })
             .then(response => {
                 if (!response.ok) {
@@ -383,11 +397,17 @@ function analyzeStockArticle(webUrl, newsId) {
 function displayAnalysisResult(data, webUrl, newsId) {
     const analysisContainer = document.createElement('div');
     analysisContainer.className = 'analysisResultContainer';
+    analysisContainer.setAttribute('data-news-id', newsId); // Set a data attribute for toggling visibility    
     let modifiedData = data.replace(/\n/g, '<br>');
     modifiedData = modifiedData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
+    modifiedData = modifiedData.replace(/```html\s+\{([\s\S]*?)\}```/g, '$1');
+    modifiedData = modifiedData.replace(/([\s\S]+)/g, '<div class="styled-html-content">$1</div>');
+    modifiedData = modifiedData.replace('```html', "");
+    modifiedData = modifiedData.replace('```', "");
+
     analysisContainer.innerHTML = `
-        <div class="analysisTitle">해당 원본뉴스 사이트(<span class="webUrl">${webUrl}</span>)를 분석한 내용입니다.</div>
-        <div class="analysisContent">${modifiedData}</div>
+        <div class="frNewsAnalysisTitle">해당 원본뉴스 사이트(<span class="frNewsWebUrl">${webUrl}</span>)를 분석한 내용입니다.</div>
+        <div class="frNewsAnalysisContent">${modifiedData}</div>
     `;
     const newsElement = document.querySelector(`[data-news-id="${newsId}"]`);
     if (newsElement) {

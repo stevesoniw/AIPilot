@@ -245,14 +245,28 @@ async def handle_gpt4_talk(request: Request):
 
 # AI가 말해주는 해외주식정보 [해외 종목뉴스 원문 1개 분석]
 @ragController.post("/rag/handle-analyze-webnews/")
-async def handle_analyze_webnews(web_url: WebURL):
+async def handle_analyze_webnews(request: Request):
     try:
-        url = web_url.url
-        logging.info(f"url received: {url}")
+        body = await request.json()
+        url = body['url']
+        ticker = body['ticker']
+        newsId = body['newsId']
+        logging.info(f"URL received: {url}")
 
         response_message = await askMulti.webNewsAnalyzer(url)
-        return {"message": "Success", "result": response_message}
-
+        
+        print(response_message)
+        # Saving the result to a file
+        try : 
+            if 'text' in response_message:
+                text_content = response_message['text']
+                save_path = f'batch/stocknews/{ticker}/{ticker}_{newsId}.txt'
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                with open(save_path, 'w', encoding='utf-8') as file:
+                    file.write(text_content)
+        except Exception as e :
+            logging.debug("frDetailedNews file save failed")
+        return {"message": "Success", "result": response_message}    
     except ValueError as ve:
         logging.exception("Validation error")
         raise HTTPException(status_code=400, detail=str(ve))

@@ -108,7 +108,7 @@
                         <div>
                             <ul>
                                 <li class="list-dep" data-tab="menu_3rd_a" data-html="/static/researchRAG.html">
-                                    <a href="#">Research Report [RAG]</a>
+                                    <a href="#">Report 쉽게 읽기</a>
                                 </li>
                             </ul>
                         </div>
@@ -179,33 +179,68 @@
             function executeScriptsByTabId(tabId) {
                 switch (tabId) {
                     case 'menua':
-                        $('#foreign_ticker').select2({
-                            ajax: {
-                                url: '/api/get_foreign_stock_symbols', 
-                                dataType: 'json',
-                                delay: 550, // 사용자가 마지막으로 입력한 후 검색이 시작되기까지의 지연 시간 (밀리초)
-                                data: function (params) {
-                                    return {
-                                        q: params.term, //  사용자 검색한거 
-                                        page: params.page // 페이지 번호인데 나중에 필요한 경우 사용하자
-                                    };
-                                },
-                                processResults: function (data, params) {
-                                    return {
-                                        results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
-                                    };                                    
-                                },
-                                cache: true
+                    $('#foreign_ticker').select2({
+                        ajax: {
+                            url: '/api/get_foreign_stock_symbols', 
+                            dataType: 'json',
+                            delay: 550, // 사용자가 마지막으로 입력한 후 검색이 시작되기까지의 지연 시간 (밀리초)
+                            data: function (params) {
+                                return {
+                                    q: params.term, // 사용자가 검색한 것
+                                    page: params.page // 페이지 번호
+                                };
                             },
-                            placeholder: '원하시는 종목을 검색해주세요!',
-                            minimumInputLength: 1, // 사용자가 최소 1개의 문자를 입력하기 전까지는 검색 결과를 표시하지 않음
-                            allowClear: true,
-                            language: {
-                                noResults: function() {
-                                    return "검색 결과가 없습니다."; 
+                            processResults: function (data, params) {
+                                // 검색된 데이터를 사용자 입력에 따라 정렬하자 (*코드먼저 검색되게 해달라는 상품전략팀 요청)
+                                const term = params.term.toUpperCase(); // 대소문자를 구분하지 않도록 검색어를 대문자로 변환
+                                data.sort((a, b) => {
+                                    const aInSymbol = a.symbol.toUpperCase().includes(term);
+                                    const bInSymbol = b.symbol.toUpperCase().includes(term);
+                                    const aInDescription = a.description.toUpperCase().includes(term);
+                                    const bInDescription = b.description.toUpperCase().includes(term);
+                    
+                                    if (aInSymbol && !bInSymbol) {
+                                        return -1; // A가 종목코드에 검색어를 포함하고 B는 포함하지 않으면 A를 앞으로
+                                    } else if (!aInSymbol && bInSymbol) {
+                                        return 1; // B가 종목코드에 검색어를 포함하고 A는 포함하지 않으면 B를 앞으로
+                                    } else if (aInSymbol && bInSymbol) {
+                                        return 0; // 둘 다 종목코드에 검색어를 포함하면 순서 유지
+                                    } else if (aInDescription && !bInDescription) {
+                                        return 1; // 설명에서만 A가 검색어를 포함하면 B를 앞으로
+                                    } else if (!aInDescription && bInDescription) {
+                                        return -1; // 설명에서만 B가 검색어를 포함하면 A를 앞으로
+                                    } else {
+                                        return 0; // 기타 경우는 순서 유지
+                                    }
+                                });
+                    
+                                return {
+                                    results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
+                                };                                    
+                            },
+                            cache: true
+                        },
+                        placeholder: '원하시는 종목을 검색해주세요!',
+                        minimumInputLength: 1, // 사용자가 최소 1개의 문자를 입력하기 전까지는 검색 결과를 표시하지 않음
+                        allowClear: true,
+                        language: {
+                            noResults: function() {
+                                return "검색 결과가 없습니다."; 
+                            }
+                        }
+                    }).on('select2:open', function (e) { //한글검색인 경우 구글 serp api 써서 한번 되게해보기ㅋ
+                        // select2가 열릴 때마다 검사
+                        var searchField = $('.select2-search__field').last();
+                        searchField.off('input.select2minLength'); // 이전 이벤트 리스너를 제거
+                        searchField.on('input.select2minLength', function () {
+                            var term = $(this).val();
+                            if (/[\u3131-\uD79D]/ugi.test(term)) { // 한글이 포함된 경우
+                                if (term.length >= 4) {
+                                    getEngNameFromGoogle(); // 입력 길이가 4 이상이면 함수 호출
                                 }
                             }
-                        });                      
+                        });
+                    });                 
                         /** FILE READ 가 속도가 더 느려서 일단 보류
                         function fetchDataAndInitialize() {
                             var data = localStorage.getItem('us_symbols');

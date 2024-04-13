@@ -68,29 +68,48 @@ function naverScrapingNews(newsType) {
     });
 }
 // NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
+// NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
 function fetchDetaildNews(url, event) {
-    fetch('/api/news-detail', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: url })
-    })
-    .then(response => response.text())
-    .then(html => {
-        const detailedNewsDiv = document.createElement('div');
-        detailedNewsDiv.className = 'naver-news-detailed';
-        detailedNewsDiv.innerHTML = html;
-        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', detailedNewsDiv);
-    })
-    .catch(error => {
-        console.error('Error fetching detailed news:', error);
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'naver-news-detailed';
-        errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
-        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', errorDiv);
-    });
+    const button = event.target;
+    const newsItem = button.closest('.naver-news-item');
+    let detailedDiv = newsItem.nextElementSibling;
+
+    // 자세히보기 버튼 Toggle 시키기. 
+    if (detailedDiv && detailedDiv.classList.contains('naver-news-detailed')) {
+        if (detailedDiv.style.display === 'none') {
+            detailedDiv.style.display = 'block';
+            button.textContent = '상세내용 닫기'; 
+        } else {
+            detailedDiv.style.display = 'none'; 
+            button.textContent = '자세히 보기'; 
+        }
+    } else {
+        fetch('/api/news-detail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url })
+        })
+        .then(response => response.text())
+        .then(html => {
+            const detailedNewsDiv = document.createElement('div');
+            detailedNewsDiv.className = 'naver-news-detailed';
+            detailedNewsDiv.innerHTML = html;
+            newsItem.insertAdjacentElement('afterend', detailedNewsDiv);
+            button.textContent = '상세내용 닫기'; 
+        })
+        .catch(error => {
+            console.error('Error fetching detailed news:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'naver-news-detailed';
+            errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+            newsItem.insertAdjacentElement('afterend', errorDiv);
+            button.textContent = '상세내용 닫기'; 
+        });
+    }
 }
+
 // 네이버 키워드 입력란 보이게 하는 함수
 function naverKeyword() {
     // 'naver-api-search-area' 요소가 이미 있는지 확인

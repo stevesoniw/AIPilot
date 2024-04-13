@@ -138,7 +138,6 @@ function renderHighchart(datasets) {
         series: series,
     });
     console.log(selectedEngNames);
-    fetchAndDisplayBondsNews(selectedEngNames);
 }
 
 
@@ -259,19 +258,24 @@ async function fetchIndicatorNews() {
     
                 const title = document.createElement('div');
                 title.className = 'indicatorNews-title';
-                title.textContent = news.title;
+                title.innerHTML = news.title; // Safe assuming backend sanitizes input
+    
+                const date = document.createElement('div');
+                date.className = 'indicatorNews-date';
+                date.textContent = new Date(news.publishOn).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
     
                 const content = document.createElement('div');
                 content.className = 'indicatorNews-content';
-                content.innerHTML = news.content;
+                content.innerHTML = news.content; // Assuming content is cleaned from malicious tags on the server-side
     
                 const translateButton = document.createElement('button');
                 translateButton.textContent = '한국어로 번역하기';
                 translateButton.className = 'translate-button';
-                translateButton.onclick = () => translateNewsContent(newsDiv);
+                translateButton.onclick = () => translateNewsContent(newsDiv); // Function to handle translation
     
                 newsDiv.appendChild(image);
                 newsDiv.appendChild(title);
+                newsDiv.appendChild(date);
                 newsDiv.appendChild(content);
                 newsDiv.appendChild(translateButton);
     
