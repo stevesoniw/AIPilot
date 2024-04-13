@@ -181,31 +181,46 @@
                     case 'menua':
                         $('#foreign_ticker').select2({
                             ajax: {
-                                url: '/api/get_foreign_stock_symbols', 
+                                url: '/api/get_foreign_stock_symbols',
                                 dataType: 'json',
-                                delay: 550, // 사용자가 마지막으로 입력한 후 검색이 시작되기까지의 지연 시간 (밀리초)
+                                delay: 550,
                                 data: function (params) {
                                     return {
-                                        q: params.term, //  사용자 검색한거 
-                                        page: params.page // 페이지 번호인데 나중에 필요한 경우 사용하자
+                                        q: params.term,
+                                        page: params.page
                                     };
                                 },
                                 processResults: function (data, params) {
+                                    // 입력값이 한글인 경우 minimumInputLength를 4로 설정하고, 특정 함수를 실행
+                                    var minimumInputLength = params.term.length >= 4 ? 4 : 1;
+                                    if (/^[가-힣]+$/.test(params.term)) {
+                                        yourFunction(params.term); // 여기에 특정 함수 호출 코드를 넣으세요.
+                                    }
+                        
+                                    // stock.symbol 대신 stock.description을 우선으로 검색하여 정렬
+                                    data.sort((a, b) => {
+                                        if (a.description.includes(params.term)) return -1;
+                                        if (b.description.includes(params.term)) return 1;
+                                        return 0;
+                                    });
+                        
                                     return {
+                                        // 검색 결과를 symbol과 description 형식으로 표시하되, symbol에 포함된 경우 상단으로 정렬
                                         results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
-                                    };                                    
+                                    };
                                 },
                                 cache: true
                             },
                             placeholder: '원하시는 종목을 검색해주세요!',
-                            minimumInputLength: 1, // 사용자가 최소 1개의 문자를 입력하기 전까지는 검색 결과를 표시하지 않음
+                            minimumInputLength: 1, // minimumInputLength 기본값 1로 설정
                             allowClear: true,
                             language: {
                                 noResults: function() {
                                     return "검색 결과가 없습니다."; 
                                 }
                             }
-                        });                      
+                        });
+                                       
                         /** FILE READ 가 속도가 더 느려서 일단 보류
                         function fetchDataAndInitialize() {
                             var data = localStorage.getItem('us_symbols');
