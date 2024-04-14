@@ -20,15 +20,28 @@
                 
                 <div style="align-items: center;">
                     <label style="flex-grow: 1;">✓ 웹사이트 주소 입력 : <input type="text" id="ai_invest_sec_websiteUrl" class="ai_invest_sec_url_input1" placeholder="http://www.naver.com/"></label>
-                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWeb()">적용</button>
+                    <button id="ai_invest_sec_readWeb" class="ai_invest_sec_read_button" onclick="openDataLayerPopup()">데이터 읽어오기</button>
+                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWeb()">DB 적용하기</button>
                 </div>
                 <div style="align-items: center;">
-                    <label style="flex-grow: 1;">✓ YouTube URL 입력 : <input type="text" id="ai_invest_sec_youtubeUrl" class="ai_invest_sec_url_input2" placeholder="http://www.naver.com/"></label>
-                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyYT()">적용</button>
+                    <label style="flex-grow: 1;">✓ YouTube URL 입력 : <input type="text" id="ai_invest_sec_youtubeUrl" class="ai_invest_sec_url_input2" placeholder="https://www.youtube.com/watch?v=-UytuxDQKVY"></label>
+                    <button id="ai_invest_sec_readYT" class="ai_invest_sec_read_button" onclick="javascript:readYoutubeScript('read')">데이터 읽어오기</button>
+                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyYT()">DB 적용하기</button>
                 </div>
                 <div id="ai_invest_sec_appliedData"></div>
             </div>
         </div>
+        <!-- Layer Popup 에어리어 -->
+        <div id="aiSecLayerPopup" class="ai-sec-layer layerHidden">
+            <div class="ai-sec-layer-header">
+                <button class="ai-sec-layer-close" onclick="toggleLayerPopup()">X</button>
+                <button class="ai-sec-layer-btn" onclick="applyYT('translate')">번역하기</button>
+                <button class="ai-sec-layer-btn" onclick="applyYT('summarize')">요약하기</button>
+            </div>
+            <div class="ai-sec-layer-content">
+                <p id="aiSecLayerPopupContent">서버에서 받아온 텍스트 데이터를 보여주는 영역</p>
+            </div>
+        </div>     
     </div>
     <div id="loading_bar_rag" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">

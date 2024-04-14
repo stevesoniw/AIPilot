@@ -126,3 +126,17 @@ def handle_nan(obj):
     if isinstance(obj, float) and np.isnan(obj):
         return None
     return obj
+
+# GPT4 일반호출 함수
+async def gpt4_request(prompt):
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=[
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
+        return None

@@ -6,9 +6,17 @@ from typing import Dict, Any, List, Optional
 import os
 import tempfile
 import logging
+from hanspell import spell_checker
+# 유튜브
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.formatters import TextFormatter
+from youtube_transcript_api.formatters import PrettyPrintFormatter
 # 개인 클래스
 from rag_openai import ChatPDF 
 from multiRAG import multiRAG
+# Personal Config & Util
+import config
+import utilTool
 
 # 기본 함수들은 다 rag_openai(*디지털리서치 파일업로드), multiRAG(*AI해외주식 talk) 파일에 정의함 
 
@@ -103,13 +111,13 @@ async def handle_ai_sec_clearmydb(request: Request):
             raise ValueError("No employeeId received")
 
         response_message = await assistant.ai_sec_clearmydb(employeeId)
+        print(response_message)
         return {"message": "Success", "result": response_message}
 
     except Exception as e:
         logging.exception("An error occurred")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
     
-        
     
 # AI 투자비서 [질문에 대해 답변하기]
 @ragController.post("/rag/ai-sec-talk/")
@@ -274,3 +282,76 @@ async def handle_analyze_webnews(request: Request):
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail="Unexpected error occurred")    
          
+# 유튜브 설정 테스트
+async def get_youtube_script():
+    # Base64 인코딩된 이미지 데이터를 디코딩
+    #image_data = base64.b64decode(data.image.split(',')[1])
+
+    # 서비스 계정 키 파일 경로
+    key_path = "sonvision-36a28cdac666.json"
+
+    # 서비스 계정 키 파일을 사용하여 인증 정보 생성
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+    # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
+    client = vision.ImageAnnotatorClient(credentials=credentials)
+    image = vision.Image(content=image_data)
+    # OCR 처리
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+    if response.error.message:
+        raise HTTPException(status_code=500, detail=response.error.message)
+
+    #structured_ocr_data = process_ocr_texts(texts)
+    # OCR 결과를 GPT-4 분석 함수에 전달
+    #analysis_result = await gpt4_pdf_talk(structured_ocr_data)
+
+    # 분석 결과 반환
+    return {"texts": "analysis_result"}         
+
+
+class YouTubeDataRequest(BaseModel):
+    video_id_or_url: str
+    type: str
+@ragController.post("/api/youtube_data/")
+async def extract_youtube_script(request_data: YouTubeDataRequest):
+    video_id_or_url = request_data.video_id_or_url
+    action_type = request_data.type
+
+    # Trim the video URL to just the ID if it's longer than expected
+    if len(video_id_or_url) > 11:
+        video_id_or_url = video_id_or_url[-11:]
+    try:
+        transcript = None
+        if action_type == 'read':
+            transcript = YouTubeTranscriptApi.get_transcript(video_id_or_url, languages=['en', 'ko'], preserve_formatting=True)
+        elif action_type == 'translate':
+            transcripts = YouTubeTranscriptApi.list_transcripts(video_id_or_url)
+            transcript = None
+            for transcript_item in transcripts:
+                if transcript_item.language_code == 'ko':
+                    transcript = transcript_item.translate('en').fetch()
+                    break
+                elif transcript_item.language_code == 'en':
+                    transcript = transcript_item.translate('ko').fetch()
+                    break
+        elif action_type == 'summarize':
+            transcript = YouTubeTranscriptApi.get_transcript(video_id_or_url, languages=['en', 'ko'], preserve_formatting=True)
+            prompt = f"You are the best at summarizing. Please summarize the following data neatly. Summarize in the same language as requested. Do not include any content other than the summary. [Data]:\n{transcript}"
+            transcript = utilTool.gpt4_request(prompt)
+
+        if transcript:
+            formatter = TextFormatter()
+            text_formatted = formatter.format_transcript(transcript)
+            print(text_formatted)
+            #일단 한줄로 만들고, 띄어쓰기 라이브러리를 이용해서 띄어쓰기한다.             
+            combined_text = ''.join(text_formatted) 
+            result = spell_checker.check(combined_text)
+            corrected_text = result.checked
+            return JSONResponse(content={"transcript": corrected_text})
+        else:
+            raise ValueError("Transcript not available")
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+  

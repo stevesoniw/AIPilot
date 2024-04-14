@@ -264,7 +264,7 @@ class ChatPDF:
         try:
             client = chromadb.PersistentClient(path=user_persist_directory)
             try:
-                all_collections = client.list_collections()  # Assuming this method lists all collections
+                all_collections = client.list_collections()  
                 filtered_collections = [col for col in all_collections if col.name.startswith(employeeId)]
             except AttributeError:
                 return {"message": "Unable to list collections. The method might not be supported."}
@@ -274,7 +274,7 @@ class ChatPDF:
 
             collections_data = []
             for collection_obj in filtered_collections:
-                collection_name = collection_obj.name  # Extract the name from the Collection object
+                collection_name = collection_obj.name 
                 collection = client.get_collection(collection_name)
                 collections_data.append({"collection_name": collection.name})
                 #collections_metadata.append({collection_name: collection.metadata})

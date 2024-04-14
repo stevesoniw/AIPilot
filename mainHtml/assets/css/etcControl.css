@@ -15,15 +15,16 @@
 .rag-chat-input button:hover { background-color: #031563; }
 
 /****** [GNB 3rd][2ST LNB] AI 투자비서 테스트 ******/
-#ai_invest_sec_employeeId {background-color: #E0F7FA; border: none; border-radius: 5px; display: inline-block; margin-right: 10px; padding: 10px; margin-left:10px;} 
-#ai_invest_sec_confirmButton {background-color: #FFA726; border: none; border-radius: 5px; cursor: pointer; color: white; display: inline-block; padding: 8px 15px; font-size: 14px;} 
-#ai_invest_sec_mainContent {border: 1px solid #cccccc; padding: 10px; margin-top: 10px; width:950px;} 
+#ai_invest_sec_employeeId {background-color: #e5def7; border: none; border-radius: 5px; display: inline-block; margin-right: 10px; padding: 10px; margin-left:10px;} 
+#ai_invest_sec_confirmButton {background-color: #5b5a58; border: none; border-radius: 1px; cursor: pointer; color: white; display: inline-block; padding: 6px 12px; font-size: 13px;} 
+#ai_invest_sec_mainContent {border: 1px solid #cccccc; padding: 10px; margin-top: 10px; width:1000px;} 
 .ai_invest_sec_button {background-color: rgb(123, 147, 252); border: none; border-radius: 5px; cursor: pointer; color: white; display: inline-block; padding: 8px 15px; font-size: 14px;} 
 #ai_invest_sec_dragDropArea {border: 2px dashed #cccccc; border-radius: 5px; padding: 20px; text-align: center; margin-left: 10px; flex-grow: 1;} 
-.ai_invest_sec_url_input1 {background-color: #ebffec; display: inline-block; margin: 10px 0; margin-left:8px; padding: 10px; width: 60%;} 
-.ai_invest_sec_url_input2 {background-color: #ebffec; display: inline-block; margin: 10px 0; padding: 10px; width: 60%;} 
-.ai_invest_sec_apply_button {background-color: #221abb; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 25px;}
-.ai_append_text { background-color: rgb(245, 243, 235); color: rgba(235, 94, 0, 0.829); font-size:15px; border-radius: 10px; padding: 10px; margin-top:5px; }
+.ai_invest_sec_url_input1 {background-color: #f9f6ff; display: inline-block; margin: 10px 0; margin-left:8px; padding: 10px; width: 55%;} 
+.ai_invest_sec_url_input2 {background-color: #f9f6ff; display: inline-block; margin: 10px 0; padding: 10px; width: 55%;} 
+.ai_invest_sec_read_button {background-color: #8e8ae7; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 25px;}
+.ai_invest_sec_apply_button {background-color: #8e8ae7; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 10px;}
+.ai_append_text { background-color: rgb(227 220 239); color: rgb(14 0 0 / 83%) font-size:15px; border-radius: 10px; padding: 10px; margin-top:5px; }
 .ai-sec-chat-container { width: 100%; max-width: 1150px; margin: auto; display: flex; flex-direction: column; justify-content: space-between; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
 .ai-sec-container { display: flex; flex-direction: column; width: 100%; margin: auto; }
 .ai-sec-messages { padding: 10px; width: calc(100% - 30px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -37,10 +38,15 @@
 .ai-sec-chat-input button { padding: 10px 20px; background-image: linear-gradient(to right, #6e51d6, #0110e2); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 16px; }
 .ai-sec-chat-input button:hover { background-color: #031563; }
 .header-with-button {display: flex; align-items: center; gap: 10px; padding: 10px;}
-.db-clear-btn {background-image: linear-gradient(to right, #32cd32, #008000); color: white; border: none; padding: 5px 10px; font-size: 0.8rem; border-radius: 5px; cursor: pointer;}
-.db-clear-btn:hover {background-image: linear-gradient(to right, #29a329, #006400);}
-.ai_no_data { display: inline-block; padding: 10px; background: linear-gradient(145deg, #a7a7a9, #a7a7a2); color: #fff; text-align: center; border-radius: 10px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: bold; margin: 10px auto; max-width: 80%; }
-
+.db-clear-btn {background-color: #5b5a58; color: white; border: none; padding: 5px 10px; font-size: 0.8rem; border-radius: 5px; cursor: pointer;}
+.db-clear-btn:hover {background-color: #c0c0c0;}
+.ai-sec-layer { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 800px; background: #f9fffb; border: 1px solid #ddd; box-shadow: 0px 0px 20px rgba(0,0,0,0.2); z-index: 1000; padding: 20px; box-sizing: border-box; display: none; font-size: 14px; }
+.ai-sec-layer-header { display: flex; justify-content: flex-start; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; position: relative; }
+.ai-sec-layer-close { position: absolute; right: 20px; top: 10px; cursor: pointer; background: none; border: none; font-size: 28px; color: #333; }
+.ai-sec-layer-btn { padding: 6px 12px; border: none; background-color: #007BFF; color: white; cursor: pointer; border-radius: 5px; font-size: 12px; margin-left:10px; }
+.ai-sec-layer-content { margin-top: 20px; line-height: 1.6; text-align: justify; color: #444; font-size: 14px; }
+.ai_no_data { display: inline-block; padding: 10px; background: linear-gradient(145deg, #a7a7a9, #a7a7a2); color: #fff; text-align: center; border-radius: 10px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: bold; margin: 10px auto; max-width: 80%; }
+.layerHidden { display: none; }
 
 /* 리서치 리포트 분석 시작 */
 .tooltip-wrap{display:flex;align-items:flex-start;gap:5px;}

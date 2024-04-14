@@ -80,14 +80,52 @@ function applyWeb() {
     var url = document.getElementById('ai_invest_sec_websiteUrl').value;
     appendData("웹사이트 주소", url);
 }
-function applyYT() {
+function readYoutubeScript(actionType = 'read') {
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
     if (employeeId.length !== 7) {
         alert("사번을 먼저 입력해주세요");
         return;
     }
     var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
+    const contentArea = document.getElementById('aiSecLayerPopupContent');  
+
+    fetch('/api/youtube_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ video_id_or_url: url, type: actionType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let transcript = data.transcript || 'Error loading data';
+        // Replace occurrences of '니다' or '세요' with themselves followed by a line break
+        transcript = transcript.replace(/(니 다|세 요)/g, '$1\n');
+        contentArea.innerText = transcript;
+        toggleLayerPopup();
+    })
+    
+    .catch(error => {
+        console.error('Error:', error);
+        contentArea.innerText = 'Failed to load data';
+    });      
     appendData("YouTube URL", url);
+}
+
+function applyYT() {
+    const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+    if (employeeId.length !== 7) {
+        alert("사번을 먼저 입력해주세요");
+        return;
+    }
+    appendData("YouTube URL", url);
+}
+
+
+
+function toggleLayerPopup() {
+    const popup = document.getElementById('aiSecLayerPopup');
+    popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
 }
 function appendData(index, type, value) {
     var container = document.getElementById('ai_invest_sec_appliedData');
