@@ -1,78 +1,131 @@
 //******************************** 3RD GNB::  리서치 PDF Starts **********************************************//
 /* 파일 업로드 시작 */
-function DropFile(dropAreaId, fileListId) {
-    let dropArea = document.getElementById(dropAreaId);
-    let fileList = document.getElementById(fileListId);
+class DropFile {
+    constructor(dropAreaId, fileListId) {
+        this.dropArea = document.getElementById(dropAreaId);
+        this.fileList = document.getElementById(fileListId);
+        this.init();
+        this.attachDeleteHandler(); 
+    }
 
-    function preventDefaults(e) {
+    init() {
+        this.dropArea.addEventListener("dragenter", this.highlight.bind(this), false);
+        this.dropArea.addEventListener("dragover", this.highlight.bind(this), false);
+        this.dropArea.addEventListener("dragleave", this.unhighlight.bind(this), false);
+        this.dropArea.addEventListener("drop", this.handleDrop.bind(this), false);
+    }
+
+    attachDeleteHandler() {
+        // Listen for clicks on the fileList container
+        this.fileList.addEventListener('click', (event) => {
+            // Debug log to confirm the event is being captured
+            console.log("Clicked within fileList:", event.target);
+
+            const deleteButton = event.target.closest('.upload-delete');
+            if (deleteButton) {
+                // Confirm the delete button was targeted
+                console.log("Delete button was clicked:", deleteButton);
+
+                const fileElement = deleteButton.closest('.file');
+                if (fileElement) {
+                    // Confirm the file DOM is correctly identified
+                    console.log("File element found for deletion:", fileElement);
+
+                    const fileId = fileElement.getAttribute('data-file-id');
+                    if (fileId) {
+                        console.log("File ID found:", fileId);
+                        this.handleFileDeletion(fileId);
+                        fileElement.remove(); // This removes the file DOM element
+                        console.log("File element removed from DOM.");
+                    } else {
+                        console.log("No file ID found on the element to delete.");
+                    }
+                } else {
+                    console.log("No file element found surrounding the delete button.");
+                }
+            }
+        });
+    }
+
+    handleFileDeletion(fileId) {
+        fetch(`/file/${fileId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Server response after deletion:", data.message);
+            updateMetainfoAfterDeletion(fileId);
+            // Update the client-side list of files based on the latest server response
+            storeFileMetadata(data.files_metadata);
+        })
+        .catch(error => console.error('Error deleting file:', error));
+    } 
+    
+    updateMetainfoAfterDeletion(fileId) {
+        const metainfo = document.getElementById('metainfo');
+        const fileMetadataDiv = document.querySelector(`div[data-file-id="${fileId}"]`);
+        if (fileMetadataDiv) {
+            fileMetadataDiv.remove();
+        }
+    }    
+
+    preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
     }
 
-    function highlight(e) {
-        preventDefaults(e);
-        dropArea.classList.add("highlight");
+    highlight(e) {
+        this.preventDefaults(e);
+        this.dropArea.classList.add("highlight");
     }
 
-    function unhighlight(e) {
-        preventDefaults(e);
-        dropArea.classList.remove("highlight");
+    unhighlight(e) {
+        this.preventDefaults(e);
+        this.dropArea.classList.remove("highlight");
     }
 
-    function handleDrop(e) {
-        unhighlight(e);
+    handleDrop(e) {
+        this.unhighlight(e);
         let dt = e.dataTransfer;
         let files = dt.files;
-
-        handleFiles(files);
-
-        const fileList = document.getElementById(fileListId);
-        if (fileList) {
-        fileList.scrollTo({ top: fileList.scrollHeight });
-        }
+        this.handleFiles(files);
+        this.fileList.scrollTo({ top: this.fileList.scrollHeight });
     }
 
-    function handleFiles(files) {
+    handleFiles(files) {
+        console.log("Handling files:", files);
         files = [...files];
-        files.forEach(previewFile);
-
-        /* 첨부파일 삭제 */
-        $('.upload-delete').click(function(){
-            // $('#chooseFile').val('');
-            $(this).parent('.file').remove();
-        });
-        /* 첨부파일 삭제 */
+        files.forEach(file => this.previewFile(file));
     }
 
-    function previewFile(file) {
-        const fileDOM = renderFile(file); // renderFile에서 DOM 요소 또는 null 반환
-        // fileDOM이 null이 아닌 경우에만 appendChild 호출
-        if (fileDOM !== null) {
-            fileList.appendChild(renderFile(file));
+    previewFile(file) {
+        let fileDOM = this.renderFile(file);
+        if (fileDOM) {
+            this.fileList.appendChild(fileDOM); // Add the file preview to the fileList
+            this.fileList.style.display = 'block'; // Make sure fileList is visible
+            submitFiles(); // This call can be adjusted based on your needs
         } else {
-            // null인 경우, 적절한 처리를 여기서 진행한다
-            console.log("파일 검증 실패: 올바른 파일을 첨부해주세요.");
+            console.log("File verification failed");
         }
     }
 
-    function renderFile(file) {
-        // 파일 크기 체크 (30MB 이하만 허용)
+    renderFile(file) {
         const maxSize = 30 * 1024 * 1024; // 30MB
         if (file.size > maxSize) {
+            console.log("파일 크기 검증 실패");
             alert("파일 크기가 너무 큽니다. 30MB 이하의 파일만 업로드 가능합니다.");
-            return null; // 혹은 적절한 에러 처리
+            return null;
         }
-        
-        // 파일 확장자 체크 (PDF만 허용)
+    
         const validExtensions = ['pdf'];
-        // 파일 이름에서 마지막 '.'을 기준으로 확장자 추출
         const fileExtension = file.name.split('.').pop().toLowerCase();
         if (!validExtensions.includes(fileExtension)) {
+            console.log("파일 확장자 검증 실패: " + fileExtension);
             alert("지원하지 않는 파일 형식입니다. PDF 파일만 업로드 가능합니다.");
-            return null; // 혹은 적절한 에러 처리
+            return null;
         }
-
-        // 파일 정보를 담을 DOM 요소 생성
+    
+        // 파일 정보를 담을 DOM 요소 생성 및 반환
         let fileDOM = document.createElement("div");
         fileDOM.className = "file";
         fileDOM.innerHTML = `
@@ -92,20 +145,65 @@ function DropFile(dropAreaId, fileListId) {
             </div>
             <a title="첨부파일 삭제" class="upload-delete"><span>첨부파일 삭제</span></a>
         `;
-        return fileDOM; // 조건을 모두 만족하면 DOM요소 반환
+        return fileDOM;
     }
-
-    dropArea.addEventListener("dragenter", highlight, false);
-    dropArea.addEventListener("dragover", highlight, false);
-    dropArea.addEventListener("dragleave", unhighlight, false);
-    dropArea.addEventListener("drop", handleDrop, false);
-
-    return {
-        handleFiles
-    };
 }
-const dropFile = new DropFile("drop-file", "files");
+//const dropFile = new DropFile("drop-file", "files");
+
 /* 파일 업로드 끝 */
+
+/* 파일 파이썬 서버로 올리기 */
+async function submitFiles() {
+    const form = document.getElementById('file-upload-form');
+    const formData = new FormData(form);
+    try {
+        const response = await fetch(`/rag/prompt-pdf-upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log("Files uploaded successfully:", result);
+            // Ensure you're selecting only the displayed file elements, not the file input
+            const fileElements = document.querySelectorAll('#showfiles .file'); 
+            result.files_metadata.forEach((meta, index) => {
+                if (fileElements[index]) {
+                    fileElements[index].setAttribute('data-file-id', meta.file_id);
+                }
+            });
+        } else {
+            console.error("Failed to upload files. Status:", response.status);
+            if (response.headers.get("Content-Type")?.includes("application/json")) {
+                console.error("Error details:", await response.json());
+            }
+        }
+    } catch (error) {
+        console.error("Error uploading files:", error);
+    }
+}
+
+
+function storeFileMetadata(filesMetadata) {
+    const filesContainer = document.getElementById('metainfo');
+    filesContainer.innerHTML = '';
+
+    filesMetadata.forEach(file => {
+        const fileEntry = document.createElement('div');
+        fileEntry.className = 'file-metadata';
+        fileEntry.setAttribute('data-file-id', file.file_id);  // Store server-assigned file ID
+        fileEntry.innerHTML = `File ID: ${file.file_id}, Name: ${file.file_name}`;
+        fileEntry.appendChild(createDeleteButton(file.file_id));
+        filesContainer.appendChild(fileEntry);
+    });
+}
+/*
+document.getElementById('chooseFile').addEventListener('change', function() {
+    const fileList = this.files;
+    handleFiles(fileList);
+});*/
+/* 파일 파이썬 서버로 올리기 끝*/
+
 
 /* 툴팁 시작 */
 function jTooltip(){
@@ -129,7 +227,6 @@ function jTooltip(){
 /* 툴팁 끝 */
 
 $(document).ready(function(){
-    
     guideTab();
 
     $('#accordion').accordion({

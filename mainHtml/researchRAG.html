@@ -8,6 +8,7 @@
         </div>
     </div>
 
+    <form id="file-upload-form" enctype="multipart/form-data">    
     <div class="upload-file-wrap">
         <div class="upload-box">
             <div id="drop-file" class="drag-file">
@@ -15,12 +16,13 @@
                 <p class="message">Drag and drop files here</p>
                 <label for="chooseFile" class="upload-label">Choose File</label>
             </div>
-            <input type="file" id="chooseFile" class="file" onchange="dropFile.handleFiles(this.files)"  multiple />
+            <input type="file" id="chooseFile" name="files" class="file"  multiple />
         </div>
-        <div id="files" class="files">
-            
-        </div>
+        <div id="showfiles" class="files"></div>
+        <div id="metainfo" class="layerHidden"></div>
     </div> 
+    </form>
+
 
     <div class="select-wrap">
         <label for="promptSelect">프롬프트 예시</label>
@@ -34,7 +36,7 @@
             리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 정리해줘.
         </div>
         <div class="answer-wrap">
-            삼성전자의 애널리스트 리포트를 바탕으로 사업 분야별 Byll과 Bear 포인트를 정리하면 다음과 같습니다.
+            삼성전자의 애널리스트 리포트를 바탕으로 사업 분야별 Bull & Bear 포인트를 정리하면 다음과 같습니다.
             <br />
             <table>
                 <colgroup>

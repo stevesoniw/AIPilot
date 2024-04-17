@@ -425,7 +425,25 @@
                         /*******************************************************************************/                        
                         break;
                     case 'menu_3rd_a':
+                        function setupEventListeners() {
+                            var chooser = document.getElementById('chooseFile');
+                            if (chooser) {
+                                chooser.removeEventListener('change', handleFileChange);
+                                chooser.addEventListener('change', handleFileChange); 
+                            }
+                        }
+                        
+                        function handleFileChange(e) {
+                            e.stopPropagation(); // Stop the event from bubbling up
+                            if (!window.dropFile) {
+                                window.dropFile = new DropFile("drop-file", "showfiles");
+                            }
+                            window.dropFile.handleFiles(this.files);
+                        }
+                        setupEventListeners();
+                        break;
                         /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
+                        /*
                         document.getElementById('fileRagInput').onchange = function() {
                             const fileInput = document.getElementById('fileRagInput');
                             if (fileInput.files.length > 0) {
@@ -457,6 +475,7 @@
                             }                
                         });    
                         break;
+                        */
                     case 'menu_3rd_b':
                         /********* [3rd GNB] AI 투자비서 컨트롤 onChange *********/
                         // 드래그 앤 드롭 기능

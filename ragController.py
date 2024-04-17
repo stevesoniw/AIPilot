@@ -3,10 +3,14 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request  
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
+from tempfile import NamedTemporaryFile
+from langchain_community.document_loaders import PyPDFLoader
 import os
 import tempfile
 import logging
-from hanspell import spell_checker
+from konlpy.tag import Okt
+from konlpy.tag import Kkma
+okt = Okt()
 # 유튜브
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
@@ -25,6 +29,55 @@ ragController = APIRouter()
 # FastAPI로 ChatPDF 인스턴스 초기화
 assistant = ChatPDF()
 askMulti = multiRAG()
+
+############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
+uploaded_files_data = {} #파일 데이터 메모리 적재용
+uploaded_files_metadata = []
+file_id_counter = 0
+class FileMetadata(BaseModel):
+    file_id: int
+    file_name: str
+@ragController.post("/rag/prompt-pdf-upload/")
+async def prompt_upload_files(files: List[UploadFile] = File(...)):
+    global uploaded_files_data, uploaded_files_metadata, file_id_counter
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+    
+    for uploaded_file in files:
+        file_data = await uploaded_file.read()
+        file_id_counter += 1
+        file_metadata = FileMetadata(file_id=file_id_counter, file_name=uploaded_file.filename)
+        
+        uploaded_files_data[file_id_counter] = {
+            "file_name": uploaded_file.filename,
+            "content": file_data
+        }
+        uploaded_files_metadata.append(file_metadata.dict())
+
+    return {"message": "Files upload succeeded", "files_metadata": uploaded_files_metadata}
+
+@ragController.delete("/file/{file_id}/")
+async def delete_file_data(file_id: int):
+    global uploaded_files_data, uploaded_files_metadata
+    file_id = int(file_id)  # Ensure file_id is an integer
+    if file_id not in uploaded_files_data:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Remove data and metadata
+    del uploaded_files_data[file_id]
+    uploaded_files_metadata = [data for data in uploaded_files_metadata if data['file_id'] != file_id]
+
+    return {"message": "File deleted successfully", "files_metadata": uploaded_files_metadata}
+
+@ragController.get("/file/{file_id}/")
+async def get_file_data(file_id: int):
+    global uploaded_files_data
+    # Check if file ID exists
+    if file_id not in uploaded_files_data:
+        raise HTTPException(status_code=404, detail="File not found")
+    # Retrieve file data from memory
+    file_data = uploaded_files_data[file_id]
+    return file_data
 
 ############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
 @ragController.post("/upload-file/")
@@ -308,6 +361,27 @@ async def get_youtube_script():
     # 분석 결과 반환
     return {"texts": "analysis_result"}         
 
+#띄어쓰기 해보기 (KoNlp 이용)
+def spacing_okt(wrongSentence):
+    tagged = okt.pos(wrongSentence)
+    corrected = ""
+    for i in tagged:
+        if i[1] in ('Josa', 'PreEomi', 'Eomi', 'Suffix', 'Punctuation'):
+            corrected += i[0]
+        else:
+            corrected += " "+i[0]
+    if corrected[0] == " ":
+        corrected = corrected[1:]
+    return corrected
+
+#한글인지 아닌지 확인하기 (KoNlp 이용)
+def is_korean(text):
+    kkma = Kkma()
+    pos = kkma.pos(text)
+    for _, tag in pos:
+        if tag.startswith('N'):
+            return True
+    return False
 
 class YouTubeDataRequest(BaseModel):
     video_id_or_url: str
@@ -325,7 +399,12 @@ async def extract_youtube_script(request_data: YouTubeDataRequest):
         if action_type == 'read':
             transcript = YouTubeTranscriptApi.get_transcript(video_id_or_url, languages=['en', 'ko'], preserve_formatting=True)
         elif action_type == 'translate':
-            transcripts = YouTubeTranscriptApi.list_transcripts(video_id_or_url)
+            transcript = YouTubeTranscriptApi.get_transcript(video_id_or_url, languages=['en', 'ko'], preserve_formatting=True)
+            if is_korean(transcript) :
+                transcript = transcript.translate('en').fetch()
+            else :
+                transcript = transcript.translate('ko').fetch()    
+            '''transcripts = YouTubeTranscriptApi.list_transcripts(video_id_or_url)
             transcript = None
             for transcript_item in transcripts:
                 if transcript_item.language_code == 'ko':
@@ -333,7 +412,7 @@ async def extract_youtube_script(request_data: YouTubeDataRequest):
                     break
                 elif transcript_item.language_code == 'en':
                     transcript = transcript_item.translate('ko').fetch()
-                    break
+                    break'''
         elif action_type == 'summarize':
             transcript = YouTubeTranscriptApi.get_transcript(video_id_or_url, languages=['en', 'ko'], preserve_formatting=True)
             prompt = f"You are the best at summarizing. Please summarize the following data neatly. Summarize in the same language as requested. Do not include any content other than the summary. [Data]:\n{transcript}"
@@ -343,11 +422,13 @@ async def extract_youtube_script(request_data: YouTubeDataRequest):
             formatter = TextFormatter()
             text_formatted = formatter.format_transcript(transcript)
             print(text_formatted)
-            #일단 한줄로 만들고, 띄어쓰기 라이브러리를 이용해서 띄어쓰기한다.             
-            combined_text = ''.join(text_formatted) 
-            result = spell_checker.check(combined_text)
-            corrected_text = result.checked
-            return JSONResponse(content={"transcript": corrected_text})
+            #일단 한줄로 만들고, 띄어쓰기 라이브러리를 이용해서 띄어쓰기한다.
+            if is_korean(text_formatted) :           
+                combined_text = ' '.join(text_formatted) 
+                result = spacing_okt(combined_text)
+            else :
+                result = text_formatted
+            return JSONResponse(content={"transcript": result})
         else:
             raise ValueError("Transcript not available")
     except Exception as e:
