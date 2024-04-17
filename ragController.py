@@ -30,6 +30,14 @@ ragController = APIRouter()
 assistant = ChatPDF()
 askMulti = multiRAG()
 
+############################################[메모리 클리어] ############################################
+@ragController.post("/rag/clear_data")
+async def clear_data():
+    # Clear all data from memory
+    uploaded_files_data.clear()
+    uploaded_files_metadata.clear()
+    return {"message": "Data cleared"}
+
 ############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
 uploaded_files_data = {} #파일 데이터 메모리 적재용
 uploaded_files_metadata = []
@@ -52,7 +60,10 @@ async def prompt_upload_files(files: List[UploadFile] = File(...)):
             "file_name": uploaded_file.filename,
             "content": file_data
         }
-        uploaded_files_metadata.append(file_metadata.dict())
+        uploaded_files_metadata.append(file_metadata.model_dump())
+        print("************************************")
+        print(uploaded_files_metadata)
+        print("************************************")
 
     return {"message": "Files upload succeeded", "files_metadata": uploaded_files_metadata}
 
@@ -69,15 +80,20 @@ async def delete_file_data(file_id: int):
 
     return {"message": "File deleted successfully", "files_metadata": uploaded_files_metadata}
 
-@ragController.get("/file/{file_id}/")
-async def get_file_data(file_id: int):
-    global uploaded_files_data
-    # Check if file ID exists
-    if file_id not in uploaded_files_data:
-        raise HTTPException(status_code=404, detail="File not found")
-    # Retrieve file data from memory
-    file_data = uploaded_files_data[file_id]
-    return file_data
+class PromptWithFilesRequest(BaseModel):
+    prompt: str
+    fileIds: List[int]
+@ragController.post("/rag/answer-from-prompt/")
+async def process_prompt_with_files(request: PromptWithFilesRequest):
+    file_data_list = []
+    for file_id in request.fileIds:
+        if file_id not in uploaded_files_data:
+            raise HTTPException(status_code=404, detail=f"File with ID {file_id} not found")
+        file_data_list.append(uploaded_files_data[file_id])
+    
+    print(file_data_list)
+    return {"message": "Files fetched successfully", "file_data": file_data_list}
+
 
 ############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
 @ragController.post("/upload-file/")
@@ -334,32 +350,6 @@ async def handle_analyze_webnews(request: Request):
     except Exception as e:
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail="Unexpected error occurred")    
-         
-# 유튜브 설정 테스트
-async def get_youtube_script():
-    # Base64 인코딩된 이미지 데이터를 디코딩
-    #image_data = base64.b64decode(data.image.split(',')[1])
-
-    # 서비스 계정 키 파일 경로
-    key_path = "sonvision-36a28cdac666.json"
-
-    # 서비스 계정 키 파일을 사용하여 인증 정보 생성
-    credentials = service_account.Credentials.from_service_account_file(key_path)
-    # 인증 정보를 사용하여 Google Cloud Vision 클라이언트 초기화
-    client = vision.ImageAnnotatorClient(credentials=credentials)
-    image = vision.Image(content=image_data)
-    # OCR 처리
-    response = client.text_detection(image=image)
-    texts = response.text_annotations
-    if response.error.message:
-        raise HTTPException(status_code=500, detail=response.error.message)
-
-    #structured_ocr_data = process_ocr_texts(texts)
-    # OCR 결과를 GPT-4 분석 함수에 전달
-    #analysis_result = await gpt4_pdf_talk(structured_ocr_data)
-
-    # 분석 결과 반환
-    return {"texts": "analysis_result"}         
 
 #띄어쓰기 해보기 (KoNlp 이용)
 def spacing_okt(wrongSentence):

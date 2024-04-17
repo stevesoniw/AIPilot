@@ -425,6 +425,8 @@
                         /*******************************************************************************/                        
                         break;
                     case 'menu_3rd_a':
+                        navigator.sendBeacon('/rag/clear_data');
+
                         function setupEventListeners() {
                             var chooser = document.getElementById('chooseFile');
                             if (chooser) {
@@ -441,6 +443,10 @@
                             window.dropFile.handleFiles(this.files);
                         }
                         setupEventListeners();
+
+                        document.getElementById('promptSelect').addEventListener('change', function() {
+                            getAnswerUsingPrompt(this.value);
+                        });
                         break;
                         /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
                         /*

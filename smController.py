@@ -7,9 +7,11 @@ from datetime import datetime
 from sklearn.preprocessing import MinMaxScaler
 from pydantic import BaseModel
 from fastapi import HTTPException, APIRouter
+from scipy.stats import pearsonr
+
 import logging
 
-SECRET_KEY = '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'
+#SECRET_KEY = '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'
 
 logging.basicConfig(level=logging.DEBUG)
 smController = APIRouter()
@@ -41,9 +43,9 @@ def compute_distance(dt, users_target, users_compare, user_distance):
         sliced_data = compare_data.iloc[i: i + user_distance, 0]
         compare_values = np.array(sliced_data).reshape(-1)
         compare_values -= compare_values[0]
-        dtw_distance = dtw.distance_fast(target_values, compare_values)
-        pcorr_coef = np.corrcoef(target_values, compare_values)[0, 1]
-        score = abs(pcorr_coef) / (dtw_distance + 1e-10)
+        distance = dtw.distance_fast(target_values, compare_values, window=int(user_distance * 0.2), inner_dist='squared euclidean')
+        pearson_corr = pearsonr(target_values, compare_values)[0]
+        score = (1 / (1 + distance)) * 0.5 + 0.5 * abs(pearson_corr)
         matrix[sliced_data.index[0].strftime("%Y-%m-%d")] = score
     return matrix
 
@@ -96,10 +98,9 @@ def normalize_df(df):
     @param df: the dataFrame to be normalized
     @return df_normalized: the normalized dataFrame
     """
-    min_max_scaler = MinMaxScaler()
-    df_normalized = min_max_scaler.fit_transform(df)
-    df_normalized = pd.DataFrame(df_normalized, columns=df.columns)
-    df_normalized.index = df.index
+    scaler = MinMaxScaler()
+    df_values = scaler.fit_transform(df.values.reshape(-1, 1))
+    df_normalized = pd.DataFrame(df_values, index=df.index, columns=df.columns)
     return df_normalized
 
 def data_select(selected_data):

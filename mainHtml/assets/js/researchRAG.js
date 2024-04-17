@@ -18,9 +18,7 @@ class DropFile {
     attachDeleteHandler() {
         // Listen for clicks on the fileList container
         this.fileList.addEventListener('click', (event) => {
-            // Debug log to confirm the event is being captured
             console.log("Clicked within fileList:", event.target);
-
             const deleteButton = event.target.closest('.upload-delete');
             if (deleteButton) {
                 // Confirm the delete button was targeted
@@ -47,6 +45,14 @@ class DropFile {
         });
     }
 
+    updateMetainfoAfterDeletion(fileId) {
+        const metainfo = document.getElementById('metainfo');
+        const fileMetadataDiv = document.querySelector(`div[data-file-id="${fileId}"]`);
+        if (fileMetadataDiv) {
+            fileMetadataDiv.remove();
+        }
+    }  
+
     handleFileDeletion(fileId) {
         fetch(`/file/${fileId}`, {
             method: 'DELETE'
@@ -54,21 +60,12 @@ class DropFile {
         .then(response => response.json())
         .then(data => {
             console.log("Server response after deletion:", data.message);
-            updateMetainfoAfterDeletion(fileId);
-            // Update the client-side list of files based on the latest server response
-            storeFileMetadata(data.files_metadata);
+            this.updateMetainfoAfterDeletion(fileId);
+            //storeFileMetadata(data.files_metadata);
         })
         .catch(error => console.error('Error deleting file:', error));
     } 
     
-    updateMetainfoAfterDeletion(fileId) {
-        const metainfo = document.getElementById('metainfo');
-        const fileMetadataDiv = document.querySelector(`div[data-file-id="${fileId}"]`);
-        if (fileMetadataDiv) {
-            fileMetadataDiv.remove();
-        }
-    }    
-
     preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -191,11 +188,44 @@ function storeFileMetadata(filesMetadata) {
     filesMetadata.forEach(file => {
         const fileEntry = document.createElement('div');
         fileEntry.className = 'file-metadata';
-        fileEntry.setAttribute('data-file-id', file.file_id);  // Store server-assigned file ID
-        fileEntry.innerHTML = `File ID: ${file.file_id}, Name: ${file.file_name}`;
-        fileEntry.appendChild(createDeleteButton(file.file_id));
+        fileEntry.setAttribute('data-file-id', file.file_id);  
+        fileEntry.innerHTML = `
+            <div>
+                File ID: ${file.file_id}, Name: ${file.file_name}
+            </div>
+        `;
         filesContainer.appendChild(fileEntry);
     });
+}
+
+function getAnswerUsingPrompt(selectedPrompt){
+    const fileElements = document.querySelectorAll('#showfiles .file');
+    
+    if (fileElements.length === 0) {
+        alert('PDF 파일을 업로드 후에 선택해주세요!');
+        return;
+    }
+
+    const fileIds = Array.from(fileElements).map(fileElement => fileElement.getAttribute('data-file-id'));
+    console.log("******************");
+    console.log(selectedPrompt);
+    console.log(fileIds);
+
+    fetch('/rag/answer-from-prompt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: selectedPrompt,
+            fileIds: fileIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server response:', data);
+    })
+    .catch(error => console.error('Error sending data:', error));
 }
 /*
 document.getElementById('chooseFile').addEventListener('change', function() {
