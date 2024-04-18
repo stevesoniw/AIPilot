@@ -72,7 +72,7 @@ st.subheader("PDF 포맷의 리서치 리포트를 여러 개 업로드해 분�
 # File uploader in the sidebar on the left
 
 # Set OPENAI_API_KEY as an environment variable
-os.environ["OPENAI_API_KEY"] = "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"
+#os.environ["OPENAI_API_KEY"] = ""
 
 llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview",streaming=True)
 
