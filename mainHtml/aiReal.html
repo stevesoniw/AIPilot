@@ -425,10 +425,21 @@
                         /*******************************************************************************/                        
                         break;
                     case 'menu_3rd_a':
+                        //파일저장한것 서버쪽 메모리 클리어해주기
                         navigator.sendBeacon('/rag/clear_data');
+                        const sendButton = document.getElementById('ragchat_button'); //채팅 버튼
+                        const inputField = document.getElementById('ragchat'); //채팅 textArea
+                        sendButton.addEventListener('click', processInput);
+                        inputField.addEventListener('keypress', function (event) {
+                            if (event.key === 'Enter') {
+                                event.preventDefault(); 
+                                processInput();
+                            }
+                        });  
+
 
                         function setupEventListeners() {
-                            var chooser = document.getElementById('chooseFile');
+                            var chooser = document.getElementById('chooseFile'); //파일선택 버튼
                             if (chooser) {
                                 chooser.removeEventListener('change', handleFileChange);
                                 chooser.addEventListener('change', handleFileChange); 
@@ -444,6 +455,7 @@
                         }
                         setupEventListeners();
 
+                        //프롬프트 셀렉트창 감시
                         document.getElementById('promptSelect').addEventListener('change', function() {
                             getAnswerUsingPrompt(this.value);
                         });

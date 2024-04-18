@@ -3,15 +3,10 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request  
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
-import PyPDF2
 from tempfile import NamedTemporaryFile
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
-from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
 from langchain_core.prompts import PromptTemplate
@@ -22,7 +17,6 @@ import asyncio
 import tempfile
 import logging
 import multiprocessing
-import base64
 from konlpy.tag import Okt
 from konlpy.tag import Kkma
 okt = Okt()
@@ -194,7 +188,7 @@ async def answer_from_prompt(request: Request):
 
         modified_prompt = PromptTemplate.from_template(prompt_template)
         print(modified_prompt)
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY, streaming=True)
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo", openai_api_key=config.OPENAI_API_KEY, streaming=True)
         llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
         stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
         result = stuff_chain.run(final_results)

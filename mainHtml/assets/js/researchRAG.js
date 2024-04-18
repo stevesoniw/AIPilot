@@ -147,7 +147,7 @@ class DropFile {
 }
 //const dropFile = new DropFile("drop-file", "files");
 
-/* 파일 업로드 끝 */
+/* 실제 파일 업로드 Class 끝 */
 
 /* 파일 파이썬 서버로 올리기 */
 async function submitFiles() {
@@ -197,6 +197,7 @@ function storeFileMetadata(filesMetadata) {
     });
 }
 
+//Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
 function getAnswerUsingPrompt(selectedPrompt){
     const fileElements = document.querySelectorAll('#showfiles .file');
     
@@ -235,6 +236,66 @@ function getAnswerUsingPrompt(selectedPrompt){
         console.error('getAnswerUsingPrompt error:', error);
     });
 }
+/* 채팅 창 컨트롤 하기 */
+function processInput() {
+    const inputField = document.getElementById('ragchat'); 
+    const userInput = inputField.value.trim();
+    if (userInput) {
+        displayQuestion(userInput);
+        sendChatRequest(userInput);
+        inputField.value = ''; 
+    }
+}
+
+function displayQuestion(question) {
+    const questionWrap = document.createElement('div');
+    const talkListWrap = document.querySelector('.talk-list-wrap');
+    questionWrap.className = 'question-wrap';
+    questionWrap.textContent = question;
+    talkListWrap.appendChild(questionWrap);
+    talkListWrap.style.display = 'flex'; // Ensure the talk list is visible
+}
+
+function sendChatRequest(question) {
+    const fileElements = document.querySelectorAll('#showfiles .file');
+    if (fileElements.length === 0) {
+        alert('Please upload PDF files before proceeding!');
+        return;
+    }
+
+    const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+
+    fetch(`/rag/chat-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            question: question,
+            file_ids: fileIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayAnswer(data);
+    })
+    .catch(error => {
+        console.error('Error fetching the answer:', error);
+        displayAnswer('Failed to fetch the answer due to an error.');
+    })
+    .finally(() => {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    });
+};
+
+function displayAnswer(answer) {
+    const answerWrap = document.createElement('div');
+    answerWrap.className = 'answer-wrap';
+    answerWrap.innerHTML = answer; // Using innerHTML in case answer contains HTML (like your table)
+    const talkListWrap = document.querySelector('.talk-list-wrap');
+    talkListWrap.appendChild(answerWrap);
+}
+
 
 /* 툴팁 시작 */
 function jTooltip(){
