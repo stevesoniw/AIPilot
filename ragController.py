@@ -3,11 +3,26 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request  
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
+import PyPDF2
 from tempfile import NamedTemporaryFile
 from langchain_community.document_loaders import PyPDFLoader
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains import ConversationalRetrievalChain
+from langchain_openai import ChatOpenAI
+from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+from langchain.chains.llm import LLMChain
+from langchain_core.prompts import PromptTemplate
+from langchain.docstore.document import Document as Doc
+
 import os
+import asyncio
 import tempfile
 import logging
+import multiprocessing
+import base64
 from konlpy.tag import Okt
 from konlpy.tag import Kkma
 okt = Okt()
@@ -52,18 +67,28 @@ async def prompt_upload_files(files: List[UploadFile] = File(...)):
         raise HTTPException(status_code=400, detail="No files provided.")
     
     for uploaded_file in files:
-        file_data = await uploaded_file.read()
         file_id_counter += 1
-        file_metadata = FileMetadata(file_id=file_id_counter, file_name=uploaded_file.filename)
-        
+        temp_file_path = f"temp_{file_id_counter}_{uploaded_file.filename}"
+                    
+        with open(temp_file_path, "wb") as f:
+            file_data = await uploaded_file.read()
+            f.write(file_data)
+        loader = PyPDFLoader(temp_file_path)
+        loaded_documents = loader.load()
+        print(f"Number of pages loaded: {len(loaded_documents)}")
+        # Store the extracted text content
         uploaded_files_data[file_id_counter] = {
             "file_name": uploaded_file.filename,
-            "content": file_data
+            "content": loaded_documents
         }
+                
+        file_metadata = FileMetadata(file_id=file_id_counter, file_name=uploaded_file.filename)
+        
         uploaded_files_metadata.append(file_metadata.model_dump())
-        print("************************************")
-        print(uploaded_files_metadata)
-        print("************************************")
+        os.remove(temp_file_path)
+        #print("************************************")
+        #print(uploaded_files_data)
+        #print("************************************")
 
     return {"message": "Files upload succeeded", "files_metadata": uploaded_files_metadata}
 
@@ -80,19 +105,133 @@ async def delete_file_data(file_id: int):
 
     return {"message": "File deleted successfully", "files_metadata": uploaded_files_metadata}
 
-class PromptWithFilesRequest(BaseModel):
-    prompt: str
-    fileIds: List[int]
+
 @ragController.post("/rag/answer-from-prompt/")
-async def process_prompt_with_files(request: PromptWithFilesRequest):
-    file_data_list = []
-    for file_id in request.fileIds:
+async def answer_from_prompt(request: Request):
+    try:
+        data = await request.json()  
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"message": "Invalid JSON."})
+    file_ids = data.get("file_ids", [])
+    prompt_option = data.get("prompt_option", None)
+    if not file_ids:
+        raise HTTPException(status_code=400, detail="No file IDs provided.")
+    if not isinstance(file_ids, list) or not all(isinstance(x, int) for x in file_ids):
+        raise HTTPException(status_code=422, detail="file_ids must be a list of integers.")
+
+    documents = []
+    for file_id in file_ids:
         if file_id not in uploaded_files_data:
             raise HTTPException(status_code=404, detail=f"File with ID {file_id} not found")
-        file_data_list.append(uploaded_files_data[file_id])
+        
+        document = uploaded_files_data[file_id]['content']
+        documents.append(document)
+        
+    #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
+    #print(documents)
+    #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
     
-    print(file_data_list)
-    return {"message": "Files fetched successfully", "file_data": file_data_list}
+    if len(documents) == 1:
+        if (prompt_option == 'A') :
+            ex_prompt = "리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘."
+        elif (prompt_option == 'B') :
+            ex_prompt = "리포트를 읽고 해당 기업의 이번 분기 실적이 어땠는지 알려줘. 뭘 근거로 리포트에서 그렇게 판단했는지도 알려줘."
+        else :
+            ex_prompt = "리포트에 쓰인 전문 용어가 있으면 설명해줘. PER, EPS, PBR 같은 주식 용어나 투자지표는 이미 알고 있으니까 생략해줘. 이 기업에서 하는 사업과 관련된 용어들 중에 생소한 것들은 꼭 알려줘. 예를 들어 LG화학이면 제품 개발하는 데 쓰인 과학 기술이나 과학 용어 같은 걸 알려줘."
+        
+        print(documents[0])
+        prompt_template = """너는 애널리스트 리포트에 대해 분석하는 리포트 전문가야.
+        애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음 요구사항에 맞춰서 리포트를 분석해줘. \n""" + """요구사항: """ + ex_prompt+ """
+        
+        대답은 한국어로 해줘.
+
+        답변은 800자 이내로 해줘.
+
+        리포트에 없는 내용은 언급하지 마.
+
+        리포트 내용:
+        "{text}"
+
+        답변: """
+        modified_prompt = PromptTemplate.from_template(prompt_template)
+        #print(modified_prompt)
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+        llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
+        stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
+        result = stuff_chain.run(documents[0])    
+
+    else:
+        if (prompt_option == 'A') :
+            ex_prompt = "리포트들을 보고 해당 기업의 Bull, Bear 포인트들을 사업부 별로 정리해서 표로 보여줘."
+        elif (prompt_option == 'B') :
+            ex_prompt = """각 리포트에서 공통적으로 언급되는 주제/키워드를 몇가지 선정하고, 의견이 일치하는 부분과 일치하지 않는 부분을 정리해줘. 
+        하위 문장의 구분은 숫자가 아닌 '•'으로 구분해주고 개별 문장은 한문장씩 끊어서 답변하되 '-합니다', '-입니다'는 빼고 문장을 만들어줘."""
+        else :
+            ex_prompt = """각 리포트들에서 전문용어/약어를 사용한 경우 이에 대한 설명을 추가해줘.
+        앞으로 용어를 설명할 때 '-입니다', '-됩니다'는 빼고 간결하게 대답해줘.
+        답변의 시작은 "<용어 설명>"으로 하고, 용어들은 1,2,3 순서를 매겨서 알려줘.
+        정리할 때, 재무적 용어 (ex. QoQ, YoY)나 리포트용 약어는 제외하고 정리해줘."""
+        
+        prompt_template = """너는 애널리스트 리포트에 대해 분석하는 리포트 전문가야.
+        애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음 요구사항에 맞춰서 리포트를 분석해줘. \n""" + """요구사항: """ + ex_prompt + """
+        
+        대답은 한국어로 해줘.
+
+        답변은 800자 이내로 해줘.
+
+        리포트에 없는 내용은 언급하지 마.
+
+        리포트 내용:
+        "{text}"
+
+        답변: """       
+
+        with multiprocessing.Pool(processes=len(documents)) as pool: #병렬처리 고고
+            results = [pool.apply_async(create_summary, (content,)) for content in documents]
+            final_results = [Doc(page_content=result.get()) for result in results]
+            print("Final Results:", final_results)
+    
+
+        modified_prompt = PromptTemplate.from_template(prompt_template)
+        print(modified_prompt)
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY, streaming=True)
+        llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
+        stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
+        result = stuff_chain.run(final_results)
+        
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+    print(result)
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+    return result
+
+def create_summary(docs):
+    # Define prompt
+    prompt_template = """You are an assistant tasked with summarizing analyst reports.
+    애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음을 분석해줘.
+
+    1. 어느 증권사에서 발행했고, 언제 발행했고, 몇분기 (ex. 20xx년 x분기) 에 대해서 어떤 기업에 대해 분석한 건지 첫 문장에서 알려줘.
+    2. 이 리포트의 주요 사항들을 사업별로 Bullet Point 형식으로 3가지 이상 알려줘. 주요사항들을 왜 그렇게 판단했는지 그 근거도 찾아서 보여줘.
+    3. 이 회사의 Bull, Bear 포인트들을 회사의 사업 분야별로 표로 정리해서 보여줘. 사업 분야라는 건 회사의 주요 사업들을 얘기하는 거야.
+
+    대답은 한국어로 해줘.
+
+    답변은 800자 이내로 해줘.
+
+    리포트에 없는 내용은 언급하지 마.
+
+    리포트 내용:
+    "{text}"
+
+    답변: """
+    prompt = PromptTemplate.from_template(prompt_template)
+    
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+    # Define StuffDocumentsChain
+    stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
+    result = stuff_chain.run(docs)
+
+    return result
 
 
 ############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################

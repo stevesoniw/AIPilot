@@ -201,7 +201,6 @@ def create_figure2(sample_data, target_date, selected_data, values_list, title, 
             "borderColor": "#28a745",  
             "fill": False
         })
-
     return fig_data
 
 

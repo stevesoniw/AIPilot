@@ -162,7 +162,6 @@ async function submitFiles() {
         if (response.ok) {
             const result = await response.json();
             console.log("Files uploaded successfully:", result);
-            // Ensure you're selecting only the displayed file elements, not the file input
             const fileElements = document.querySelectorAll('#showfiles .file'); 
             result.files_metadata.forEach((meta, index) => {
                 if (fileElements[index]) {
@@ -205,35 +204,37 @@ function getAnswerUsingPrompt(selectedPrompt){
         alert('PDF 파일을 업로드 후에 선택해주세요!');
         return;
     }
-
-    const fileIds = Array.from(fileElements).map(fileElement => fileElement.getAttribute('data-file-id'));
-    console.log("******************");
+    //정수로 변환필요 (python 서버에 int 선언되어있음)
+    const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
     console.log(selectedPrompt);
     console.log(fileIds);
+    document.getElementById('loading_bar_ragprompt').style.display = 'block';
 
-    fetch('/rag/answer-from-prompt', {
+    fetch(`/rag/answer-from-prompt`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            prompt: selectedPrompt,
-            fileIds: fileIds
+            prompt_option: selectedPrompt,
+            file_ids: fileIds
         })
     })
     .then(response => response.json())
     .then(data => {
         console.log('Server response:', data);
-    })
-    .catch(error => console.error('Error sending data:', error));
-}
-/*
-document.getElementById('chooseFile').addEventListener('change', function() {
-    const fileList = this.files;
-    handleFiles(fileList);
-});*/
-/* 파일 파이썬 서버로 올리기 끝*/
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+        const answerWrap = document.querySelector('.answer-wrap');
+        answerWrap.innerText = data;  
 
+        const selectedOptionText = document.querySelector('#promptSelect option:checked').text;
+        document.querySelector('.question-wrap').textContent = selectedOptionText;
+    })
+    .catch(error => {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';        
+        console.error('getAnswerUsingPrompt error:', error);
+    });
+}
 
 /* 툴팁 시작 */
 function jTooltip(){
