@@ -82,11 +82,27 @@ class DropFile {
     }
 
     handleDrop(e) {
-        this.unhighlight(e);
+        this.preventDefaults(e);
         let dt = e.dataTransfer;
         let files = dt.files;
-        this.handleFiles(files);
-        this.fileList.scrollTo({ top: this.fileList.scrollHeight });
+        console.log("Dropped files:", files); // 드롭된 파일 로그 출력
+        if (files.length > 0) { 
+            this.handleFiles(files);
+            this.updateInputFiles(files); 
+            this.fileList.scrollTo({ top: this.fileList.scrollHeight });
+        } else {
+            console.error("No files dropped");
+        }
+    }
+
+    updateInputFiles(files) {
+        const fileInput = document.getElementById('chooseFile');
+        const dataTransfer = new DataTransfer(); // 새 DataTransfer 객체 생성
+        for (let file of files) {
+            console.log("filesssssssss:", file);
+            dataTransfer.items.add(file); // 파일을 DataTransfer 아이템에 추가
+        }
+        fileInput.files = dataTransfer.files; // input 요소의 files 속성 업데이트
     }
 
     handleFiles(files) {
@@ -100,7 +116,7 @@ class DropFile {
         if (fileDOM) {
             this.fileList.appendChild(fileDOM); // Add the file preview to the fileList
             this.fileList.style.display = 'block'; // Make sure fileList is visible
-            submitFiles(); // This call can be adjusted based on your needs
+            setTimeout(submitFiles, 100); 
         } else {
             console.log("File verification failed");
         }
@@ -200,7 +216,10 @@ function storeFileMetadata(filesMetadata) {
 //Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
 function getAnswerUsingPrompt(selectedPrompt){
     const fileElements = document.querySelectorAll('#showfiles .file');
-    
+    if (!selectedPrompt) {
+        console.log("No prompt selected.");
+        return;  // 선택해주세요 선택일 경우에는 멈추기
+    }
     if (fileElements.length === 0) {
         alert('PDF 파일을 업로드 후에 선택해주세요!');
         return;
@@ -230,6 +249,7 @@ function getAnswerUsingPrompt(selectedPrompt){
 
         const selectedOptionText = document.querySelector('#promptSelect option:checked').text;
         document.querySelector('.question-wrap').textContent = selectedOptionText;
+        customScrollTo('top');
     })
     .catch(error => {
         document.getElementById('loading_bar_ragprompt').style.display = 'none';        
@@ -241,7 +261,6 @@ function processInput() {
     const inputField = document.getElementById('ragchat'); 
     const userInput = inputField.value.trim();
     if (userInput) {
-        displayQuestion(userInput);
         sendChatRequest(userInput);
         inputField.value = ''; 
     }
@@ -253,19 +272,34 @@ function displayQuestion(question) {
     questionWrap.className = 'question-wrap';
     questionWrap.textContent = question;
     talkListWrap.appendChild(questionWrap);
-    talkListWrap.style.display = 'flex'; // Ensure the talk list is visible
+    talkListWrap.style.display = 'flex'; // 보이게하는거
+}
+
+function customScrollTo(position) {
+    if (position === 'bottom') {
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    } else if (position === 'top') {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
 }
 
 function sendChatRequest(question) {
     const fileElements = document.querySelectorAll('#showfiles .file');
     if (fileElements.length === 0) {
-        alert('Please upload PDF files before proceeding!');
+        alert('PDF 파일을 먼저 업로드 후 질문해주세요\n(※해당 채팅은 PDF 내용을 바탕으로만 답변합니다.)');
         return;
     }
-
+    displayQuestion(question);
     const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+    document.getElementById('loading_bar_ragprompt').style.display = 'block';
 
-    fetch(`/rag/chat-request`, {
+    fetch(`/rag/answer-from-prompt`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -277,11 +311,13 @@ function sendChatRequest(question) {
     })
     .then(response => response.json())
     .then(data => {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
         displayAnswer(data);
     })
     .catch(error => {
         console.error('Error fetching the answer:', error);
-        displayAnswer('Failed to fetch the answer due to an error.');
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+        displayAnswer('API 서버가 불안정해요. 다시 질문해주세요!');
     })
     .finally(() => {
         document.getElementById('loading_bar_ragprompt').style.display = 'none';
@@ -291,9 +327,10 @@ function sendChatRequest(question) {
 function displayAnswer(answer) {
     const answerWrap = document.createElement('div');
     answerWrap.className = 'answer-wrap';
-    answerWrap.innerHTML = answer; // Using innerHTML in case answer contains HTML (like your table)
+    answerWrap.innerText = answer; 
     const talkListWrap = document.querySelector('.talk-list-wrap');
     talkListWrap.appendChild(answerWrap);
+    answerWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
 

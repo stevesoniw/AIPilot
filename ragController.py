@@ -108,6 +108,7 @@ async def answer_from_prompt(request: Request):
         return JSONResponse(status_code=400, content={"message": "Invalid JSON."})
     file_ids = data.get("file_ids", [])
     prompt_option = data.get("prompt_option", None)
+    question = data.get("question", None)
     if not file_ids:
         raise HTTPException(status_code=400, detail="No file IDs provided.")
     if not isinstance(file_ids, list) or not all(isinstance(x, int) for x in file_ids):
@@ -126,13 +127,15 @@ async def answer_from_prompt(request: Request):
     #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
     
     if len(documents) == 1:
-        if (prompt_option == 'A') :
-            ex_prompt = "리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘."
-        elif (prompt_option == 'B') :
-            ex_prompt = "리포트를 읽고 해당 기업의 이번 분기 실적이 어땠는지 알려줘. 뭘 근거로 리포트에서 그렇게 판단했는지도 알려줘."
-        else :
-            ex_prompt = "리포트에 쓰인 전문 용어가 있으면 설명해줘. PER, EPS, PBR 같은 주식 용어나 투자지표는 이미 알고 있으니까 생략해줘. 이 기업에서 하는 사업과 관련된 용어들 중에 생소한 것들은 꼭 알려줘. 예를 들어 LG화학이면 제품 개발하는 데 쓰인 과학 기술이나 과학 용어 같은 걸 알려줘."
-        
+        if prompt_option:
+            ex_prompt = {
+                'A': "리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘.",
+                'B': "리포트를 읽고 해당 기업의 이번 분기 실적이 어땠는지 알려줘. 뭘 근거로 리포트에서 그렇게 판단했는지도 알려줘.",
+                'C': "리포트에 쓰인 전문 용어가 있으면 설명해줘. PER, EPS, PBR 같은 주식 용어나 투자지표는 이미 알고 있으니까 생략해줘. 이 기업에서 하는 사업과 관련된 용어들 중에 생소한 것들은 꼭 알려줘. 예를 들어 LG화학이면 제품 개발하는 데 쓰인 과학 기술이나 과학 용어 같은 걸 알려줘."
+            }.get(prompt_option, "")
+        else:
+            ex_prompt = question       
+
         print(documents[0])
         prompt_template = """너는 애널리스트 리포트에 대해 분석하는 리포트 전문가야.
         애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음 요구사항에 맞춰서 리포트를 분석해줘. \n""" + """요구사항: """ + ex_prompt+ """
@@ -155,17 +158,19 @@ async def answer_from_prompt(request: Request):
         result = stuff_chain.run(documents[0])    
 
     else:
-        if (prompt_option == 'A') :
-            ex_prompt = "리포트들을 보고 해당 기업의 Bull, Bear 포인트들을 사업부 별로 정리해서 표로 보여줘."
-        elif (prompt_option == 'B') :
-            ex_prompt = """각 리포트에서 공통적으로 언급되는 주제/키워드를 몇가지 선정하고, 의견이 일치하는 부분과 일치하지 않는 부분을 정리해줘. 
-        하위 문장의 구분은 숫자가 아닌 '•'으로 구분해주고 개별 문장은 한문장씩 끊어서 답변하되 '-합니다', '-입니다'는 빼고 문장을 만들어줘."""
-        else :
-            ex_prompt = """각 리포트들에서 전문용어/약어를 사용한 경우 이에 대한 설명을 추가해줘.
-        앞으로 용어를 설명할 때 '-입니다', '-됩니다'는 빼고 간결하게 대답해줘.
-        답변의 시작은 "<용어 설명>"으로 하고, 용어들은 1,2,3 순서를 매겨서 알려줘.
-        정리할 때, 재무적 용어 (ex. QoQ, YoY)나 리포트용 약어는 제외하고 정리해줘."""
-        
+        if prompt_option:
+            ex_prompt = {
+                'A': "리포트들을 보고 해당 기업의 Bull, Bear 포인트들을 사업부 별로 정리해서 표로 보여줘.",
+                'B': """각 리포트에서 공통적으로 언급되는 주제/키워드를 몇가지 선정하고, 의견이 일치하는 부분과 일치하지 않는 부분을 정리해줘. 
+                        하위 문장의 구분은 숫자가 아닌 '•'으로 구분해주고 개별 문장은 한문장씩 끊어서 답변하되 '-합니다', '-입니다'는 빼고 문장을 만들어줘.""",
+                'C': """각 리포트들에서 전문용어/약어를 사용한 경우 이에 대한 설명을 추가해줘.
+                    앞으로 용어를 설명할 때 '-입니다', '-됩니다'는 빼고 간결하게 대답해줘.
+                    답변의 시작은 "<용어 설명>"으로 하고, 용어들은 1,2,3 순서를 매겨서 알려줘.
+                    정리할 때, 재무적 용어 (ex. QoQ, YoY)나 리포트용 약어는 제외하고 정리해줘."""
+            }.get(prompt_option, "")
+        else:
+            ex_prompt = question    
+
         prompt_template = """너는 애널리스트 리포트에 대해 분석하는 리포트 전문가야.
         애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음 요구사항에 맞춰서 리포트를 분석해줘. \n""" + """요구사항: """ + ex_prompt + """
         

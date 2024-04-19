@@ -15,6 +15,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from functools import lru_cache
 from bs4 import BeautifulSoup
+from langchain_community.llms import OpenAI
+from langchain.agents import load_tools, initialize_agent
 #금융관련 APIs
 import finnhub
 import yfinance as yf
@@ -36,7 +38,39 @@ finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 
 #################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보  Starts #################################
+############  [해외 종목 검색] - 한글로 검색시 영어 종목코드 리턴해주기 #################
+
+
+class UserInput(BaseModel):
+    userInputCN: str
+@frControllerAI.post("/foreignStock/get-frstock-code/")
+async def get_frstock_code(data: UserInput):
+    llm = OpenAI(model_name="gpt-4-turbo", openai_api_key=config.OPENAI_API_KEY)
+    tool_names = ["serpapi"]
+
+    google_search = load_tools(tool_names)
     
+    stock_ticker_search_agent = initialize_agent(google_search,
+                            llm,
+                            agent="zero-shot-react-description",
+                            verbose=True,
+                            return_intermediate_steps=True,  ## return_intermediate_steps allows return value for feature use, for example the throught process and final response
+                            )
+
+    input_template = "What is the stock symbol for " + UserInput + ". And please only return the stock symbol; for example if input is Amazon, only return AMZN. And please do not return in sentence."
+    
+    response = stock_ticker_search_agent(
+        {
+            "input": input_template
+        }
+    )
+    print(response)
+    print("==========================================================================================================")
+    stockCode = response['output']
+    print(stockCode)
+    return {"stockCode": stockCode}
+
+
 
 ############  [GET NEWS INFO (해외뉴스정보) 및 (소셜정보)] #################
 # Finnhub 해외 종목뉴스 

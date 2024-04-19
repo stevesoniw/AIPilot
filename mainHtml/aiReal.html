@@ -290,9 +290,10 @@
                         searchField.off('input.select2minLength'); // 이전 이벤트 리스너를 제거
                         searchField.on('input.select2minLength', function () {
                             var term = $(this).val();
-                            if (/[\u3131-\uD79D]/ugi.test(term)) { // 한글이 포함된 경우
-                                if (term.length >= 4) {
-                                    getEngNameFromGoogle(); // 입력 길이가 4 이상이면 함수 호출
+                            if (/[\u3131-\uD79D\uAC00-\uD7A3]/.test(term)) { // 한글이 포함된 경우
+                                if (term.length >= 2) {
+                                    alert('11');
+                                    getEngNameFromGoogle(term); // 입력 길이가 4 이상이면 함수 호출
                                 }
                             }
                         });
@@ -437,13 +438,13 @@
                             }
                         });  
 
-
                         function setupEventListeners() {
                             var chooser = document.getElementById('chooseFile'); //파일선택 버튼
                             if (chooser) {
                                 chooser.removeEventListener('change', handleFileChange);
                                 chooser.addEventListener('change', handleFileChange); 
                             }
+                            window.dropFile = new DropFile('drop-file', 'showfiles');
                         }
                         
                         function handleFileChange(e) {
@@ -457,7 +458,9 @@
 
                         //프롬프트 셀렉트창 감시
                         document.getElementById('promptSelect').addEventListener('change', function() {
-                            getAnswerUsingPrompt(this.value);
+                            if (this.value) { 
+                                getAnswerUsingPrompt(this.value);
+                            }
                         });
                         break;
                         /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/

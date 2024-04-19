@@ -29,10 +29,9 @@ async function goNews() {
             body: JSON.stringify({categories: selectedCategories})
         });
 
-        g_news = await response.json();
+        seekingNewsData = await response.json();
         //g_news = newsResult
-        const seekingNewsData = JSON.parse(g_news);
-
+        //const seekingNewsData = JSON.parse(g_news);
         if (seekingNewsData) {
             // displayNews 함수를 호출하여 뉴스 데이터를 화면에 표시
             document.getElementById('loading_bar_news').style.display = 'none';
