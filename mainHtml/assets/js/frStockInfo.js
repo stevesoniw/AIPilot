@@ -16,8 +16,30 @@ function removeButtonOn(buttonId) {
 }
 
 //종목검색 한글로 했을때 구글 검색해와서 맞는종목 세팅해주기
-function getEngNameFromGoogle() {
-    console.log("Calling getEngNameFromGoogle()");
+async function getEngNameFromGoogle(term) {
+    const requestBody = {
+        userInputCN: term
+    };
+    try {
+        const response = await fetch("/foreignStock/get-frstock-code/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+        if (response.ok) {
+            console.log("Received stock code:", data.stockCode);
+            return data.stockCode;
+        } else {
+            console.error("Error from server:", data);
+            return null; 
+        }
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return null; 
+    }
 }
 
 //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기

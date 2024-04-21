@@ -216,9 +216,10 @@ function storeFileMetadata(filesMetadata) {
 //Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
 function getAnswerUsingPrompt(selectedPrompt){
     const fileElements = document.querySelectorAll('#showfiles .file');
-    if (!selectedPrompt) {
-        console.log("No prompt selected.");
-        return;  // 선택해주세요 선택일 경우에는 멈추기
+    console.log("selectedPrompt=", selectedPrompt);
+    if (selectedPrompt === 'default') {
+        console.log("Default prompt selected - no action taken.");
+        return;  
     }
     if (fileElements.length === 0) {
         alert('PDF 파일을 업로드 후에 선택해주세요!');

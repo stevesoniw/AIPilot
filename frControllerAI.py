@@ -20,7 +20,7 @@ from langchain.agents import load_tools, initialize_agent
 #금융관련 APIs
 import finnhub
 import yfinance as yf
-from openai import OpenAI
+#from openai import OpenAI
 #personal 파일
 import config
 import utilTool
@@ -45,10 +45,13 @@ class UserInput(BaseModel):
     userInputCN: str
 @frControllerAI.post("/foreignStock/get-frstock-code/")
 async def get_frstock_code(data: UserInput):
-    llm = OpenAI(model_name="gpt-4-turbo", openai_api_key=config.OPENAI_API_KEY)
+    llm = OpenAI(api_key=config.OPENAI_API_KEY)
+    print("**********************************")
+    print(data.userInputCN)  # 사용자 입력 값을 확인
+    print("**********************************")
     tool_names = ["serpapi"]
-
-    google_search = load_tools(tool_names)
+    serpapi_api_key = config.SERPAPI_API_KEY
+    google_search = load_tools(tool_names, serpapi_api_key=serpapi_api_key)
     
     stock_ticker_search_agent = initialize_agent(google_search,
                             llm,
@@ -57,7 +60,7 @@ async def get_frstock_code(data: UserInput):
                             return_intermediate_steps=True,  ## return_intermediate_steps allows return value for feature use, for example the throught process and final response
                             )
 
-    input_template = "What is the stock symbol for " + UserInput + ". And please only return the stock symbol; for example if input is Amazon, only return AMZN. And please do not return in sentence."
+    input_template = "What is the stock symbol for " + data.userInputCN + ". And please only return the stock symbol; for example if input is Amazon, only return AMZN. And please do not return in sentence."
     
     response = stock_ticker_search_agent(
         {
