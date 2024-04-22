@@ -213,6 +213,23 @@ def fetch_news_detail(news_url: NewsURL):
             raise HTTPException(status_code=404, detail="News content not found")
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
+    
+@dmController.post("/groqLamaTest")
+async def groq_cloud_lama_test(request_data: dict):
+    action = request_data.get("action")
+    g_news = request_data.get("g_news")
+
+    SYSTEM_PROMPT = ""
+    if action == "navergpt":
+        # 네이버 뉴스에 대한 GPT 의견 묻기임 
+        SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications. answer in Korean."        
+        digest_news = g_news
+        gpt_result = await utilTool.lama3_news_sum(digest_news, SYSTEM_PROMPT)        
+        
+    else:
+        gpt_result = {"error": "Invalid action"}
+    
+    return {"result": gpt_result}    
 ############################## [2ND_GNB][1ST_MENU] 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 Ends ######################    
 
 ############################## [2ND_GNB][2ND_MENU] 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 Starts   ################################

@@ -8,6 +8,9 @@ from sklearn.preprocessing import MinMaxScaler
 from pydantic import BaseModel
 from fastapi import HTTPException, APIRouter
 from scipy.stats import pearsonr
+from fastapi.responses import JSONResponse
+import math
+import json
 
 import logging
 
@@ -16,6 +19,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 smController = APIRouter()
 
+#################################################### [유사국면 - 단일지수 처리] Starts #################################################
 def calculate_date_distance(dt, date_str1, date_str2):
     """
     Calculate the absolute distance in days between two dates provided as strings
@@ -91,6 +95,26 @@ def filter_overlaps(ranges):
         if not overlap:
             non_overlapping.append(r1)
     return non_overlapping
+
+def have_overlap2(range1, range2):
+    start1, end1 = range1  # Adjusted to expect two values
+    start2, end2 = range2
+
+    # Assuming the dates do not overlap if one starts after the other ends
+    return not (end1 < start2 or end2 < start1)
+
+def filter_overlaps2(dates):
+    filtered_dates = []
+    for r1 in dates:
+        overlap = False
+        for r2 in filtered_dates:
+            if have_overlap2(r1, r2):
+                overlap = True
+                break
+        if not overlap:
+            filtered_dates.append(r1)
+    return filtered_dates
+
 
 def normalize_df(df):
     """
@@ -210,8 +234,9 @@ class AnalysisRequest(BaseModel):
     target_date_end: str
     compare_date_start: str
     compare_date_end: str
+    n_graphs: int 
     n_steps: int
-
+    #n_graphs: int        
 @smController.post("/similarity/univariate-analyze/")
 def analyze(request: AnalysisRequest):
     original_data = data_select(request.selected_data)
@@ -243,78 +268,193 @@ def analyze(request: AnalysisRequest):
         
     return {"chart_data": chart_data} 
     
+#################################################### [유사국면 - 단일지수 처리] Ends #################################################
+
+#################################################### [유사국면 - 복수지수 처리] Starts ###############################################
+
+def same_sign(a, b):
+    return (a >= 0 and b >= 0) or (a < 0 and b < 0)
+
+
+def find_similar_dates(df, target_change, date_distance):
+    results = []
+    for i in range(len(df) - date_distance + 1):
+        sliced_data = df.iloc[i: i + date_distance, 0]
+        sliced_change = sliced_data.values[-1] - sliced_data.values[0]
+        if math.isclose(target_change[0], sliced_change):
+            start_date = sliced_data.index[0].strftime("%Y-%m-%d")
+            end_date = sliced_data.index[-1].strftime("%Y-%m-%d")
+            results.append([start_date, end_date])
+    return results
+
+def data_select2(selected_data):
+    file_path = "mainHtml/assets/data/prototype.csv"
+    data = pd.read_csv(file_path, index_col='Date', parse_dates=True)
+    data = data.dropna()
+    if selected_data in data.columns:
+        return data
+    else:
+        return pd.DataFrame() 
+    
+    
+def create_multi_figure(sample_data, target_date, selected_data, values_list, subtract=False, n_steps = 0):
+
+    chart_data = {
+        "chart": {"type": "line"},
+        "title": {"text": "Time Series Analysis"},
+        "xAxis": {"categories": []},
+        "yAxis": {"title": {"text": "Value"}},
+        "series": []
+    }
+
+    if n_steps > 0:
+        get_length = len(sample_data.loc[target_date[0]: target_date[1]])
+        target_data = sample_data[target_date[0]:][: get_length + n_steps]
+        target_data.reset_index(drop=True, inplace=True)
+    else:
+        target_data = sample_data.loc[target_date[0]: target_date[1]]
+        target_data.reset_index(drop=True, inplace=True)
+
+    if subtract:
+        target_trace = target_data[selected_data] - target_data[selected_data].iloc[0]
+    else:
+        target_trace = target_data[selected_data]
+
+    chart_data["xAxis"]["categories"] = target_data.index.tolist()
+    chart_data["series"].append({"name": f"Target: {target_date[0]} to {target_date[1]}", "data": target_trace.tolist()})
+
+    for i, (start_date, end_date) in enumerate(values_list, 1):
+        if n_steps > 0:
+            get_length = len(sample_data.loc[start_date:end_date])
+            sliced_data = sample_data[start_date:][:get_length + n_steps]
+            sliced_data.reset_index(drop=True, inplace=True)
+        else:
+            sliced_data = sample_data.loc[start_date:end_date]
+            sliced_data.reset_index(drop=True, inplace=True)
+
+        if subtract:
+            sliced_trace = sliced_data[selected_data] - sliced_data[selected_data].iloc[0]
+        else:
+            sliced_trace = sliced_data[selected_data]
+
+        chart_data["series"].append({"name": f'Graph {i}: {start_date} to {end_date}', "data": sliced_trace.tolist()})
+
+    return chart_data
+
+def get_data(index_name: str) -> pd.DataFrame:
+    file_path = "mainHtml/assets/data/prototype.csv"
+    dt = pd.read_csv(file_path, index_col=0)[[index_name]].dropna()
+    dt.index = pd.to_datetime(dt.index)
+    dt = dt.sort_index(ascending=True)
+    return dt
+
+class AnalysisRequestMulti(BaseModel):
+    selected_data: str
+    target_date_start: str
+    target_date_end: str
+    compare_date_start: str
+    compare_date_end: str
+    n_graphs: int 
+    n_steps: int
+    #n_graphs: int      
+@smController.post("/similarity/multivariate-analyze/")
+def analyze_time_series(request: AnalysisRequestMulti):
+
+    print("*********************************************************")
+    print(request.selected_data)
+    print(request.target_date_start)
+    print(request.target_date_end)
+    print(request.compare_date_start)
+    print(request.compare_date_end)
+    print(request.n_steps)
+    print(request.n_graphs)
+    print("*********************************************************")
+
+    target_start = request.target_date_start
+    target_end = request.target_date_end
+    compare_start = request.compare_date_start
+    compare_end = request.compare_date_end
+    
+    #target_date = (request.target_date_start,  request.target_date_end)
+    #compare_date = (request.compare_date_start, request.compare_date_end)
+    
+    if target_start > target_end or compare_start > compare_end:
+        print("Invalid date ranges provided.")
+        raise HTTPException(status_code=400, detail="Invalid date ranges provided.")
+
+    original_data = get_data(request.selected_data)
+    original_data.index = pd.to_datetime(original_data.index).normalize()
+   
+    target_data = original_data.loc[target_start:target_end]
+    analysis_data = original_data.loc[compare_start:compare_end]
+    
+    target_date = (target_start, target_end)
+    compare_date = (compare_start, compare_end)
+    
+    #target_data = original_data.loc[request.target_date_start: request.target_date_end]
+    #analysis_data = original_data.loc[request.compare_date_start: request.compare_date_end]
+    print("AAAAAAAAAAAAAAAAAAAAAA")
+    print(target_data)
+    print("AAAAAAAAAAAAAAAAAAAAAA")
+
+    if target_data.empty or analysis_data.empty:
+        print("No data available for the given date ranges.")
+        raise HTTPException(status_code=404, detail="No data available for the given date ranges.")
+    
+    print("Target data example:", target_data.head())
+    print("Analysis data example:", analysis_data.head())
+    
+    try:
+        target_change = target_data.iloc[-1] - target_data.iloc[0]
+        similar_dates = find_similar_dates(analysis_data, target_change, len(target_data))
+        
+        print("***********************")
+        print(target_change)
+        print("***********************")
+        print(similar_dates)
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Not enough data points in the target or analysis range.")
+    
+    if len(similar_dates) == 0:
+        raise ValueError("No similar dates found for analysis")
+
+    filtered_dates = filter_overlaps2(similar_dates)
+    values_list = [(pd.to_datetime(start), pd.to_datetime(end)) for start, end in filtered_dates][:request.n_graphs]
+
+    fig_superimpose_target_original = create_multi_figure(original_data, target_date, request.selected_data, values_list, subtract=False, n_steps = request.n_steps)
+    fig_superimpose_target_aligned = create_multi_figure(original_data, target_date, request.selected_data, values_list, subtract=True, n_steps = request.n_steps)
+    
+    print(fig_superimpose_target_original)
+    
+    '''chart_data = {
+        "original": fig_superimpose_target_original,
+        "aligned": fig_superimpose_target_aligned
+    }'''
+    return JSONResponse(content={
+        "chart_data": {
+            "original": fig_superimpose_target_original,  # assuming this is already a dict
+            "aligned": fig_superimpose_target_aligned     # assuming this is already a dict
+        }
+    })    
+           
+
+
 '''
-test_request_data = AnalysisRequest(
+request_data = AnalysisRequestMulti(
     selected_data="GT2 Govt",
-    target_date_start="2023-11-01",
-    target_date_end="2024-01-01",
-    compare_date_start="2021-10-07",
-    compare_date_end="2023-10-26",
-    n_steps=20
+    target_date_start="2020-01-10",
+    target_date_end="2020-02-20",
+    analysis_date_start="2015-01-21",
+    analysis_date_end="2019-01-10",
+    n_steps=10,
+    n_graphs=2
 )
 
-# analyze 함수를 하드코딩된 데이터로 테스트
-response = analyze(test_request_data)
-print("Response:", response  )'''
-  
-'''def main():
-    st.sidebar.title('단일 유사기간 분석툴')
-    selected_data = st.sidebar.selectbox(
-        'Time Series Data:', 
-        ('GT2 Govt', 'GT5 Govt', 'GT10 Govt', 'GT30 Govt', 'USYC2Y10 Index', 'USYC5Y30 Index', 'USYC1030 Index',
-         'USGGBE10 Index', 'GTII10 Govt', 'GTDEM2Y Govt', 'GTDEM5Y Govt', 'GTDEM10Y Govt', 'DEYC2Y10 Index',
-         'DEYC5Y30 Index', 'DEGGBE10 Index', 'GTDEMII10Y Govt', 'GTESP10Y Govt', 'GTITL10Y Govt', 'GTGBP10Y Govt',
-         'GTCAD10Y Govt', 'GTAUD10Y Govt', 'GTJPY10Y Govt', 'CCSWNI5 BGN Curncy', 'IRSWNI5 BGN Curncy', 'ODF29 Comdty',
-         'MPSW5E BGN Curncy', 'GVSK3YR Index', 'GVSK10YR Index', 'DXY Index', 'KRW Curncy', 'EUR Curncy', 'JPY Curncy',
-         'CNH Curncy', 'BRL Curncy', 'INR Curncy', 'MXN Curncy', 'SPX Index', 'CCMP Index', 'DAX Index', 'BCOM Index',
-         'XAU Curncy', 'USCRWTIC Index', 'TSFR3M Index', 'USGG3M Index', 'US0003M Index', 'UREPTA30 Index', 'LQD US Equity',
-         'HYG US Equity', 'CDX IG CDSI GEN 5Y Corp', 'CDX HY CDSI GEN 5Y SPRD Corp', 'EMLC US Equity', 'EMB US Equity',
-         'VIX Index', 'MOVE Index', '.VIXVXN Index', 'GFSIFLOW Index', 'JLGPUSPH Index', 'JLGPEUPH Index', 'MRIEM Index',
-         'ACMTP10 Index', 'FWISUS55 Index', 'ILM3NAVG Index', 'ECRPUS 1Y Index', 'CESIUSD Index', 'CESIUSH Index', 'CESIUSS Index',
-         'CESIEUR Index', 'CESIEUH Index', 'CESIEUS Index', 'CESIEM Index', 'CESIEMXP Index', 'CESIEMFW Index'
-         )
-                                        )
-    
-    if selected_data is not None:
-        original_data = data_select(selected_data)
-        original_data.index = pd.to_datetime(original_data.index)
-        original_data = original_data.sort_index(ascending=True)
-
-        sample_data = normalize_df(original_data)
-        sample_data.index = pd.to_datetime(sample_data.index)
-        sample_data = sample_data.sort_index(ascending=True)
-        target_date = st.sidebar.date_input(
-            "Target Date Range",
-            (datetime(2023, 11, 1), datetime(2024, 1, 1)),
-            format="YYYY/MM/DD"
-        )
-        target_date = [date.strftime("%Y-%m-%d") for date in target_date]
-        user_target_distance = calculate_date_distance(sample_data, target_date[0], target_date[1])
-
-        # max_year, max_month, max_day = sample_data.index[-1].year, sample_data.index[-1].month, sample_data.index[-1].day
-        min_year, min_month, min_day = sample_data.index[0].year, sample_data.index[0].month, sample_data.index[0].day
-
-        compare_date = st.sidebar.date_input(
-            "Date Range for Analysis",
-            (datetime(min_year, min_month, min_day), datetime(2023, 9, 30)),
-            format="YYYY/MM/DD"
-        )
-        compare_date = [date.strftime("%Y-%m-%d") for date in compare_date]
-
-        nsteps = st.sidebar.slider('N-Steps Ahead (in days)', min_value=0, max_value=100, value=0, step=10)
-
-        if st.sidebar.button('Generate'):
-            similarity_distance = compute_distance(sample_data, target_date, compare_date, user_target_distance)
-            dates_score_list = dates_score(sample_data, similarity_distance, user_target_distance)
-            sorted_dates_score_list = sorted(dates_score_list, key=lambda x: x[2], reverse = True)
-            filtered_dates = filter_overlaps(sorted_dates_score_list)
-            
-            values_list = [(pd.to_datetime(start), pd.to_datetime(end), distance) for start, end, distance in filtered_dates]
-            
-            # Original
-            fig_superimpose_target_original = create_figure(original_data, target_date, selected_data, values_list, 'Original', subtract=False, n_steps = nsteps)
-            st.plotly_chart(fig_superimpose_target_original)
-
-            # Aligned
-            fig_superimpose_target_aligned = create_figure(original_data, target_date, selected_data, values_list, 'Aligned', subtract=True, n_steps = nsteps)
-            st.plotly_chart(fig_superimpose_target_aligned)'''
+# 함수 호출
+try:
+    result = analyze_time_series(request_data)
+    print(result)
+except HTTPException as e:
+    print(f"HTTPException: {e.detail}")
+except Exception as e:
+    print(f"An error occurred: {e}")'''

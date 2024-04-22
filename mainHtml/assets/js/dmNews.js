@@ -210,13 +210,52 @@ async function naverGptAsk() {
             }),
         });
         if (!response.ok) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';             
             throw new Error('서버 오류가 발생했습니다.');
-            document.getElementById('loading_bar_navergpt').style.display = 'none';  
         }
         const data = await response.json();
         if (data.result.error) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';              
             throw new Error(data.result.error);
+        } else {
             document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            displaySummary(data.result); 
+        }
+    } catch (error) {
+        console.error('요약 데이터를 가져오는 중 오류가 발생했습니다:', error);
+        document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        alert('데이터를 가져오는 중 오류가 발생했습니다. 오류 메시지: ' + error.message);
+    }
+}
+
+async function naverLamaAsk() {
+    const newsSummaryElements = document.querySelectorAll('.naver-news-summary');
+    let send_news = Array.from(newsSummaryElements).map(elem => elem.textContent.trim()).join('\n');
+    if (!send_news) {
+        alert('분석할 뉴스 데이터가 없습니다.');
+        return;
+    }
+    document.getElementById('loading_bar_navergpt').style.display = 'block';  
+//console.log(send_news);
+    try {
+        const response = await fetch('/groqLamaTest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: "navergpt",
+                g_news: send_news
+            }),
+        });
+        if (!response.ok) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            throw new Error('서버 오류가 발생했습니다.');
+        }
+        const data = await response.json();
+        if (data.result.error) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            throw new Error(data.result.error);            
         } else {
             document.getElementById('loading_bar_navergpt').style.display = 'none';  
             displaySummary(data.result); 

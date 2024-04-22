@@ -391,20 +391,24 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .calInput[type="text"] {padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; color: #333; width: 120px;}
 
 
-
-
 /* [1ST GNB][7TH LNB] 유사국면 시스템 분석 */
-.similarity-container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #FFFFFF; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px; }
+.similarity-tab-menu { left: 0; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); width: auto; margin: 0 auto;}
+.similarity-tabs { background: #fffefe; border-top: none;}
+.similarity-tab-link { width:180px; background: inherit; border-top: 1px solid #9d9d9d; border-right: 1px solid #9d9d9d; border-bottom: 1px solid #9d9d9d; float: left; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-weight: bold;}
+.similarity-tab-link:hover, .similarity-tab-link.active { background-color: #e0e0e0;}
+.similarity-tab-link:first-child { border-left: 1px solid #9d9d9d;}
+.similarity-tab-content { display: none; padding: 20px; border: none;}
+.similarity-container { max-width: 800px; margin: 20px auto; margin-top: 50px !important; padding: 20px; background-color: #FFFFFF; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px;}
 .similarity-section { border-bottom: 1px solid #EEE; padding-bottom: 20px; margin-bottom: 20px; background-color: #FAFAFA; }
 .similarity-form-group { display: flex; align-items: center; margin-bottom: 10px; }
 .similarity-form-group > div { display: flex; align-items: center; }
 .similarity-form-group:last-child { margin-bottom: 0; }
-.similarity-form-label { flex-basis: 20%; min-width: 150px; margin-right: 10px; color: #FFA726; }
-.similarity-form-input, .similarity-select, .similarity-button { padding: 10px; border-radius: 5px; border: 1px solid #FFCCBC; box-sizing: border-box; }
+.similarity-form-label { flex-basis: 20%; min-width: 150px; margin-right: 10px; color: #837d75; }
+.similarity-form-input, .similarity-select, .similarity-button { padding: 10px; border-radius: 5px; border: 1px solid #45332e; box-sizing: border-box; }
 .similarity-form-input, .similarity-select { flex-grow: 1;} 
 .similarity-range-input { width: auto; margin-left: 10px; } 
-.similarity-title { background-color: #2c068b; color: #FFFFFF; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; text-align: center; font-size:20px; }
-.similarity-button { background-color: #FFA726; color: white; cursor: pointer; border: none; width: auto; margin-top: 10px; align-self: flex-start; }
+.similarity-title { background-color: #535255; color: #FFFFFF; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 20px -20px; text-align: center; font-size:20px; }
+.similarity-button { background-color: #4f473d; color: white; cursor: pointer; border: none; width: auto; margin-top: 10px; align-self: flex-start; }
 .similarity-button:hover { background-color: #FB8C00; }
 .similarity-nSteps-value { margin-left: 10px; font-size: 16px; color: #fda744; }
 .similarity-select, .similarity-form-input { height: 38px; margin-right:10px; } 
