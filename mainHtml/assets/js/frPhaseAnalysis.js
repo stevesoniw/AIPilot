@@ -228,7 +228,13 @@ function generateMultiHighCharts(chartData, containerId) {
     // Find the last index from the target series data
     if (chartData.series[0] && chartData.series[0].name.startsWith('Target:')) {
         const targetSeriesData = chartData.series[0].data;
+        console.log("**************");
+        console.log(targetSeriesData.length);
+        console.log("**************");
         plotLinePosition = targetSeriesData.length - 1 - nStepsValue; // Calculate position from end with nSteps back
+        if (plotLinePosition >= targetSeriesData.length) {
+            plotLinePosition = targetSeriesData.length - 1; // Ensure plot line is within the chart
+        }
     }
     Highcharts.chart(containerId, {
         chart: {
@@ -256,7 +262,10 @@ function generateMultiHighCharts(chartData, containerId) {
                         color: 'red'
                     }
                 }
-            }]
+            }],
+            max: chartData.series[0] ? chartData.series[0].data.length - 1 : null // x축의 최대값 설정
+    },
+    yAxis: {
         },
         yAxis: {
             title: {
