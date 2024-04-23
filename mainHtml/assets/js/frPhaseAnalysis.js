@@ -148,14 +148,14 @@ function generateSimilarityAnalysis() {
     
 }
 
-function generateMultiAnalysis() {
-    const selectedData = document.getElementById('multi-selectedData').value;
-    const targetDateStart = document.getElementById('multi-targetDateStart').value;
-    const targetDateEnd = document.getElementById('multi-targetDateEnd').value;
-    const compareDateStart = document.getElementById('multi-compareDateStart').value;
-    const compareDateEnd = document.getElementById('multi-compareDateEnd').value;
-    const nSteps = document.getElementById('multi-nSteps').value;
-    const nGraphs = document.getElementById('multi-nGraphs').value;
+function generateVariationAnalysis() {
+    const selectedData = document.getElementById('variation-selectedData').value;
+    const targetDateStart = document.getElementById('variation-targetDateStart').value;
+    const targetDateEnd = document.getElementById('variation-targetDateEnd').value;
+    const compareDateStart = document.getElementById('variation-compareDateStart').value;
+    const compareDateEnd = document.getElementById('variation-compareDateEnd').value;
+    const nSteps = document.getElementById('variation-nSteps').value;
+    const nGraphs = document.getElementById('variation-nGraphs').value;
 
     if (!targetDateStart || !targetDateEnd || !compareDateStart || !compareDateEnd) {
         alert("날짜 범위를 꼭 지정해주세요!");
@@ -165,7 +165,7 @@ function generateMultiAnalysis() {
     //console.log("Sending data:", JSON.stringify(payload));
 
     document.getElementById('loading_bar_similarity').style.display = 'block';                                
-    fetch('/similarity/multivariate-analyze/', {
+    fetch('/similarity/variation-variate-analyze/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -180,18 +180,25 @@ function generateMultiAnalysis() {
             n_steps: parseInt(nSteps, 10)
         }),        
     })
-    .then(response => response.json())
+    .then(response => response.json().then(data => {
+        if (!response.ok) {
+            // 에러 메시지가 포함된 응답 처리
+            throw new Error(data.detail || "An error occurred");
+        }
+        return data;  // 성공 응답 데이터 반환
+    }))
     .then(data => {
         console.log(data.chart_data.original);
         const originalChartData = data.chart_data.original;
         const alignedChartData = data.chart_data.aligned;
         document.getElementById('loading_bar_similarity').style.display = 'none';    
         // Invoke the chart creation functions
-        generateMultiHighCharts(originalChartData, 'multiOriginalChartContainer');
-        generateMultiHighCharts(alignedChartData, 'multiAlignedChartContainer');
+        generateVariationHighCharts(originalChartData, 'variationOriginalChartContainer');
+        generateVariationHighCharts(alignedChartData, 'variationAlignedChartContainer');
     })
     .catch(error => {
-        console.error('Error fetching similarity data:', error);
+        console.error('Error fetching similarity data:', error.message);
+        alert(error.message);  // 서버 에러 메시지 또는 기본 에러 메시지를 alert로 표시
         document.getElementById('loading_bar_similarity').style.display = 'none'; 
     });
 }
@@ -199,19 +206,19 @@ function generateMultiAnalysis() {
 function formatDateWithoutTime(dateTimeStr) {
     return dateTimeStr.split(' ')[0]; 
 }
-function generateMultiHighCharts(chartData, containerId) {
+function generateVariationHighCharts(chartData, containerId) {
     let container = document.getElementById(containerId);
     if (!container) {
         console.error('Container not found:', containerId);
         return;
     }
     let chartTitle = '';
-    if (containerId === 'multiOriginalChartContainer') {
+    if (containerId === 'variationOriginalChartContainer') {
         chartTitle = 'Original Comparison';
-    } else if (containerId === 'multiAlignedChartContainer') {
+    } else if (containerId === 'variationAlignedChartContainer') {
         chartTitle = 'Aligned Comparison';
     }
-    const nStepsValue = parseInt(document.getElementById('nMultiStepValue').textContent, 10);
+    const nStepsValue = parseInt(document.getElementById('nVariationStepValue').textContent, 10);
     let plotLinePosition = null;
 
     const formattedSeries = chartData.series.map(series => {

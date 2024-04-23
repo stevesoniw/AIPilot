@@ -357,7 +357,7 @@ class AnalysisRequestMulti(BaseModel):
     n_graphs: int 
     n_steps: int
     #n_graphs: int      
-@smController.post("/similarity/multivariate-analyze/")
+@smController.post("/similarity/variation-variate-analyze/")
 def analyze_time_series(request: AnalysisRequestMulti):
 
     print("*********************************************************")
@@ -416,7 +416,8 @@ def analyze_time_series(request: AnalysisRequestMulti):
         raise HTTPException(status_code=404, detail="Not enough data points in the target or analysis range.")
     
     if len(similar_dates) == 0:
-        raise ValueError("No similar dates found for analysis")
+        print("abcccccccccccccccccccccccccccc")
+        raise HTTPException(status_code=404, detail="해당 변동 지수와 동일한 변동폭을 가진 과거 데이터가 없습니다. Target Date를 다시 지정하거나, 분석 지표를 다시 선택해주세요.")
 
     filtered_dates = filter_overlaps2(similar_dates)
     values_list = [(pd.to_datetime(start), pd.to_datetime(end)) for start, end in filtered_dates][:request.n_graphs]

@@ -136,16 +136,19 @@
                 <div id="similarityAlignedChartContainer"></div>
             </div>    
         </div>
-        <!-- Tab2 유사국면 분석 (다변량) -->
-        <div id="Tab2" class="similarity-tab-content">
+         <!-- Tab3 유사 국면 분석(다변량)  -->
+        <div id="Tab2" class="similarity-tab-content">     
+        </div>
+        <!-- Tab3 유사 변동 분석  -->
+        <div id="Tab3" class="similarity-tab-content">
             <div class="similarity-container">
                 <div class="similarity-title">
-                    <h2>Time Series Analysis Tool (Multivariate)</h2>
+                    <h2>Time Series Analysis Tool (유사변동분석)</h2>
                 </div>
                 <div class="similarity-section">
                     <div class="similarity-form-group">
-                        <label for="multi-selectedData" class="similarity-form-label">Time Series Data:</label>
-                        <select id="multi-selectedData" class="similarity-form-input">
+                        <label for="variation-selectedData" class="similarity-form-label">Time Series Data:</label>
+                        <select id="variation-selectedData" class="similarity-form-input">
                             <option value="GT2 Govt">GT2 Govt</option>
                             <option value="GT5 Govt">GT5 Govt</option>
                             <option value="GT10 Govt">GT10 Govt</option>
@@ -226,9 +229,9 @@
                         <label class="similarity-form-label">Target Date Range:</label>
                         <div style="display: flex; align-items: center; flex-grow: 1;">
                             <span style="margin-right: 5px;">From:</span>
-                            <input type="date" id="multi-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
+                            <input type="date" id="variation-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
                             <span style="margin: 0 5px;">To:</span>
-                            <input type="date" id="multi-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-03-11">
+                            <input type="date" id="variation-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-03-11">
                         </div>
                     </div>
                 </div>
@@ -237,24 +240,24 @@
                         <label class="similarity-form-label">Date Range for Analysis From:</label>
                         <div style="display: flex; align-items: center; flex-grow: 1;">
                             <span style="margin-right: 5px;">From:</span>
-                            <input type="date" id="multi-compareDateStart" class="similarity-form-input similarity-range-input" value="2019-01-01">
+                            <input type="date" id="variation-compareDateStart" class="similarity-form-input similarity-range-input" value="2019-01-01">
                             <span style="margin: 0 5px;">To:</span>
-                            <input type="date" id="multi-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-01-01">
+                            <input type="date" id="variation-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-01-01">
                         </div>
                     </div>                            
                 </div>
                 <div class="similarity-form-group">
                     <label for="similarity-nSteps" class="similarity-form-label">N-Steps Ahead (in days):</label>
-                    <input type="range" id="multi-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('multi-nSteps', 'nMultiStepValue')">
-                    <span id="nMultiStepValue" class="similarity-nSteps-value">0</span>
+                    <input type="range" id="variation-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('variation-nSteps', 'nVariationStepValue')">
+                    <span id="nVariationStepValue" class="similarity-nSteps-value">0</span>
                 </div>
                 <div class="similarity-form-group">
                     <label for="similarity-nSteps" class="similarity-form-label">No of Graphs:</label>
-                    <input type="range" id="multi-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('multi-nGraphs', 'nMultiGraphValue');">
-                    <span id="nMultiGraphValue" class="similarity-nSteps-value">1</span>
+                    <input type="range" id="variation-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('variation-nGraphs', 'nVariationGraphValue');">
+                    <span id="nVariationGraphValue" class="similarity-nSteps-value">1</span>
                 </div>                
                 <div style="text-align: center;">
-                    <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateMultiAnalysis();">Generate</button>
+                    <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateVariationAnalysis();">Generate</button>
                 </div>
 
                 <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
@@ -262,12 +265,10 @@
                     <p>유사국면 데이터 서치중입니다.</p>
                 </div>                          
                         
-                <div id="multiOriginalChartContainer"></div>
-                <div id="multiAlignedChartContainer"></div>
+                <div id="variationOriginalChartContainer"></div>
+                <div id="variationAlignedChartContainer"></div>
             </div>    
         </div> 
-        <div id="Tab3" class="similarity-tab-content">     
-        </div>
     </div>
    
 </div> 
