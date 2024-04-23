@@ -17,6 +17,7 @@ function updateValue(inputId, outputId) {
     document.getElementById(outputId).textContent = document.getElementById(inputId).value;
 }
 
+/*************  유사국면분석 (단일지표)  ****************/
 function generateSingleHighCharts(chartDataArray, containerId) {
     let container = document.getElementById(containerId);
     if (!container) {
@@ -148,6 +149,183 @@ function generateSimilarityAnalysis() {
     
 }
 
+/*************  유사국면분석 (복수지표)  ****************/
+
+function generateMultiHighCharts(chartDataArray, containerId) {
+    let container = document.getElementById(containerId);
+    if (!container) {
+        console.error('Container not found:', containerId);
+        return;
+    }
+    let chartTitle = '';
+    if (containerId === 'multiOriginalChartContainer') {
+        chartTitle = 'Original Comparison';
+    } else if (containerId === 'multiAlignedChartContainer') {
+        chartTitle = 'Aligned Comparison';
+    }
+    
+    // nStepsValue 값 처리
+    const nStepsValue = parseInt(document.getElementById('nMultiStepValue').textContent, 10);
+    const maxXValue = Math.max(...chartDataArray.flatMap(dataset => dataset.x));
+    const plotLineValue = maxXValue - nStepsValue;
+    
+    Highcharts.chart(containerId, {
+        chart: {
+            type: 'line',
+            zoomType: 'x' // 줌 기능 활성화
+        },
+        title: {
+            text: chartTitle
+        },
+        xAxis: {
+            type: 'linear',
+            title: {
+                text: 'Index'
+            },
+            labels: {
+                enabled: true // x축 라벨 활성화
+            },
+            plotLines: [{
+                color: 'red', // 점선그리자. n-step ㅋ
+                dashStyle: 'Dash', 
+                value: plotLineValue, 
+                width: 2, 
+                label: {
+                    text: 'N Steps' 
+                }
+            }]
+        },
+        yAxis: {
+            title: {
+                text: 'Value'
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+        },
+        plotOptions: {
+            series: {
+                label: {
+                    connectorAllowed: false
+                },
+                pointStart: 0
+            }
+        },
+        series: chartDataArray.map(dataset => ({
+            name: dataset.name,
+            data: dataset.y
+        })),
+        responsive: {
+            rules: [{
+                condition: {
+                    maxWidth: 500
+                },
+                chartOptions: {
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    }
+                }
+            }]
+        }
+    });
+}
+
+function appendSelectedData() {
+    const selectBox = document.getElementById('multi-selectedData');
+    const weightsBox = document.getElementById('multi-nWeights');
+    const selectedValue = selectBox.value;
+    const selectedWeight = weightsBox.value;
+    const container = document.getElementById('selectedDataContainer');
+
+    const item = document.createElement('div');
+    item.className = 'multi-select-item';
+    //weight는 일단 hidden
+    const weightInput = document.createElement('input');
+    weightInput.type = 'hidden';
+    weightInput.value = selectedWeight;
+    weightInput.className = 'multi-select-weight';    
+
+    const text = document.createElement('input');
+    text.type = 'text';
+    text.className = 'multi-select-text';
+    text.value = selectedValue;
+    text.readOnly = true;
+
+    const deleteBtn = document.createElement('span');
+    deleteBtn.className = 'multi-select-delete';
+    deleteBtn.innerHTML = 'x';
+    deleteBtn.onclick = function() {
+        container.removeChild(item);
+    };
+
+    item.appendChild(text);
+    item.appendChild(weightInput);
+    item.appendChild(deleteBtn);
+    container.appendChild(item);
+}
+
+function generateMultiAnalysis() {
+    const dataContainer = document.getElementById('selectedDataContainer');
+    const allInputs = dataContainer.querySelectorAll('.multi-select-text');
+    const allWeights = dataContainer.querySelectorAll('.multi-select-weight');
+    const selectedData = Array.from(allInputs).map(input => input.value);
+    const weights = Array.from(allWeights).map(input => parseFloat(input.value));
+
+    //const selectedData = document.getElementById('multi-selectedData').value;
+    const targetDateStart = document.getElementById('multi-targetDateStart').value;
+    const targetDateEnd = document.getElementById('multi-targetDateEnd').value;
+    const compareDateStart = document.getElementById('multi-compareDateStart').value;
+    const compareDateEnd = document.getElementById('multi-compareDateEnd').value;
+    const nSteps = document.getElementById('multi-nSteps').value;
+    const nGraphs = document.getElementById('multi-nGraphs').value;
+
+    console.log("Sending data with selectedData array and weights:", selectedData, weights);
+
+    if (!targetDateStart || !targetDateEnd || !compareDateStart || !compareDateEnd) {
+        alert("날짜 범위를 꼭 지정해주세요!");
+        return;
+    }
+    console.log("Sending data:", { selectedData, targetDateStart, targetDateEnd, nSteps, nGraphs,weights });
+
+    document.getElementById('loading_bar_similarity').style.display = 'block';                                
+    fetch('/similarity/multivariate-analyze/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            selected_data: selectedData,
+            target_date_start: targetDateStart,
+            target_date_end: targetDateEnd,
+            compare_date_start: compareDateStart,
+            compare_date_end: compareDateEnd,
+            n_graphs: parseInt(nGraphs, 10),
+            n_steps: parseInt(nSteps, 10),
+            weights : weights
+            //n_graphs: parseInt(nGraphs, 10)
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        const originalChartData = JSON.parse(data.chart_data.original).data;
+        const alignedChartData = JSON.parse(data.chart_data.aligned).data;
+        document.getElementById('loading_bar_similarity').style.display = 'none';    
+        // 차트 생성 함수 호출
+        generateMultiHighCharts(originalChartData, 'multiOriginalChartContainer');
+        generateMultiHighCharts(alignedChartData, 'multiAlignedChartContainer');
+    })
+    .catch(error => {
+        console.error('Error fetching multi similarity data:', error);
+        document.getElementById('loading_bar_similarity').style.display = 'none'; 
+    });
+    
+}
+
+/*************  유사변동분석   ****************/
 function generateVariationAnalysis() {
     const selectedData = document.getElementById('variation-selectedData').value;
     const targetDateStart = document.getElementById('variation-targetDateStart').value;

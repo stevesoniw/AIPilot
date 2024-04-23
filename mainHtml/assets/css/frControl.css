@@ -476,6 +476,10 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .similarity-button:hover { background-color: #FB8C00; }
 .similarity-nSteps-value { margin-left: 10px; font-size: 16px; color: #fda744; }
 .similarity-select, .similarity-form-input { height: 38px; margin-right:10px; } 
+.multi-select-container { display: flex; flex-direction: column; margin-top: 10px; } 
+.multi-select-item { display: flex; align-items: center; margin-bottom: 5px; } 
+.multi-select-text { flex-grow: 1; margin-right: 10px; border: 1px solid #ccc; padding: 5px; border-radius: 4px; } 
+.multi-select-delete { cursor: pointer; color: red; }
 
 
 /* 뉴스 영역 */

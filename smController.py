@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from typing import List
 from dtaidistance import dtw
 import plotly.graph_objects as go
 from plotly.io import to_json
@@ -18,6 +19,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 smController = APIRouter()
+CONTROLLER = True
 
 #################################################### [유사국면 - 단일지수 처리] Starts #################################################
 def calculate_date_distance(dt, date_str1, date_str2):
@@ -95,26 +97,6 @@ def filter_overlaps(ranges):
         if not overlap:
             non_overlapping.append(r1)
     return non_overlapping
-
-def have_overlap2(range1, range2):
-    start1, end1 = range1  # Adjusted to expect two values
-    start2, end2 = range2
-
-    # Assuming the dates do not overlap if one starts after the other ends
-    return not (end1 < start2 or end2 < start1)
-
-def filter_overlaps2(dates):
-    filtered_dates = []
-    for r1 in dates:
-        overlap = False
-        for r2 in filtered_dates:
-            if have_overlap2(r1, r2):
-                overlap = True
-                break
-        if not overlap:
-            filtered_dates.append(r1)
-    return filtered_dates
-
 
 def normalize_df(df):
     """
@@ -271,9 +253,251 @@ def analyze(request: AnalysisRequest):
 #################################################### [유사국면 - 단일지수 처리] Ends #################################################
 
 #################################################### [유사국면 - 복수지수 처리] Starts ###############################################
+def calculate_corr_dtw(target_features, compare_features, weights):
+    result = []
+    for dim in range(target_features.shape[1]):
+        distance = dtw.distance_fast(target_features[:, dim], compare_features[:, dim])
+        corr_coef = abs(np.corrcoef(target_features[:, dim], compare_features[:, dim])[0, 1])
+        score = (1 / (1 + (distance))) * 0.5 + corr_coef * 0.5
+        if len(weights) != 0:
+            result.append(score * weights[dim])
+        else:
+            result.append(score/ target_features.shape[1])
+    return sum(result)
 
+def compute_distance_multi(dt, users_target, users_compare, user_distance, weights):
+    matrix = {}
+    target_data = dt.loc[users_target[0]: users_target[1]]
+    target_data = target_data.divide(target_data.iloc[0])
+    target_data -= target_data.iloc[0]
+    target_values = target_data.values
+
+    compare_data = dt.loc[users_compare[0]: users_compare[1]]
+    for i in range(len(compare_data) - user_distance + 1):
+        sliced_data = compare_data.iloc[i: i + user_distance]
+        sliced_data = sliced_data.divide(sliced_data.iloc[0])
+        sliced_data -= sliced_data.iloc[0]
+        compare_values = sliced_data.values
+        score = calculate_corr_dtw(target_values, compare_values, weights)
+        matrix[sliced_data.index[0].strftime("%Y-%m-%d")] = score
+    return matrix
+
+def normalize_df_multi(df):
+    return (df - df.mean()) / df.std()
+
+def generate_data(options):
+    analysis_df = data_select(options)
+    analysis_df = analysis_df.sort_index(ascending=True)
+    analysis_df = analysis_df.loc[:,~analysis_df.columns.duplicated()]
+    analysis_df.index = pd.to_datetime(analysis_df.index)
+    analysis_df = analysis_df.dropna()
+    return analysis_df
+
+def create_figures(sample_data, target_dates, values_list, options, title_prefix, subtract=False, n_steps = 0):
+    chart_data_list = []
+    for column in options:
+        chart_data = {
+            "chart": {"type": "line"},
+            "title": {"text": f"{title_prefix} {column}"},
+            "xAxis": {"categories": []},
+            "yAxis": {"title": {"text": "Value"}},
+            "series": []
+        }
+        print("11")
+
+        if n_steps > 0:
+            get_length = len(sample_data.loc[target_dates[0]: target_dates[1]])
+            target_data = sample_data[target_dates[0]:][: get_length + n_steps]
+            target_data.reset_index(drop=True, inplace=True)
+            print("22")
+        else:
+            target_data = sample_data.loc[target_dates[0]: target_dates[1]]
+            target_data.reset_index(drop=True, inplace=True)
+            print("33")
+
+        if subtract:
+            target_trace = (target_data[column] / target_data[column].iloc[0])
+            target_trace = (target_trace - target_trace[0])
+            print("44")
+        else:
+            print("55")
+            target_trace = target_data[column]
+            print("66")
+            print(target_trace)
+            print("66")
+
+        chart_data["xAxis"]["categories"] = target_data.index.tolist()
+        print(target_data.index.tolist())
+        chart_data["series"].append({"name": f"Target: {column.split('_')[-1]}", "data": target_trace.tolist()})
+
+        print("77")
+        for i, (start_date, end_date, score) in enumerate(values_list, 1):
+            if n_steps > 0:
+                print("88")
+                get_length = len(sample_data.loc[start_date:end_date])
+                sliced_data = sample_data[start_date:][:get_length + n_steps]
+                sliced_data.reset_index(drop=True, inplace=True)
+            else:
+                print("99")
+                sliced_data = sample_data.loc[start_date:end_date]
+                sliced_data.reset_index(drop=True, inplace=True)
+
+            if subtract:
+                sliced_trace = (sliced_data[column] / sliced_data[column].iloc[0])
+                sliced_trace = (sliced_trace - sliced_trace[0])
+            else:
+                sliced_trace = sliced_data[column]
+
+            chart_data["series"].append({"name": f"Graph {i}: {start_date} to {end_date} ({round(score, 5)})", "data": sliced_trace.tolist()})
+            print("XX")
+        chart_data_list.append(chart_data)
+
+    return json.dumps(chart_data_list)
+
+def n_steps_ahead(data, target_date, values_list, options, n_steps=0):
+    concatenated_df = pd.DataFrame()
+    target_changes = []
+    for column in options:
+        changes = []
+        original_data = data[column]
+        target_data = data[column].loc[target_date[0]: target_date[1]]
+        target_change = (target_data.iloc[-1] - target_data.iloc[0])
+        target_changes.append(round(target_change, 5))
+        for _, (_, end_date, _) in enumerate(values_list, 1):
+            sliced_data = original_data.loc[end_date:].iloc[:n_steps]
+            sliced_data.reset_index(drop=True, inplace=True)
+            change = sliced_data.iloc[-1] - sliced_data.iloc[0]
+            changes.append(change)
+        df = pd.DataFrame(changes)
+        df.index = [f'Graph {i}' for i in range(1, len(df) + 1)]
+        concatenated_df = pd.concat([concatenated_df, df], axis=1) 
+    concatenated_df.columns = options
+
+    target_df = pd.DataFrame(target_changes).T
+    target_df.columns = options
+    target_df.index = ['Delta']
+    return target_df, concatenated_df
+
+def compute_individual_dtw(dt, target_dates, graph_list):
+    matrix = {}
+    target_data = dt.loc[target_dates[0]: target_dates[1]]
+    target_data = target_data.divide(target_data.iloc[0])
+    target_data -= target_data.iloc[0]
+    target_values = target_data.values
+
+    matrix = {}
+    for idx in range(target_data.shape[1]):
+        target_compare = target_values[:, idx]
+        result = []
+        for x, y, _ in graph_list:
+            sliced_data = dt.loc[x: y].iloc[:, idx]  
+            sliced_data = sliced_data.divide(sliced_data.iloc[0])
+            sliced_data -= sliced_data.iloc[0]
+            compare_values = sliced_data.values
+            distance = dtw.distance_fast(target_compare, compare_values)
+            corr_coef = abs(np.corrcoef(target_compare, compare_values)[0, 1])
+            score = (1 / (1 + (distance))) * 0.5 + corr_coef * 0.5
+            result.append(score)
+        sorted_result = sorted(result, reverse= CONTROLLER)
+        rank_dict = {value: rank for rank, value in enumerate(sorted_result, start=1)}
+        ranks = ["Graph "+ str(rank_dict[value]) + "(" + str(round(score, 5)) + ")" for value, score in zip(result, sorted_result)]
+        matrix[target_data.columns[idx]] = ranks
+    return pd.DataFrame(matrix)
+
+class AnalysisRequestMulti(BaseModel):
+    selected_data: List[str]
+    target_date_start: str
+    target_date_end: str
+    compare_date_start: str
+    compare_date_end: str
+    n_graphs: int 
+    n_steps: int
+    weights: List[float]
+@smController.post("/similarity/multivariate-analyze/")
+async def analyze_multi_series(data: AnalysisRequestMulti):
+    print("*********************************************************")
+    print(data.selected_data)
+    print(data.target_date_start)
+    print(data.target_date_end)
+    print(data.compare_date_start)
+    print(data.compare_date_end)
+    print(data.n_steps)
+    print(data.n_graphs)
+    print(data.weights)
+    print("*********************************************************")
+
+    #target_date = (request.target_date_start,  request.target_date_end)
+    #compare_date = (request.compare_date_start, request.compare_date_end)
+    
+    original_data = generate_data(data.selected_data)
+    original_data.index = pd.to_datetime(original_data.index).normalize()
+    
+    print("myDataAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!")
+    print(original_data)
+    print("myDataAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!")
+    
+    target_start_date = data.target_date_start
+    target_end_date = data.target_date_end
+    analysis_start_date = data.compare_date_start
+    analysis_end_date = data.compare_date_end
+    
+    target_distance = calculate_date_distance(original_data, target_start_date, target_end_date)
+    similarity_distance = compute_distance_multi(original_data, [target_start_date, target_end_date], 
+                                           [analysis_start_date, analysis_end_date], target_distance, data.weights)
+    dates_score_list = dates_score(original_data, similarity_distance, target_distance)
+    sorted_dates_score_list = sorted(dates_score_list, key=lambda x: x[2], reverse=CONTROLLER)
+    filtered_dates = filter_overlaps(sorted_dates_score_list)
+    values_list = [(start_date, end_date, distance) for start_date, end_date, distance in filtered_dates][:data.n_graphs]
+    
+    print("severeeeeeeeeeeeeeeeeeeeeeee!")
+    print(values_list)
+    print("selected_data::::::")
+    print(data.selected_data)
+    
+    original_figs = create_figures(original_data, [target_start_date, target_end_date], values_list, data.selected_data, "(Original)", subtract=False, n_steps=data.n_steps)
+    print("andddddddddddddddddddddddddddddddddd!")
+    print(original_figs)
+    aligned_figs = create_figures(original_data, [target_start_date, target_end_date], values_list, data.selected_data, "(Aligned)", subtract=True, n_steps=data.n_steps)
+
+    individual_table = compute_individual_dtw(original_data, [target_start_date, target_end_date], values_list)
+    if data.n_graphs > 0:
+        target_df, change_df = n_steps_ahead(original_data, [target_start_date, target_end_date], values_list, data.selected_data, n_steps= data.n_graphs)
+    
+    print(aligned_figs)
+    print("*****************")
+    print(individual_table)
+    
+    return JSONResponse(content={
+        "chart_data": {
+            "original": original_figs,  
+            "aligned": aligned_figs     
+        }
+    })  
+
+#################################################### [유사국면 - 복수지수 처리] Ends ###############################################
+
+###################################################### [유사 변동 분석 처리] Starts ###################################################
 def same_sign(a, b):
     return (a >= 0 and b >= 0) or (a < 0 and b < 0)
+
+def have_overlap_variation(range1, range2):
+    start1, end1 = range1  # Adjusted to expect two values
+    start2, end2 = range2
+
+    # Assuming the dates do not overlap if one starts after the other ends
+    return not (end1 < start2 or end2 < start1)
+
+def filter_overlaps_variation(dates):
+    filtered_dates = []
+    for r1 in dates:
+        overlap = False
+        for r2 in filtered_dates:
+            if have_overlap_variation(r1, r2):
+                overlap = True
+                break
+        if not overlap:
+            filtered_dates.append(r1)
+    return filtered_dates
 
 
 def find_similar_dates(df, target_change, date_distance):
@@ -297,7 +521,7 @@ def data_select2(selected_data):
         return pd.DataFrame() 
     
     
-def create_multi_figure(sample_data, target_date, selected_data, values_list, subtract=False, n_steps = 0):
+def create_variation_figure(sample_data, target_date, selected_data, values_list, subtract=False, n_steps = 0):
 
     chart_data = {
         "chart": {"type": "line"},
@@ -348,7 +572,7 @@ def get_data(index_name: str) -> pd.DataFrame:
     dt = dt.sort_index(ascending=True)
     return dt
 
-class AnalysisRequestMulti(BaseModel):
+class AnalysisRequestVariation(BaseModel):
     selected_data: str
     target_date_start: str
     target_date_end: str
@@ -358,7 +582,7 @@ class AnalysisRequestMulti(BaseModel):
     n_steps: int
     #n_graphs: int      
 @smController.post("/similarity/variation-variate-analyze/")
-def analyze_time_series(request: AnalysisRequestMulti):
+def analyze_time_series(request: AnalysisRequestVariation):
 
     print("*********************************************************")
     print(request.selected_data)
@@ -393,37 +617,33 @@ def analyze_time_series(request: AnalysisRequestMulti):
     
     #target_data = original_data.loc[request.target_date_start: request.target_date_end]
     #analysis_data = original_data.loc[request.compare_date_start: request.compare_date_end]
-    print("AAAAAAAAAAAAAAAAAAAAAA")
-    print(target_data)
-    print("AAAAAAAAAAAAAAAAAAAAAA")
+    #print("AAAAAAAAAAAAAAAAAAAAAA")
+    #print(target_data)
+    #print("AAAAAAAAAAAAAAAAAAAAAA")
 
     if target_data.empty or analysis_data.empty:
         print("No data available for the given date ranges.")
         raise HTTPException(status_code=404, detail="No data available for the given date ranges.")
     
-    print("Target data example:", target_data.head())
-    print("Analysis data example:", analysis_data.head())
+    #print("Target data example:", target_data.head())
+    #print("Analysis data example:", analysis_data.head())
     
     try:
         target_change = target_data.iloc[-1] - target_data.iloc[0]
         similar_dates = find_similar_dates(analysis_data, target_change, len(target_data))
         
-        print("***********************")
-        print(target_change)
-        print("***********************")
-        print(similar_dates)
+        #print(similar_dates)
     except IndexError:
         raise HTTPException(status_code=404, detail="Not enough data points in the target or analysis range.")
     
     if len(similar_dates) == 0:
-        print("abcccccccccccccccccccccccccccc")
         raise HTTPException(status_code=404, detail="해당 변동 지수와 동일한 변동폭을 가진 과거 데이터가 없습니다. Target Date를 다시 지정하거나, 분석 지표를 다시 선택해주세요.")
 
-    filtered_dates = filter_overlaps2(similar_dates)
+    filtered_dates = filter_overlaps_variation(similar_dates)
     values_list = [(pd.to_datetime(start), pd.to_datetime(end)) for start, end in filtered_dates][:request.n_graphs]
 
-    fig_superimpose_target_original = create_multi_figure(original_data, target_date, request.selected_data, values_list, subtract=False, n_steps = request.n_steps)
-    fig_superimpose_target_aligned = create_multi_figure(original_data, target_date, request.selected_data, values_list, subtract=True, n_steps = request.n_steps)
+    fig_superimpose_target_original = create_variation_figure(original_data, target_date, request.selected_data, values_list, subtract=False, n_steps = request.n_steps)
+    fig_superimpose_target_aligned = create_variation_figure(original_data, target_date, request.selected_data, values_list, subtract=True, n_steps = request.n_steps)
     
     print(fig_superimpose_target_original)
     
@@ -433,12 +653,12 @@ def analyze_time_series(request: AnalysisRequestMulti):
     }'''
     return JSONResponse(content={
         "chart_data": {
-            "original": fig_superimpose_target_original,  # assuming this is already a dict
-            "aligned": fig_superimpose_target_aligned     # assuming this is already a dict
+            "original": fig_superimpose_target_original,  
+            "aligned": fig_superimpose_target_aligned     # this is already a dict
         }
     })    
            
-
+###################################################### [유사 변동 분석 처리] Ends ###################################################
 
 '''
 request_data = AnalysisRequestMulti(
