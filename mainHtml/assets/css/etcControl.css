@@ -14,7 +14,7 @@
 .rag-chat-input button { padding: 10px 20px; background-image: linear-gradient(to right, #6e51d6, #0110e2); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 16px;}
 .rag-chat-input button:hover { background-color: #031563; }
 
-/****** [GNB 3rd][2ST LNB] AI 투자비서 테스트 ******/
+/****** [GNB 3rd][2ST LNB] 실험실 AI 투자비서 테스트 ******/
 #ai_invest_sec_employeeId {background-color: #e5def7; border: none; border-radius: 5px; display: inline-block; margin-right: 10px; padding: 10px; margin-left:10px;} 
 #ai_invest_sec_confirmButton {background-color: #5b5a58; border: none; border-radius: 1px; cursor: pointer; color: white; display: inline-block; padding: 6px 12px; font-size: 13px;} 
 #ai_invest_sec_mainContent {border: 1px solid #cccccc; padding: 10px; margin-top: 10px; width:1000px;} 
@@ -48,11 +48,13 @@
 .ai_no_data { display: inline-block; padding: 10px; background: linear-gradient(145deg, #a7a7a9, #a7a7a2); color: #fff; text-align: center; border-radius: 10px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: bold; margin: 10px auto; max-width: 80%; }
 .layerHidden { display: none; }
 
-/* 리서치 리포트 분석 시작 */
+
+/********************** [GNB 3rd][1ST LNB] 리서치 리포트 분석 *************************/
+    /* 리서치 리포트 분석 시작 */
 .tooltip-wrap{display:flex;align-items:flex-start;gap:5px;}
 .chat-info{width:17px;height:17px;margin-top:3px;font-size:0;line-height:0;background:url('/static/assets/images/info_ic.png') no-repeat center;background-size:100%;vertical-align:middle;cursor:pointer;opacity:.7;}
 .mb0{margin-bottom:0 !important;}
-/* 툴팁 */
+    /* 툴팁 */
 .ui-tooltip{padding:10px 10px;color:#fff;border:none;border-radius:5px;font-size:13px;background-color:#2970ff;box-shadow:none;}
 .ui-widget.ui-widget-content{border:none;}
 .arrow::after{content:'';position:absolute;left:10px;bottom:-4px;width:8px;height:8px;transform:rotate(45deg);background:#2970ff;}
@@ -118,4 +120,38 @@
 .loading-text-ragprompt{ font-size:14px; background-color: rgb(255, 255, 255); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; margin-top: 10px;}
 .ragprompt_highlight{ color: rgb(227, 0, 235); font-weight:bold;} 
 
-/* 리서치 리포트 분석 끝 */
+
+/**********************************************[ 다이얼로그 팝업 ] **********************************************/
+.ui-dialog{padding:0;}
+.ui-widget.ui-widget-content{border:0;}
+.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br,
+.ui-corner-all, .ui-corner-bottom, .ui-corner-left, .ui-corner-bl,
+.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr,
+.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl{border-radius:0;}
+.ui-widget{font: 100%/1.4 'Spoqa Han Sans', sans-serif;}
+.ui-widget-content{color:inherit;}
+.ui-widget-header{color:inherit;background:transparent;border:0;font-weight:normal;}
+.ui-dialog .ui-dialog-titlebar{padding:0;}
+.ui-dialog .ui-dialog-titlebar-close:hover{border:none;}
+.ui-widget .ui-widget{font-size:inherit;right:0;top:0;margin:0;padding:0;}
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button{font: 100%/1.4 'Spoqa Han Sans', sans-serif;}
+.ui-dialog .ui-dialog-content{padding:0;}
+.ui-dialog .ui-dialog-buttonpane{border:0;margin:0;padding:0;}
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset{float:none;}
+.ui-dialog .ui-dialog-buttonpane button{margin:0;}
+.ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited, a.ui-button, a:link.ui-button, a:visited.ui-button, .ui-button{color:inherit;}
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default, .ui-button, html .ui-button.ui-state-disabled:hover, html .ui-button.ui-state-disabled:active{border:0;}
+
+.ui-widget-overlay{background:#000;opacity:.5;}
+.research-dialog.ui-widget.ui-widget-content{position:relative;background:transparent;}
+.research-dialog.ui-widget .ui-widget{font-size:14px;}
+.research-dialog.ui-dialog .ui-dialog-title{display:none;}
+.research-dialog.ui-dialog .ui-dialog-titlebar-close{right:10px;top:10px;width:40px;height:40px;background:url('/static/assets/images/pop_close_btn.png') no-repeat center;z-index:1;}
+.research-dialog.ui-dialog .ui-dialog-content{padding:55px 20px 23px;background:#fff;border-radius:20px;}
+.research-dialog .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button{font-size:14px}
+.research-dialog.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);width:100%;text-align:center;}
+
+.pop-tit{margin-bottom:22px;font-size:18px;color:#000;line-height:16px;font-weight:700;}
+.pop-cont-wrap{color:#333;line-height:24px;}
+.tab-wrap.dialog-tab{margin:15px 0;}
+.tab-wrap.dialog-tab .tab-list{padding:10px;font-size:13px;}

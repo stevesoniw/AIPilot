@@ -1,0 +1,56 @@
+<!-- [#7 메뉴 시작] 유사국면 분석 시스템 -->   
+<div id="menug" class="menu-cont">
+    <h2 class="s-tit">해외주식 유사국면 분석</h2>
+    <h3 class="s-tit">해외주식에 대한 유사국면 분석시스템입니다.</p></h3>
+    <div class="input-container">
+        <div class="foreign-stockcode-box">
+            <select id="frst_phase_ticker" style="width: 100%" tabindex="-1" class="select2-hidden-accessible" aria-hidden="true"></select>
+        </div>   
+    </div>
+    <div class="similarity-container">
+        <div class="similarity-section">
+            <div class="similarity-form-group">
+                <label class="similarity-form-label">Target Date Range:</label>
+                <div style="display: flex; align-items: center; flex-grow: 1;">
+                    <span style="margin-right: 5px;">From:</span>
+                    <input type="date" id="similarity-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
+                    <span style="margin: 0 5px;">To:</span>
+                    <input type="date" id="similarity-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-03-11">
+                </div>
+            </div>
+        </div>
+        <div class="similarity-section">
+            <div class="similarity-form-group">
+                <label class="similarity-form-label">Date Range for Analysis From:</label>
+                <div style="display: flex; align-items: center; flex-grow: 1;">
+                    <span style="margin-right: 5px;">From:</span>
+                    <input type="date" id="similarity-compareDateStart" class="similarity-form-input similarity-range-input" value="2021-01-01">
+                    <span style="margin: 0 5px;">To:</span>
+                    <input type="date" id="similarity-compareDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
+                </div>
+            </div>                            
+        </div>
+        <div class="similarity-form-group">
+            <label for="similarity-nSteps" class="similarity-form-label">N-Steps Ahead (in days):</label>
+            <input type="range" id="single-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('single-nSteps', 'nSingleStepValue');">
+            <span id="nSingleStepValue" class="similarity-nSteps-value">0</span>
+        </div>
+        <div class="similarity-form-group">
+            <label for="similarity-nSteps" class="similarity-form-label">No of Graphs:</label>
+            <input type="range" id="single-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('single-nGraphs', 'nSingleGraphValue');">
+            <span id="nSingleGraphValue" class="similarity-nSteps-value">1</span>
+        </div>                    
+        <div style="text-align: center;">
+            <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateSimilarityAnalysis();">Generate</button>
+        </div>
+        <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
+            <img src="/static/assets/images/LoadingBar_E.gif">
+            <p>유사국면 데이터 서치중입니다.</p>
+        </div>                          
+                
+        <div id="similarityOriginalChartContainer"></div>
+        <div id="similarityAlignedChartContainer"></div>
+    </div>    
+</div>
+
+  

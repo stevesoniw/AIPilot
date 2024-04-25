@@ -32,6 +32,7 @@
             </div>
         </div>
         <!-- Layer Popup 에어리어 -->
+        <!--
         <div id="aiSecLayerPopup" class="ai-sec-layer layerHidden">
             <div class="ai-sec-layer-header">
                 <button class="ai-sec-layer-close" onclick="toggleLayerPopup()">X</button>
@@ -41,7 +42,21 @@
             <div class="ai-sec-layer-content">
                 <p id="aiSecLayerPopupContent">서버에서 받아온 텍스트 데이터를 보여주는 영역</p>
             </div>
-        </div>     
+        </div>  -->
+        <div id="aiSecLayerPopup" class="layerHidden">
+            <h5 class="pop-tit">타이틀 영역입니다.</h5>
+            <div class="pop-cont-wrap">
+                <ul class="tab-wrap dialog-tab">
+                    <li class="tab-list active">
+                        <a href="#">요약</a>
+                    </li>
+                    <li class="tab-list">
+                        <a href="#">번역</a>
+                    </li>
+                </ul>
+                <p id="aiSecLayerPopupContent"></p>
+            </div>
+        </div>           
     </div>
     <div id="loading_bar_rag" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">

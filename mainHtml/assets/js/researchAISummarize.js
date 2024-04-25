@@ -121,11 +121,28 @@ function applyYT() {
     appendData("YouTube URL", url);
 }
 
-
-
 function toggleLayerPopup() {
-    const popup = document.getElementById('aiSecLayerPopup');
-    popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    //const popup = document.getElementById('aiSecLayerPopup');
+    //popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    alert("11");
+    $('#aiSecLayerPopup').dialog({
+        dialogClass : 'research-dialog',
+        title : '',
+        modal : true,
+        draggable : false,
+        resizable : false,
+        autoOpen: false,
+        width: 700,
+        height: 700,
+        open : function(){
+            $('.ui-widget-overlay').on('click', function(){
+                $('#dialog-sample').dialog('close');
+            });
+        }
+    });
+
+    $('#aiSecLayerPopup').dialog('open');
+
 }
 function appendData(index, type, value) {
     var container = document.getElementById('ai_invest_sec_appliedData');

@@ -147,7 +147,22 @@ async def gpt4_request(prompt):
 # Lama3 API TEST 해보기
 async def lama3_news_sum(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. korean 외의 언어로는 절대 답변하지 말고, 화면 가독성이 좋도록 줄바꿈도 해서 답변해줘. 뉴스 데이터 : " + str(newsData)
+        completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ],
+            model="llama3-8b-8192",
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in lama3_news_sum function: %s", str(e))
+        return None    
+
+async def mixtral_news_sum(newsData, SYSTEM_PROMPT):
+    try:
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. korean 외의 언어로는 절대 답변하지 말고, 화면 가독성이 좋도록 줄바꿈도 해서 답변해줘. 뉴스 데이터 : " + str(newsData)
         completion = groq_client.chat.completions.create(
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -159,3 +174,6 @@ async def lama3_news_sum(newsData, SYSTEM_PROMPT):
     except Exception as e:
         logging.error("An error occurred in lama3_news_sum function: %s", str(e))
         return None    
+    
+        
+    

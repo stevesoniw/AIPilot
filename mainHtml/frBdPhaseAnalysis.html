@@ -141,12 +141,13 @@
         <div id="Tab2" class="similarity-tab-content">  
             <div class="similarity-container">
                 <div class="similarity-title">
-                    <h2>Time Series Analysis Tool (Multivariate))</h2>
+                    <h2>Time Series Analysis Tool (Multivariate)</h2>
                 </div>
                 <div class="similarity-section">
                     <div class="similarity-form-group">
                         <label for="multi-selectedData" class="similarity-form-label">Time Series Data:</label>
                         <select id="multi-selectedData" class="similarity-form-input" onchange="appendSelectedData();">
+                            <option value="default">분석 지표를 선택해 주세요.</option>
                             <option value="GT2 Govt">GT2 Govt</option>
                             <option value="GT5 Govt">GT5 Govt</option>
                             <option value="GT10 Govt">GT10 Govt</option>
@@ -255,13 +256,14 @@
                     <input type="range" id="multi-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('multi-nGraphs', 'nMultiGraphValue');">
                     <span id="nMultiGraphValue" class="similarity-nSteps-value">1</span>
                 </div>      
+                <!--
                 <div class="similarity-form-group">
                     <label for="similarity-weights" class="similarity-form-label">Weights:</label>
                     <input type="range" id="multi-nWeights" min="0" max="1" value="0" step="0.2" class="similarity-form-input" oninput="updateValue('multi-nWeights', 'nMultiWeightValue');">
                     <span id="nMultiWeightValue" class="similarity-nSteps-value">1</span>
-                </div>                             
+                </div>                             -->
                 <div style="text-align: center;">
-                    <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateMultiAnalysis();">Generate</button>
+                    <button class="similarity-button" id="multi-generateButton" onClick="javascript:generateMultiAnalysis();">Generate</button>
                 </div>
 
                 <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
@@ -269,8 +271,7 @@
                     <p>유사국면 데이터 서치중입니다.</p>
                 </div>                          
                         
-                <div id="multiOriginalChartContainer"></div>
-                <div id="multiAlignedChartContainer"></div>
+                <div id="chartContainerBase"></div>
             </div>      
         </div>
         <!-- Tab3 유사 변동 분석  -->

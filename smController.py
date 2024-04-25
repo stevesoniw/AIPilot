@@ -209,7 +209,6 @@ def create_figure2(sample_data, target_date, selected_data, values_list, title, 
         })
     return fig_data
 
-
 class AnalysisRequest(BaseModel):
     selected_data: str
     target_date_start: str
@@ -238,7 +237,7 @@ def analyze(request: AnalysisRequest):
     dates_score_list = dates_score(sample_data, similarity_score, user_target_distance)
     sorted_dates_score_list = sorted(dates_score_list, key=lambda x: x[2], reverse=True)
     filtered_dates = filter_overlaps(sorted_dates_score_list)
-    values_list = [(pd.to_datetime(start), pd.to_datetime(end), distance) for start, end, distance in filtered_dates]
+    values_list = [(pd.to_datetime(start), pd.to_datetime(end), distance) for start, end, distance in filtered_dates][:request.n_graphs]
     fig_superimpose_target_original = create_figure(original_data, [request.target_date_start, request.target_date_end], request.selected_data, values_list, subtract=False, n_steps = request.n_steps, N = N)
     fig_superimpose_target_aligned = create_figure(original_data, [request.target_date_start, request.target_date_end], request.selected_data, values_list, subtract=True, n_steps = request.n_steps, N = N)
     
@@ -303,28 +302,18 @@ def create_figures(sample_data, target_dates, values_list, options, title_prefix
             "yAxis": {"title": {"text": "Value"}},
             "series": []
         }
-        print("11")
-
         if n_steps > 0:
             get_length = len(sample_data.loc[target_dates[0]: target_dates[1]])
             target_data = sample_data[target_dates[0]:][: get_length + n_steps]
             target_data.reset_index(drop=True, inplace=True)
-            print("22")
         else:
             target_data = sample_data.loc[target_dates[0]: target_dates[1]]
             target_data.reset_index(drop=True, inplace=True)
-            print("33")
-
         if subtract:
             target_trace = (target_data[column] / target_data[column].iloc[0])
             target_trace = (target_trace - target_trace[0])
-            print("44")
         else:
-            print("55")
             target_trace = target_data[column]
-            print("66")
-            print(target_trace)
-            print("66")
 
         chart_data["xAxis"]["categories"] = target_data.index.tolist()
         print(target_data.index.tolist())
@@ -349,7 +338,6 @@ def create_figures(sample_data, target_dates, values_list, options, title_prefix
                 sliced_trace = sliced_data[column]
 
             chart_data["series"].append({"name": f"Graph {i}: {start_date} to {end_date} ({round(score, 5)})", "data": sliced_trace.tolist()})
-            print("XX")
         chart_data_list.append(chart_data)
 
     return json.dumps(chart_data_list)
@@ -432,10 +420,6 @@ async def analyze_multi_series(data: AnalysisRequestMulti):
     original_data = generate_data(data.selected_data)
     original_data.index = pd.to_datetime(original_data.index).normalize()
     
-    print("myDataAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!")
-    print(original_data)
-    print("myDataAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!")
-    
     target_start_date = data.target_date_start
     target_end_date = data.target_date_end
     analysis_start_date = data.compare_date_start
@@ -449,23 +433,15 @@ async def analyze_multi_series(data: AnalysisRequestMulti):
     filtered_dates = filter_overlaps(sorted_dates_score_list)
     values_list = [(start_date, end_date, distance) for start_date, end_date, distance in filtered_dates][:data.n_graphs]
     
-    print("severeeeeeeeeeeeeeeeeeeeeeee!")
-    print(values_list)
-    print("selected_data::::::")
-    print(data.selected_data)
+    #print(values_list)
+    #print(data.selected_data)
     
     original_figs = create_figures(original_data, [target_start_date, target_end_date], values_list, data.selected_data, "(Original)", subtract=False, n_steps=data.n_steps)
-    print("andddddddddddddddddddddddddddddddddd!")
-    print(original_figs)
     aligned_figs = create_figures(original_data, [target_start_date, target_end_date], values_list, data.selected_data, "(Aligned)", subtract=True, n_steps=data.n_steps)
 
-    individual_table = compute_individual_dtw(original_data, [target_start_date, target_end_date], values_list)
+    #individual_table = compute_individual_dtw(original_data, [target_start_date, target_end_date], values_list)
     if data.n_graphs > 0:
         target_df, change_df = n_steps_ahead(original_data, [target_start_date, target_end_date], values_list, data.selected_data, n_steps= data.n_graphs)
-    
-    print(aligned_figs)
-    print("*****************")
-    print(individual_table)
     
     return JSONResponse(content={
         "chart_data": {
@@ -659,23 +635,3 @@ def analyze_time_series(request: AnalysisRequestVariation):
     })    
            
 ###################################################### [유사 변동 분석 처리] Ends ###################################################
-
-'''
-request_data = AnalysisRequestMulti(
-    selected_data="GT2 Govt",
-    target_date_start="2020-01-10",
-    target_date_end="2020-02-20",
-    analysis_date_start="2015-01-21",
-    analysis_date_end="2019-01-10",
-    n_steps=10,
-    n_graphs=2
-)
-
-# 함수 호출
-try:
-    result = analyze_time_series(request_data)
-    print(result)
-except HTTPException as e:
-    print(f"HTTPException: {e.detail}")
-except Exception as e:
-    print(f"An error occurred: {e}")'''

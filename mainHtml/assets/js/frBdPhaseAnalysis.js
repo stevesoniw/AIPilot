@@ -164,36 +164,64 @@ function generateMultiHighCharts(chartDataArray, containerId) {
         chartTitle = 'Aligned Comparison';
     }
     
-    // nStepsValue 값 처리
+    //console.log("***************");
+    //console.log(chartDataArray);
+    //console.log("***************");
+
     const nStepsValue = parseInt(document.getElementById('nMultiStepValue').textContent, 10);
-    const maxXValue = Math.max(...chartDataArray.flatMap(dataset => dataset.x));
-    const plotLineValue = maxXValue - nStepsValue;
     
+
+    // Collect all series and format names if needed
+    const allSeries = chartDataArray.series.map(series => {
+        if (series.name.startsWith('Graph')) {
+            const nameParts = series.name.split(': ');
+            const dateRangeParts = nameParts[1].split(' to ');
+            const formattedStart = formatDateWithoutTime(dateRangeParts[0]);
+            const formattedEnd = formatDateWithoutTime(dateRangeParts[1]);
+            return {
+                name: `${nameParts[0]}: ${formattedStart} to ${formattedEnd}`,
+                data: series.data
+            };
+        }
+        return {
+            name: series.name,
+            data: series.data
+        };
+    });
+
+    // Assuming the first dataset contains xAxis categories and is representative
+    
+    const categories = chartDataArray.xAxis.categories;
+    let plotLinePosition = Math.max(0, categories.length - 1 - nStepsValue);
+
     Highcharts.chart(containerId, {
         chart: {
             type: 'line',
-            zoomType: 'x' // 줌 기능 활성화
+            zoomType: 'x'
         },
         title: {
-            text: chartTitle
+            text: chartDataArray.title.text
         },
         xAxis: {
-            type: 'linear',
+            categories: categories,
             title: {
-                text: 'Index'
+                text: 'Date'
             },
-            labels: {
-                enabled: true // x축 라벨 활성화
-            },
+            crosshair: true,
             plotLines: [{
-                color: 'red', // 점선그리자. n-step ㅋ
+                color: 'red',
+                value: plotLinePosition,
                 dashStyle: 'Dash', 
-                value: plotLineValue, 
-                width: 2, 
+                width: 2,
+                zIndex: 5,
                 label: {
-                    text: 'N Steps' 
+                    text: 'N Steps',
+                    style: {
+                        color: 'red'
+                    }
                 }
-            }]
+            }],
+            max: categories.length - 1
         },
         yAxis: {
             title: {
@@ -213,10 +241,7 @@ function generateMultiHighCharts(chartDataArray, containerId) {
                 pointStart: 0
             }
         },
-        series: chartDataArray.map(dataset => ({
-            name: dataset.name,
-            data: dataset.y
-        })),
+        series: allSeries,
         responsive: {
             rules: [{
                 condition: {
@@ -234,20 +259,21 @@ function generateMultiHighCharts(chartDataArray, containerId) {
     });
 }
 
+function formatDateWithoutTime(dateTimeStr) {
+    const date = new Date(dateTimeStr);
+    return date.toISOString().split('T')[0]; // returns date in YYYY-MM-DD format
+}
+//선택한 지표 붙이기 
 function appendSelectedData() {
     const selectBox = document.getElementById('multi-selectedData');
-    const weightsBox = document.getElementById('multi-nWeights');
     const selectedValue = selectBox.value;
-    const selectedWeight = weightsBox.value;
+    if (selectedValue === "default") {
+        return;
+    }    
     const container = document.getElementById('selectedDataContainer');
 
     const item = document.createElement('div');
     item.className = 'multi-select-item';
-    //weight는 일단 hidden
-    const weightInput = document.createElement('input');
-    weightInput.type = 'hidden';
-    weightInput.value = selectedWeight;
-    weightInput.className = 'multi-select-weight';    
 
     const text = document.createElement('input');
     text.type = 'text';
@@ -255,19 +281,52 @@ function appendSelectedData() {
     text.value = selectedValue;
     text.readOnly = true;
 
+    const weightLabel = document.createElement('label');
+    weightLabel.textContent = 'Weights: ';
+    weightLabel.className = 'multi-select-label';
+
+    const weightInput = document.createElement('input');
+    weightInput.type = 'number';
+    weightInput.className = 'multi-select-weight';
+    weightInput.value = calculateWeight();
+    weightInput.min = "0";
+    weightInput.max = "1";
+    weightInput.step = "0.1";
+    weightInput.addEventListener('change', validateWeights);
+
     const deleteBtn = document.createElement('span');
     deleteBtn.className = 'multi-select-delete';
-    deleteBtn.innerHTML = 'x';
+    deleteBtn.textContent = 'x';
     deleteBtn.onclick = function() {
         container.removeChild(item);
+        validateWeights();
     };
 
     item.appendChild(text);
+    item.appendChild(weightLabel);
     item.appendChild(weightInput);
     item.appendChild(deleteBtn);
     container.appendChild(item);
 }
 
+function calculateWeight() {
+    const weights = document.querySelectorAll('.multi-select-weight');
+    const count = weights.length + 1; // Including the new input
+    const normalizedWeight = Math.floor(10 / count) / 10;
+    let lastWeight = 1 - normalizedWeight * (count - 1);
+    lastWeight = Math.round(lastWeight * 10) / 10; // Round to one decimal
+
+    weights.forEach(input => input.value = normalizedWeight);
+    return lastWeight; // Adjusted for rounding
+}
+
+function validateWeights() {
+    const weights = document.querySelectorAll('.multi-select-weight');
+    const sum = Array.from(weights).reduce((acc, input) => acc + parseFloat(input.value), 0);
+    if (sum !== 1) {
+        alert("Weights(지표별 비중)의 합은 1이 되어야 정확한 결과가 나옵니다. 참고해서 입력해주세요.");
+    }
+}
 function generateMultiAnalysis() {
     const dataContainer = document.getElementById('selectedDataContainer');
     const allInputs = dataContainer.querySelectorAll('.multi-select-text');
@@ -285,11 +344,16 @@ function generateMultiAnalysis() {
 
     console.log("Sending data with selectedData array and weights:", selectedData, weights);
 
+    if (selectedData.length === 0) {
+        alert("분석할 지표를 먼저 선택해주세요!");
+        return;
+    }
+
     if (!targetDateStart || !targetDateEnd || !compareDateStart || !compareDateEnd) {
         alert("날짜 범위를 꼭 지정해주세요!");
         return;
     }
-    console.log("Sending data:", { selectedData, targetDateStart, targetDateEnd, nSteps, nGraphs,weights });
+    //console.log("Sending data:", { selectedData, targetDateStart, targetDateEnd, nSteps, nGraphs,weights });
 
     document.getElementById('loading_bar_similarity').style.display = 'block';                                
     fetch('/similarity/multivariate-analyze/', {
@@ -311,18 +375,69 @@ function generateMultiAnalysis() {
     })
     .then(response => response.json())
     .then(data => {
-        const originalChartData = JSON.parse(data.chart_data.original).data;
-        const alignedChartData = JSON.parse(data.chart_data.aligned).data;
+        /*
+        console.log("aaa");
+        console.log(data.chart_data.original);
+        console.log("aaa");
+        const originalChartData = JSON.parse(data.chart_data.original);
+        const alignedChartData = JSON.parse(data.chart_data.aligned);
         document.getElementById('loading_bar_similarity').style.display = 'none';    
         // 차트 생성 함수 호출
         generateMultiHighCharts(originalChartData, 'multiOriginalChartContainer');
-        generateMultiHighCharts(alignedChartData, 'multiAlignedChartContainer');
+        generateMultiHighCharts(alignedChartData, 'multiAlignedChartContainer');*/
+        document.getElementById('loading_bar_similarity').style.display = 'none';    
+        createAndPopulateChartContainers(data.chart_data);
+        
     })
     .catch(error => {
         console.error('Error fetching multi similarity data:', error);
         document.getElementById('loading_bar_similarity').style.display = 'none'; 
     });
-    
+}
+
+function createAndPopulateChartContainers(chartData) {
+    // Parsing the JSON strings in 'original' and 'aligned' properties
+    if (typeof chartData.original === 'string') {
+        try {
+            chartData.original = JSON.parse(chartData.original);
+        } catch (error) {
+            console.error('Error parsing chartData.original:', error);
+            return;
+        }
+    }
+    if (typeof chartData.aligned === 'string') {
+        try {
+            chartData.aligned = JSON.parse(chartData.aligned);
+        } catch (error) {
+            console.error('Error parsing chartData.aligned:', error);
+            return;
+        }
+    }
+
+    const chartContainerBase = document.getElementById('chartContainerBase');
+    chartContainerBase.innerHTML = ''; // Clear previous contents
+
+    // Assuming there's a need to display both 'original' and 'aligned' charts
+    // Create containers and charts for 'original'
+    chartData.original.forEach((data, index) => {
+        const containerId = `originalChartContainer${index}`;
+        createChartContainer(chartContainerBase, data, containerId);
+    });
+
+    // Create containers and charts for 'aligned'
+    chartData.aligned.forEach((data, index) => {
+        const containerId = `alignedChartContainer${index}`;
+        createChartContainer(chartContainerBase, data, containerId);
+    });
+}
+
+function createChartContainer(base, data, containerId) {
+    const div = document.createElement('div');
+    div.id = containerId;
+    div.className = 'chart-container';
+    base.appendChild(div);
+
+    generateMultiHighCharts(data, containerId);
 }
 
 /*************  유사변동분석   ****************/
@@ -366,7 +481,7 @@ function generateVariationAnalysis() {
         return data;  // 성공 응답 데이터 반환
     }))
     .then(data => {
-        console.log(data.chart_data.original);
+        //console.log(data.chart_data.original);
         const originalChartData = data.chart_data.original;
         const alignedChartData = data.chart_data.aligned;
         document.getElementById('loading_bar_similarity').style.display = 'none';    
@@ -381,9 +496,8 @@ function generateVariationAnalysis() {
     });
 }
 
-function formatDateWithoutTime(dateTimeStr) {
-    return dateTimeStr.split(' ')[0]; 
-}
+
+
 function generateVariationHighCharts(chartData, containerId) {
     let container = document.getElementById(containerId);
     if (!container) {
@@ -413,12 +527,12 @@ function generateVariationHighCharts(chartData, containerId) {
     // Find the last index from the target series data
     if (chartData.series[0] && chartData.series[0].name.startsWith('Target:')) {
         const targetSeriesData = chartData.series[0].data;
-        console.log("**************");
-        console.log(targetSeriesData.length);
-        console.log("**************");
-        plotLinePosition = targetSeriesData.length - 1 - nStepsValue; // Calculate position from end with nSteps back
+        //console.log("**************");
+        //console.log(targetSeriesData.length);
+        //console.log("**************");
+        plotLinePosition = targetSeriesData.length - 1 - nStepsValue; 
         if (plotLinePosition >= targetSeriesData.length) {
-            plotLinePosition = targetSeriesData.length - 1; // Ensure plot line is within the chart
+            plotLinePosition = targetSeriesData.length - 1; 
         }
     }
     Highcharts.chart(containerId, {

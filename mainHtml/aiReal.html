@@ -35,7 +35,8 @@
         <script src="/static/assets/js/frNews.js"></script>
         <script src="/static/assets/js/frSocialData.js"></script>
         <script src="/static/assets/js/frCalendar.js"></script>
-        <script src="/static/assets/js/frPhaseAnalysis.js"></script>
+        <script src="/static/assets/js/frBdPhaseAnalysis.js"></script>
+        <script src="/static/assets/js/frStPhaseAnalysis.js"></script>
         <script src="/static/assets/js/dmNews.js"></script>
         <script src="/static/assets/js/dmPhaseAnalysis.js"></script>
         <script src="/static/assets/js/researchRAG.js"></script>
@@ -88,9 +89,12 @@
                                 <li class="list-dep" data-tab="menue" data-html="/static/frCalendar.html">
                                     <a href="#">Economic 캘린더</a>
                                 </li>
-                                <li class="list-dep" data-tab="menuf" data-html="/static/frPhaseAnalysis.html">
-                                    <a href="#">유사국면 분석</a>
+                                <li class="list-dep" data-tab="menuf" data-html="/static/frBdPhaseAnalysis.html">
+                                    <a href="#">유사국면 분석 - 채권</a>
                                 </li>
+                                <li class="list-dep" data-tab="menug" data-html="/static/frStPhaseAnalysis.html">
+                                    <a href="#">유사국면 분석 - 해외주식</a>
+                                </li>                                
                             </ul>
                         </div>
                         <h3 class="menu02"><a href="#" class="acc-tit">[국내] 마켓데이터 분석</a></h3>
@@ -231,86 +235,88 @@
                     minimumResultsForSearch: Infinity
                 }).val(null).trigger("change");
             }            
-             //html 로드 되어야만 제어할수 있는 자바스크립트 처리를 위한 함수 
+
+            //해외종목 검색코드 함수를 공통으로 만들어 메인 영역으로 뺌 (*여러 메뉴에서 계속 동일한 기능 사용하게 될것같음)
+            var isSearchingKorean = false; // 전역으로 한글 검색 상태 추적
+            function setupSelect2(selector, apiUrl) {
+                $(selector).select2({
+                    ajax: {
+                        url: apiUrl,
+                        dataType: 'json',
+                        delay: 550,
+                        data: function (params) {
+                            return {
+                                q: params.term,
+                                page: params.page
+                            };
+                        },
+                        processResults: function (data, params) {
+                            const term = params.term.toUpperCase();
+                            data.sort((a, b) => {
+                                const aInSymbol = a.symbol.toUpperCase().includes(term);
+                                const bInSymbol = b.symbol.toUpperCase().includes(term);
+                                const aInDescription = a.description.toUpperCase().includes(term);
+                                const bInDescription = b.description.toUpperCase().includes(term);
+            
+                                if (aInSymbol && !bInSymbol) {
+                                    return -1;
+                                } else if (!aInSymbol && bInSymbol) {
+                                    return 1;
+                                } else if (aInSymbol && bInSymbol) {
+                                    return 0;
+                                } else if (aInDescription && !bInDescription) {
+                                    return 1;
+                                } else if (!aInDescription && bInDescription) {
+                                    return -1;
+                                } else {
+                                    return 0;
+                                }
+                            });
+                            return {
+                                results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
+                            };
+                        },
+                        cache: true
+                    },
+                    placeholder: '원하시는 종목을 검색해주세요!',
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    language: {
+                        noResults: function () {
+                            return isSearchingKorean ? "한글로 검색어를 찾고 있습니다. 조금 기다려주세요." : "검색 결과가 없습니다.";
+                        }
+                    }
+                }).on('select2:open', function (e) {
+                    var searchField = $('.select2-search__field').last();
+                    var debounceTimer;
+                    searchField.off('input.select2minLength');
+                    searchField.on('input.select2minLength', function () {
+                        var term = $(this).val();
+                        clearTimeout(debounceTimer);
+                        if (/[\u3131-\uD79D\uAC00-\uD7A3]/.test(term)) {
+                            if (term.length >= 2) {
+                                isSearchingKorean = true;
+                                debounceTimer = setTimeout(function() {
+                                    getEngNameFromGoogle(term).then(stockCode => {
+                                        if (stockCode) {
+                                            searchField.val(stockCode).trigger('input');
+                                            searchField.trigger('input.select2minLength');
+                                        }
+                                        isSearchingKorean = false;
+                                    });
+                                }, 3000);
+                            }
+                        } else {
+                            isSearchingKorean = false;
+                        }
+                    });
+                });
+            }
+            //html 로드 되어야만 제어할수 있는 자바스크립트 처리를 위한 함수 
             function executeScriptsByTabId(tabId) {
                 switch (tabId) {
                     case 'menua':
-                    var isSearchingKorean = false; // 한글 검색 상태 추적
-                    $('#foreign_ticker').select2({
-                        ajax: {
-                            url: '/api/get_foreign_stock_symbols',
-                            dataType: 'json',
-                            delay: 550,
-                            data: function (params) {
-                                return {
-                                    q: params.term,
-                                    page: params.page
-                                };
-                            },
-                            processResults: function (data, params) {
-                                const term = params.term.toUpperCase();
-                                data.sort((a, b) => {
-                                    const aInSymbol = a.symbol.toUpperCase().includes(term);
-                                    const bInSymbol = b.symbol.toUpperCase().includes(term);
-                                    const aInDescription = a.description.toUpperCase().includes(term);
-                                    const bInDescription = b.description.toUpperCase().includes(term);
-                        
-                                    if (aInSymbol && !bInSymbol) {
-                                        return -1;
-                                    } else if (!aInSymbol && bInSymbol) {
-                                        return 1;
-                                    } else if (aInSymbol && bInSymbol) {
-                                        return 0;
-                                    } else if (aInDescription && !bInDescription) {
-                                        return 1;
-                                    } else if (!aInDescription && bInDescription) {
-                                        return -1;
-                                    } else {
-                                        return 0;
-                                    }
-                                });
-                                return {
-                                    results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
-                                };                                    
-                            },
-                            cache: true
-                        },
-                        placeholder: '원하시는 종목을 검색해주세요!',
-                        minimumInputLength: 1,
-                        allowClear: true,
-                        language: {
-                            noResults: function() {
-                                if (isSearchingKorean) {
-                                    return "한글로 검색어를 찾고 있습니다. 조금 기다려주세요.";
-                                }
-                                return "검색 결과가 없습니다.";
-                            }
-                        }
-                    }).on('select2:open', function (e) {
-                        var searchField = $('.select2-search__field').last();
-                        var debounceTimer;
-                        searchField.off('input.select2minLength');
-                        searchField.on('input.select2minLength', function () {
-                            var term = $(this).val();
-                            clearTimeout(debounceTimer);
-                            if (/[\u3131-\uD79D\uAC00-\uD7A3]/.test(term)) {
-                                if (term.length >= 2) {
-                                    isSearchingKorean = true; // 한글 검색 상태로 설정
-                                    debounceTimer = setTimeout(function() {
-                                        getEngNameFromGoogle(term).then(stockCode => {
-                                            if (stockCode) {
-                                                searchField.val(stockCode).trigger('input');
-                                                searchField.trigger('input.select2minLength');
-                                            }
-                                            isSearchingKorean = false; // 한글 검색 완료
-                                        });
-                                    }, 3000);
-                                }
-                            } else {
-                                isSearchingKorean = false; // 한글 검색 상태 해제
-                            }
-                        });
-                    });
+                       setupSelect2('#foreign_ticker', '/api/get_foreign_stock_symbols');
                         /** FILE READ 가 속도가 더 느려서 일단 보류
                         function fetchDataAndInitialize() {
                             var data = localStorage.getItem('us_symbols');
@@ -375,7 +381,7 @@
                         addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
                         addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
                         break;
-                    case 'menub':
+                    case 'menub': //글로벌 주요 경제지표영역
                         $('#indicator_select').select2();
                         $("#indicatorFromDate, #indicatorToDate").datepicker({
                             dateFormat: "yy-mm-dd",
@@ -385,7 +391,7 @@
                         $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정
                         $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                        
                         break;
-                    case 'menuc':
+                    case 'menuc':  //뉴스 데이터 분석
                         // News영역 컨트롤 ::'All Market News' 체크박스 관련 스크립트
                         document.getElementById('all').addEventListener('click', function() {
                             const allCheckbox = this;
@@ -403,12 +409,26 @@
                             });
                         });
                         break;
-                    case 'menue': 
+                    case 'menud':
+                         break;
+                    case 'menue':  // Economic 캘린더
                             goCalendar(); 
                          break;
-                    case 'menuf': 
-                            document.querySelector('.similarity-tab-link').click();
-                         break;                         
+                    case 'menuf': //유사국면-채권
+                            document.querySelector('.similarity-tab-link').click(); //첫번째 탭 디폴트 로딩
+                            // 복수지표에서 weight값 계산하기 
+                            document.getElementById('multi-generateButton').addEventListener('click', function() {
+                                const sum = Array.from(document.querySelectorAll('.multi-select-weight'))
+                                                  .reduce((acc, input) => acc + parseFloat(input.value), 0);
+                                if (sum > 1) {
+                                    alert("The total sum of weights must equal 1 before proceeding.");
+                                    return;
+                                }
+                            });                            
+                         break;    
+                    case 'menug':
+                          setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
+                         break;
                     case 'menu_2nd_a':
                         // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
                         naverScrapingNews(1);

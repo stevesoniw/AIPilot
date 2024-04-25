@@ -310,7 +310,7 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .loading_bar_translate { position: fixed; bottom: 200px; left: 57%; transform: translateX(-50%); display: none; z-index: 99; text-align: center; } 
 .loading_bar_translate > img {max-width: 100px; max-height: 100px;}
 
-/*  [1ST GNB][2ND LNB] 글로벌 주요 경제지표 리뉴얼 추가영역 시작 */
+/*  [1ST GNB][2ND LNB] 글로벌 주요 경제지표 리뉴얼 추가영역  */
 #chartPilot h3.s-tit.new-sub-tit{font-size:20px;margin-bottom:20px;font-weight:500;}
 .form-container{width:auto;max-width:inherit;margin:30px 0;padding:30px;background:#f5f5ff;border:1px solid #efefef;border-radius:0;box-shadow:none;}
 .form-header{font-size:17px;color:#333;text-align:left;}
@@ -334,9 +334,42 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .translate-button:hover{background:#008296;}
 .bondNews-title{font-size:18px;}
 .bondNews-content{line-height:1.8;}
-/* [1ST GNB][2ND LNB] 글로벌 주요 경제지표 리뉴얼 추가영역 끝 */
 
-/* [1ST GNB][4TH LNB] 소셜 FOMC 영역 시작*/
+/* [1ST GNB][3RD LNB] 뉴스 데이터 영역 */
+
+    /* 뉴스 체크박스 */
+.category-selection {max-width: 1200px;margin: 20px auto;background: #f1efef;padding: 20px;border-radius: 10px;box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.category-form {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 15px;}
+.category {display: flex; align-items: center; background: #ffffff; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);transition: transform 0.2s ease-in-out;}
+.category:hover { transform: translateY(-2px);}
+label {font-size: 16px; cursor: pointer;}
+label:hover {color: #fa7508;}
+#all + label {color: red;}
+.form-action {grid-column: span 4; display: flex; justify-content: center; padding: 20px;  margin-top: 20px;  margin-left: auto; margin-right: auto;}
+.load-news-btn {background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 18px; transition: background-color 0.3s ease;}
+.load-news-btn:hover {background-color: #0056b3;}
+    /* 뉴스 데이터 */
+.news-board {display: flex; flex-direction: column; margin: 20px;}
+.news-item {border: 1px solid #ddd; margin-bottom: 10px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+.news-item img {max-width: 100px; margin-right: 10px; border: 1px solid #ccc;}
+.news-content {display: flex; align-items: flex-start;}
+.news-title {font-size: 18px; margin: 0 0 10px 0; color: orange;}
+.news-body {font-size: 15px;}
+.publish-date {font-size: 14px; color: white; background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px; display: inline-block;}
+    /* 뉴스 버튼 스타일 */
+.buttons-container {display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;}
+.btn {background: linear-gradient(90deg, rgba(180, 180, 180, 1) 0%, rgba(150, 150, 150, 1) 100%);color: #000; border: none; padding: 8px 16px; margin: 0 10px; border-radius: 5px;
+    cursor: pointer; font-size: 14px; transition: background 0.3s ease;}
+.btn:hover {background: linear-gradient(90deg, rgba(150, 150, 150, 1) 0%, rgba(180, 180, 180, 1) 100%);}
+.newstrans-button {background-color: #FF4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 10px; cursor: pointer; display: inline-block;}
+    /* 뉴스 AI 답변 */
+.ai-box {background-color: #ffffe0; border:1px solid #ccc; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 0;}
+.list-dep {list-style-type: none; padding: 0;}
+.list-dep li {margin-bottom: 10px;}
+.gpt_t {margin-bottom: 10px;}
+
+
+/* [1ST GNB][4TH LNB] 소셜 FOMC 영역 */
     /* FOMC 연준위원 스피치 요약 및 성향분석 시작 */
 .font-bold{font-weight:500;}
 .site-link{color:#2970ff !important;text-decoration:underline;}
@@ -395,12 +428,9 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .pop-cont-wrap{color:#333;line-height:24px;}
 .tab-wrap.dialog-tab{margin:15px 0;}
 .tab-wrap.dialog-tab .tab-list{padding:10px;font-size:13px;}
-    /* 팝업 끝 */
-    /* FOMC 연준위원 스피치 요약 및 성향분석 끝 */
+    /* 팝업 끝 *//* FOMC 연준위원 스피치 요약 및 성향분석 끝 */
 
-/* [1ST GNB][4TH LNB] 소셜 FOMC 영역 끝*/
-
-/* [1ST GNB][5TH LNB] 캘린더 영역 시작 */
+/* [1ST GNB][5TH LNB] 캘린더 영역  */
 #chartPilot .event {border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9;}
 #chartPilot .event .title { color: #333; font-weight: bold; }
 #chartPilot .event .details {font-size: 14px;}
@@ -455,7 +485,7 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .calInput[type="text"] {padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; color: #333; width: 120px;}
 
 
-/* [1ST GNB][7TH LNB] 유사국면 시스템 분석 */
+/* [1ST GNB][6TH LNB] 유사국면 시스템 :: 해외채권 분석 */
 .similarity-tab-menu { left: 0; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); width: auto; margin: 0 auto;}
 .similarity-tabs { background: #fffefe; border-top: none;}
 .similarity-tab-link { width:180px; background: inherit; border-top: 1px solid #9d9d9d; border-right: 1px solid #9d9d9d; border-bottom: 1px solid #9d9d9d; float: left; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; font-weight: bold;}
@@ -476,45 +506,18 @@ input[type="date"] {appearance: auto;-webkit-appearance: auto;}
 .similarity-button:hover { background-color: #FB8C00; }
 .similarity-nSteps-value { margin-left: 10px; font-size: 16px; color: #fda744; }
 .similarity-select, .similarity-form-input { height: 38px; margin-right:10px; } 
-.multi-select-container { display: flex; flex-direction: column; margin-top: 10px; } 
-.multi-select-item { display: flex; align-items: center; margin-bottom: 5px; } 
-.multi-select-text { flex-grow: 1; margin-right: 10px; border: 1px solid #ccc; padding: 5px; border-radius: 4px; } 
-.multi-select-delete { cursor: pointer; color: red; }
+.multi-select-item {display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: #f8f8f8;}
+.multi-select-text {flex-grow: 2; margin-right: 10px; border: 1px solid #ccc; padding: 5px; border-radius: 4px; width: auto; background-color: #ffffff;}
+.multi-select-label {margin-right: 5px; font-weight: normal; color: #333; font-size:13px;}
+.multi-select-weight {width: 15%; flex-grow: 1; border: 1px solid #ccc; padding: 5px; border-radius: 4px; background-color: #e6e6e6;}
+.multi-select-delete {cursor: pointer; color: red; font-weight: bold; padding: 5px; border-radius: 4px; background-color: #f2f2f2;}
 
 
-/* 뉴스 영역 */
-/* 뉴스 체크박스 */
-.category-selection {max-width: 1200px;margin: 20px auto;background: #f1efef;padding: 20px;border-radius: 10px;box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-.category-form {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 15px;}
-.category {display: flex; align-items: center; background: #ffffff; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);transition: transform 0.2s ease-in-out;}
-.category:hover { transform: translateY(-2px);}
-/*input[type="checkbox"] { accent-color: #f58d05; margin-right: 10px; display: block !important;}*/
-label {font-size: 16px; cursor: pointer;}
-label:hover {color: #fa7508;}
-#all + label {color: red;}
-.form-action {grid-column: span 4; display: flex; justify-content: center; padding: 20px;  margin-top: 20px;  margin-left: auto; margin-right: auto;}
-.load-news-btn {background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 18px; transition: background-color 0.3s ease;}
-.load-news-btn:hover {background-color: #0056b3;}
-/* 뉴스 데이터 */
-.news-board {display: flex; flex-direction: column; margin: 20px;}
-.news-item {border: 1px solid #ddd; margin-bottom: 10px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-.news-item img {max-width: 100px; margin-right: 10px; border: 1px solid #ccc;}
-.news-content {display: flex; align-items: flex-start;}
-.news-title {font-size: 18px; margin: 0 0 10px 0; color: orange;}
-.news-body {font-size: 15px;}
-.publish-date {font-size: 14px; color: white; background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px; display: inline-block;}
+/* [1ST GNB][7TH LNB] 유사국면 시스템 :: 해외주식 분석 */
+.foreign-stockcode-box{margin: 20px auto; text-align: center; width: 80%; max-width: 800px;}
+.input-container .foreign-stockcode-box{width:100%;max-width:inherit;}
 
-/* 뉴스 버튼 스타일 */
-.buttons-container {display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;}
-.btn {background: linear-gradient(90deg, rgba(180, 180, 180, 1) 0%, rgba(150, 150, 150, 1) 100%);color: #000; border: none; padding: 8px 16px; margin: 0 10px; border-radius: 5px;
-    cursor: pointer; font-size: 14px; transition: background 0.3s ease;}
-.btn:hover {background: linear-gradient(90deg, rgba(150, 150, 150, 1) 0%, rgba(180, 180, 180, 1) 100%);}
-.newstrans-button {background-color: #FF4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 10px; cursor: pointer; display: inline-block;}
-/* 뉴스 AI 답변 */
-.ai-box {background-color: #ffffe0; border:1px solid #ccc; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 0;}
-.list-dep {list-style-type: none; padding: 0;}
-.list-dep li {margin-bottom: 10px;}
-.gpt_t {margin-bottom: 10px;}
+
 
 /* 로딩 바 */
 .loading_bar {position: absolute; top: 80%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 99; text-align: center;}
