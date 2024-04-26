@@ -26,6 +26,12 @@ import utilTool
 import logging
 from fastapi import HTTPException, Request, APIRouter
 from fastapi.responses import JSONResponse
+from bs4 import BeautifulSoup
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+from langchain.chains.llm import LLMChain
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain.docstore.document import Document as Doc
 
 # 라우터 설정
 logging.basicConfig(level=logging.DEBUG)
@@ -479,3 +485,119 @@ async def gpt4_pdf_talk(response_data):
         print("An error occurred in gpt4_chart_talk:", str(e))
         return None
 ##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 ENDS ################################################### 
+################################### FOMC 스피치 크롤링하고 요약해주기 ############################################
+def scrape_speeches(url):
+    """
+    URL 입력했을 때 최근 FOMC 스피치 리스트를 가져오는 함수
+    """
+    try: 
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+   
+        # Find the parent div with class 'row eventlist'
+        eventlist_div = soup.find('div', class_='row eventlist')
+
+        # Find the desired section within the parent div
+        desired_section = eventlist_div.find('div', class_='col-xs-12 col-sm-8 col-md-8')
+
+        speeches = []
+
+        for speech in desired_section.find_all('div', class_='row'):
+            # print(speech)
+            # print("*****")
+            date = speech.find('time').text
+            link = 'https://www.federalreserve.gov' + speech.find('div', class_='col-xs-9 col-md-10 eventlist__event').find('a', href=True)['href']
+            title = speech.find('em').text
+            author = speech.find('p', class_='news__speaker').text
+            # youtube = speech.find('a', class_='watchLive')
+            # if youtube:
+            #     youtube_link = speech.find('a', class_='watchLive')['href']
+            #     speeches.append({'date': date, 'link': link, 'title': title, 'author': author, 'youtube_link': youtube_link})
+            # else: # youtube link doesn't exist
+            speeches.append({'date': date, 'link': link, 'title': title, 'author': author})
+
+        return speeches
+    except requests.exceptions.RequestException as e:
+        return "An error occurred while fetching speech news: {}".format(e)  
+    
+def scrape_speech_content(url):
+    """
+    URL 입력했을 때 URL 안에 있는 스피치 텍스트를 가져오는 함수
+    """
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    desired_section = soup.find('div', class_='col-xs-12 col-sm-8 col-md-8')
+    
+    ### 비디오 내용 제거
+    unwanted_div = desired_section.find('div', class_='col-xs-12 col-md-7 pull-right')
+    if unwanted_div:
+        unwanted_div.decompose()
+    ## 엔딩을 가리키는 hr태그 찾기
+    hr_tag = desired_section.find('hr')
+    # Extract the content before the <hr> tag
+    if hr_tag:
+        previous_content = hr_tag.find_previous_siblings()
+        result_str = ""
+        for tag in reversed(previous_content):
+            # print(tag)
+            result_str += tag.text + "\n\n"
+    else:
+        result_str = desired_section.text.strip()
+    
+    return result_str    
+
+@frControllerETC.get("/frSocialData")
+async def get_fr_social_data(request: Request):
+    scraped_data_2024 = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2024-speeches.htm")
+    scraped_data_2023 = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2023-speeches.htm")
+    scraped_data = scraped_data_2024 + scraped_data_2023
+    
+    
+    logging.info("======GETTING SOCIAL DATA =======")
+    return {"data": scraped_data}
+
+class SpeechData(BaseModel):
+    title: str
+    link: str
+@frControllerETC.post("/summarizeSpeech")
+async def summarize_speech(data: SpeechData):
+    speech_title = translate_gpt(data.title)  #타이틀 번역하기
+    speech_text = scrape_speech_content(data.link) # 링크 가서 내용 크롤링하기
+    # print(sample_text)
+    # Define prompt
+    prompt_template = """You are an economist tasked with summarizing speeches by Federal Open Market Committee (FOMC) members.
+    Explain as if you are talking to someone who knows nothing about FOMC or economics. So, you have to explain economics terminology used in the text as well.
+
+    너한테 FOMC 연설문 전체 내용을 줄 거야. 연설문의 주요 내용을 요약해줘. 고유명사는 괄호로 영어 원문도 보여줘.
+    
+    대답은 한국어로 해줘. 답변은 500자 이내로 해줘. Speech에 없는 내용은 언급하지 마.
+    
+    연설자를 가리킬 때는 항상 "연설자" 라고 말해. 다른 명칭을 사용하지 마. 
+    
+    답은 항상 -입니다, -습니다 체로 해줘. 
+    
+    Speech:
+    "{text}"
+
+    답변: """
+
+    prompt = PromptTemplate.from_template(prompt_template)
+
+    # Define LLM chain
+    llm = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo-preview", api_key=config.OPENAI_API_KEY, 
+                     streaming=True)
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+
+    # Define StuffDocumentsChain
+    stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text", verbose=True)
+    docs = Doc(page_content=speech_text)
+    result = stuff_chain.run([docs])
+    print(result)
+    return {"title": speech_title, "summary": result}
+
+# scraped_data = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2024-speeches.htm")
+
+# @frControllerETC.get("/frSocialData")
+# async def get_fr_social_data(request: Request):
+#     return templates.TemplateResponse("frSocialData.html", {"request": request, "data": scraped_data})    

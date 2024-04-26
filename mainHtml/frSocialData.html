@@ -27,165 +27,65 @@
         <form id="">
             <div class="checkbox-row">
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name01" name="name01" value="Chair Powell">
+                    <input type="checkbox" id="name01" name="name01" value="Chair Powell" onclick="getCheckboxValue(event)">
                     <label for="name01">Chair Powell</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name02" name="name02" value="Vice Chair Jefferson">
+                    <input type="checkbox" id="name02" name="name02" value="Vice Chair Jefferson" onclick="getCheckboxValue(event)">
                     <label for="name02">Vice Chair Jefferson</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name03" name="name03" value="Vice Chair for Supervision Barr">
+                    <input type="checkbox" id="name03" name="name03" value="Vice Chair for Supervision Barr" onclick="getCheckboxValue(event)">
                     <label for="name03">Vice Chair for Supervision Barr</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name04" name="name04" value="Governor Bowman">
+                    <input type="checkbox" id="name04" name="name04" value="Governor Bowman" onclick="getCheckboxValue(event)">
                     <label for="name04">Governor Bowman</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name05" name="name05" value="Governor Cook">
+                    <input type="checkbox" id="name05" name="name05" value="Governor Cook" onclick="getCheckboxValue(event)">
                     <label for="name05">Governor Cook</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name06" name="name06" value="Governor Kugler">
+                    <input type="checkbox" id="name06" name="name06" value="Governor Kugler" onclick="getCheckboxValue(event)">
                     <label for="name06">Governor Kugler</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" id="name07" name="name07" value="Governor Waller">
+                    <input type="checkbox" id="name07" name="name07" value="Governor Waller" onclick="getCheckboxValue(event)">
                     <label for="name07">Governor Waller</label>
                 </div>
                 </div>
 
                 <div class="form-actions">
                     <div class="center-button">
-                        <button type="button" id="" class="indicatorButton new-show-chart-btn" onclick="">Apply Filter</button>
+                        <button type="button" id="" class="indicatorButton new-show-chart-btn" onclick="filterSpeeches(event)">Apply Filter</button>
                     </div>                        
-                    <button type="button" id="clearButton" onclick="">초기화</button>
+                    <button type="button" id="clearButton" onclick="clearCheckboxes(event)">초기화</button>
                 </div> 
             </form>
         </div>
         
-        <div class="fomc-speach-list">
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/bowman.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">Risks and Uncertainty in Monetary Policy:Current and Past Considerations</h4>
-                    <p class="box-content-stit">Governor Michelle W.Bowman</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/kugler.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">Enriching Data and Analysis in Economics with Real Life Experiences</h4>
-                    <p class="box-content-stit">Governor Adriana D.Kugler</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/barr.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">The Future of Banking</h4>
-                    <p class="box-content-stit">Vice Chair Michael Barr</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/cook.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">The Future of Banking</h4>
-                    <p class="box-content-stit">Cook</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/jefferson.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">The Future of Banking</h4>
-                    <p class="box-content-stit">Jefferson</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/waller.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">The Future of Banking</h4>
-                    <p class="box-content-stit">Waller</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            <div class="box-flex-wrap">
-                <span class="date-label">2024-04-05</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/powell.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">The Future of Banking</h4>
-                    <p class="box-content-stit">Powell</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="#" class="box-content-btn blue" target="_blank">영상보기</a>
-                        <a href="#" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="fomc-speach-list">  
 
-        <button id="" class="blue-big-btn">더보기</button>
+        </div>
+        <div id="loading_bar_fomc" class="loading_bar" style="margin-left: 0px; position: fixed;">
+            <img src="/static/assets/images/LoadingBar_C.gif">
+            <p class="loading-text">요약하는 중입니다. 잠시만 기다려주세요~</p>
+        </div> 
+
+       
     </div>
+    <!-- <div class="view-more">
+        <button id="view-more" class="blue-big-btn" onclick="loadMoreData()">더보기</button>
+        <br>margin-left: 0px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;
+    </div> -->
 </div>
 <!-- 예시입니다.-->
 
 <!-- 팝업 시작 -->
 <div id="aiSummary">
-    <h5 class="pop-tit">Risks and Uncertainty in Monetary Policy:Current and Past Considerations</h5>
+    <h5 class="pop-tit"></h5>
     <div class="pop-cont-wrap">
-        Risks and Uncertainty in Monetary Policy:Current and Past ConsiderationsRisks and Uncertainty in Monetary Policy:Current and Past Considerations
-        <br />
-        Risks and Uncertainty in Monetary Policy:Current and Past Considerations
-        <br />
-        Risks and Uncertainty in Monetary Policy:Current and Past Considerations
     </div>
 </div>
+
