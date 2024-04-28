@@ -84,7 +84,7 @@
                                     <a href="#">뉴스 데이터 분석</a>
                                 </li>
                                 <li class="list-dep" data-tab="menud" data-html="/static/frSocialData.html">
-                                    <a href="#">소셜 데이터 분석</a>
+                                    <a href="#">FOMC 데이터 분석</a>
                                 </li>
                                 <li class="list-dep" data-tab="menue" data-html="/static/frCalendar.html">
                                     <a href="#">Economic 캘린더</a>
@@ -286,6 +286,11 @@
                             return isSearchingKorean ? "한글로 검색어를 찾고 있습니다. 조금 기다려주세요." : "검색 결과가 없습니다.";
                         }
                     }
+                }).on('select2:select', function (e) {
+                    // 선택 이벤트가 발생했을 때 실행할 함수들
+                    removeButtonOn('getEarningInfo');
+                    removeButtonOn('getStockInfo');
+                    removeButtonOn('getForeignStockNews');
                 }).on('select2:open', function (e) {
                     var searchField = $('.select2-search__field').last();
                     var debounceTimer;

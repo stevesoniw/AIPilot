@@ -20,7 +20,7 @@ from langchain.agents import load_tools, initialize_agent
 #금융관련 APIs
 import finnhub
 import yfinance as yf
-#from openai import OpenAI
+from openai import OpenAI
 #personal 파일
 import config
 import utilTool
@@ -491,9 +491,9 @@ def get_prompt_earning (ticker):
         term2 = '상회하였습니다.' if eps_actual > eps_estimate else '하회하였습니다'
         head = "\n [실적발표 요약]: \n {}에 {}년{}분기 {}의 실적이 발표되었습니다. 실적(매출)은 ${}M으로 당초 예측한 ${}M 대비 {}% {}, eps는 예측한 {}대비 {}으로 eps는 {}% {} ".format(date_announce,earning_y,earning_q, profile['name'], revenue_actual, revenue_estimate,excess_revenue,term1,eps_estimate, eps_actual, excess_eps, term2)
         if all(utilTool.is_valid(value) for value in [date_announce, earning_y, earning_q, profile['name'], revenue_actual, revenue_estimate, excess_revenue, term1, eps_estimate, eps_actual, excess_eps, term2]):
-            head = "\n [실적발표 요약]: \n {}에 {}년{}분기 {}의 실적이 발표되었습니다. 실적(매출)은 ${}M으로 당초 예측한 ${}M 대비 {}% {}, eps는 예측한 {}대비 {}으로 eps는 {}% {}".format(date_announce, earning_y, earning_q, profile['name'], revenue_actual, revenue_estimate, excess_revenue, term1, eps_estimate, eps_actual, excess_eps, term2)
+            head2 = "\n [실적발표 요약]: \n {}에 {}년{}분기 {}의 실적이 발표되었습니다. 실적(매출)은 ${}M으로 당초 예측한 ${}M 대비 {}% {}, eps는 예측한 {}대비 {}으로 eps는 {}% {}".format(date_announce, earning_y, earning_q, profile['name'], revenue_actual, revenue_estimate, excess_revenue, term1, eps_estimate, eps_actual, excess_eps, term2)
         else:
-            head = ""
+            head2 = ""
         
         
         # 기준점 산출 (세가지 시점)

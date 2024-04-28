@@ -358,10 +358,12 @@ label:hover {color: #fa7508;}
 .publish-date {font-size: 14px; color: white; background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px; display: inline-block;}
     /* 뉴스 버튼 스타일 */
 .buttons-container {display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px;}
-.btn {background: linear-gradient(90deg, rgba(180, 180, 180, 1) 0%, rgba(150, 150, 150, 1) 100%);color: #000; border: none; padding: 8px 16px; margin: 0 10px; border-radius: 5px;
-    cursor: pointer; font-size: 14px; transition: background 0.3s ease;}
-.btn:hover {background: linear-gradient(90deg, rgba(150, 150, 150, 1) 0%, rgba(180, 180, 180, 1) 100%);}
 .newstrans-button {background-color: #FF4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; margin-left: 10px; cursor: pointer; display: inline-block;}
+.fr-news-btn { background: #fff; color: #333; border: 2px solid #6f6969; padding: 8px 16px; margin: 0 10px; border-radius: 5px; cursor: pointer; font-size: 14px; transition: background 0.3s ease, color 0.3s ease; }
+.fr-news-btn:hover { background: #6f6969; color: #fff; }
+.fr-news-btn-alt { background: #6f6969; color: #fff; border: 2px solid #6f6969; padding: 8px 16px; margin: 0 10px; border-radius: 5px; cursor: pointer; font-size: 14px; transition: background 0.3s ease, color 0.3s ease; }
+.fr-news-btn-alt:hover { background: #fff; color: #333; }
+
     /* 뉴스 AI 답변 */
 .ai-box {background-color: #ffffe0; border:1px solid #ccc; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 5px; margin-right: 0; margin-bottom: 20px; margin-left: 0;}
 .list-dep {list-style-type: none; padding: 0;}
@@ -483,6 +485,7 @@ label:hover {color: #fa7508;}
 .popupHidden { display: none; }
 .calLabel {margin-right: 10px; white-space: nowrap; margin-left:20px !important; font-size:13px !important;}
 .calInput[type="text"] {padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; color: #333; width: 120px;}
+.calendarChartContainer{overflow: hidden;width:100%;height:500px;}
 
 
 /* [1ST GNB][6TH LNB] 유사국면 시스템 :: 해외채권 분석 */
@@ -511,11 +514,57 @@ label:hover {color: #fa7508;}
 .multi-select-label {margin-right: 5px; font-weight: normal; color: #333; font-size:13px;}
 .multi-select-weight {width: 15%; flex-grow: 1; border: 1px solid #ccc; padding: 5px; border-radius: 4px; background-color: #e6e6e6;}
 .multi-select-delete {cursor: pointer; color: red; font-weight: bold; padding: 5px; border-radius: 4px; background-color: #f2f2f2;}
-
+.similarity-tab-menu{box-shadow:none;}
+.similarity-tab-link{float:none;transition:none;}
+.similarity-tab-link:hover{color:inherit;}
+.similarity-tab-link.active{color:#2970ff;}
+.similarity-tab-content{padding:0;}
+.similarity-container{max-width:inherit;margin:0;padding:0;box-shadow:none;}
+.similarity-title{margin:0 0 20px 0;padding:0;font-size:20px;color:#333;background:transparent;text-align:left;}
+.similarity-section{margin-bottom:0;padding:15px 80px 15px 30px;background:#fafaff;border-top:1px solid #d8d8d8;border-bottom:0;}
+.similarity-section.bbd8{border-bottom:1px solid #d8d8d8;}
+.similarity-select, .similarity-form-input{margin-right:0;}
+select.similarity-form-input{flex-grow:initial;min-width:520px;margin-right:0;border:1px solid #d8d8d8;border-radius:0;}
+.similarity-form-label{flex-basis:20%;margin-right:50px;color:#333;}
+.similarity-form-label:hover{color:inherit;}
+.input-date-wrap{display:flex;align-items:center;gap:5px;}
+.similarity-range-input{margin-left:0;background:url('/static/assets/images/calendar_ic.png') no-repeat right;}
+input[type="date"].similarity-range-input{position:relative;color:#555;}
+input[type="date"].similarity-range-input::-webkit-calendar-picker-indicator{position:absolute;left:0;top:0;width:100%;height:100%;background:transparent;color:transparent;cursor:pointer;}
+input[type="date"].similarity-form-input{flex-grow:initial;width:250px;height:30px;margin-right:0;padding:0;background-color:#fff;border:1px solid #d8d8d8;border-right:0;border-radius:0;text-align:center;}
+input[type="range"].similarity-form-input{flex-grow:initial;width:50%;padding:0;}
+input[type="range"].similarity-form-input:focus{outline:0;}
+.similarity-nSteps-value{color:#2970ff;}
+.similarity-button{width:160px;height:40px;margin-top:40px;background:#2970ff;border-radius:4px;}
+.similarity-button:hover{color:#2970ff;background:#fff;border:1px solid #2970ff;}
+#similarityOriginalChartContainer{margin-top:40px;}
+#similarityAlignedChartContainer{margin-top:40px;}
 
 /* [1ST GNB][7TH LNB] 유사국면 시스템 :: 해외주식 분석 */
 .foreign-stockcode-box{margin: 20px auto; text-align: center; width: 80%; max-width: 800px;}
 .input-container .foreign-stockcode-box{width:100%;max-width:inherit;}
+.frst-news-container { flex-direction: column; align-items: center; padding: 20px; display: none; }
+.frst-news-main-title { position: relative; margin-bottom: 24px; font-size: 24px; line-height: 24px; }
+.frst-news-main-title::before { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 7px; background: #fad58c; z-index: -1; }
+.frst-news-sub-title { margin-bottom: 30px; color: #333; font-weight: 400; font-size: 18px; }
+.frst-news-date-inputs { margin-bottom: 20px; }
+.frst-news-date-input { color: #555; position: relative; width: 250px; height: 30px; margin-right: 10px; padding: 0; background-color: #fff; border: 1px solid #d8d8d8; text-align: center; }
+.frst-news-date-input::-webkit-calendar-picker-indicator { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: transparent; color: transparent; cursor: pointer; }
+.frst-news-search-btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.frst-news-search-btn:hover { background-color: #0056b3; }
+.frst-news-results { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 850px; margin-top: 20px; }
+.frst-flex-wrap { position: relative; width:100%; display: flex; margin: 20px 0; padding: 20px; background: #f5f7f9; border: 1px solid #efefef; }
+.frst-date-label { position: absolute; top: 20px; right: 20px; padding: 5px 10px; font-size: 12px; color: #fff; background: #666; border-radius: 4px; }
+.frst-left-img-wrap { width: 120px; height: 100px; }
+.frst-left-img-wrap img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
+.frst-content { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding-left: 25px; }
+.frst-content-tit { font-size: 18px; color: #333; font-weight: 500; margin-bottom: 10px; }
+.frst-content-btn-wrap { margin-top: 10px; display: flex; gap: 10px; }
+.frst-content-btn { padding: 8px 12px; font-size: 12px; color: #fff; font-weight: 500; border-radius: 4px; text-decoration: none; }
+.frst-content-btn.blue { background: #2970ff; }
+.frst-content-btn.orange { background: #f58220; }
+.frst-content-btn:hover { opacity: 0.8; }
+
 
 
 

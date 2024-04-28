@@ -44,9 +44,6 @@ async function getEngNameFromGoogle(term) {
 
 //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
 async function loadEarningData() {
-    addButtonOn('getEarningInfo');
-    removeButtonOn('getStockInfo');
-    removeButtonOn('getForeignStockNews'); 
     const ticker = document.getElementById('foreign_ticker').value;             
     try {
         //로딩바
@@ -67,6 +64,9 @@ async function loadEarningData() {
             document.getElementById('loading_bar_fingpt').style.display = 'none';  
             return;
         }
+        addButtonOn('getEarningInfo');
+        removeButtonOn('getStockInfo');
+        removeButtonOn('getForeignStockNews'); 
 
         const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
         const fileUrl = `/batch/earning_data/${ticker}/earningChart_${ticker}_${todayDate}.json`;
@@ -272,9 +272,6 @@ async function gptStockWave(ticker) {
 //********************************** AI가 말해주는 주식정보 함수 Starts [#2.Get ForeignStockNewsInfo]**************************************//
 //Finnhub에서 해외 종목 뉴스데이터 가져오기 
 async function loadForeignStockNews() {
-    addButtonOn('getForeignStockNews');
-    removeButtonOn('getEarningInfo');
-    removeButtonOn('getStockInfo');  
     //실적
     document.getElementById('loading_bar_fingpt').style.display = 'none';
     document.getElementById('fingptChartArea').style.display = 'none';
@@ -295,12 +292,26 @@ async function loadForeignStockNews() {
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         return;
     }
+    addButtonOn('getForeignStockNews');
+    removeButtonOn('getEarningInfo');
+    removeButtonOn('getStockInfo');      
     document.getElementById('loading_bar_foreignnews').style.display = 'block';
     try {
-        const response = await fetch(`/foreignStock/financials/news/${ticker}`);
-        if (!response.ok) throw new Error('Failed to fetch foreign stock news info data');
-        
-        const data = await response.json();
+        //파일 있는지 먼저 체크하도록 수정
+        const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        const fileUrl = `/batch/stocknews/${ticker}/news_${ticker}_${todayDate}.json`;
+    
+        const checkResponse = await fetch(fileUrl);
+        let data;
+        if (checkResponse.ok) {
+            console.log("file exists");
+            data = await checkResponse.json();
+        } else {
+            const newsResponse = await fetch(`/foreignStock/financials/news/${ticker}`);
+            if (!newsResponse.ok) throw new Error('Failed to fetch foreign stock news data');
+            data = await newsResponse.json();
+        }
+
         const newsContainer = document.getElementById('foreignTickerNewsArea');
         newsContainer.innerHTML = '';
         if (data.length === 0) {
@@ -310,7 +321,7 @@ async function loadForeignStockNews() {
         // 뉴스 항목 너무 많아서 최대 15개까지만 표시함
         data.slice(0, 15).forEach(news => {
             const newsDate = new Date(news.datetime * 1000).toISOString().slice(0, 10);
-            const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 5) + 1}.jpg`;
+            const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 25) + 1}.jpg`;
             const newsElement = `
                     <div class="foreignTickerNews-container" data-news-id="${news.id}">
                     <span class="foreignTickerNews-datetime">${newsDate}</span>
@@ -606,9 +617,6 @@ async function fetchForeignStockCodes() {
 }
 //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 (Get Stock Info)
 async function loadBasicInfo() {
-    addButtonOn('getStockInfo');
-    removeButtonOn('getEarningInfo');
-    removeButtonOn('getForeignStockNews');   
     //실적
     document.getElementById('loading_bar_fingpt').style.display = 'none';
     document.getElementById('fingptChartArea').style.display = 'none';
@@ -628,6 +636,9 @@ async function loadBasicInfo() {
         document.getElementById('loading_bar_stockbasic').style.display = 'none';
         return;
     }
+    addButtonOn('getStockInfo');
+    removeButtonOn('getEarningInfo');
+    removeButtonOn('getForeignStockNews');       
     document.getElementById('loading_bar_stockbasic').style.display = 'block';
     document.getElementById('chatApp').style.display = 'none';
     try {
@@ -909,7 +920,7 @@ function displayQuarterlyGrowthChart(chartData) {
 //********************************* AI가 말해주는 주식정보 함수 Starts [#4.Ask AI Anything]****************************************//
 function loadAiChat() {
     alert("기능 준비중입니다.");
-    return
+    return;
     try {
         //앞선 데이터들 모두 클리어(?!) 기획을.. 어케할지 고민
             /**

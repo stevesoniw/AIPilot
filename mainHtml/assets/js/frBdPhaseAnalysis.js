@@ -1,4 +1,4 @@
-//****************************** [1ST GNB][7TH MENU]유사국면 함수 Starts *******************************//  
+//****************************** [1ST GNB][6TH MENU]유사국면-채권 함수 Starts *******************************//  
 function openSimTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("similarity-tab-content");
@@ -354,8 +354,7 @@ function generateMultiAnalysis() {
         return;
     }
     //console.log("Sending data:", { selectedData, targetDateStart, targetDateEnd, nSteps, nGraphs,weights });
-
-    document.getElementById('loading_bar_similarity').style.display = 'block';                                
+    document.getElementById('loading_bar_multi').style.display = 'block';                                
     fetch('/similarity/multivariate-analyze/', {
         method: 'POST',
         headers: {
@@ -385,13 +384,13 @@ function generateMultiAnalysis() {
         // 차트 생성 함수 호출
         generateMultiHighCharts(originalChartData, 'multiOriginalChartContainer');
         generateMultiHighCharts(alignedChartData, 'multiAlignedChartContainer');*/
-        document.getElementById('loading_bar_similarity').style.display = 'none';    
+        document.getElementById('loading_bar_multi').style.display = 'none';    
         createAndPopulateChartContainers(data.chart_data);
         
     })
     .catch(error => {
         console.error('Error fetching multi similarity data:', error);
-        document.getElementById('loading_bar_similarity').style.display = 'none'; 
+        document.getElementById('loading_bar_multi').style.display = 'none'; 
     });
 }
 
@@ -457,7 +456,7 @@ function generateVariationAnalysis() {
 
     //console.log("Sending data:", JSON.stringify(payload));
 
-    document.getElementById('loading_bar_similarity').style.display = 'block';                                
+    document.getElementById('loading_bar_variation').style.display = 'block';                                
     fetch('/similarity/variation-variate-analyze/', {
         method: 'POST',
         headers: {
@@ -484,7 +483,7 @@ function generateVariationAnalysis() {
         //console.log(data.chart_data.original);
         const originalChartData = data.chart_data.original;
         const alignedChartData = data.chart_data.aligned;
-        document.getElementById('loading_bar_similarity').style.display = 'none';    
+        document.getElementById('loading_bar_variation').style.display = 'none';    
         // Invoke the chart creation functions
         generateVariationHighCharts(originalChartData, 'variationOriginalChartContainer');
         generateVariationHighCharts(alignedChartData, 'variationAlignedChartContainer');
@@ -492,7 +491,7 @@ function generateVariationAnalysis() {
     .catch(error => {
         console.error('Error fetching similarity data:', error.message);
         alert(error.message);  // 서버 에러 메시지 또는 기본 에러 메시지를 alert로 표시
-        document.getElementById('loading_bar_similarity').style.display = 'none'; 
+        document.getElementById('loading_bar_variation').style.display = 'none'; 
     });
 }
 
@@ -607,4 +606,4 @@ function generateVariationHighCharts(chartData, containerId) {
 }
 
 
-//********************************* [1ST GNB][7TH MENU]유사국면 함수 Ends ***************************************//   
+//********************************* [1ST GNB][6TH MENU]유사국면-채권 함수 Ends ***************************************//   

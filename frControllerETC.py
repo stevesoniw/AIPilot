@@ -202,11 +202,9 @@ async def fetch_indicator_news(date_range: DateRange):
         print(from_date)
         selected_eng_names = ['market-news::financials', 'market-news::issuance', 'market-news::us-economy']
         news_json = rapidapi_indicator_news(selected_eng_names, from_date, to_date)
-        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        print(news_json)
+        #print(news_json)
         extracted_data = extract_news_data(news_json) 
-        print("ccccccccccccccccccccccccccc")
-        print(extracted_data)
+        #print(extracted_data)
         return extracted_data
     except Exception as e:
         # 오류 처리
@@ -361,30 +359,36 @@ def extract_title_and_content(json_str):
 async def gpt_request(request_data: dict):
     action = request_data.get("action")
     g_news = request_data.get("g_news")
+    llm = request_data.get("llm", None)
+    if llm == 'lama':
+        #news_sum_function = utilTool.lama3_news_sum
+        news_sum_function = utilTool.mixtral_news_sum        
+    else:
+        news_sum_function = utilTool.gpt4_news_sum    
 
     SYSTEM_PROMPT = ""
     if action == "translate":
         # 한국어로 번역하기에 대한 처리
         SYSTEM_PROMPT = "You are an expert in translation. Translate the title and content from the following JSON data into Korean. Return the translated content in the same JSON format, but only translate the title and content into Korean. Do not provide any other response besides the JSON format."
-        gpt_result = await utilTool.gpt4_news_sum(g_news, SYSTEM_PROMPT)
+        gpt_result = await news_sum_function(g_news, SYSTEM_PROMPT)
 
     elif action == "opinions":
         # AI 의견보기에 대한 처리
         SYSTEM_PROMPT = "Given the provided news data, please provide your expert analysis and insights on the current market trends and future prospects. Consider factors such as recent developments, market sentiment, and potential impacts on various industries based on the news. Your analysis should be comprehensive, well-informed, and forward-looking, offering valuable insights for investors and stakeholders. Thank you for your expertise"
-        digest_news = extract_title_and_content(g_news)        
-        gpt_result = await utilTool.gpt4_news_sum(digest_news, SYSTEM_PROMPT)
+        #digest_news = extract_title_and_content(g_news)        
+        gpt_result = await news_sum_function(g_news, SYSTEM_PROMPT)
 
     elif action == "summarize":
         # 내용 요약하기에 대한 처리
         SYSTEM_PROMPT = "You're an expert in data summarization. Given the provided JSON data, please summarize its contents systematically and comprehensively into about 20 sentences, ignoring JSON parameters unrelated to news articles."        
-        digest_news = extract_title_and_content(g_news)
-        gpt_result = await utilTool.gpt4_news_sum(digest_news, SYSTEM_PROMPT)
+        #digest_news = extract_title_and_content(g_news)
+        gpt_result = await news_sum_function(g_news, SYSTEM_PROMPT)
 
     elif action == "navergpt":
         # 네이버 뉴스에 대한 GPT 의견 묻기임 
         SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications."        
         digest_news = g_news
-        gpt_result = await utilTool.gpt4_news_sum(digest_news, SYSTEM_PROMPT)        
+        gpt_result = await news_sum_function(digest_news, SYSTEM_PROMPT)        
         
     else:
         gpt_result = {"error": "Invalid action"}

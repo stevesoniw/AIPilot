@@ -283,7 +283,8 @@ async function fetchIndicatorNews() {
             });
         }
     }catch (error) {
-            console.error('Error loading fetchAndDisplayIndicatorNews').style.display = 'none';
+            console.error('Error loading fetchAndDisplayIndicatorNews');
+            document.getElementById('loading_bar_indicatorNews').style.display = 'none';
     }
 }
 

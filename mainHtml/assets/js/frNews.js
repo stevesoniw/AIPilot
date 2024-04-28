@@ -1,5 +1,5 @@
 //************************************** 뉴스요청 함수 Starts ******************************************//
-
+var g_news;
 async function goNews() {
     const checkboxes = document.querySelectorAll("#categoryForm input[name='categories']");
     const selectedCategories = Array.from(checkboxes)
@@ -29,7 +29,10 @@ async function goNews() {
             body: JSON.stringify({categories: selectedCategories})
         });
 
-        seekingNewsData = await response.json();
+        g_news = await response.json();
+        //g_news = newsResult
+        const seekingNewsData = g_news;
+
         //g_news = newsResult
         //const seekingNewsData = JSON.parse(g_news);
         if (seekingNewsData) {
@@ -102,7 +105,7 @@ function displayNews(seekingNewsData) {
         console.error('Received data is not an array:', seekingNewsData);
     }
 }
-async function gptRequest(action) {
+async function gptRequest(action, llm) {
     if (g_news.length === 0) {
         alert("뉴스데이터가 조회된 후 클릭해주세요");
         return;
@@ -113,12 +116,21 @@ async function gptRequest(action) {
     document.getElementById('gpt-summary-container').style.display = 'none'; 
 
     //alert(JSON.stringify({action: action, g_news: g_news}));
+    const sanitizedNews = g_news.map(newsItem => ({
+        title: newsItem.title,  
+        content: newsItem.content 
+    }));    
+    console.log("**************************");
+    console.log(g_news);
+    console.log("**************************");    
+    console.log(sanitizedNews);
+
     const requestOptions = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({action: action, g_news: g_news})                
+        body: JSON.stringify({action: action, g_news: sanitizedNews, llm : llm})                
     };
 
     try {
@@ -143,6 +155,7 @@ async function gptRequest(action) {
         }
 
     } catch (error) {
+        document.getElementById('loading_bar_gpt').style.display = 'none';  
         console.error('Error:', error);
     }
 }

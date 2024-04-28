@@ -11,45 +11,65 @@
         <div class="similarity-section">
             <div class="similarity-form-group">
                 <label class="similarity-form-label">Target Date Range:</label>
-                <div style="display: flex; align-items: center; flex-grow: 1;">
-                    <span style="margin-right: 5px;">From:</span>
-                    <input type="date" id="similarity-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
-                    <span style="margin: 0 5px;">To:</span>
-                    <input type="date" id="similarity-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-03-11">
+                <div class="input-date-wrap">
+                    <input type="date" id="frst-targetDateStart" class="similarity-form-input similarity-range-input" value="2024-03-01">
+                    <span>~</span>
+                    <input type="date" id="frst-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-04-20">
                 </div>
             </div>
         </div>
         <div class="similarity-section">
             <div class="similarity-form-group">
                 <label class="similarity-form-label">Date Range for Analysis From:</label>
-                <div style="display: flex; align-items: center; flex-grow: 1;">
-                    <span style="margin-right: 5px;">From:</span>
-                    <input type="date" id="similarity-compareDateStart" class="similarity-form-input similarity-range-input" value="2021-01-01">
-                    <span style="margin: 0 5px;">To:</span>
-                    <input type="date" id="similarity-compareDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
+                <div class="input-date-wrap">
+                    <input type="date" id="frst-compareDateStart" class="similarity-form-input similarity-range-input" value="2020-01-01">
+                    <span>~</span>
+                    <input type="date" id="frst-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-12-31">
                 </div>
             </div>                            
         </div>
-        <div class="similarity-form-group">
-            <label for="similarity-nSteps" class="similarity-form-label">N-Steps Ahead (in days):</label>
-            <input type="range" id="single-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('single-nSteps', 'nSingleStepValue');">
-            <span id="nSingleStepValue" class="similarity-nSteps-value">0</span>
+        <div class="similarity-section">
+            <div class="similarity-form-group">
+                <label for="frst-nSteps" class="similarity-form-label">N-Steps Ahead (in days):</label>
+                <input type="range" id="frst-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('frst-nSteps', 'nFrstStepValue');">
+                <span id="nFrstStepValue" class="similarity-nSteps-value">0</span>
+            </div>
         </div>
-        <div class="similarity-form-group">
-            <label for="similarity-nSteps" class="similarity-form-label">No of Graphs:</label>
-            <input type="range" id="single-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('single-nGraphs', 'nSingleGraphValue');">
-            <span id="nSingleGraphValue" class="similarity-nSteps-value">1</span>
-        </div>                    
+        <div class="similarity-section bbd8">
+            <div class="similarity-form-group">
+                <label for="frst-nSteps" class="similarity-form-label">No of Graphs:</label>
+                <input type="range" id="frst-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('frst-nGraphs', 'nFrstGraphValue');">
+                <span id="nFrstGraphValue" class="similarity-nSteps-value">1</span>
+            </div>                    
+        </div>
+        <div class="similarity-section bbd8">
+            <div class="similarity-form-group">
+                <label for="frst-nThreshold" class="similarity-form-label">Thresholds:</label>
+                <input type="range" id="frst-nThresholds" min="0" max="1" value="0" step="0.1" class="similarity-form-input" oninput="updateValue('frst-nThresholds', 'nFrstThresholdValue');">
+                <span id="nFrstThresholdValue" class="similarity-nSteps-value">0</span>
+            </div>                    
+        </div>        
         <div style="text-align: center;">
-            <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateSimilarityAnalysis();">Generate</button>
+            <button class="similarity-button" id="frst-generateButton" onClick="javascript:generateFsSimilarityAnalysis();">Generate</button>
         </div>
-        <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
+        <div id="loading_bar_frst" class="loading_bar" style="margin-left: 0px;">
             <img src="/static/assets/images/LoadingBar_E.gif">
             <p>유사국면 데이터 서치중입니다.</p>
         </div>                          
                 
-        <div id="similarityOriginalChartContainer"></div>
-        <div id="similarityAlignedChartContainer"></div>
+        <div id="frstOriginalChartContainer" style="overflow: hidden;width:100%;height:500px;"></div>
+        <div id="frstAlignedChartContainer" style="overflow: hidden;width:100%;height:500px;"></div>
+        <div id="frstNewsSearch" class="frst-news-container">
+            <h2 class="frst-news-main-title">뉴스 검색</h2>
+            <h3 class="frst-news-sub-title">과거 유사기간의 뉴스를 검색해보세요</h3>
+            <div class="frst-news-date-inputs">
+                <input type="date" id="frst-news-from-date" class="frst-news-date-input" value="2020-01-01">
+                <span> - </span>
+                <input type="date" id="frst-news-to-date" class="frst-news-date-input" value="2020-01-30">
+            </div>
+            <button class="frst-news-search-btn" onclick="frstPastNews();">Search</button>
+            <div id="frstNewsResults" class="frst-news-results"></div> 
+        </div>
     </div>    
 </div>
 

@@ -1,24 +1,30 @@
+from datetime import datetime
 import pandas as pd
 import numpy as np
-from typing import List
-from dtaidistance import dtw
+from typing import List, Tuple
+import math
+import yfinance as yf
+import finnhub
 import plotly.graph_objects as go
 from plotly.io import to_json
-from datetime import datetime
 from sklearn.preprocessing import MinMaxScaler
 from pydantic import BaseModel
-from fastapi import HTTPException, APIRouter
 from scipy.stats import pearsonr
+import scipy.stats
+from dtaidistance import dtw
+from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
-import math
+import requests
 import json
-
 import logging
+import config
 
 #SECRET_KEY = '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'
 
 logging.basicConfig(level=logging.DEBUG)
 smController = APIRouter()
+rapidAPI = config.RAPID_API_KEY
+finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
 CONTROLLER = True
 
 #################################################### [유사국면 - 단일지수 처리] Starts #################################################
@@ -635,3 +641,228 @@ def analyze_time_series(request: AnalysisRequestVariation):
     })    
            
 ###################################################### [유사 변동 분석 처리] Ends ###################################################
+
+#################################################### ["해외주식" >> 유사국면 분석] Starts #################################################
+def fs_have_overlap(range1, range2):
+    start1, end1, _ = range1
+    start2, end2, _ = range2
+    return start1 <= end2 and start2 <= end1
+
+def fs_remove_overlaps(ranges):
+    non_overlapping = [ranges[0]]
+    for r1 in ranges[1:]:
+        overlap = False
+        for r2 in non_overlapping:
+            if fs_have_overlap(r1, r2):
+                overlap = True
+                break
+        if not overlap:
+            non_overlapping.append((pd.to_datetime(r1[0]), pd.to_datetime(r1[1]), r1[2])) # Start, End, Distance
+    return non_overlapping
+
+def fs_get_start_end_score(df, dateScore, target_distance):
+    result = []
+    for from_date in dateScore:
+        score = dateScore[from_date]
+        started_data = df.loc[from_date:][:target_distance]
+        from_date = datetime.strptime(from_date, "%Y-%m-%d")
+        to_date = started_data.index[-1]
+        result.append((from_date, to_date, score))
+    return result
+
+def fs_compute_distance(df: pd.DataFrame, target_input: Tuple[str, str], compare_input: Tuple[str, str], target_distance: int) -> dict:
+    matrix = {}
+    target_data = df.loc[target_input[0]: target_input[1]]
+    target_data = target_data / target_data.values[0]
+    target_values = np.array(target_data.values).reshape(-1)
+    target_values -= target_values[0]
+    compare_data = df.loc[compare_input[0]: compare_input[1]]
+
+    for i in range(len(compare_data) - target_distance + 1):
+        sliced_data = compare_data.iloc[i: i + target_distance, 0]
+        sliced_data = sliced_data / sliced_data.values[0]
+        compare_values = np.array(sliced_data).reshape(-1)
+        compare_values -= compare_values[0]
+        distance = dtw.distance_fast(target_values, compare_values, window = int(target_distance * 0.2), inner_dist = 'squared euclidean')
+        pearson_corr = scipy.stats.pearsonr(target_values, compare_values)[0]
+        matrix[sliced_data.index[0].strftime("%Y-%m-%d")] = (1 / (1 + distance)) * 0.5 + 0.5 * abs(pearson_corr)
+    return matrix
+
+
+def fs_create_figure(sample_data, target_date, selected_data, values_list, subtract=False, n_steps = 0):
+
+    chart_data = {
+        "chart": {"type": "line"},
+        "title": {"text": "Graphs"},
+        "xAxis": {"categories": []},
+        "yAxis": {"title": {"text": "Value"}},
+        "series": []
+    }
+
+    if n_steps > 0:
+        get_length = len(sample_data.loc[target_date[0]: target_date[1]])
+        target_data = sample_data[target_date[0]:][: get_length + n_steps]
+        target_data.reset_index(drop=True, inplace=True)
+    else:
+        target_data = sample_data.loc[target_date[0]: target_date[1]]
+        target_data.reset_index(drop=True, inplace=True)
+
+    if subtract:
+        target_trace = (target_data[selected_data] / target_data[selected_data].iloc[0])
+        target_trace = (target_trace - target_trace[0])
+    else:
+        target_trace = target_data[selected_data]
+
+    chart_data["xAxis"]["categories"] = target_data.index.tolist()
+    chart_data["series"].append({"name": f"Target: {target_date[0]} to {target_date[1]}", "data": target_trace.tolist()})
+
+    for i, (start_date, end_date, score) in enumerate(values_list, 1):
+        if n_steps > 0:
+            get_length = len(sample_data.loc[start_date:end_date])
+            sliced_data = sample_data[start_date:][:get_length + n_steps]
+            sliced_data.reset_index(drop=True, inplace=True)
+        else:
+            sliced_data = sample_data.loc[start_date:end_date]
+            sliced_data.reset_index(drop=True, inplace=True)
+
+        if subtract:
+            sliced_trace = (sliced_data[selected_data] / sliced_data[selected_data].iloc[0])
+            sliced_trace = (sliced_trace - sliced_trace[0])
+        else:
+            sliced_trace = sliced_data[selected_data]
+
+        chart_data["series"].append({"name": f"Graph {i}: {start_date} to {end_date} ({round(score, 5)})", "data": sliced_trace.tolist()})
+
+    return json.dumps(chart_data)
+
+
+class AnalysisRequestFrStock(BaseModel):
+    selected_data: str
+    target_date_start: str
+    target_date_end: str
+    compare_date_start: str
+    compare_date_end: str
+    n_graphs: int 
+    n_steps: int
+    threshold: float
+@smController.post("/similarity/foreign-stock-analyze/")
+async def analyze_time_series(data: AnalysisRequestFrStock):
+    target_start_date = data.target_date_start
+    target_end_date = data.target_date_end
+    analysis_start_date = data.compare_date_start
+    analysis_end_date = data.compare_date_end
+        
+    target_date = [target_start_date, target_end_date]
+    compare_date =  [analysis_start_date, analysis_end_date]
+
+    if pd.to_datetime(target_date[0]) <= pd.to_datetime(compare_date[1]):
+        raise HTTPException(status_code=400, detail="TARGET DATE RANGE and DATE RANGE FOR ANALYSIS should not overlap!")
+
+    print("*********************************************************")
+    print(data.selected_data)
+    print(data.target_date_start)
+    print(data.target_date_end)
+    print(data.n_steps)
+    print(data.n_graphs)
+    print(data.threshold)
+    print("*********************************************************")
+
+    df = yf.download(data.selected_data)['Adj Close']
+    df = df.reset_index()
+    df.columns = ['Date', data.selected_data]
+    df.index = pd.to_datetime(df['Date'])
+    df.drop(columns = ['Date'], axis=1, inplace = True)
+    df = df.sort_index(ascending=True)
+
+    target_distance = len(df.loc[target_date[0]: target_date[1]])
+
+    similarity_scores = fs_compute_distance(df, target_date, compare_date, target_distance)
+    start_end_distance_list = fs_get_start_end_score(df, similarity_scores, target_distance)
+    start_end_distance_list = sorted(start_end_distance_list, key=lambda x: x[2], reverse=CONTROLLER)
+    filtered_start_end_distance_list = fs_remove_overlaps(start_end_distance_list)
+
+    filtered_start_end_distance_list = [entry for entry in filtered_start_end_distance_list if entry[2] >= data.threshold][:data.n_graphs]
+
+    fs_superimpose_target_original = fs_create_figure(df, target_date, data.selected_data, filtered_start_end_distance_list, subtract=False, n_steps = data.n_steps)
+    fs_superimpose_target_aligned = fs_create_figure(df, target_date, data.selected_data, filtered_start_end_distance_list, subtract=True, n_steps = data.n_steps)
+
+    print(fs_superimpose_target_original)
+    print("********************")
+    print(fs_superimpose_target_aligned)
+    print("********************")
+    
+    #chart_data = {
+    #    "original": fs_superimpose_target_original.to_json(),
+    #    "aligned": fs_superimpose_target_aligned.to_json()
+    #}
+        
+    return JSONResponse(content={
+        "chart_data": {
+            "original": fs_superimpose_target_original,  
+            "aligned": fs_superimpose_target_aligned     
+        }
+    })  
+########### [과거 뉴스 검색] ###########   
+# seeking alpha 뉴스에서 쓸데없는 파라미터들 없애기
+def extract_news_data(news_json):
+    extracted_data = []
+    for item in news_json['data']:
+        news_item = item['attributes']
+        links = item['links']
+        # URL 처리: 'self' 키의 값에 'https://seekingalpha.com'를 조건부로 추가
+        self_link = links.get('self')
+        full_link = f'https://seekingalpha.com{self_link}' if self_link else None
+
+        extracted_item = {
+            'title': news_item.get('title', 'No title provided'),
+            'publishOn': news_item.get('publishOn', None),
+            'gettyImageUrl': news_item.get('gettyImageUrl', None),
+            'link': full_link
+        }
+        extracted_data.append(extracted_item)
+    return extracted_data
+
+
+def rapidapi_indicator_news(ticker, from_date, to_date ):
+    url = "https://seeking-alpha.p.rapidapi.com/news/v2/list-by-symbol"
+    querystring = {"id": ticker , "until": to_date, "since" : from_date, "size": "25", "number": "1"}
+    headers = {
+	    "X-RapidAPI-Key": rapidAPI,
+	    "X-RapidAPI-Host": "seeking-alpha.p.rapidapi.com"
+    }    
+        
+    response = requests.get(url, headers=headers, params=querystring)
+    return response.json()    
+
+# Finnhub 뉴스는 Free Tier인 경우 1년치만 줌. 일단 보류 
+def finnhub_company_news(ticker, from_date, to_date):
+    past_news = finnhub_client.company_news(ticker, _from=from_date, to=to_date)
+    #print("*****************")
+    #print(past_news)
+    #print("*****************")
+    return past_news
+    
+    
+# 과거 뉴스 검색해오기 
+class DateRange(BaseModel):
+    ticker : str
+    from_date: int
+    to_date: int
+@smController.post("/similarity/frstPastNews/")
+async def frst_past_news(date_range: DateRange):
+    try:
+        ticker = date_range.ticker
+        from_date = date_range.from_date
+        to_date = date_range.to_date        
+        news_json = rapidapi_indicator_news(ticker, from_date, to_date)
+        #news_json = finnhub_company_news(ticker, from_date, to_date)
+        #print(news_json)
+        extracted_data = extract_news_data(news_json) 
+        print(extracted_data)
+        return extracted_data
+    except Exception as e:
+        # 오류 처리
+        print("Error fetching bond news:", e)
+        return {"error": "Failed to fetch bond news"}
+
+
