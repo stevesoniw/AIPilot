@@ -1,6 +1,101 @@
 let data = null;
 let selectedSpeakers = [];
+// FOMC 페이지 내에서 Menu탭 이동
+function fomcMenuChange(type){
+    let htmlPath = '';
+    if(type === 'press'){
+        htmlPath = 'frSocialPress.html';
+        fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');        
+    }else if(type === 'summary'){
+        htmlPath = 'frSocialData.html';
+        getFOMCSpeeches();
+    }else{
+        htmlPath = 'frSocialAnaysis.html';
+    }
+    $('#right-area').load(htmlPath); // HTML 파일의 내용을 로드하여 right-area에 삽입
+}
 
+/********************************** [프레스 릴리스 ] ******************************************/
+// FOMC 사이트가서 데이터 긁어온다 
+async function fomcScrapingAPI(url) {
+    try {
+        const response = await fetch(url);
+        if (response.ok) {
+            const data = await response.json();
+            displayFomcData(data);
+        } else {
+            console.error('Failed to fetch fomc main data:', response.status);
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+    }
+} 
+
+// FOMC 메인 타이틀 뉴스들 보여주기
+function displayFomcData(data) {
+    console.log(data);
+    const container = document.getElementById('fomc_press_releases');
+    container.innerHTML = ''; 
+    data.forEach(item => {
+        const div = document.createElement('div');
+        // Updated class name to match new naming convention
+        div.className = 'fomc-release-item'; 
+        div.innerHTML = `
+            <h3 data-link="${item.link}">${item.title}</h3>
+            <div class="dis-flex">
+                <p>Date: ${item.datetime}</p>
+                <p>Press Type: ${item.press_type}</p>
+            </div>
+            <button class="fomc-release-summary-btn" onclick="fetchFomcReleaseDetail('${item.link}', this.parentElement.querySelector('.fomc-release-detail'))">Press Release AI 요약내용 보기</button>
+            <div class="fomc-release-detail"></div>
+        `;
+        container.appendChild(div);
+        document.getElementById('fomc_press_releases').style.display = 'block';   
+    });
+}
+
+// FOMC 상세 데이터 다시 스크래핑 
+async function fetchFomcReleaseDetail(link, detailContainer) {
+    try {
+        var loadingText = document.getElementById('loading-text-fomc-press');
+        loadingText.textContent = 'Press Release 내용분석중입니다. 조금만 기다려주세요.';
+        document.getElementById('loading_bar_fomc_press').style.display = 'block';
+        const response = await fetch(`/fomc-scraping-details-release?url=${encodeURIComponent(link)}`);
+        if (response.ok) {
+            let detailData = await response.text();
+            // \n을 <br>로 변환
+            detailData = detailData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
+            detailData = detailData.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
+            // 상세 데이터를 표시할 새로운 div 생성
+            let detailDiv = document.createElement('div');
+            detailDiv.className = 'fomc-detail-content';
+            detailDiv.innerHTML = detailData;
+            
+            detailContainer.innerHTML = '';
+            detailContainer.appendChild(detailDiv);
+            //약간 텀 주자
+            setTimeout(() => {
+                detailContainer.classList.remove('fomc-detail-hiddenNews');
+                detailContainer.classList.add('fomc-detail-shownNews');
+                detailContainer.style.display = 'block'; 
+                const totalHeight = detailContainer.scrollHeight;
+                detailContainer.style.maxHeight = `${totalHeight}px`; // 도저히 안됨ㅠ지연 후 maxHeight 설정하자. 
+            }, 2);                  
+        } else {
+            console.error('Failed to fetch detail:', response.status);
+            detailContainer.innerHTML = '<p>Error loading details.</p>';
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+        detailContainer.innerHTML = '<p>Error loading details.</p>';
+    } finally {
+        var loadingText = document.getElementById('loading-text-fomc-press');
+        loadingText.textContent = '데이터 로딩중입니다.';
+        document.getElementById('loading_bar_fomc_press').style.display = 'none';
+    }
+}
+
+/*********************************  [ 요약 ] **************************************************/
 // FOMC Speech 크롤링하는 함수
 async function getFOMCSpeeches() {
     try {

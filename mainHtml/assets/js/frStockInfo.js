@@ -51,6 +51,7 @@ async function loadEarningData() {
         document.getElementById('loading_bar_fingpt').style.display = 'block';                    
         //뉴스
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
+        document.getElementById('foreignTickerNewsSum').style.display = 'none';
         document.getElementById('foreignTickerNewsArea').style.display = 'none';
         document.getElementById('fomc-press-releases').style.display = 'none';
         //기본정보
@@ -296,6 +297,8 @@ async function loadForeignStockNews() {
     removeButtonOn('getEarningInfo');
     removeButtonOn('getStockInfo');      
     document.getElementById('loading_bar_foreignnews').style.display = 'block';
+    //뉴스써머리 함수 따로 호출!
+    loadNewsSummary(ticker);
     try {
         //파일 있는지 먼저 체크하도록 수정
         const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -349,7 +352,7 @@ async function loadForeignStockNews() {
     } finally {
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         //FOMC 호출 연이어서..
-        fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');
+        //fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');
     }
 }
 function toggleVisibility(element) {
@@ -362,6 +365,31 @@ function toggleVisibility(element) {
         // 접기ㅋ
         element.classList.add('hiddenNews');
         element.style.maxHeight = '0';
+    }
+}
+//많이 보는 종목만 newsSummary 첨에 생성해서 보여주기 
+async function loadNewsSummary(ticker) {
+    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const container = document.getElementById('foreignTickerNewsSum');
+    container.innerHTML = ''; 
+    const url = `/batch/stocknews/${ticker}/aisummary_${ticker}_${todayDate}.txt`;
+  
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Failed to fetch the summary file');
+        }
+        let textData = await response.text();
+        textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
+        textData = textData.replace(/- \s*/g, '<br>');
+        textData = textData.replace(/###\s*/g, '<br><br>');
+        textData = textData.replace(/(\d+\.\s+)/g, '<br>$1');
+        
+        container.innerHTML = `<p>${textData}</p>`;
+        container.style.display='block';
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = ''; 
     }
 }
 
@@ -448,6 +476,7 @@ function displayAnalysisResult(data, webUrl, newsId) {
     }
 }
 // FOMC 사이트가서 데이터 긁어온다 
+/**
 async function fomcScrapingAPI(url) {
     try {
         const response = await fetch(url);
@@ -556,7 +585,6 @@ async function fetchFomcReleaseDetail(link, detailContainer) {
         if (response.ok) {
             let detailData = await response.text();
             // \n을 <br>로 변환
-            detailData = detailData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
             detailData = detailData.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
             // 상세 데이터를 표시할 새로운 div 생성
             let detailDiv = document.createElement('div');
@@ -585,7 +613,7 @@ async function fetchFomcReleaseDetail(link, detailContainer) {
         loadingText.textContent = '데이터 로딩중입니다.';
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
     }
-}
+}**/
 
             
 //********************************** AI가 말해주는 주식정보 함수 Ends [#2.Get ForeignStockNewsInfo]**************************************//        
@@ -625,6 +653,7 @@ async function loadBasicInfo() {
     document.getElementById('gptStockwaveArea').style.display = 'none';
     //뉴스
     document.getElementById('loading_bar_foreignnews').style.display = 'none';
+    document.getElementById('foreignTickerNewsSum').style.display = 'none';
     document.getElementById('foreignTickerNewsArea').style.display = 'none';
     document.getElementById('fomc-press-releases').style.display = 'none';
     //기본정보

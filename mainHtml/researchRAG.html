@@ -9,18 +9,30 @@
     </div>
 
     <form id="file-upload-form" enctype="multipart/form-data">    
-    <div class="upload-file-wrap">
-        <div class="upload-box">
-            <div id="drop-file" class="drag-file">
-                <img src="/static/assets/images/upload-file-ic.png" class="image" alt="" />
-                <p class="message">Drag and drop files here</p>
-                <label for="chooseFile" class="upload-label">Choose File</label>
+    <div class="upload-area-wrap">        
+        <div class="upload-file-wrap">
+            <div class="upload-box">
+                <div id="drop-file" class="drag-file">
+                    <img src="/static/assets/images/upload-file-ic.png" class="image" alt="" />
+                    <p class="message">Drag and drop files here</p>
+                    <label for="chooseFile" class="upload-label">Choose File</label>
+                </div>
+                <input type="file" id="chooseFile" name="files" class="file"  multiple />
             </div>
-            <input type="file" id="chooseFile" name="files" class="file"  multiple />
-        </div>
-        <div id="showfiles" class="files"></div>
-        <div id="metainfo" class="layerHidden"></div>
-    </div> 
+            <div id="showfiles" class="files"></div>
+            <div id="metainfo" class="layerHidden"></div>
+        </div> 
+        <div class="upload-check-area">
+            <label class="upload-checkbox">
+                <input type="checkbox" name="researchGPT4" id="researchGPT4" value="gpt" checked>
+                <span class="checkbox-label">GPT4 활용</span>
+            </label>
+            <label class="upload-checkbox">
+                <input type="checkbox" name="researchLama3" id="researchLama3" value="lama">
+                <span class="checkbox-label">Lama3 활용</span>
+            </label>
+        </div>        
+    </div>
     </form>
 
 

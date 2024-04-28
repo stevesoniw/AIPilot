@@ -162,7 +162,7 @@ async def process_stock_main_news(symbols):
             extracted_finnhub = await fetch_news_finnhub(symbol)
             prompt = ("The following content is news data. Execute as the system prompt instructed. "
                       "Please make sure to respond in Korean. Attach HTML tags so that your forecast "
-                      "can appear in '#ff1480' color. Your response will be displayed on an HTML screen. Therefore, include appropriate <br> tags and other useful tags to make it easy for people to read."
+                      "can appear in '#ff1480' color. Your response will be displayed on an HTML screen. Therefore, include many appropriate <br> tags and other useful tags to make it easy for people to read."
                       "News Data : " + str(extracted_seekingalpha) + str(extracted_finnhub))
             summary = await gpt4_news_sum(prompt)
             #summary = await lama3_news_sum(prompt)

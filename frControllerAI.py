@@ -88,62 +88,6 @@ async def get_financial_stockNews(ticker: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-# FOMC 데이터 스크래핑 [1차 press relase 타이틀목록 조회용] 
-@frControllerAI.get("/fomc-scraping-release/")    
-def fetch_fomc_press_release(url: str):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
-            data = response.content.decode('utf-8-sig')
-            json_data = json.loads(data)[:10]  
-            data_list = []
-            for item in json_data:
-                datetime = item.get("d")
-                title = item.get("t")
-                press_type = item.get("pt")
-                link = "https://www.federalreserve.gov" + item.get("l") 
-                
-                data_list.append({
-                    'datetime': datetime,
-                    'title': title,
-                    'link': link,
-                    'press_type': press_type
-                })
-            return data_list
-        else:
-            return "Failed to fetch FOMC title data with status code: {}".format(response.status_code)
-    except Exception as e:  
-        raise HTTPException(status_code=400, detail=str(e))    
-
-#print(fetch_fomc_press_release('https://www.federalreserve.gov/json/ne-press.json'))
-# FOMC 데이터 스크래핑 [1차 press relase 상세내용 조회용] 
-@frControllerAI.get("/fomc-scraping-details-release/")    
-async def fetch_fomc_press_release(url: str):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
-            data = response.content.decode('utf-8-sig')
-            
-            soup = BeautifulSoup(data, 'html.parser')
-            # 타이틀을 뽑고
-            title = soup.find('h3', class_='title').text.strip()
-            # 콘텐츠를 뽑고
-            contents = soup.find('div', id='article').find_all('p')
-            contents_text = '\n'.join(p.text for p in contents if 'article__time' not in p.get('class', []))
-            # join해서 gpt로 던지자 
-            data_list = f"Title: {title}\nContents:\n{contents_text}"
-
-            SYSTEM_PROMPT = "너는 뉴스데이터 분석전문가야. 다음 뉴스 데이터를 7줄로 심도있게 요약해줘. 타이틀과 요약으로 나누어서 내용을 보여주고 이 뉴스가 향후 시장경제에 미치게 될 너의 전망도 같이 알려줘"
-            summary = await utilTool.gpt4_news_sum(data_list, SYSTEM_PROMPT)
-            return summary            
-        else:
-            return f"Failed to fetch FOMC release detail data with status code: {response.status_code}"
-    except Exception as e:  
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 ### Finnhub earnings_calendar 유료결제(분기 150달러)가 되어야 사용가능할듯.(Finnhub중에서도 Estimates쪽 결재필요)
 ### Freekey는 1분기꺼밖에 안옴. 일단 막아놓고 야후꺼로 조합해서 쓴다 ㅠㅠ
 '''@app.get("/api/get_earning_announcement/{ticker}")

@@ -106,7 +106,13 @@ class DropFile {
     }
 
     handleFiles(files) {
-        console.log("Handling files:", files);
+        var element = document.getElementById('loading-text-ragprompt'); 
+        var loading = document.getElementById('loading_bar_ragprompt');
+        if (element && loading) {
+          element.textContent = '리포트 업로드 중입니다'; 
+          loading.style.display = 'block';
+        }        
+        console.log("Handling files are:", files);
         files = [...files];
         files.forEach(file => this.previewFile(file));
     }
@@ -118,6 +124,7 @@ class DropFile {
             this.fileList.style.display = 'block'; // Make sure fileList is visible
             setTimeout(submitFiles, 100); 
         } else {
+            document.getElementById('loading_bar_ragprompt').style.display = 'none';
             console.log("File verification failed");
         }
     }
@@ -179,6 +186,7 @@ async function submitFiles() {
             const result = await response.json();
             console.log("Files uploaded successfully:", result);
             const fileElements = document.querySelectorAll('#showfiles .file'); 
+            document.getElementById('loading_bar_ragprompt').style.display = 'none';
             result.files_metadata.forEach((meta, index) => {
                 if (fileElements[index]) {
                     fileElements[index].setAttribute('data-file-id', meta.file_id);
@@ -186,11 +194,13 @@ async function submitFiles() {
             });
         } else {
             console.error("Failed to upload files. Status:", response.status);
+            document.getElementById('loading_bar_ragprompt').style.display = 'none';
             if (response.headers.get("Content-Type")?.includes("application/json")) {
                 console.error("Error details:", await response.json());
             }
         }
     } catch (error) {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
         console.error("Error uploading files:", error);
     }
 }
@@ -229,7 +239,19 @@ function getAnswerUsingPrompt(selectedPrompt){
     const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
     console.log(selectedPrompt);
     console.log(fileIds);
-    document.getElementById('loading_bar_ragprompt').style.display = 'block';
+    var element = document.getElementById('loading-text-ragprompt'); 
+    var loading = document.getElementById('loading_bar_ragprompt');
+    if (element && loading) {
+      element.textContent = '리포트 분석중 입니다'; 
+      loading.style.display = 'block';
+    }        
+    // 체크박스 value 체킹
+    let checkboxValue = null;
+    if (document.getElementById('researchGPT4').checked) {
+        checkboxValue = document.getElementById('researchGPT4').value;
+    } else if (document.getElementById('researchLama3').checked) {
+        checkboxValue = document.getElementById('researchLama3').value;
+    }
 
     fetch(`/rag/answer-from-prompt`, {
         method: 'POST',
@@ -238,7 +260,8 @@ function getAnswerUsingPrompt(selectedPrompt){
         },
         body: JSON.stringify({
             prompt_option: selectedPrompt,
-            file_ids: fileIds
+            file_ids: fileIds,
+            tool_used: checkboxValue
         })
     })
     .then(response => response.json())
@@ -298,6 +321,13 @@ function sendChatRequest(question) {
     }
     displayQuestion(question);
     const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+    // 체크박스 value 체킹
+    let checkboxValue = null;
+    if (document.getElementById('researchGPT4').checked) {
+        checkboxValue = document.getElementById('researchGPT4').value;
+    } else if (document.getElementById('researchLama3').checked) {
+        checkboxValue = document.getElementById('researchLama3').value;
+    }
     document.getElementById('loading_bar_ragprompt').style.display = 'block';
 
     fetch(`/rag/answer-from-prompt`, {
@@ -307,7 +337,8 @@ function sendChatRequest(question) {
         },
         body: JSON.stringify({
             question: question,
-            file_ids: fileIds
+            file_ids: fileIds,
+            tool_used: checkboxValue
         })
     })
     .then(response => response.json())
@@ -328,7 +359,7 @@ function sendChatRequest(question) {
 function displayAnswer(answer) {
     const answerWrap = document.createElement('div');
     answerWrap.className = 'answer-wrap';
-    answerWrap.innerText = answer; 
+    answerWrap.innerHTML = answer; 
     const talkListWrap = document.querySelector('.talk-list-wrap');
     talkListWrap.appendChild(answerWrap);
     answerWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });

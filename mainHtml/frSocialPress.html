@@ -1,0 +1,44 @@
+<div id="menud" class="menu-cont on">
+    <h2 class="s-tit">FOMC 연준위원 스피치 요약 및 성향분석</h2>
+    <h3 class="s-tit">
+        최근에 발표된 연준위원의 스피치의 내용을 생성형AI로 요약하고 스피치를 기반으로한 연준위원의 성향 변화 추이를 보여드립니다.
+        <br />
+        아래 참고사이트도 확인해보세요.
+        <br />
+        <span class="font-bold">한국자본시장연구원</span> : <a href="https://www.kcmi.re.kr" class="site-link" target="_blank">https://www.kcmi.re.kr</a>
+        <br />
+        <span class="font-bold">금융위원회 (영문)</span> : <a href="https://fsc.go.kr/eng/index" class="site-link" target="_blank">https://fsc.go.kr/eng/index </a>
+    </h3>
+    <ul class="tab-wrap">
+        <li class="tab-list active">
+            <a href="javascript:fomcMenuChange('press');">프레스릴리스</a>
+        </li>
+        <li class="tab-list">
+            <a href="javascript:fomcMenuChange('summary');">요약</a>
+        </li>
+        <li class="tab-list">
+            <a href="javascript:fomcMenuChange('analysis');">성향분석</a>
+        </li>
+    </ul>
+
+    <div class="form-container">
+        <div id="loading_bar_fomc_press" class="loading_bar" style="margin-left: 0px; position: fixed;">
+            <img src="/static/assets/images/LoadingBar_C.gif">
+            <p class="loading-text" id="loading-text-fomc-press">요약하는 중입니다. 잠시만 기다려주세요~</p>
+        </div> 
+        <div id="fomc_press_releases"></div>
+    </div>
+    <!-- <div class="view-more">
+        <button id="view-more" class="blue-big-btn" onclick="loadMoreData()">더보기</button>
+        <br>margin-left: 0px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;
+    </div> -->
+</div>
+<!-- 예시입니다.-->
+
+<!-- 팝업 시작 -->
+<div id="aiSummary">
+    <h5 class="pop-tit"></h5>
+    <div class="pop-cont-wrap">
+    </div>
+</div>
+

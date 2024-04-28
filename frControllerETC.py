@@ -19,6 +19,7 @@ import fredpy as fp
 from fredapi import Fred
 from openai import OpenAI
 import yfinance as yf
+from groq import Groq
 #personal 파일
 import config
 import utilTool
@@ -43,7 +44,7 @@ client = OpenAI(api_key = config.OPENAI_API_KEY)
 fp.api_key =config.FRED_API_KEY
 fred = Fred(api_key=config.FRED_API_KEY)
 rapidAPI = config.RAPID_API_KEY
-
+groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 ################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts #########################################
 
 # series id 받아서 데이터 갖고오는 공통함수 
@@ -228,6 +229,38 @@ def translate_gpt(text):
         logging.error("An error occurred in translate_gpt function: %s", str(e))
         return None       
 
+def translate_lama(text):
+    try:
+        SYSTEM_PROMPT = "다음 내용을 한국어로 번역해줘. url이나 링크 부분만 번역하지마" 
+        prompt = f"영어를 반드시 한국어로 번역해서 알려줘. url과 링크를 제외한 답변내용은 반드시 한국어여야해. 내용은 다음과 같아\n{text}"
+        response = groq_client.chat.completions.create(
+            model="mixtral-8x7b-32768",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in translate_lama function: %s", str(e))
+        return None    
+
+class FrNewsTranslateRequest(BaseModel):
+    title: str
+    content: str
+    method: str  # Method to decide the translation function (e.g., "lama" or "gpt")
+@frControllerETC.post("/frnews-translate")
+async def translate_text(request: FrNewsTranslateRequest):
+    if request.method.lower() == "lama":
+        translate_func = translate_lama
+    else:
+        translate_func = translate_gpt
+
+    translated_title = translate_func(request.title)
+    translated_content = translate_func(request.content)
+    
+    return {"title": translated_title, "content": translated_content}
+
 class TranslateRequest(BaseModel):
     title: str
     content: str
@@ -238,8 +271,6 @@ async def translate_text(request: TranslateRequest):
     translated_content = translate_gpt(request.content)
     
     return {"title": translated_title, "content": translated_content}
-
-
 ##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Ends ##################################
 ##################################[1ST_GNB][5TH_MENU] CALENDAR 보여주기 Starts #####################################################
 # 증시 캘린더 관련 함수 
@@ -407,7 +438,7 @@ async def gpttest():
     print(gpt_summary)
     
 asyncio.run(gpttest()) '''
-##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 Starts ###################################################
+#####################################[TEST 없어진 MENU] 해외 증시 마켓 PDF 분석 Starts ################################################
 
 class ImageData(BaseModel):
     image: str  # Base64 인코딩된 이미지 데이터
@@ -488,8 +519,68 @@ async def gpt4_pdf_talk(response_data):
     except Exception as e:
         print("An error occurred in gpt4_chart_talk:", str(e))
         return None
-##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 ENDS ################################################### 
-################################### FOMC 스피치 크롤링하고 요약해주기 ############################################
+##################################[TEST 없어진 메뉴] 해외 증시 마켓 PDF 분석 ENDS ################################################### 
+################################### [1ST GNB][4TH LNB] FOMC 데이터 분석 Starts############################################
+
+#############(1. FOMC PRESS Release 분석 )
+
+# FOMC 데이터 스크래핑 [1차 press relase 타이틀목록 조회용] 
+@frControllerETC.get("/fomc-scraping-release/")    
+def fetch_fomc_press_release(url: str):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
+            data = response.content.decode('utf-8-sig')
+            json_data = json.loads(data)[:10]  
+            data_list = []
+            for item in json_data:
+                datetime = item.get("d")
+                title = item.get("t")
+                press_type = item.get("pt")
+                link = "https://www.federalreserve.gov" + item.get("l") 
+                
+                data_list.append({
+                    'datetime': datetime,
+                    'title': title,
+                    'link': link,
+                    'press_type': press_type
+                })
+            return data_list
+        else:
+            return "Failed to fetch FOMC title data with status code: {}".format(response.status_code)
+    except Exception as e:  
+        raise HTTPException(status_code=400, detail=str(e))    
+
+#print(fetch_fomc_press_release('https://www.federalreserve.gov/json/ne-press.json'))
+# FOMC 데이터 스크래핑 [1차 press relase 상세내용 조회용] 
+@frControllerETC.get("/fomc-scraping-details-release/")    
+async def fetch_fomc_press_release(url: str):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
+            data = response.content.decode('utf-8-sig')
+            
+            soup = BeautifulSoup(data, 'html.parser')
+            # 타이틀을 뽑고
+            title = soup.find('h3', class_='title').text.strip()
+            # 콘텐츠를 뽑고
+            contents = soup.find('div', id='article').find_all('p')
+            contents_text = '\n'.join(p.text for p in contents if 'article__time' not in p.get('class', []))
+            # join해서 gpt로 던지자 
+            data_list = f"Title: {title}\nContents:\n{contents_text}"
+
+            SYSTEM_PROMPT = "너는 뉴스데이터 분석전문가야. 다음 뉴스 데이터를 7줄로 심도있게 요약해줘. 타이틀과 요약으로 나누어서 내용을 보여주고 이 뉴스가 향후 시장경제에 미치게 될 너의 전망도 같이 알려줘"
+            summary = await utilTool.gpt4_news_sum(data_list, SYSTEM_PROMPT)
+            return summary            
+        else:
+            return f"Failed to fetch FOMC release detail data with status code: {response.status_code}"
+    except Exception as e:  
+        raise HTTPException(status_code=400, detail=str(e))
+    
+#############(2.FOMC 위원들 Speech 요약 및  분석 )
+
 def scrape_speeches(url):
     """
     URL 입력했을 때 최근 FOMC 스피치 리스트를 가져오는 함수
@@ -605,3 +696,6 @@ async def summarize_speech(data: SpeechData):
 # @frControllerETC.get("/frSocialData")
 # async def get_fr_social_data(request: Request):
 #     return templates.TemplateResponse("frSocialData.html", {"request": request, "data": scraped_data})    
+
+
+################################### [1ST GNB][4TH LNB] FOMC 데이터 분석 Ends############################################

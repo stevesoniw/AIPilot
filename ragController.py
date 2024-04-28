@@ -11,6 +11,7 @@ from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
 from langchain_core.prompts import PromptTemplate
 from langchain.docstore.document import Document as Doc
+from langchain_groq import ChatGroq
 
 import os
 import asyncio
@@ -35,6 +36,7 @@ import utilTool
 
 logging.basicConfig(level=logging.DEBUG)
 ragController = APIRouter()
+chat = ChatGroq(temperature=0, groq_api_key=config.GROQ_CLOUD_API_KEY, model_name="mixtral-8x7b-32768")
 # FastAPI로 ChatPDF 인스턴스 초기화
 assistant = ChatPDF()
 askMulti = multiRAG()
@@ -109,6 +111,7 @@ async def answer_from_prompt(request: Request):
     file_ids = data.get("file_ids", [])
     prompt_option = data.get("prompt_option", None)
     question = data.get("question", None)
+    tool_used = data.get("tool_used", None) 
     if not file_ids:
         raise HTTPException(status_code=400, detail="No file IDs provided.")
     if not isinstance(file_ids, list) or not all(isinstance(x, int) for x in file_ids):
@@ -121,7 +124,9 @@ async def answer_from_prompt(request: Request):
         
         document = uploaded_files_data[file_id]['content']
         documents.append(document)
-        
+    
+    print("****************")
+    print(tool_used)
     #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
     #print(documents)
     #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
@@ -152,7 +157,11 @@ async def answer_from_prompt(request: Request):
         답변: """
         modified_prompt = PromptTemplate.from_template(prompt_template)
         #print(modified_prompt)
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+        if tool_used == "lama" :
+            print("lama3 working on..")
+            llm = chat    
+        else :
+            llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
         llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
         stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
         result = stuff_chain.run(documents[0])    

@@ -504,7 +504,15 @@
                                 getAnswerUsingPrompt(this.value);
                             }
                         });
-                        break;
+                        
+                        //체크박스 감시 
+                        document.querySelectorAll('.upload-checkbox input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.addEventListener('change', function() {
+                                let otherCheckboxId = this.id === 'researchGPT4' ? 'researchLama3' : 'researchGPT4';
+                                document.getElementById(otherCheckboxId).checked = false;
+                            });
+                        });
+                        break;                        
                         /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
                         /*
                         document.getElementById('fileRagInput').onchange = function() {

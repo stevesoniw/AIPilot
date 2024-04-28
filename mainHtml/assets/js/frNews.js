@@ -68,36 +68,9 @@ function displayNews(seekingNewsData) {
                     </div>
                 </div>
             `;
-            const translateButton = document.createElement('button');
-            translateButton.className = 'newstrans-button';
-            translateButton.textContent = '한국어 번역하기';
-            newsItem.querySelector('.news-content > div').appendChild(translateButton); // 버튼을 뉴스 컨텐츠 div에 추가
-
-            translateButton.addEventListener('click', async function() {
-                const loadingBar = document.createElement('div');
-                loadingBar.className = 'loading-bar';
-                loadingBar.innerHTML = '<img src="/static/assets/images/LoadingBar_C.gif" alt="Loading" />';
-                newsItem.appendChild(loadingBar);
-
-                try {
-                    const response = await fetch('/translate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ title: item.title, content: item.content })
-                    });
-                    if (!response.ok) throw new Error('Network response was not ok.');
-                    const translatedData = await response.json();
-
-                    newsItem.querySelector('.news-title').textContent = translatedData.title;
-                    newsItem.querySelector('.news-body').innerHTML = translatedData.content;
-                } catch (error) {
-                    console.error('Error:', error);
-                } finally {
-                    loadingBar.remove();
-                }
-            });
+            addTranslationButton(newsItem, item.title, item.content, 'lama', '한국어 번역하기(Lama)');
+            addTranslationButton(newsItem, item.title, item.content, 'gpt', '한국어 번역하기(GPT)');
+       
 
             newsContainer.appendChild(newsItem);
         });
@@ -105,6 +78,38 @@ function displayNews(seekingNewsData) {
         console.error('Received data is not an array:', seekingNewsData);
     }
 }
+
+function addTranslationButton(newsItem, title, content, method, buttonText) {
+    const translateButton = document.createElement('button');
+    translateButton.className = 'newstrans-button';
+    translateButton.textContent = buttonText;
+    newsItem.querySelector('.news-content > div').appendChild(translateButton);
+
+    translateButton.addEventListener('click', async function() {
+        const loadingBar = document.createElement('div');
+        loadingBar.className = 'loading-bar';
+        loadingBar.innerHTML = '<img src="/static/assets/images/LoadingBar_C.gif" alt="Loading" />';
+        newsItem.appendChild(loadingBar);
+
+        try {
+            const response = await fetch('/frnews-translate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, content, method })
+            });
+            if (!response.ok) throw new Error('Network response was not ok.');
+            const translatedData = await response.json();
+
+            newsItem.querySelector('.news-title').textContent = translatedData.title;
+            newsItem.querySelector('.news-body').innerHTML = translatedData.content;
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            loadingBar.remove();
+        }
+    });
+}
+
 async function gptRequest(action, llm) {
     if (g_news.length === 0) {
         alert("뉴스데이터가 조회된 후 클릭해주세요");
