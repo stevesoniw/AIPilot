@@ -89,6 +89,10 @@ function readYoutubeScript(actionType = 'read') {
     var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
     const contentArea = document.getElementById('aiSecLayerPopupContent');  
 
+    var loadingText = document.getElementById('loading_research_ai_text');
+    loadingText.textContent = 'Youtube 스크립트 수집중입니다.';
+    document.getElementById('loading_bar_research_ai').style.display = 'block';
+
     fetch('/api/youtube_data', {
         method: 'POST',
         headers: {
@@ -98,6 +102,7 @@ function readYoutubeScript(actionType = 'read') {
     })
     .then(response => response.json())
     .then(data => {
+        document.getElementById('loading_bar_research_ai').style.display = 'none';
         let transcript = data.transcript || 'Error loading data';
         // Replace occurrences of '니다' or '세요' with themselves followed by a line break
         transcript = transcript.replace(/(니 다|세 요)/g, '$1\n');
@@ -107,7 +112,8 @@ function readYoutubeScript(actionType = 'read') {
     
     .catch(error => {
         console.error('Error:', error);
-        contentArea.innerText = 'Failed to load data';
+        alert("Youtube 네트워킹에 실패했습니다.")
+        document.getElementById('loading_bar_research_ai').style.display = 'none';
     });      
     appendData("YouTube URL", url);
 }
@@ -124,7 +130,6 @@ function applyYT() {
 function toggleLayerPopup() {
     //const popup = document.getElementById('aiSecLayerPopup');
     //popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    alert("11");
     $('#aiSecLayerPopup').dialog({
         dialogClass : 'research-dialog',
         title : '',

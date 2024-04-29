@@ -242,7 +242,7 @@ def create_summary(docs):
     return result
 
 
-############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
+############################################[일단 없앤 기존메뉴] 리서치 RAG 테스트쪽할때 ############################################
 @ragController.post("/upload-file/")
 async def create_upload_file(file: UploadFile = File(...)):
     try:
@@ -272,7 +272,7 @@ async def process_message(message_body: Message):
     response_message = await assistant.ask(message.strip())
     return {"message": response_message}
 
-############################################[3RD GNB] [2ND LNB] AI 투자비서 테스트쪽 ############################################
+############################################[3RD GNB] [2ND LNB] 실험실-AI 투자비서 테스트쪽 ############################################
 @ragController.post("/rag/ai-sec-upload/")
 async def handle_ai_sec_file(
     file: UploadFile = File(...), 

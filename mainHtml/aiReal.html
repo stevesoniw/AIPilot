@@ -200,7 +200,8 @@
                 }
             }
             function guideTab(){
-                $('.left-area .list-dep').click(function(event){
+                //$('.left-area').on('click', '.list-dep', function(event){
+                $('.left-area').off('click', '.list-dep').on('click', '.list-dep', function(event){
                     event.preventDefault(); // 기본 동작 방지
                     var htmlPath = $(this).data('html'); // data-html 속성에서 HTML 파일 경로를 가져옴
                     $('.list-dep').removeClass('on');
@@ -221,6 +222,7 @@
                     }
                 });
             }
+            
             function initializeSelect2(selector, placeholderText) {
                 $(selector).select2({
                     placeholder: placeholderText,

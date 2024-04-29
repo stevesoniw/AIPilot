@@ -121,12 +121,10 @@ function drawChart(chartData, num) {
         }
     });
     container.style.display = 'block';
-    container.scrollIntoView({behavior: "smooth", block: "end"});
-    const spacer = document.createElement('div');
-    spacer.style.height = '200px';
-    document.body.appendChild(spacer);
-
-    window.scrollTo(0, document.body.scrollHeight);;
+    setTimeout(() => {
+        const element = container;
+        element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 200);  
 }
 //4. 유사국면 데이터 찾기 GOGO  (by son , not jay)
 async function similarTimeSearch() {

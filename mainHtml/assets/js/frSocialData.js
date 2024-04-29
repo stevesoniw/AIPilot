@@ -55,56 +55,65 @@ function displayFomcData(data) {
 }
 
 // FOMC 상세 데이터 다시 스크래핑 
+// FOMC 상세 데이터 다시 스크래핑
 async function fetchFomcReleaseDetail(link, detailContainer) {
-    try {
-        //파일이 이미 있으면, 서버가 아니라 파일에서 데이터 읽게 수정한다 (*속도개선)
-        const filename = link.split('/').pop().split('.')[0]; 
-        const filePath = `/batch/fomc/fomc_detail_${filename}.txt`;
-        const fileResponse = await fetch(filePath);
-        let detailData;        
-        if (fileResponse.ok) {
-            // 파일이 존재하면 파일의 내용을 사용
-            detailData = await fileResponse.text();
-        }else {
+    const detailButton = detailContainer.previousElementSibling;
+    
+    // 토글 기능을 추가
+    if (detailContainer.classList.contains('fomc-detail-shownNews')) {
+        detailContainer.classList.remove('fomc-detail-shownNews');
+        detailContainer.classList.add('fomc-detail-hiddenNews');
+        detailContainer.style.display = 'none'; 
+        detailButton.textContent = 'Press Release AI 요약내용 보기';
+        return;
+    } else {
+        try {
+            const filename = link.split('/').pop().split('.')[0]; 
+            const filePath = `/batch/fomc/fomc_detail_${filename}.txt`;
+            const fileResponse = await fetch(filePath);
+            let detailData;        
+            if (fileResponse.ok) {
+                detailData = await fileResponse.text();
+            } else {
+                var loadingText = document.getElementById('loading-text-fomc-press');
+                loadingText.textContent = 'Press Release 내용분석중입니다. 조금만 기다려주세요.';
+                document.getElementById('loading_bar_fomc_press').style.display = 'block';
+                    
+                const response = await fetch(`/fomc-scraping-details-release?url=${encodeURIComponent(link)}`);
+                if (!response.ok) {
+                    console.error('Failed to fetch detail:', response.status);
+                    detailContainer.innerHTML = '<p>Error loading details.</p>';
+                    return;
+                }     
+                detailData = await response.text();
+            }        
+            detailData = detailData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
+            detailData = detailData.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
+            let detailDiv = document.createElement('div');
+            detailDiv.className = 'fomc-detail-content';
+            detailDiv.innerHTML = detailData;
+            
+            detailContainer.innerHTML = '';
+            detailContainer.appendChild(detailDiv);
+            setTimeout(() => {
+                detailContainer.classList.remove('fomc-detail-hiddenNews');
+                detailContainer.classList.add('fomc-detail-shownNews');
+                detailContainer.style.display = 'block'; 
+                const totalHeight = detailContainer.scrollHeight;
+                detailContainer.style.maxHeight = `${totalHeight}px`;
+                detailButton.textContent = 'Press Release AI 요약 닫기';
+            }, 2);                  
+        } catch (error) {
+            console.error('An error occurred:', error);
+            detailContainer.innerHTML = '<p>Error loading details.</p>';
+        } finally {
             var loadingText = document.getElementById('loading-text-fomc-press');
-            loadingText.textContent = 'Press Release 내용분석중입니다. 조금만 기다려주세요.';
-            document.getElementById('loading_bar_fomc_press').style.display = 'block';
-                
-            const response = await fetch(`/fomc-scraping-details-release?url=${encodeURIComponent(link)}`);
-            if (!response.ok) {
-                console.error('Failed to fetch detail:', response.status);
-                detailContainer.innerHTML = '<p>Error loading details.</p>';
-                return;
-            }     
-            detailData = await response.text();
-        }        
-        // \n을 <br>로 변환
-        detailData = detailData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
-        detailData = detailData.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
-        // 상세 데이터를 표시할 새로운 div 생성
-        let detailDiv = document.createElement('div');
-        detailDiv.className = 'fomc-detail-content';
-        detailDiv.innerHTML = detailData;
-        
-        detailContainer.innerHTML = '';
-        detailContainer.appendChild(detailDiv);
-        //약간 텀 주자
-        setTimeout(() => {
-            detailContainer.classList.remove('fomc-detail-hiddenNews');
-            detailContainer.classList.add('fomc-detail-shownNews');
-            detailContainer.style.display = 'block'; 
-            const totalHeight = detailContainer.scrollHeight;
-            detailContainer.style.maxHeight = `${totalHeight}px`; // 도저히 안됨ㅠ지연 후 maxHeight 설정하자. 
-        }, 2);                  
-    } catch (error) {
-        console.error('An error occurred:', error);
-        detailContainer.innerHTML = '<p>Error loading details.</p>';
-    } finally {
-        var loadingText = document.getElementById('loading-text-fomc-press');
-        loadingText.textContent = '데이터 로딩중입니다.';
-        document.getElementById('loading_bar_fomc_press').style.display = 'none';
+            loadingText.textContent = '데이터 로딩중입니다.';
+            document.getElementById('loading_bar_fomc_press').style.display = 'none';
+        }
     }
 }
+
 
 /*********************************  [ 요약 ] **************************************************/
 // FOMC Speech 크롤링하는 함수
