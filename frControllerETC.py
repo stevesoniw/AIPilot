@@ -2,6 +2,7 @@
 import json
 import requests
 import httpx
+import os
 import asyncio
 from typing import Optional, List
 import base64
@@ -558,6 +559,7 @@ def fetch_fomc_press_release(url: str):
 async def fetch_fomc_press_release(url: str):
     try:
         response = requests.get(url)
+        # URL 예시 :: https://www.federalreserve.gov/newsevents/pressreleases/bcreg20240424a.htm
         if response.status_code == 200:
             # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
             data = response.content.decode('utf-8-sig')
@@ -573,6 +575,15 @@ async def fetch_fomc_press_release(url: str):
 
             SYSTEM_PROMPT = "너는 뉴스데이터 분석전문가야. 다음 뉴스 데이터를 7줄로 심도있게 요약해줘. 타이틀과 요약으로 나누어서 내용을 보여주고 이 뉴스가 향후 시장경제에 미치게 될 너의 전망도 같이 알려줘"
             summary = await utilTool.gpt4_news_sum(data_list, SYSTEM_PROMPT)
+            
+            ##### 파일 저장도 따로 한다!! (속도개선) #####
+                        # 파일 이름 추출
+            filename = url.split('/')[-1].split('.')[0] + '.txt'
+            save_path = f"batch/fomc/fomc_detail_{filename}"
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            with open(save_path, 'w', encoding='utf-8') as file:
+                file.write(summary)
+            
             return summary            
         else:
             return f"Failed to fetch FOMC release detail data with status code: {response.status_code}"

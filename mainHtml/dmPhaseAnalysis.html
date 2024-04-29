@@ -3,15 +3,16 @@
     <h2 class="s-tit">국내 주식 유사국면 찾기</h2>
     <h3 class="s-tit">특정 주식을 골라 유사국면을 검색해보세요</h3>
 
-    <div class="stock-search-box">
-        <select id="stockCodeSelect" style="width: 100%"></select>
-    </div>
+    <div class="input-container">
+        <div class="stock-search-box">
+            <select id="stockCodeSelect" style="width: 100%"></select>
+        </div>
+    </div>        
+    <p class="date-instruction">해당 종목의 차트데이터 확인을 위해 하단 날짜를 선택해주세요</p>
     <div class="date-selection">
-        <p class="date-instruction">"해당 종목의 차트데이터 확인을 위해 하단 날짜를 선택해주세요"</p>
-        <label for="fromDate">From</label>
         <input type="text" id="fromDate" name="fromDate">
-        <label for="toDate">To</label>
-        <input type="text" id="toDate" name="toDate"><br/>
+        ~
+        <input type="text" id="toDate" name="toDate">
         <button id="stockChartsearch" class="stockChartsearch" onclick="fetchChartData()">검색</button>
     </div>   
     <!-- 처음 차트가 실제 그려지는 영역임-->
@@ -20,14 +21,16 @@
         <p class="loading-text">차트 로딩중입니다.</p>
     </div>
     <div id="stockFirstChartContainer" class="stockChartContainer"></div>
-    <div id="date-select-2" class="date-selection">
-        <p class="date-instruction2">"현재 조회된 차트데이터와 유사한 과거 기록을 찾을 구간을 선택해주세요"</p>
-        <label for="fromDate">From</label>
-        <input type="text" id="fromDate_2" name="fromDate">
-        <label for="toDate">To</label>
-        <input type="text" id="toDate_2" name="toDate"><br/>
-        <button id="similarTimeSearch" class="stockChartsearch" onclick="similarTimeSearch()">유사국면 찾기</button>
-    </div> 
+
+    <div>
+        <p class="date-instruction2">현재 조회된 차트데이터와 유사한 과거 기록을 찾을 구간을 선택해주세요</p>
+        <div id="date-select-2" class="date-selection">
+            <input type="text" id="fromDate_2" name="fromDate_2">
+            ~
+            <input type="text" id="toDate_2" name="toDate_2">
+            <button id="similarTimeSearch" class="stockChartsearch" onclick="similarTimeSearch()">유사국면 찾기</button>
+        </div>
+    </div>
     <div id="loading_bar_secondStock" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">
         <p class="loading-text-similar">유사국면 차트 로딩중입니다.<br/>(유사국면 검색은 시간이 오래 걸릴 수 있습니다)</p>

@@ -375,6 +375,18 @@ label:hover {color: #fa7508;}
 .fomc-detail-shownNews{padding:0;}
 .fomc-detail-content{padding:25px;margin-top:30px;background:#c2dbf3;line-height:32px;border:1px solid #efefef;border-radius:0;box-shadow:none;}
 .fomc-detail-content .highlight_news{display:block;color:#2970ff;}
+/* FOCM 데이터 분석 > 프레스릴리스 시작 */
+.fomc-release-item{margin-top:30px;padding:20px;background:#f5f5ff;border:1px solid #efefef;}
+.fomc-release-item h3{color:#333;}
+.fomc-release-date-type{gap:5px;}
+.fomc-release-item .fomc-release-date{font-size:12px;padding:5px 10px;color:#333;background:#fff;border:1px solid #efefef;border-radius:4px;}
+.fomc-release-item .fomc-release-presstype{font-size:12px;padding:5px 10px;color:#333;background:#fff;border:1px solid #efefef;border-radius:4px;}
+.foreignTickerNews-analysis{background:#2970ff;}
+.fomc-release-summary-btn{margin:20px 0 0 0;padding:8px 12px;font-size:12px;background:#2970ff;border-radius:4px;}
+.fomc-release-summary-btn:hover{background:#2970ff;}
+.fomc-detail-content{font-size:15px;color:#555;line-height:30px;background:#fff;transition:none;}
+.fomc-detail-content .highlight_news{color:#111;font-weight:bold;}
+/* FOCM 데이터 분석 > 프레스릴리스 끝 */
 
     /* FOMC 연준위원 스피치 요약 및 성향분석 시작 */
 .font-bold{font-weight:500;}
@@ -434,7 +446,14 @@ label:hover {color: #fa7508;}
 .pop-cont-wrap{color:#333;line-height:24px;}
 .tab-wrap.dialog-tab{margin:15px 0;}
 .tab-wrap.dialog-tab .tab-list{padding:10px;font-size:13px;}
-    /* 팝업 끝 *//* FOMC 연준위원 스피치 요약 및 성향분석 끝 */
+    /* 팝업 끝 */
+/* FOMC 성향분석 시작 */
+.radio-row {display: flex; justify-content: flex-start; flex-wrap: wrap; gap:10px 30px;margin-bottom:20px;}
+.radio-group {display: flex; align-items: center; margin: 5px;}
+.radio-group label {white-space: nowrap;}
+.radio-group label:hover{color:inherit;}
+/* FOMC 성향분석 끝 */    
+/* FOMC 연준위원 스피치 요약 및 성향분석 끝 */
 
 /* [1ST GNB][5TH LNB] 캘린더 영역  */
 #chartPilot .event {border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9;}

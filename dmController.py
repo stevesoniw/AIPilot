@@ -318,9 +318,13 @@ async def find_similar_period(request: StockRequest):
     series_ref = np.array(hist_ref['Close'], dtype=np.double)
     series_full = np.array(hist_full['Close'], dtype=np.double)
     
+    hist_full.index = hist_full.index.tz_localize(None)
+    hist_ref.index = hist_ref.index.tz_localize(None)
+    
     # 참조 기간의 인덱스 찾기
-    ref_start_idx = hist_full.index.get_loc(hist_ref.index[0])
-    ref_end_idx = hist_full.index.get_loc(hist_ref.index[-1])    
+    ref_start_idx = hist_full.index.searchsorted(hist_ref.index[0])
+    ref_end_idx = hist_full.index.searchsorted(hist_ref.index[-1], side='right') - 1
+  
    
     # 참조 기간의 길이
     len_ref = len(series_ref)    

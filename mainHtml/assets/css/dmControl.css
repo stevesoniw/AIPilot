@@ -54,3 +54,16 @@
 .stockChartContainer2 {text-align: center; margin-top: 20px; margin-bottom: 300px; max-width: 800px; margin: auto;}
 .loading-text-similar {background-color: rgb(242, 234, 253); color: rgba(255, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px;}
 .moreToDev {height: 100px;}
+/* 유사국면 분석 시작 리뉴얼 추가작업*/
+.input-container .stock-search-box{width:100%;max-width:inherit;}
+.date-instruction{margin-top:30px;font-size:16px;color:#333;}
+.date-selection{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:15px;background:#fafaff;border:1px solid #d8d8d8;}
+#fromDate, #toDate, #fromDate_2, #toDate_2{margin:0;padding:5px 35px 5px 5px;color:#555;background:url('/static/assets/images/calendar_ic.png') no-repeat right;background-color:#fff;text-align:center;border:1px solid #d8d8d8;border-right:0;border-radius:0;cursor:pointer;}
+#fromDate, #toDate, #fromDate_2, #toDate_2:focus{border-color:inherit !important;}
+.stockChartsearch{margin:20px 0;padding:5px 15px;color:#333;font-size:14px;background:#fff;font-weight:500;border:1px solid #d8d8d8;}
+.stockChartsearch:hover{color:#fff;background:#2970ff;border:1px solid #2970ff;}
+.stockChartContainer{max-width:inherit;margin-top:30px;}
+#date-select-2{display:flex;max-width:inherit;margin-top:15px;}
+.date-instruction2{margin-top:40px;font-size:16px;color:#333;font-weight:normal;text-align:left;}
+.similarity-result{margin-top:15px;background:#fff;border:1px solid #d8d8d8;}
+/* 유사국면 분석 끝 */

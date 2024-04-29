@@ -28,6 +28,10 @@ async function fetchChartData() {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
     const stockCode = document.getElementById('stockCodeSelect').value;
+    if (!stockCode) {
+        alert('종목을 먼저 선택해주세요!');
+        return;
+    }
     //유사국면 차트 조회 후 다시 처음차트 조회하면 없애버리기 + 유사국면쪽 안보이게 리셋
     document.getElementById('stockSecondChartContainer').innerHTML = ''; 
     document.getElementById('date-select-2').style.display = 'none';
@@ -134,6 +138,7 @@ async function similarTimeSearch() {
     document.getElementById('loading_bar_secondStock').style.display = 'block';
     document.getElementById('similarityResult').style.display = 'none';
 
+    console.log(stockCode, fromDate, toDate, fromDate_2, toDate_2);
     try {
         const response = await fetch('/find-similar-period', {
             method: 'POST',
