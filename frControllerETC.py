@@ -3,6 +3,7 @@ import json
 import requests
 import httpx
 import os
+import logging
 import asyncio
 from typing import Optional, List
 import base64
@@ -11,9 +12,13 @@ from datetime import datetime, timedelta
 from google.cloud import vision
 from google.oauth2 import service_account
 from pydantic import BaseModel
+from urllib.parse import urlparse, parse_qs
 import pandas as pd
 import matplotlib
+from bs4 import BeautifulSoup
 matplotlib.use('Agg')
+import multiprocessing
+from functools import lru_cache
 #금융관련 APIs
 import finnhub
 import fredpy as fp
@@ -21,14 +26,14 @@ from fredapi import Fred
 from openai import OpenAI
 import yfinance as yf
 from groq import Groq
+from serpapi import GoogleSearch
 #personal 파일
 import config
 import utilTool
 #FAST API 관련
-import logging
 from fastapi import HTTPException, Request, APIRouter
 from fastapi.responses import JSONResponse
-from bs4 import BeautifulSoup
+#Langchain 관련
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
 from langchain_core.prompts import PromptTemplate
@@ -666,21 +671,16 @@ async def get_fr_social_data(request: Request):
 class SpeechData(BaseModel):
     title: str
     link: str
-@frControllerETC.post("/summarizeSpeech")
-async def summarize_speech(data: SpeechData):
-    speech_title = translate_gpt(data.title)  #타이틀 번역하기
-    speech_text = scrape_speech_content(data.link) # 링크 가서 내용 크롤링하기
-    # print(sample_text)
-    # Define prompt
+    
+
+@lru_cache(maxsize=None)  # 요약이 너무 오래 걸려서 한번 나온 결과는 캐싱한다
+def generate_content(text):
+    # Your function logic here
     prompt_template = """You are an economist tasked with summarizing speeches by Federal Open Market Committee (FOMC) members.
     Explain as if you are talking to someone who knows nothing about FOMC or economics. So, you have to explain economics terminology used in the text as well.
-
     너한테 FOMC 연설문 전체 내용을 줄 거야. 연설문의 주요 내용을 요약해줘. 고유명사는 괄호로 영어 원문도 보여줘.
-    
     대답은 한국어로 해줘. 답변은 500자 이내로 해줘. Speech에 없는 내용은 언급하지 마.
-    
     연설자를 가리킬 때는 항상 "연설자" 라고 말해. 다른 명칭을 사용하지 마. 
-    
     답은 항상 -입니다, -습니다 체로 해줘. 
     
     Speech:
@@ -691,22 +691,191 @@ async def summarize_speech(data: SpeechData):
     prompt = PromptTemplate.from_template(prompt_template)
 
     # Define LLM chain
-    llm = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo-preview", api_key=config.OPENAI_API_KEY, 
+    llm = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo", api_key=config.OPENAI_API_KEY, 
                      streaming=True)
     llm_chain = LLMChain(llm=llm, prompt=prompt)
 
     # Define StuffDocumentsChain
     stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text", verbose=True)
-    docs = Doc(page_content=speech_text)
-    result = stuff_chain.run([docs])
-    print(result)
-    return {"title": speech_title, "summary": result}
-
-# scraped_data = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2024-speeches.htm")
-
-# @frControllerETC.get("/frSocialData")
-# async def get_fr_social_data(request: Request):
-#     return templates.TemplateResponse("frSocialData.html", {"request": request, "data": scraped_data})    
+    docs = Doc(page_content=text)
+    return stuff_chain.run([docs])
 
 
-################################### [1ST GNB][4TH LNB] FOMC 데이터 분석 Ends############################################
+@frControllerETC.post("/summarizeSpeech")
+async def summarize_speech(data: SpeechData):
+    try:    
+        #파일 저장용 이름따내기
+        parsed_url = urlparse(data.link)
+        file_name_with_extension = os.path.basename(parsed_url.path)   
+        file_id = file_name_with_extension.split('.')[0]   
+        
+        speech_title = translate_gpt(data.title)  #타이틀 번역하기
+        speech_text = scrape_speech_content(data.link) # 링크 가서 내용 크롤링하기
+        summary = generate_content(speech_text)    
+            
+        result = {"title": speech_title, "summary": summary}
+        
+        #retrun 할 데이터를 파일로도 저장시킴(for 속도개선)
+        file_path = f"batch/fomc/fomc_speech_ai_sum_{file_id}.json"
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(result, f, ensure_ascii=False)  
+        return result    
+    except Exception as e:
+        print(f"Error saving file(at summarize_speech): {e}")
+        #파일저장에서 에러나도 어쨌든 리턴은 되게..
+        return result
+    
+
+#### 사람별로 관련 로이터 article 가져오는 함수 (serp api 활용)
+def get_articles_by_person(person):
+    params = {
+        #   "engine": "google_news",
+        "tbm": "nws",
+        "q": f"{person} Reuters",
+        "api_key": config.SERPAPI_API_KEY,
+        #   "tbs": "sbd:1", ##sort by date
+        "num": 20        
+    }
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        news_results = results["news_results"]
+        # print(news_results)
+        
+        # 출처가 로이터 인것만 필터링
+        reuters_articles = [article for article in news_results if article['source'] == 'Reuters']
+        # 타이틀에 사람 이름이 들어간 것만 필터링
+        filtered_articles = [article for article in reuters_articles if person.split()[-1].lower() in article['title'].lower()]
+        # 날짜 중복인 것들 중에 중복 제거
+        encountered_dates = set()
+        final_articles = []
+        
+        for article in filtered_articles:
+            if article['date'] not in encountered_dates:
+                final_articles.append(article)
+                encountered_dates.add(article['date'])
+                
+        return final_articles
+    except Exception as e: 
+        raise HTTPException(status_code=400, detail=str(e))   
+        
+@frControllerETC.get("/articleData")
+async def get_article_data(request: Request):
+    print(get_articles_by_person("John Williams"))
+    print(get_articles_by_person("Thomas Barkin"))
+    print(get_articles_by_person("Raphael Bostic"))
+    print(get_articles_by_person("Mary Daly"))
+    print(get_articles_by_person("Loretta Mester"))
+    return -1
+
+"""
+You are an economist determining dovish/hawkish orientation from FOMC members' speeches.
+    You will be given a speech from a FOMC member. Your job is to determine if the author has dovish, neutral, or hawkish stance based on the speech you are given.
+    Return two things: orientation (dovish, neutral, hawkish) and the sentence from the speech that made you decide the author's orientation. 
+    The format should be "orientation: (ex. dovish), reason: (ex. We should lower interest rate.)" The parenthesis are where the actual orientation and sentence should go.
+    If the speech does not have a sentence that shows author's orientation, return "N/A".
+"""
+class SentimentAnalysisRequest(BaseModel):
+    speeches: List
+    
+def extract_main_sentence(url):
+    """
+    Based on given url, extracts main sentence that shows hawkish-dovish orientation
+    """
+    text = scrape_speech_content(url)
+    prompt_template = """You are an economist determining dovish/hawkish orientation from FOMC members' speeches.
+
+    You will be given a speech from a FOMC member. Find and return one main sentence (or multiple if it consists of two sentences) from the speech that shows the author's thought about what we should do about federal funds rate.
+    If the speech does not contain such sentence, return None.
+    
+    Speech:
+    "{text}"
+
+    답변: """
+    prompt = PromptTemplate.from_template(prompt_template)
+
+    # Define LLM chain
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo", streaming=True,
+                     api_key=config.OPENAI_API_KEY)
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+
+    # Define StuffDocumentsChain
+    stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text", verbose=True)
+        
+    docs = Doc(page_content=text)
+    # #     # # result1 = stuff_chain.invoke(docs)['output_text']
+    # #     # # print(stuff_chain.invoke(docs))
+    # #     # # # print(stuff_chain.run(docs))
+    # #     # # print(type(docs))
+    return stuff_chain.run([docs])
+
+
+
+@frControllerETC.post("/sentimentAnalysis")
+async def get_sentiment_data(request: SentimentAnalysisRequest):
+    speeches = request.speeches
+    if len(speeches) > 15:
+        speeches = speeches[0:15] # 15개로 제한
+    # empty_dict = {}
+    # for speech in speeches:
+    #     empty_dict[speech['date']] = extract_main_sentence(speech["link"])
+    with multiprocessing.Pool(processes=10) as pool:
+        # Apply the function asynchronously to each speech
+        results = [pool.apply_async(extract_main_sentence, (speech["link"],)) for speech in speeches]
+        
+        # Gather results as they become available
+        final_results = [{"date": speech["date"], "title": speech["title"], "result": result.get()} for speech, result in zip(speeches, results)]
+        
+        # Print final results
+        # print("Final Results:", final_results)
+        # results = [pool.apply_async(extract_main_sentence, (speech["link"],)) for speech in speeches]
+        # final_results = [result.get() for result in results]
+        print("Final Results:", final_results)
+    
+    ### 오케잉 이제 스피치에 대해서 주요문장 뽑자....
+    return final_results
+
+def query(payload):
+    API_URL = "https://api-inference.huggingface.co/models/gtfintechlab/FOMC-RoBERTa"
+    headers = {"Authorization": f"Bearer {config.HUGGINGFACE_API_KEY}"}
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
+	
+def correct_labels(output):
+    """[[{'label': 'LABEL_2', 'score': 0.99967360496521},
+    {'label': 'LABEL_0', 'score': 0.0001806987274903804},
+    {'label': 'LABEL_1', 'score': 0.00014567791367881}]],
+    요런 데이터가 오면 LABEL_2 = Neutral
+    LABEL_1 = Hawkish
+    LABEL_0 = Dovish
+    로 바꿔주는 함수
+    """
+    print(output)
+    for score_dict in output[0]:## [{'label': LABEL 2, 'score: 0.999}. {}]
+        if score_dict['label'] == 'LABEL_2':
+            score_dict['label'] = "Neutral"
+        elif score_dict['label'] == 'LABEL_1':
+            score_dict['label'] = "Hawkish"
+        else:  # label 0이면 dovish
+            score_dict['label'] = "Dovish"
+    
+    return output
+        
+
+@frControllerETC.post("/sentimentScore")
+async def get_sentiment_data(request: SentimentAnalysisRequest):
+    speeches = request.speeches
+    final_results = []
+    for speech in speeches:
+        if speech["result"] != "None": 
+            output = query({
+                "inputs": speech["result"]
+                })
+            final_results.append({"date": speech["date"], "scores": correct_labels(output), "result": speech["result"]})    
+        else:
+            continue
+        
+    print(final_results)
+    return final_results
+
+################################### [1ST GNB][4TH LNB] FOMC 데이터 분석 Ends############################################        
