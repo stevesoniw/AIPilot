@@ -80,6 +80,45 @@ function applyWeb() {
     var url = document.getElementById('ai_invest_sec_websiteUrl').value;
     appendData("웹사이트 주소", url);
 }
+function readWebSite() {
+    const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+    if (employeeId.length !== 7) {
+        alert("사번을 먼저 입력해주세요");
+        return;
+    }
+    var url = document.getElementById('ai_invest_sec_websiteUrl').value;
+    const contentArea = document.getElementById('aiSecLayerPopupContent');  
+
+    var loadingText = document.getElementById('loading_research_ai_text');
+    loadingText.textContent = '웹사이트 데이터 수집중입니다.';
+    document.getElementById('loading_bar_research_ai').style.display = 'block';
+
+    fetch('/api/website_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ website_url: url})
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading_bar_research_ai').style.display = 'none';
+        let transcript = data.transcript || 'Error loading data';
+        // Replace occurrences of '니다' or '세요' with themselves followed by a line break
+        transcript = transcript.replace(/(니 다|세 요)/g, '$1\n');
+        contentArea.innerText = transcript;
+        toggleLayerPopup();
+    })
+    
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Youtube 네트워킹에 실패했습니다.")
+        document.getElementById('loading_bar_research_ai').style.display = 'none';
+    });      
+    appendData("YouTube URL", url);
+}
+
+
 function readYoutubeScript(actionType = 'read') {
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
     if (employeeId.length !== 7) {

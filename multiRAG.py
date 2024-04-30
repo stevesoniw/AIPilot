@@ -124,7 +124,7 @@ class multiRAG:
             input_variables=['text']
         )
         combine_prompt = PromptTemplate(
-            template="""다음 웹사이트 내용에 대해 간단히 설명해주고, 반드시 한국말로 답변해줘. 그리고 다음 문장을 꼭 답변 마지막에 붙여줘.'해당 사이트 내용에 대해 무엇이든 질문해보세요!']
+            template="""다음 웹사이트 내용에 대해 자세히 설명해주고, 반드시 한국말로 답변해줘.']
             {text}
             """,
             input_variables=['text']

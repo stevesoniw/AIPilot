@@ -49,7 +49,7 @@ async def clear_data():
     uploaded_files_metadata.clear()
     return {"message": "Data cleared"}
 
-############################################[3RD GNB] [1ST LNB] 리서치 RAG 테스트쪽 ############################################
+############################################[3RD GNB] [1ST LNB] 리서치 REPORT 쉽게읽기 ############################################
 uploaded_files_data = {} #파일 데이터 메모리 적재용
 uploaded_files_metadata = []
 file_id_counter = 0
@@ -272,89 +272,7 @@ async def process_message(message_body: Message):
     response_message = await assistant.ask(message.strip())
     return {"message": response_message}
 
-############################################[3RD GNB] [2ND LNB] 실험실-AI 투자비서 테스트쪽 ############################################
-@ragController.post("/rag/ai-sec-upload/")
-async def handle_ai_sec_file(
-    file: UploadFile = File(...), 
-    employeeId: Optional[str] = Form(None) # 사번을 Form 데이터로 받음
-):
-    try:
-        # 파일 확장자 확인
-        file_extension = file.filename.split('.')[-1].lower()
-        file_name_itself = '.'.join(file.filename.split('.')[:-1])
-        if file_extension not in ['pdf', 'docx']:
-            return {"error": "Unsupported file type."}
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix="." + file_extension) as temp_file:
-            temp_file.write(await file.read())
-            # 파일 타입과 사번에 따라 ingest 함수 호출
-            await assistant.ai_sec_file_control(
-                file_path=temp_file.name, 
-                file_type=file_extension, 
-                file_name_itself=file_name_itself, 
-                employeeId=employeeId  # 사번도 매개변수로 전달
-            )
-        return {"filename": file.filename, "employeeId": employeeId}
-    finally:
-        if temp_file:
-            os.remove(temp_file.name)
-
-# AI 투자비서 [사번에 딸린 DB 조회하기]
-@ragController.post("/rag/ai-sec-viewmydb/")
-async def handle_ai_sec_viewmydb(request: Request):
-    try:
-        data = await request.json()  
-        logging.info(f"Data received: {data}")
-        employeeId = data.get('employeeId')
-        if not employeeId:
-            raise ValueError("No employeeId received")
-
-        response_message = await assistant.ai_sec_viewmydb(employeeId)
-        return {"message": "Success", "result": response_message}
-
-    except Exception as e:
-        logging.exception("An error occurred")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-    
-# AI 투자비서 [사번에 딸린 DB 클리어하기] 
-@ragController.post("/rag/ai-sec-cleardb/")
-async def handle_ai_sec_clearmydb(request: Request):
-    try:
-        data = await request.json()  
-        logging.info(f"Data received: {data}")
-        employeeId = data.get('employeeId')
-        if not employeeId:
-            raise ValueError("No employeeId received")
-
-        response_message = await assistant.ai_sec_clearmydb(employeeId)
-        print(response_message)
-        return {"message": "Success", "result": response_message}
-
-    except Exception as e:
-        logging.exception("An error occurred")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-    
-    
-# AI 투자비서 [질문에 대해 답변하기]
-@ragController.post("/rag/ai-sec-talk/")
-async def handle_ai_sec_talk(request: Request):
-    try:
-        data = await request.json()  
-        logging.info(f"Data received: {data}")
-        message = data.get('message') 
-        employeeId = data.get('employeeId')
-        if not message:
-            raise ValueError("No message received")
-
-        response_message = await assistant.ai_sec_talk(message, employeeId)
-        return {"message": "Success", "result": response_message}
-
-    except Exception as e:
-        logging.exception("An error occurred")
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-
-
-#################################### [1ST GNB] AI가 말해주는 해외주식정보 채팅영역 #####################################
+#################################### [1ST GNB] AI가 말해주는 해외주식정보 채팅영역 - 여긴 파일분리 못함 #####################################
 
 # AI가 말해주는 해외주식정보 [1.사용자가 조회한 주식정보 데이터 저장용]
 @ragController.post("/rag/handle-ai-query/")
@@ -498,6 +416,88 @@ async def handle_analyze_webnews(request: Request):
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail="Unexpected error occurred")    
 
+############################################[3RD GNB] [2ND LNB] 실험실-AI 투자비서 테스트쪽 ############################################
+@ragController.post("/rag/ai-sec-upload/")
+async def handle_ai_sec_file(
+    file: UploadFile = File(...), 
+    employeeId: Optional[str] = Form(None) # 사번을 Form 데이터로 받음
+):
+    try:
+        # 파일 확장자 확인
+        file_extension = file.filename.split('.')[-1].lower()
+        file_name_itself = '.'.join(file.filename.split('.')[:-1])
+        if file_extension not in ['pdf', 'docx']:
+            return {"error": "Unsupported file type."}
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix="." + file_extension) as temp_file:
+            temp_file.write(await file.read())
+            # 파일 타입과 사번에 따라 ingest 함수 호출
+            await assistant.ai_sec_file_control(
+                file_path=temp_file.name, 
+                file_type=file_extension, 
+                file_name_itself=file_name_itself, 
+                employeeId=employeeId  # 사번도 매개변수로 전달
+            )
+        return {"filename": file.filename, "employeeId": employeeId}
+    finally:
+        if temp_file:
+            os.remove(temp_file.name)
+
+# AI 투자비서 [사번에 딸린 DB 조회하기]
+@ragController.post("/rag/ai-sec-viewmydb/")
+async def handle_ai_sec_viewmydb(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        employeeId = data.get('employeeId')
+        if not employeeId:
+            raise ValueError("No employeeId received")
+
+        response_message = await assistant.ai_sec_viewmydb(employeeId)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+# AI 투자비서 [사번에 딸린 DB 클리어하기] 
+@ragController.post("/rag/ai-sec-cleardb/")
+async def handle_ai_sec_clearmydb(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        employeeId = data.get('employeeId')
+        if not employeeId:
+            raise ValueError("No employeeId received")
+
+        response_message = await assistant.ai_sec_clearmydb(employeeId)
+        print(response_message)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+    
+# AI 투자비서 [질문에 대해 답변하기]
+@ragController.post("/rag/ai-sec-talk/")
+async def handle_ai_sec_talk(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        message = data.get('message') 
+        employeeId = data.get('employeeId')
+        if not message:
+            raise ValueError("No message received")
+
+        response_message = await assistant.ai_sec_talk(message, employeeId)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+
 #띄어쓰기 해보기 (KoNlp 이용)
 def spacing_okt(wrongSentence):
     tagged = okt.pos(wrongSentence)
@@ -520,6 +520,33 @@ def is_korean(text):
             return True
     return False
 
+# 유튜브 스크립트 읽기
+class WebSiteDataRequest(BaseModel):
+    website_url: str
+    type: str
+@ragController.post("/api/website_data/")
+async def extract_youtube_script(request_data: WebSiteDataRequest):
+    website_url = request_data.website_url
+    action_type = request_data.type
+
+    try:
+        response_message = await askMulti.webNewsAnalyzer(website_url)
+        
+        print(response_message)
+
+        return {"message": "Success", "result": response_message}    
+    
+    except ValueError as ve:
+        logging.exception("Validation error")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logging.exception("An unexpected error occurred")
+        raise HTTPException(status_code=500, detail="Unexpected error occurred")   
+
+
+
+
+# 유튜브 스크립트 읽기
 class YouTubeDataRequest(BaseModel):
     video_id_or_url: str
     type: str

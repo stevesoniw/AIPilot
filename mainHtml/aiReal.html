@@ -12,6 +12,7 @@
         <meta content="AISolutionDivision.pilot" name="keywords" />
         <!-- Favicons -->
         <link rel="shortcut icon" href="/static/assets/images/favicon.ico" />
+        <!-----------  PRODUCT  JS        ----------->        
         <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
         <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
         <script type="text/javascript" src="/static/assets/js/aos.js"></script>
@@ -41,9 +42,6 @@
         <script src="/static/assets/js/dmPhaseAnalysis.js"></script>
         <script src="/static/assets/js/researchRAG.js"></script>
         <script src="/static/assets/js/researchAISummarize.js"></script>
-        <!-----------  PRODUCT  JS        ----------->
-        <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
-        <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
         <!-- fullcalendar Lib-->  
         <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -540,6 +538,10 @@
                                     document.getElementById(otherCheckboxId).checked = false;
                                 });
                             });
+                            setTimeout(() => {
+                                jTooltip();
+                            }, 50);                             
+                            
                             break;                        
                             /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
                             /*

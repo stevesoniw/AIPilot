@@ -387,34 +387,4 @@ function jTooltip(){
 }
 /* 툴팁 끝 */
 
-$(document).ready(function(){
-    guideTab();
-
-    $('#accordion').accordion({
-        collapsible: true,
-        animate: 300,
-        active: 2,
-        heightStyle: 'content',
-        classes: {
-            'ui-accordion':'nav-acc',
-            'ui-accordion-header': 'nav-acc-header',
-            'ui-accordion-content': 'nav-acc-content'
-        },
-        icons: {
-            header:'nav-acc-ic',
-            activeHeader:'nav-acc-ic-active'
-        },
-        beforeActivate: function(){
-            // 활성화되기 전에 코드를 실행합니다.
-            console.log('활성화되기 전에 코드를 실행합니다.');
-        },
-        activate: function(){
-            // 활성화된 후에 코드를 실행합니다.
-            console.log('활성화된 후에 코드를 실행합니다.');
-        }
-    });
-
-    jTooltip();
-
-});
 //******************************** 3RD GNB::  리서치RAG Ends   ***********************************************//   

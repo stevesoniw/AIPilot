@@ -68,7 +68,6 @@ function naverScrapingNews(newsType) {
     });
 }
 // NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
-// NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
 function fetchDetaildNews(url, event) {
     const button = event.target;
     const newsItem = button.closest('.naver-news-item');
@@ -184,6 +183,9 @@ async function naverSearchAPI() {
 }
 //네이버 뉴스 GPT(AI) 의견보기 함수 ::  요약보여주기
 function displaySummary(summary) {
+    // 데이터 가공
+    summary = summary.replace(/\*\*(.*?)\*\*/g, '<br/><br/><span style="color: #ff1480; text-transform: uppercase;">$1</span><br/>');
+    summary = summary.replace(/(?:^|\s)\*(.*?)(?=\s|$)/g, '<br>*$1');
     const summaryContainer = document.querySelector('.ai-summary-result');
     summaryContainer.innerHTML = `<div class="summary-content">${summary}</div>`;
     summaryContainer.style.display = 'block';
