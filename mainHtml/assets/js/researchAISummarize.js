@@ -7,6 +7,8 @@ function confirmEmployeeId() {
         alert("사번을 제대로 입력해주세요");
     } else {
         document.getElementById('ai_invest_sec_mainContent').style.opacity = "1";
+        document.getElementById('ai_invest_sec_applyWeb').style.opacity = "0.5";
+        document.getElementById('ai_invest_sec_applyYT').style.opacity = "0.5";
         aiSecViewMyDB();
     }
 }
@@ -32,7 +34,7 @@ async function aiSecViewMyDB() {
                 const splitName = collectionName.split('_');
                 const type = splitName[1]; // 예: 'PDF'
                 const value = splitName.slice(2).join('_'); // 예: '1', 'BQE_EquityBase'
-                appendData(index + 1, type, value);
+                appendData(index + 1, type, value, employeeId);
             });
         } else {
             container.innerHTML = `<p class="ai_no_data">현재 적용된 데이터가 없습니다.</p>`;
@@ -72,6 +74,7 @@ async function clearDB(){
 
 // '적용' 버튼 클릭 시 웹사이트 및 YouTube URL 적용
 function applyWeb() {
+    let savedTranscript = document.getElementById('webSiteHidden').getAttribute('data-transcript');
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
     if (employeeId.length !== 7) {
         alert("사번을 먼저 입력해주세요");
@@ -80,52 +83,66 @@ function applyWeb() {
     var url = document.getElementById('ai_invest_sec_websiteUrl').value;
     appendData("웹사이트 주소", url);
 }
-function readWebSite() {
+function readWebSite(actionType) {
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+    var url = document.getElementById('ai_invest_sec_websiteUrl').value;
     if (employeeId.length !== 7) {
         alert("사번을 먼저 입력해주세요");
         return;
     }
-    var url = document.getElementById('ai_invest_sec_websiteUrl').value;
+    if (url.length < 5 || !url.startsWith('http')) {
+        alert("URL을 정확하게 입력해주세요! (*http부터 입력)");
+        return;
+    }        
     const contentArea = document.getElementById('aiSecLayerPopupContent');  
+    contentArea.innerText = "";
 
     var loadingText = document.getElementById('loading_research_ai_text');
     loadingText.textContent = '웹사이트 데이터 수집중입니다.';
     document.getElementById('loading_bar_research_ai').style.display = 'block';
+    
+    console.log("******************");
+    console.log(url);
+    console.log(actionType);
 
     fetch('/api/website_data', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ website_url: url})
+        body: JSON.stringify({website_url: url, type: actionType})
     })
     .then(response => response.json())
     .then(data => {
         document.getElementById('loading_bar_research_ai').style.display = 'none';
-        let transcript = data.transcript || 'Error loading data';
-        // Replace occurrences of '니다' or '세요' with themselves followed by a line break
-        transcript = transcript.replace(/(니 다|세 요)/g, '$1\n');
+        document.getElementById('ai_invest_sec_applyWeb').disabled = false;
+        document.getElementById('ai_invest_sec_applyWeb').style.opacity = "1";
+        console.log(data.result);
+        let transcript = data.result;
         contentArea.innerText = transcript;
-        toggleLayerPopup();
+        document.getElementById('webSiteHidden').setAttribute('data-transcript', transcript);
+        toggleLayerPopup('website', url);
     })
     
     .catch(error => {
         console.error('Error:', error);
-        alert("Youtube 네트워킹에 실패했습니다.")
+        alert("Website 데이터 추출에 실패했습니다.")
         document.getElementById('loading_bar_research_ai').style.display = 'none';
     });      
-    appendData("YouTube URL", url);
 }
 
 
 function readYoutubeScript(actionType = 'read') {
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+    var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
     if (employeeId.length !== 7) {
         alert("사번을 먼저 입력해주세요");
         return;
     }
-    var url = document.getElementById('ai_invest_sec_youtubeUrl').value;
+    if (url.length < 5 || !url.startsWith('http')) {
+        alert("URL을 정확하게 입력해주세요! (*http부터 입력)");
+        return;
+    }    
     const contentArea = document.getElementById('aiSecLayerPopupContent');  
 
     var loadingText = document.getElementById('loading_research_ai_text');
@@ -142,11 +159,14 @@ function readYoutubeScript(actionType = 'read') {
     .then(response => response.json())
     .then(data => {
         document.getElementById('loading_bar_research_ai').style.display = 'none';
+        document.getElementById('ai_invest_sec_applyYT').disabled = false;
+        document.getElementById('ai_invest_sec_applyYT').style.opacity = "1";
         let transcript = data.transcript || 'Error loading data';
         // Replace occurrences of '니다' or '세요' with themselves followed by a line break
         transcript = transcript.replace(/(니 다|세 요)/g, '$1\n');
+        document.getElementById('youTubeHidden').setAttribute('data-transcript', transcript);
         contentArea.innerText = transcript;
-        toggleLayerPopup();
+        toggleLayerPopup('youtube', url);
     })
     
     .catch(error => {
@@ -154,48 +174,101 @@ function readYoutubeScript(actionType = 'read') {
         alert("Youtube 네트워킹에 실패했습니다.")
         document.getElementById('loading_bar_research_ai').style.display = 'none';
     });      
-    appendData("YouTube URL", url);
+    //appendData("YouTube URL", url);
 }
 
 function applyYT() {
+    let savedTranscript = document.getElementById('youTubeHidden').getAttribute('data-transcript');
+    alert(savedTranscript);
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
     if (employeeId.length !== 7) {
         alert("사번을 먼저 입력해주세요");
         return;
     }
-    appendData("YouTube URL", url);
+    //appendData("YouTube URL", url);
 }
 
-function toggleLayerPopup() {
-    //const popup = document.getElementById('aiSecLayerPopup');
-    //popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    $('#aiSecLayerPopup').dialog({
-        dialogClass : 'research-dialog',
-        title : '',
-        modal : true,
-        draggable : false,
-        resizable : false,
-        autoOpen: false,
-        width: 700,
-        height: 700,
-        open : function(){
-            $('.ui-widget-overlay').on('click', function(){
-                $('#dialog-sample').dialog('close');
-            });
+async function viewSavedFileContent(fileCollectionName) {
+    const contentArea = document.getElementById('aiSecLayerPopupContent2');       
+    try {
+        var loadingText = document.getElementById('loading_research_ai_text');
+        loadingText.textContent = 'File Read 중입니다.';
+        document.getElementById('loading_bar_research_ai').style.display = 'block';
+
+        const response = await fetch('/rag/ai-invest-view-file/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file_collection_name: fileCollectionName })
+        });
+        if (!response.ok) {
+            document.getElementById('loading_bar_research_ai').style.display = 'none';
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    });
+        const result = await response.json();
+        document.getElementById('loading_bar_research_ai').style.display = 'none';        
+        console.log("****")
+        console.log(result.result.documents);
+        contentArea.innerHTML = result.result.documents;
+        toggleLayerPopup('file', fileCollectionName);        
 
-    $('#aiSecLayerPopup').dialog('open');
-
+    } catch (error) {
+        console.error("Fetch error: " + error.message);
+        document.getElementById('loading_bar_research_ai').style.display = 'none';  
+        alert("데이터 조회 중 오류가 발생했습니다");
+    }
 }
-function appendData(index, type, value) {
+
+function toggleLayerPopup(type, title) {
+    var popupId, dialogWidth, titleId;    
+    if(type === 'file'){
+        popupId =  '#aiSecLayerPopup2';
+        dialogWidth = 900
+        const parts = title.split('_');
+        const formattedName = parts[2];
+        const fileType = parts[1].toUpperCase(); 
+        var showTitle = formattedName+"."+fileType+" 파일 내용입니다"
+        titleId = 'aisec_2_title';
+        $('#' + titleId).text(showTitle);
+    }else{
+        popupId =  '#aiSecLayerPopup';
+        dialogWidth = 800
+        var showTitle = title + "의 추출 내용입니다"
+        titleId = 'aisec_1_title'; 
+        $('#' + titleId).text(showTitle);
+    }
+    $(popupId).dialog({
+        dialogClass: 'research-dialog',
+        title: showTitle, 
+        modal: true,
+        draggable: false,
+        resizable: false,
+        autoOpen: false,
+        width: dialogWidth,
+        height: 700,
+        open: function() {
+            $('.ui-widget-overlay').on('click', function() {
+                $(popupId).dialog('close');
+            });
+            //타이틀 바꿔주기 
+            $('#' + titleId).text(showTitle);
+        }
+    }).dialog('open');
+}
+
+function appendData(index, type, value, employeeId) {
     var container = document.getElementById('ai_invest_sec_appliedData');
     const displayValue = value !== "1" ? `${type} - ${value}` : type;
-    if(container.innerHTML === "") {
+    if (container.innerHTML === "") {
         container.innerHTML += `<div class="header-with-button"><p>◎ MY DB 적용 데이터</p><button onclick="clearDB()" class="db-clear-btn">DB 클리어</button></div>`;
-    }                
-    container.innerHTML += `<p class="ai_append_text">[나의 DB에 적용된 데이터 #${index}] ${displayValue}</p>`;
-}           
+    }
+    const formattedName = value.replace(/\s+/g, '_').replace(/\W/g, '').toLowerCase();
+    const fileCollectionName = `${employeeId}_${type.toLowerCase()}_${formattedName}`;
+    container.innerHTML += `<div class="ai_invest_data_box">
+        <p class="ai_append_text">[나의 DB에 적용된 데이터 #${index}] ${displayValue}</p>
+        ${['pdf', 'docx', 'doc'].includes(type.toLowerCase()) ? `<button onclick="viewSavedFileContent('${fileCollectionName}')" class="view-btn">내용보기</button>` : ''}
+    </div>`;
+}
+
 function triggerAiFileInput() {
     document.getElementById('aiSecFileInput').click();
 }

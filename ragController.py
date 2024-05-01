@@ -12,7 +12,10 @@ from langchain.chains.llm import LLMChain
 from langchain_core.prompts import PromptTemplate
 from langchain.docstore.document import Document as Doc
 from langchain_groq import ChatGroq
-
+from langchain_community.document_loaders import BSHTMLLoader
+from langchain_community.document_loaders.web_base import WebBaseLoader
+from langchain.text_splitter import CharacterTextSplitter
+from groq import Groq
 import os
 import asyncio
 import tempfile
@@ -36,7 +39,7 @@ import utilTool
 
 logging.basicConfig(level=logging.DEBUG)
 ragController = APIRouter()
-chat = ChatGroq(temperature=0, groq_api_key=config.GROQ_CLOUD_API_KEY, model_name="mixtral-8x7b-32768")
+groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 # FastAPI로 ChatPDF 인스턴스 초기화
 assistant = ChatPDF()
 askMulti = multiRAG()
@@ -477,7 +480,26 @@ async def handle_ai_sec_clearmydb(request: Request):
     except Exception as e:
         logging.exception("An error occurred")
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
-    
+
+
+# AI 투자비서 [파일 내용 조회하기]
+@ragController.post("/rag/ai-invest-view-file/")
+async def handle_ai_sec_file_read(request: Request):
+    try:
+        data = await request.json()  
+        logging.info(f"Data received: {data}")
+        file_collection_name = data.get('file_collection_name')
+        if not file_collection_name:
+            raise ValueError("No file_collection_name received")
+
+        response_message = await assistant.ai_sec_view_file(file_collection_name)
+        print(response_message)
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        
     
 # AI 투자비서 [질문에 대해 답변하기]
 @ragController.post("/rag/ai-sec-talk/")
@@ -520,30 +542,52 @@ def is_korean(text):
             return True
     return False
 
-# 유튜브 스크립트 읽기
+# 웹사이트 내용 추출하기
 class WebSiteDataRequest(BaseModel):
     website_url: str
     type: str
 @ragController.post("/api/website_data/")
-async def extract_youtube_script(request_data: WebSiteDataRequest):
+async def extract_website_data(request_data: WebSiteDataRequest):
     website_url = request_data.website_url
     action_type = request_data.type
-
+    print(website_url)
+    print(action_type)
+    
+    text_splitter = CharacterTextSplitter(chunk_size=1024, chunk_overlap=100, length_function=len, separator= "\n\n\n")
+    docs = WebBaseLoader(website_url).load_and_split(text_splitter) #BSHTMLLoader 가 WebBaseLoader 보다 더 가벼운듯함. 컴팩트하게 긁어옴
     try:
-        response_message = await askMulti.webNewsAnalyzer(website_url)
-        
+        print(docs)
+        response_message = await website_data_neatly(docs)
+        print("*******************")      
         print(response_message)
+        print("*******************")      
 
         return {"message": "Success", "result": response_message}    
-    
     except ValueError as ve:
         logging.exception("Validation error")
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail="Unexpected error occurred")   
-
-
+    
+async def website_data_neatly(docs):
+    try:
+        prompt = """This is an article obtained from a specific website. Please organize and align it neatly so that it looks appealing to others when they see it.
+Write '[Website Content]' in the title, and show the text content below that. At the end, add a title labeled '[Summary]' 
+and craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. this is the article: """ + str(docs)
+        SYSTEM_PROMPT = "Please make sure to respond in the language the article was written in. Answer the summary in Korean."
+        completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ],
+            #model="mixtral-8x7b-32768",
+            model="llama3-8b-8192",
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in lama3_news_sum function: %s", str(e))
+        return None    
 
 
 # 유튜브 스크립트 읽기

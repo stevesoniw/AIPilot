@@ -34,13 +34,13 @@ class ChatPDF:
     vector_store = None
     retriever = None
     chain = None
-    LLM_MODEL_NAME = "gpt-4-1106-preview"
+    LLM_MODEL_NAME = "gpt-4-turbo"
     #OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
     OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
     def __init__(self):
         # openAI 쪽 정의
-        self.llmModel = ChatOpenAI(temperature=0.1, openai_api_key=config.OPENAI_API_KEY)
+        self.llmModel = ChatOpenAI(temperature=0.1, model=self.LLM_MODEL_NAME, openai_api_key=config.OPENAI_API_KEY)
         self.embeddings = OpenAIEmbeddings(model=self.OPENAI_EMBEDDING_MODEL, openai_api_key=config.OPENAI_API_KEY)
         # text_splitter 정의 
         self.text_splitter = CharacterTextSplitter(chunk_size=512, chunk_overlap=50, separator= "\n\n\n")
@@ -317,6 +317,24 @@ class ChatPDF:
             return "success"
         except Exception as e:
             return f"Failed to clear database: {e}"
+        
+    # 클라에서 파일 데이터 조회요청 왔을때, 파일 내용 보내주기
+    async def ai_sec_view_file(self, file_collection_name):
+        user_persist_directory = os.path.join(self.persist_directory, file_collection_name.split('_')[0])
+        try:
+            client = chromadb.PersistentClient(path=user_persist_directory)
+            collection = client.get_collection(name=file_collection_name)
+            print("************************")
+            print(collection)
+            print("************************")
+            # self.embeddings = OpenAIEmbeddings(model=self.OPENAI_EMBEDDING_MODEL, openai_api_key=config.OPENAI_API_KEY)
+            documents_data = collection.get( include=[ "documents" ])
+            documents_contents = documents_data['documents']
+            #print(documents_contents)
+            return {"message": "Success", "documents": documents_contents}
+        except Exception as e:
+            return {"message": "An error occurred while accessing the collection."}
+       
         
          
     # 클라에서 질문 왔을때 DB에서 similarity score 조회해서 답변해주기

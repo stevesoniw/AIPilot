@@ -3,7 +3,7 @@
 <div id="menu_3rd_b" class="menu-cont">
     <div class="ai_container">
         <h2 class="s-tit">AI 투자비서 테스트 화면</h2>
-        <h3 class="s-tit">업로드 된 파일들, 오늘의 마켓데이터, Trending Stocks 를 중심으로 한 Q&A 시스템</h3>
+        <h3 class="s-tit">업로드 된 파일들, 나만의 마켓데이터, WebSite, Youtube 데이터 등을 활용한 Q&A 시스템</h3>
         <input type="file" id="aiSecFileInput" style="display: none;" onchange="handleAiFileUpload(this.files)">
         <div id="ai_invest_sec_container" class="ai_invest_sec-container">
             <div style="display: flex; align-items: center;">
@@ -15,18 +15,18 @@
             <div id="ai_invest_sec_mainContent" style="border: 1px solid #cccccc; padding: 10px; margin-top: 10px; opacity: 0.5;">
                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
                     <button id="ai_invest_sec_uploadButton" class="ai_invest_sec_button" onClick="triggerAiFileInput();">파일 업로드</button>
-                    <div id="ai_invest_sec_dragDropArea" class="ai_invest_sec_drag_drop_area">또는 파일 드래그</div>
+                    <div id="ai_invest_sec_dragDropArea" class="ai_invest_sec_drag_drop_area">또는 파일 드래그 (pdf or docx)</div>
                 </div>
                 
                 <div style="align-items: center;">
                     <label style="flex-grow: 1;">✓ 웹사이트 주소 입력 : <input type="text" id="ai_invest_sec_websiteUrl" class="ai_invest_sec_url_input1" placeholder="http://www.naver.com/"></label>
-                    <button id="ai_invest_sec_readWeb" class="ai_invest_sec_read_button" onclick="javascript:readWebSite()">데이터 읽어오기</button>
-                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWeb()">DB 적용하기</button>
+                    <button id="ai_invest_sec_readWeb" class="ai_invest_sec_read_button" onclick="javascript:readWebSite('read')">데이터 읽어오기</button>
+                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWeb()" disabled>DB 적용하기</button>
                 </div>
                 <div style="align-items: center;">
                     <label style="flex-grow: 1;">✓ YouTube URL 입력 : <input type="text" id="ai_invest_sec_youtubeUrl" class="ai_invest_sec_url_input2" placeholder="https://www.youtube.com/watch?v=-UytuxDQKVY"></label>
                     <button id="ai_invest_sec_readYT" class="ai_invest_sec_read_button" onclick="javascript:readYoutubeScript('read')">데이터 읽어오기</button>
-                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyYT()">DB 적용하기</button>
+                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyYT()" disabled>DB 적용하기</button>
                 </div>
                 <div id="ai_invest_sec_appliedData"></div>
             </div>
@@ -44,7 +44,7 @@
             </div>
         </div>  -->
         <div id="aiSecLayerPopup" class="layerHidden">
-            <h5 class="pop-tit">타이틀 영역입니다.</h5>
+            <h5 class="ai-sec-pop-tit" id="aisec_1_title">추출된 데이터입니다.</h5>
             <div class="pop-cont-wrap">
                 <ul class="tab-wrap dialog-tab">
                     <li class="tab-list active">
@@ -56,7 +56,23 @@
                 </ul>
                 <p id="aiSecLayerPopupContent"></p>
             </div>
-        </div>           
+        </div>   
+        <div id="webSiteHidden" data-transcript=""></div>
+        <div id="youTubeHidden" data-transcript=""></div>   
+        <div id="aiSecLayerPopup2" class="layerHidden">
+            <h5 class="ai-sec-pop-tit" id="aisec_2_title">파일 데이터입니다.</h5>
+            <div class="pop-cont-wrap">
+                <ul class="tab-wrap dialog-tab">
+                    <li class="tab-list active">
+                        <a href="javascript:readYoutubeScript('summarize')">요약</a>
+                    </li>
+                    <li class="tab-list">
+                        <a href="javascript:readYoutubeScript('translate')">번역</a>
+                    </li>
+                </ul>
+                <p id="aiSecLayerPopupContent2"></p>
+            </div>
+        </div>                
     </div>
     <div id="loading_bar_research_ai" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">
@@ -71,7 +87,7 @@
                 </div>
                 <!-- Example of a sent message -->
                 <div class="rag-message rag-sent">
-                    <div class="rag-text"></div>
+                    <div class="rag-text">*질문예시: 등록된 miraeasset.pdf 의 내용을 요약해줘</div>
                 </div>
                 <!-- Add more messages here -->
             </div>
