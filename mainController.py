@@ -12,11 +12,16 @@ from ragController import ragController
 from smController import smController
 #######################################
 #FAST API 관련
-import logging
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+#######################################
+#Environment 관련
+from datetime import datetime
+import logging
+import asyncpg
+
 
 app = FastAPI()
 app.include_router(frControllerAI)
@@ -25,6 +30,38 @@ app.include_router(dmController)
 app.include_router(ragController)
 app.include_router(smController)
 logging.basicConfig(level=logging.DEBUG)
+
+##############################################       접속 카운트      #################################################
+
+async def get_database_connection():
+    return await asyncpg.connect(user='postgres', password='mirae01!@', database='your_database', host='127.0.0.1')
+
+@app.middleware("http")
+async def count_visitors(request: Request, call_next):
+    # 데이터베이스 연결
+    conn = await get_database_connection()
+    try:
+        # 오늘 날짜에 대한 방문자 수를 증가
+        await conn.execute('''
+            INSERT INTO visitors (date, count) VALUES (CURRENT_DATE, 1)
+            ON CONFLICT (date) DO UPDATE SET count = visitors.count + 1;
+        ''')
+        response = await call_next(request)
+        return response
+    finally:
+        await conn.close()
+
+@app.get("/get-visitors")
+async def get_visitors():
+    conn = await get_database_connection()
+    try:
+        count = await conn.fetchval('SELECT count FROM visitors WHERE date = CURRENT_DATE;')
+        return {"visitors_today": count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await conn.close()
+                
 
 ##############################################          공통          ################################################
 # FastAPI에서 정적 파일과 템플릿을 제공하기 위한 설정

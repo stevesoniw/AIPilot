@@ -61,16 +61,25 @@ async def scrape_and_save_stocks(client):
         return False
     
 # 혹시 수동으로 종목을 입력해서 가져와야될 경우도 있을것 같아, 파일로 먼저 저장하고, 이후 읽어오는 2단계로 변경함. 
+# 귀찮으니 수동으로 기입하는 파일도 따로 만들자. 
 async def load_stocks_from_file():
     try:
-        async with aiofiles.open('batch/hotstocks.txt', 'r') as file:
-            symbols = await file.read()
-            symbols = symbols.splitlines()
-            print("Stocks data loaded successfully.")
-            return symbols
+        # 두 파일의 경로를 리스트로 관리
+        files = ['batch/hotstocks.txt', 'batch/hotstocks_manual.txt']
+        symbols_set = set()  # 중복을 제거하기 위한 세트
+
+        # 각 파일을 순회하면서 데이터 읽기
+        for file_path in files:
+            async with aiofiles.open(file_path, 'r') as file:
+                symbols = await file.read()
+                symbols_set.update(symbols.splitlines())  # 세트에 추가하면서 자동 중복 제거
+
+        print("Stocks data loaded successfully.")
+        return list(symbols_set)  # 세트를 리스트로 변환하여 반환
     except Exception as e:
         print(f"파일 읽기 실패: {e}")
         return []
+
         
 
 # 종목뉴스 가져오기 (RapidAPI 의 seeking alpha 뉴스)
