@@ -8,7 +8,7 @@
 .rag-text:empty {display: none;}
 .rag-received { align-self: flex-start; background-color: #e3e1e1; color: #474747; }
 .rag-sent { align-self: flex-end; background-color: #f2e2f9; color: #474747; }
-.rag-text { padding: 10px 15px; border-radius: 20px; color: inherit; }
+.rag-text { padding: 10px 15px; border-radius: 20px; color: inherit; text-align: right; }
 .rag-chat-input { display: flex; padding: 10px; background-color: #fff; border-top: 1px solid #eee; }
 .rag-chat-input input { flex: 1; padding: 10px; margin-right: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
 .rag-chat-input button { padding: 10px 20px; background-image: linear-gradient(to right, #6e51d6, #0110e2); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 16px;}
@@ -49,6 +49,7 @@
 .ai-sec-layer-btn { padding: 6px 12px; border: none; background-color: #007BFF; color: white; cursor: pointer; border-radius: 5px; font-size: 12px; margin-left:10px; }
 .ai-sec-layer-content { margin-top: 20px; line-height: 1.6; text-align: justify; color: #444; font-size: 14px; }
 .ai_no_data { display: inline-block; padding: 10px; background: linear-gradient(145deg, #a7a7a9, #a7a7a2); color: #fff; text-align: center; border-radius: 10px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: bold; margin: 10px auto; max-width: 80%; }
+.loading-text-ragprompt{ font-size:14px;  background-color: rgba(255, 255, 255, 0); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; margin-top: 10px;}
 .layerHidden { display: none; }
 
 

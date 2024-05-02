@@ -52,38 +52,121 @@ async function clearDB(){
         return;
     }
     try {
+        var loadingText = document.getElementById('loading_research_ai_text');
+        loadingText.textContent = 'DB 데이터를 리셋하고 있습니다.';
+        document.getElementById('loading_bar_research_ai').style.display = 'block';        
         const response = await fetch('/rag/ai-sec-cleardb/', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({employeeId: employeeId}),
         });
         if (!response.ok) {
+            document.getElementById('loading_bar_research_ai').style.display = 'none'; 
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
         if (result.result === "success") {
+            alert("DB 데이터가 Clear 되었습니다!");
+            removeAllDivsByClass('ai-sec-text');
+            document.getElementById('loading_bar_research_ai').style.display = 'none'; 
             document.getElementById('ai_invest_sec_appliedData').innerHTML = `<div class="header-with-button"><p>◎ MY DB 적용 데이터</p><button onclick="clearDB()" class="db-clear-btn">DB 클리어</button></div>`;
         } else {
+            document.getElementById('loading_bar_research_ai').style.display = 'none'; 
             console.error("No message received from the ai sec rag server.");
         }
     } catch (error) {
+        document.getElementById('loading_bar_research_ai').style.display = 'none'; 
         console.error("Fetch error: " + error.message);
     }   
+}
+// 채팅내역도 같이 지워주자ㅋㅋ
+function removeAllDivsByClass(className) {
+    const elements = document.querySelectorAll(`div.${className}`);
+    if (elements.length > 0) {
+        elements.forEach(element => {
+            element.parentNode.removeChild(element);
+        });
+    } else {
+        console.log(`No elements found with class: ${className}`);
+    }
 }
 
 
 // '적용' 버튼 클릭 시 웹사이트 및 YouTube URL 적용
-function applyWeb() {
-    let savedTranscript = document.getElementById('webSiteHidden').getAttribute('data-transcript');
+async function applyWebToDB(file_type) {
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+    let savedTranscript = "";
     if (employeeId.length !== 7) {
         alert("사번을 먼저 입력해주세요");
         return;
     }
-    var url = document.getElementById('ai_invest_sec_websiteUrl').value;
-    appendData("웹사이트 주소", url);
+    var webSiteUrl = document.getElementById('ai_invest_sec_websiteUrl').value;
+    var youTubeUrl = document.getElementById('ai_invest_sec_youtubeUrl').value;
+    var domain;    
+    console.log(webSiteUrl);
+    console.log(youTubeUrl);
+    if(file_type=='website'){
+        savedTranscript = document.getElementById('webSiteHidden').getAttribute('data-transcript');
+        try {
+            domain = new URL(webSiteUrl);
+            console.log("domain====", domain);
+            if (!webSiteUrl.trim() || !domain) {
+                alert('올바른 형식의 URL이 아닙니다. 다시 입력해주세요!');
+                return;
+            }
+            domain = domain.hostname; 
+        } catch (error) {
+            alert('올바른 형식의 URL이 아닙니다. 다시 입력해주세요!');
+            return; 
+        }        
+    }else if(file_type== 'youtube'){
+        savedTranscript = document.getElementById('youTubeHidden').getAttribute('data-transcript');
+        try {
+            const urlObj = new URL(youTubeUrl);
+            let videoId = "youtubeData";
+            console.log("urlObj====", urlObj);
+            if (urlObj.hostname === "youtu.be") {
+                videoId = urlObj.pathname.substring(1); // 경로에서 첫 번째 '/' 제거
+            } else if (urlObj.hostname === "www.youtube.com" || urlObj.hostname === "youtube.com") {
+                videoId = urlObj.searchParams.get("v"); // 쿼리 매개변수에서 'v' 값을 가져옴
+            }
+            domain = videoId;
+        } catch (error) {
+            alert('올바른 형식의 YouTube URL이 아닙니다. 다시 입력해주세요!');
+            return;
+        }        
+    }
+    var loadingText = document.getElementById('loading_research_ai_text');
+    loadingText.textContent = '웹사이트 DATA 저장중입니다.';
+    document.getElementById('loading_bar_research_ai').style.display = 'block';
+    try{
+        const response = await  fetch('/rag/website_db_register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ employeeId: employeeId, savedTranscript: savedTranscript, domain: domain, file_type : file_type }),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log(result);
+        if (result.message === "Success") {
+            alert(`${file_type === 'website' ? 'Website' : 'YouTube'} Data가 저장되었습니다.`);
+            document.getElementById('loading_bar_research_ai').style.display = 'none';        
+        }else {
+            console.error("Website Data Register Failed");
+            alert("Website Data 저장에 실패했습니다.")
+            document.getElementById('loading_bar_research_ai').style.display = 'none';        
+        }
+    } catch (error) {
+        console.error("Fetch error: " + error.message);
+        document.getElementById('loading_bar_research_ai').style.display = 'none';        
+    }     
+    //DB 데이터 다시조회
+    aiSecViewMyDB();
 }
-function readWebSite(actionType) {
+
+function readWebSite(actionType, llm_model) {
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
     var url = document.getElementById('ai_invest_sec_websiteUrl').value;
     if (employeeId.length !== 7) {
@@ -110,7 +193,7 @@ function readWebSite(actionType) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({website_url: url, type: actionType})
+        body: JSON.stringify({website_url: url, type: actionType, llm_model: llm_model})
     })
     .then(response => response.json())
     .then(data => {
@@ -139,7 +222,7 @@ function readYoutubeScript(actionType = 'read') {
         alert("사번을 먼저 입력해주세요");
         return;
     }
-    if (url.length < 5 || !url.startsWith('http')) {
+    if (url.length < 5 || !url.startsWith('http') || !url.includes('youtu')) { //youtu.be 고려
         alert("URL을 정확하게 입력해주세요! (*http부터 입력)");
         return;
     }    
@@ -162,8 +245,9 @@ function readYoutubeScript(actionType = 'read') {
         document.getElementById('ai_invest_sec_applyYT').disabled = false;
         document.getElementById('ai_invest_sec_applyYT').style.opacity = "1";
         let transcript = data.transcript || 'Error loading data';
-        // Replace occurrences of '니다' or '세요' with themselves followed by a line break
-        transcript = transcript.replace(/(니 다|세 요)/g, '$1\n');
+        // 줄바꿈 너무 안돼서 강제로 바꿔줌. 회사이름도 틀려서 바꿔줌
+        transcript = transcript.replace(/(니다|세요|까요|겠죠|있죠|이죠)/g, '$1\n');
+        transcript = transcript.replace(/미래[세셋]/g, '미래에셋')
         document.getElementById('youTubeHidden').setAttribute('data-transcript', transcript);
         contentArea.innerText = transcript;
         toggleLayerPopup('youtube', url);
@@ -173,18 +257,8 @@ function readYoutubeScript(actionType = 'read') {
         console.error('Error:', error);
         alert("Youtube 네트워킹에 실패했습니다.")
         document.getElementById('loading_bar_research_ai').style.display = 'none';
+        document.getElementById('ai_invest_sec_applyYT').style.opacity = "0.5";
     });      
-    //appendData("YouTube URL", url);
-}
-
-function applyYT() {
-    let savedTranscript = document.getElementById('youTubeHidden').getAttribute('data-transcript');
-    alert(savedTranscript);
-    const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
-    if (employeeId.length !== 7) {
-        alert("사번을 먼저 입력해주세요");
-        return;
-    }
     //appendData("YouTube URL", url);
 }
 
@@ -287,6 +361,11 @@ function uploadAiFileToServer(file) {
     let formData = new FormData();
     formData.append("file", file); 
     const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+    
+    var loadingText = document.getElementById('loading_research_ai_text');
+    loadingText.textContent = 'File Data 저장중입니다.';
+    document.getElementById('loading_bar_research_ai').style.display = 'block';
+
     formData.append("employeeId", employeeId);
     fetch('/rag/ai-sec-upload/', {
         method: 'POST',
@@ -295,10 +374,13 @@ function uploadAiFileToServer(file) {
     .then(response => response.json())
     .then(data => {
         console.log('Success:', data);
+        document.getElementById('loading_bar_research_ai').style.display = 'none';
+        alert("파일이 정상적으로 저장되었습니다.");
         aiSecViewMyDB();
     })
     .catch((error) => {
         console.error('Error:', error);
+        document.getElementById('loading_bar_research_ai').style.display = 'none';
     });
 } 
 //채팅 질의 답변 함수 
@@ -341,7 +423,8 @@ function aiSecChatDisplay(messageText, sender) {
     
     const messageTextDiv = document.createElement('div');
     messageTextDiv.classList.add('ai-sec-text');
-    messageTextDiv.textContent = messageText;
+    //messageTextDiv.textContent = messageText;
+    messageTextDiv.innerText = messageText;
     
     messageWrapper.appendChild(messageTextDiv);
     messagesContainer.appendChild(messageWrapper);

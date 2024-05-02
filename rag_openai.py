@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import TextLoader
 from langchain.schema.output_parser import StrOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.text_splitter import CharacterTextSplitter
@@ -23,6 +24,7 @@ from korean_romanizer.romanizer import Romanizer
 import chromadb
 # 기본 유틸
 import config
+import tempfile
 import os
 import re
 import uuid
@@ -298,6 +300,7 @@ class ChatPDF:
         except Exception as e:
             return f"Failed to clear database: {e}"'''  
 
+    # 모든 벡터DB 컬렉션 클리어해주기 
     async def ai_sec_clearmydb(self, employeeId):
         try:
             user_persist_directory = os.path.join(self.persist_directory, employeeId)
@@ -322,8 +325,11 @@ class ChatPDF:
     async def ai_sec_view_file(self, file_collection_name):
         user_persist_directory = os.path.join(self.persist_directory, file_collection_name.split('_')[0])
         try:
-            client = chromadb.PersistentClient(path=user_persist_directory)
-            collection = client.get_collection(name=file_collection_name)
+            print("ABCD")
+            print(file_collection_name)
+            print(user_persist_directory)
+            newclient = chromadb.PersistentClient(path=user_persist_directory)
+            collection = newclient.get_collection(name=file_collection_name)
             print("************************")
             print(collection)
             print("************************")
@@ -336,6 +342,60 @@ class ChatPDF:
             return {"message": "An error occurred while accessing the collection."}
        
         
+    # 클라에서 웹사이트 DB 저장요청 왔을때, DB에 저장해주기 
+    async def website_db_register(self, employeeId, savedTranscript, domain, file_type):
+        try:
+            print("Received Transcript:", savedTranscript)
+            with tempfile.NamedTemporaryFile(delete=False, mode='w+', encoding='utf-8') as temp_file:
+                temp_file.write(savedTranscript)
+                temp_file_path = temp_file.name
+                print(temp_file_path)
+            try:
+                loader = TextLoader(temp_file_path,  encoding = 'UTF-8')
+                documents = loader.load()
+                text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+                docs = text_splitter.split_documents(documents)                
+                print("***********************************************************************")
+                print("Initial Chunks:", docs)
+            except Exception as e:
+                print("Error in loading or splitting documents:", str(e))
+                raise
+            finally:
+                os.remove(temp_file_path)  # 임시 파일 삭제            
+   
+            try:
+                chunks = filter_complex_metadata(docs)
+                print("Filtered Chunks:", chunks)
+            except Exception as e:
+                print("Error in filtering metadata:", str(e))
+                raise
+            
+            user_persist_directory = os.path.join(self.persist_directory, employeeId)
+            os.makedirs(user_persist_directory, exist_ok=True)
+            
+            base_collection_name = f"{employeeId}_{file_type.lower()}_{domain}"
+            new_collection_name = base_collection_name
+            collection_index = 1
+            
+            while os.path.exists(os.path.join(user_persist_directory, new_collection_name)):
+                new_collection_name = f"{base_collection_name}_{collection_index}"
+                collection_index += 1
+            print("Collection Name:", new_collection_name)
+            
+            collection_metadata = {
+                "hnsw:space": "cosine",
+                "file_type": file_type.lower(),
+                "file_domain": domain 
+            }            
+            
+            self.vectordb = Chroma.from_documents(documents=chunks, embedding=self.embeddings, persist_directory=user_persist_directory, collection_name=new_collection_name, collection_metadata=collection_metadata)
+            self.vectordb.persist()
+
+            return {"message": "success"}
+        except Exception as e:
+            print("An error occurred:", str(e))
+            return {"message": "An error occurred while accessing the collection."}
+                
          
     # 클라에서 질문 왔을때 DB에서 similarity score 조회해서 답변해주기
     async def ai_sec_talk(self, query, employeeId):

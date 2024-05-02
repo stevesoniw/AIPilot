@@ -761,11 +761,11 @@ def get_articles_by_person(person):
         
 @frControllerETC.get("/articleData")
 async def get_article_data(request: Request):
-    print(get_articles_by_person("John Williams"))
-    print(get_articles_by_person("Thomas Barkin"))
-    print(get_articles_by_person("Raphael Bostic"))
-    print(get_articles_by_person("Mary Daly"))
-    print(get_articles_by_person("Loretta Mester"))
+    #print(get_articles_by_person("John Williams"))
+    #print(get_articles_by_person("Thomas Barkin"))
+    #print(get_articles_by_person("Raphael Bostic"))
+    #print(get_articles_by_person("Mary Daly"))
+    #print(get_articles_by_person("Loretta Mester"))
     return -1
 
 """

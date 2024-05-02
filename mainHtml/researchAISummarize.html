@@ -20,13 +20,13 @@
                 
                 <div style="align-items: center;">
                     <label style="flex-grow: 1;">✓ 웹사이트 주소 입력 : <input type="text" id="ai_invest_sec_websiteUrl" class="ai_invest_sec_url_input1" placeholder="http://www.naver.com/"></label>
-                    <button id="ai_invest_sec_readWeb" class="ai_invest_sec_read_button" onclick="javascript:readWebSite('read')">데이터 읽어오기</button>
-                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWeb()" disabled>DB 적용하기</button>
+                    <button id="ai_invest_sec_readWeb" class="ai_invest_sec_read_button" onclick="javascript:readWebSite('read', 'gpt')">데이터 읽어오기</button>
+                    <button id="ai_invest_sec_applyWeb" class="ai_invest_sec_apply_button" onclick="applyWebToDB('website')" disabled>DB 적용하기</button>
                 </div>
                 <div style="align-items: center;">
                     <label style="flex-grow: 1;">✓ YouTube URL 입력 : <input type="text" id="ai_invest_sec_youtubeUrl" class="ai_invest_sec_url_input2" placeholder="https://www.youtube.com/watch?v=-UytuxDQKVY"></label>
                     <button id="ai_invest_sec_readYT" class="ai_invest_sec_read_button" onclick="javascript:readYoutubeScript('read')">데이터 읽어오기</button>
-                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyYT()" disabled>DB 적용하기</button>
+                    <button id="ai_invest_sec_applyYT" class="ai_invest_sec_apply_button" onclick="applyWebToDB('youtube')" disabled>DB 적용하기</button>
                 </div>
                 <div id="ai_invest_sec_appliedData"></div>
             </div>
@@ -76,7 +76,7 @@
     </div>
     <div id="loading_bar_research_ai" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">
-        <p class="loading-text" id="loading_research_ai_text">데이터 로딩중입니다.</p>
+        <p class="loading-text-ai-sec" id="loading_research_ai_text">데이터 로딩중입니다.</p>
     </div>
     <!-- 채팅영역 -->
     <div class="box-instruction">
@@ -87,7 +87,7 @@
                 </div>
                 <!-- Example of a sent message -->
                 <div class="rag-message rag-sent">
-                    <div class="rag-text">*질문예시: 등록된 miraeasset.pdf 의 내용을 요약해줘</div>
+                    <div class="rag-text">*질문예시: 등록된 miraeasset.pdf 의 내용을 요약해줘<br/>or 등록된 youtube 데이터에 대해서 설명해줘</div>
                 </div>
                 <!-- Add more messages here -->
             </div>

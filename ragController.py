@@ -16,6 +16,7 @@ from langchain_community.document_loaders import BSHTMLLoader
 from langchain_community.document_loaders.web_base import WebBaseLoader
 from langchain.text_splitter import CharacterTextSplitter
 from groq import Groq
+from openai import OpenAI
 import os
 import asyncio
 import tempfile
@@ -40,6 +41,7 @@ import utilTool
 logging.basicConfig(level=logging.DEBUG)
 ragController = APIRouter()
 groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
+client = OpenAI(api_key = config.OPENAI_API_KEY)
 # FastAPI로 ChatPDF 인스턴스 초기화
 assistant = ChatPDF()
 askMulti = multiRAG()
@@ -429,7 +431,7 @@ async def handle_ai_sec_file(
         # 파일 확장자 확인
         file_extension = file.filename.split('.')[-1].lower()
         file_name_itself = '.'.join(file.filename.split('.')[:-1])
-        if file_extension not in ['pdf', 'docx']:
+        if file_extension not in ['pdf', 'docx', 'doc']:
             return {"error": "Unsupported file type."}
 
         with tempfile.NamedTemporaryFile(delete=False, suffix="." + file_extension) as temp_file:
@@ -542,22 +544,47 @@ def is_korean(text):
             return True
     return False
 
-# 웹사이트 내용 추출하기
+# AI 투자비서 [웹사이트 데이터 벡터DB에 등록하기]
+@ragController.post("/rag/website_db_register/")
+async def website_db_register(request: Request):
+    try:
+        data = await request.json()  
+        #logging.info(f"Data received: {data}")
+        employeeId = data.get('employeeId')
+        savedTranscript = data.get('savedTranscript')         
+        domain = data.get('domain')  
+        file_type = data.get('file_type')  
+        if not savedTranscript:
+            raise ValueError("No savedTranscript received")
+
+        response_message = await assistant.website_db_register(employeeId, savedTranscript, domain, file_type)
+        
+        print("****************************")
+        print(response_message)
+        print("****************************")
+        return {"message": "Success", "result": response_message}
+
+    except Exception as e:
+        logging.exception("An error occurred")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
+    
+# AI 투자비서 [웹사이트 내용 추출하기]
 class WebSiteDataRequest(BaseModel):
     website_url: str
     type: str
+    llm_model : str
 @ragController.post("/api/website_data/")
 async def extract_website_data(request_data: WebSiteDataRequest):
     website_url = request_data.website_url
     action_type = request_data.type
-    print(website_url)
-    print(action_type)
+    llm_model = request_data.llm_model
     
     text_splitter = CharacterTextSplitter(chunk_size=1024, chunk_overlap=100, length_function=len, separator= "\n\n\n")
     docs = WebBaseLoader(website_url).load_and_split(text_splitter) #BSHTMLLoader 가 WebBaseLoader 보다 더 가벼운듯함. 컴팩트하게 긁어옴
     try:
         print(docs)
-        response_message = await website_data_neatly(docs)
+        response_message = await website_data_neatly(docs, llm_model)
         print("*******************")      
         print(response_message)
         print("*******************")      
@@ -570,19 +597,27 @@ async def extract_website_data(request_data: WebSiteDataRequest):
         logging.exception("An unexpected error occurred")
         raise HTTPException(status_code=500, detail="Unexpected error occurred")   
     
-async def website_data_neatly(docs):
+async def website_data_neatly(docs, type):
     try:
+        if type == 'lama':
+            model = "llama3-8b-8192"
+            api_client = groq_client
+        else:
+            model = "gpt-4-0125-preview"
+            api_client = client
+            
         prompt = """This is an article obtained from a specific website. Please organize and align it neatly so that it looks appealing to others when they see it.
 Write '[Website Content]' in the title, and show the text content below that. At the end, add a title labeled '[Summary]' 
 and craft a summary that is detailed, thorough, in-depth, and complex, while maintaining clarity and conciseness. this is the article: """ + str(docs)
         SYSTEM_PROMPT = "Please make sure to respond in the language the article was written in. Answer the summary in Korean."
-        completion = groq_client.chat.completions.create(
+        completion = api_client.chat.completions.create(
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
                 ],
             #model="mixtral-8x7b-32768",
-            model="llama3-8b-8192",
+            #model="llama3-8b-8192",
+            model=model
         )
         return completion.choices[0].message.content
     except Exception as e:
@@ -590,7 +625,8 @@ and craft a summary that is detailed, thorough, in-depth, and complex, while mai
         return None    
 
 
-# 유튜브 스크립트 읽기
+
+# AI 투자비서 [유튜브 스크립트 읽어오기]
 class YouTubeDataRequest(BaseModel):
     video_id_or_url: str
     type: str
@@ -629,13 +665,15 @@ async def extract_youtube_script(request_data: YouTubeDataRequest):
         if transcript:
             formatter = TextFormatter()
             text_formatted = formatter.format_transcript(transcript)
-            print(text_formatted)
+            text_without_newlines = text_formatted.replace('\n', '')
+            print(text_without_newlines)
             #일단 한줄로 만들고, 띄어쓰기 라이브러리를 이용해서 띄어쓰기한다.
-            if is_korean(text_formatted) :           
+            if is_korean(text_formatted) :          
                 combined_text = ' '.join(text_formatted) 
-                result = spacing_okt(combined_text)
+                result = text_without_newlines
+                #result = spacing_okt(combined_text)
             else :
-                result = text_formatted
+                result = text_without_newlines
             return JSONResponse(content={"transcript": result})
         else:
             raise ValueError("Transcript not available")
