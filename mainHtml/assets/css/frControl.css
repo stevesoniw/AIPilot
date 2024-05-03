@@ -585,7 +585,7 @@ input[type="range"].similarity-form-input:focus{outline:0;}
 .frst-news-date-input::-webkit-calendar-picker-indicator { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: transparent; color: transparent; cursor: pointer; }
 .frst-news-search-btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
 .frst-news-search-btn:hover { background-color: #0056b3; }
-.frst-news-results { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 850px; margin-top: 20px; }
+.frst-news-results { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 1000px; margin-top: 20px; }
 .frst-flex-wrap { position: relative; width:100%; display: flex; margin: 20px 0; padding: 20px; background: #f5f7f9; border: 1px solid #efefef; }
 .frst-date-label { position: absolute; top: 20px; right: 20px; padding: 5px 10px; font-size: 12px; color: #fff; background: #666; border-radius: 4px; }
 .frst-left-img-wrap { width: 120px; height: 100px; }

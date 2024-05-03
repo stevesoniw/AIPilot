@@ -227,18 +227,18 @@ function displayFrstNews(news_data) {
         const newsDiv = document.createElement('div');
         newsDiv.className = 'frst-flex-wrap';  // Changed class name to match the styling
         newsDiv.innerHTML = `
-            <span class="frst-date-label">${new Date(item.publishOn).toLocaleDateString()}</span>
-            <div class="frst-left-img-wrap">
-                <img src="${imageUrl}" alt="News Image" class="frst-news-image">
+        <span class="frst-date-label">${new Date(item.publishOn).toLocaleDateString()}</span>
+        <div class="frst-left-img-wrap">
+            <img src="${imageUrl}" alt="News Image" class="frst-news-image">
+        </div>
+        <div class="frst-content">
+            <h4 class="frst-content-tit">${item.title}</h4>
+            <div class="frst-content-btn-wrap">
+                <a href="${item.link}" class="frst-content-btn blue" target="_blank">원문보기</a>
             </div>
-            <div class="frst-content">
-                <h4 class="frst-content-tit">${item.title}</h4>
-                <div class="frst-content-btn-wrap">
-                    <a href="${item.link}" class="frst-content-btn blue" target="_blank">원문보기</a>`
-                    // <button class="frst-content-btn orange">AI 요약하기</button>
-                `</div>
-            </div>
+        </div>
         `;
+    
         resultsContainer.appendChild(newsDiv);
     });
 }
