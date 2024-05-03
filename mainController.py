@@ -49,26 +49,33 @@ app = FastAPI(lifespan=db_connection_manager)
 
 @app.middleware("http")
 async def count_visitors(request: Request, call_next):
+    #logger.debug(f"Received request: {request.url}")    
+    path = request.url.path.rstrip('/')
+    if path == '':
+        menu_name = 'root'  # Default root menu
+    elif path.startswith('/static'):
+        menu_name = 'static_content'  # All static content
+    else:
+        menu_name = path.strip('/')  # Directly use path as the menu name
+   
+    #logger.debug(f"Checking if request matches root URLs: Path={request.url.path}, Host={request.url.hostname}")
+
     if not hasattr(request.app.state, 'db_pool'):
         logger.error("Database pool not available in app state.")
-    if request.url.path.startswith("/static/"):
-        response = await call_next(request)
-        return response        
-    else : 
-        try:
-            ip_address = request.client.host  # Get client IP address
-            async with request.app.state.db_pool.acquire() as conn:
-                logger.debug("Database connection acquired for visitor counting.")
-                await conn.execute('''
-                    INSERT INTO visitors (visit_date, visitor_count, ip_address)
-                    VALUES (CURRENT_DATE, 1, $1)
-                    ON CONFLICT (visit_date) DO UPDATE
-                    SET visitor_count = visitors.visitor_count + 1;
-                ''', ip_address)  # Pass the IP address as a parameter to the SQL query
-                logger.debug("Visitor count updated successfully.")
-        except Exception as e:
-            logger.error(f"Error updating visitor count: {e}")
-    
+    try:
+        ip_address = request.client.host  # Get client IP address
+        async with request.app.state.db_pool.acquire() as conn:
+            #logger.debug("Database connection acquired for visitor counting.")
+            await conn.execute('''
+                INSERT INTO menu_visits (visit_date, menu_name, menu_count, ip_address)
+                VALUES (CURRENT_DATE, $1, 1, $2)
+                ON CONFLICT (visit_date, menu_name) DO UPDATE
+                SET menu_count = menu_visits.menu_count + 1;
+            ''', menu_name, ip_address)
+            #logger.debug(f"Menu visit count updated successfully for {menu_name}.")
+    except Exception as e:
+        logger.error(f"Error updating menu visit count: {e}")
+
     response = await call_next(request)
     return response
 
