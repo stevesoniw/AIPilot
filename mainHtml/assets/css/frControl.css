@@ -582,6 +582,7 @@ input[type="range"].similarity-form-input:focus{outline:0;}
 #chartPilot .list-dep.small-ver li{margin-bottom:5px;color:#555;}
 #chartPilot .list-dep.small-ver li::before{top:7px;background:#2970ff;}
 /* [해외] 마켓데이터 분석 > 유사국면 분석 툴팁 추가 */
+
 /* [해외] 마켓데이터 분석 > 유사국면 분석 테이블 버전 추가 */
 .table-wrap02 th{color:#333;background:#fafaff;}
 .table-wrap02 th, .table-wrap02 td{padding:15px 20px;}

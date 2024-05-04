@@ -325,15 +325,15 @@ def create_figures(sample_data, target_dates, values_list, options, title_prefix
         print(target_data.index.tolist())
         chart_data["series"].append({"name": f"Target: {column.split('_')[-1]}", "data": target_trace.tolist()})
 
-        print("77")
+       # print("77")
         for i, (start_date, end_date, score) in enumerate(values_list, 1):
             if n_steps > 0:
-                print("88")
+                #print("88")
                 get_length = len(sample_data.loc[start_date:end_date])
                 sliced_data = sample_data[start_date:][:get_length + n_steps]
                 sliced_data.reset_index(drop=True, inplace=True)
             else:
-                print("99")
+                #print("99")
                 sliced_data = sample_data.loc[start_date:end_date]
                 sliced_data.reset_index(drop=True, inplace=True)
 
@@ -448,6 +448,12 @@ async def analyze_multi_series(data: AnalysisRequestMulti):
     #individual_table = compute_individual_dtw(original_data, [target_start_date, target_end_date], values_list)
     if data.n_graphs > 0:
         target_df, change_df = n_steps_ahead(original_data, [target_start_date, target_end_date], values_list, data.selected_data, n_steps= data.n_graphs)
+        
+    print("************************")
+    print(original_figs)
+    print("************************")
+    print(aligned_figs)
+    print("************************")
     
     return JSONResponse(content={
         "chart_data": {
@@ -627,7 +633,7 @@ def analyze_time_series(request: AnalysisRequestVariation):
     fig_superimpose_target_original = create_variation_figure(original_data, target_date, request.selected_data, values_list, subtract=False, n_steps = request.n_steps)
     fig_superimpose_target_aligned = create_variation_figure(original_data, target_date, request.selected_data, values_list, subtract=True, n_steps = request.n_steps)
     
-    print(fig_superimpose_target_original)
+    #print(fig_superimpose_target_original)
     
     '''chart_data = {
         "original": fig_superimpose_target_original,
@@ -786,10 +792,10 @@ async def analyze_time_series(data: AnalysisRequestFrStock):
     fs_superimpose_target_original = fs_create_figure(df, target_date, data.selected_data, filtered_start_end_distance_list, subtract=False, n_steps = data.n_steps)
     fs_superimpose_target_aligned = fs_create_figure(df, target_date, data.selected_data, filtered_start_end_distance_list, subtract=True, n_steps = data.n_steps)
 
-    print(fs_superimpose_target_original)
-    print("********************")
-    print(fs_superimpose_target_aligned)
-    print("********************")
+    #print(fs_superimpose_target_original)
+    #print("********************")
+    #print(fs_superimpose_target_aligned)
+    #print("********************")
     
     #chart_data = {
     #    "original": fs_superimpose_target_original.to_json(),

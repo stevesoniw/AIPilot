@@ -17,6 +17,36 @@ function updateValue(inputId, outputId) {
     document.getElementById(outputId).textContent = document.getElementById(inputId).value;
 }
 
+function initializeTooltips() {
+    // 툴팁을 적용할 각 요소의 ID를 배열에 저장
+    var tooltipIDs = ['#tooltip-targetPeriod', '#tooltip-analysisPeriod', '#tooltip-nSteps'];
+
+    // 각 툴팁에 대해 설정을 적용
+    $(tooltipIDs.join(', ')).tooltip({
+        position: {
+            my: 'left bottom-10',
+            at: 'left top',
+            using: function(position, feedback) {
+                $(this).css(position);
+                $('<div>').addClass('arrow')
+                          .addClass(feedback.vertical)
+                          .addClass(feedback.horizontal)
+                          .appendTo(this);
+            }
+        },
+        content: function() {
+            return $(this).attr('title');
+        },
+        show: {
+            duration: 100
+        },
+        create: function() {
+            // 스타일 클래스 추가하여 CSS를 통해 스타일 적용
+            $(this).addClass('custom-tooltip-style');
+        }
+    });
+}
+
 /*************  유사국면분석 (단일지표)  ****************/
 function generateSingleHighCharts(chartDataArray, containerId) {
     let container = document.getElementById(containerId);
@@ -80,9 +110,9 @@ function generateSingleHighCharts(chartDataArray, containerId) {
                 pointStart: 0
             }
         },
-        series: chartDataArray.map(dataset => ({
+        series: chartDataArray.map((dataset, index) => ({
             name: dataset.name,
-            data: dataset.y
+            data: index === 0 ? dataset.y.slice(0, plotLineValue + 1) : dataset.y // Only truncate the first series
         })),
         responsive: {
             rules: [{
@@ -169,28 +199,32 @@ function generateMultiHighCharts(chartDataArray, containerId) {
     //console.log("***************");
 
     const nStepsValue = parseInt(document.getElementById('nMultiStepValue').textContent, 10);
+    const categories = chartDataArray.xAxis.categories;
+    const maxXValue = chartDataArray.xAxis.categories.length - 1;
+    const longestSeriesLength = Math.max(...chartDataArray.series.map(series => series.data.length));
+    const plotLineValue = longestSeriesLength - nStepsValue - 1;
     
+    //console.log("****************");
+    //console.log("longestSeriesLength=", longestSeriesLength);
+    //console.log("nStepsValue=", nStepsValue);
+    //console.log("plotLineValue=", plotLineValue);
 
-    // Collect all series and format names if needed
-    const allSeries = chartDataArray.series.map(series => {
+    const allSeries = chartDataArray.series.map((series, index) => {
+        if (index === 0) { 
+            series.data = series.data.slice(0, plotLineValue + 1);
+        }
         if (series.name.startsWith('Graph')) {
             const nameParts = series.name.split(': ');
             const dateRangeParts = nameParts[1].split(' to ');
             const formattedStart = formatDateWithoutTime(dateRangeParts[0]);
             const formattedEnd = formatDateWithoutTime(dateRangeParts[1]);
-            return {
-                name: `${nameParts[0]}: ${formattedStart} to ${formattedEnd}`,
-                data: series.data
-            };
+            series.name = `${nameParts[0]}: ${formattedStart} to ${formattedEnd}`;
         }
-        return {
-            name: series.name,
-            data: series.data
-        };
+
+        return series;
     });
 
-    const categories = chartDataArray.xAxis.categories;
-    let plotLinePosition = Math.max(0, categories.length - 1 - nStepsValue);
+    //let plotLinePosition = Math.max(0, categories.length - 1 - nStepsValue);
 
     Highcharts.chart(containerId, {
         chart: {
@@ -201,25 +235,24 @@ function generateMultiHighCharts(chartDataArray, containerId) {
             text: chartDataArray.title.text
         },
         xAxis: {
+            type: 'linear',
             categories: categories,
             title: {
-                text: 'Date'
+                text: 'Index'
             },
+            labels: {
+                enabled: true
+            },           
             crosshair: true,
             plotLines: [{
                 color: 'red',
-                value: plotLinePosition,
+                value: plotLineValue, 
                 dashStyle: 'Dash', 
                 width: 2,
-                zIndex: 5,
                 label: {
-                    text: 'N Steps',
-                    style: {
-                        color: 'red'
-                    }
+                    text: 'N Steps'
                 }
-            }],
-            max: categories.length - 1
+            }]
         },
         yAxis: {
             title: {
@@ -414,7 +447,6 @@ function createAndPopulateChartContainers(chartData) {
     const chartContainerBase = document.getElementById('chartContainerBase');
     chartContainerBase.innerHTML = ''; // Clear previous contents
 
-    // Assuming there's a need to display both 'original' and 'aligned' charts
     // Create containers and charts for 'original'
     chartData.original.forEach((data, index) => {
         const containerId = `originalChartContainer${index}`;
@@ -508,9 +540,14 @@ function generateVariationHighCharts(chartData, containerId) {
         chartTitle = 'Aligned Comparison';
     }
     const nStepsValue = parseInt(document.getElementById('nVariationStepValue').textContent, 10);
-    let plotLinePosition = null;
+    const maxLength = Math.max(...chartData.series.map(series => series.data.length));
+    let plotLinePosition = maxLength - nStepsValue;
+    if (plotLinePosition >= maxLength) {
+        plotLinePosition = maxLength - 1;
+    }
 
-    const formattedSeries = chartData.series.map(series => {
+    // Formatting series names and truncating target series data
+    const formattedSeries = chartData.series.map((series, index) => {
         if (series.name.startsWith('Graph')) {
             const nameParts = series.name.split(': ');
             const dateRangeParts = nameParts[1].split(' to ');
@@ -518,20 +555,13 @@ function generateVariationHighCharts(chartData, containerId) {
             const formattedEnd = formatDateWithoutTime(dateRangeParts[1]);
             series.name = `${nameParts[0]}: ${formattedStart} to ${formattedEnd}`;
         }
+        // Truncate the target series data
+        if (index === 0 && series.name.startsWith('Target:')) {
+            series.data = series.data.slice(0, plotLinePosition + 1);
+        }
         return series;
     });
 
-    // Find the last index from the target series data
-    if (chartData.series[0] && chartData.series[0].name.startsWith('Target:')) {
-        const targetSeriesData = chartData.series[0].data;
-        //console.log("**************");
-        //console.log(targetSeriesData.length);
-        //console.log("**************");
-        plotLinePosition = targetSeriesData.length - 1 - nStepsValue; 
-        if (plotLinePosition >= targetSeriesData.length) {
-            plotLinePosition = targetSeriesData.length - 1; 
-        }
-    }
     Highcharts.chart(containerId, {
         chart: {
             type: 'line',
@@ -559,7 +589,7 @@ function generateVariationHighCharts(chartData, containerId) {
                     }
                 }
             }],
-            max: chartData.series[0] ? chartData.series[0].data.length - 1 : null // x축의 최대값 설정
+            max: maxLength - 1  // x축의 최대값 설정
     },
     yAxis: {
         },
