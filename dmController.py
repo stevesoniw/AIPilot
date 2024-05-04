@@ -213,6 +213,23 @@ def fetch_news_detail(news_url: NewsURL):
             raise HTTPException(status_code=404, detail="News content not found")
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=400, detail=f"Error fetching Naver news detail: {e}")
+    
+@dmController.post("/groqLamaTest")
+async def groq_cloud_lama_test(request_data: dict):
+    action = request_data.get("action")
+    g_news = request_data.get("g_news")
+
+    SYSTEM_PROMPT = ""
+    if action == "navergpt":
+        # 네이버 뉴스에 대한 GPT 의견 묻기임 
+        SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications. answer in Korean."        
+        digest_news = g_news
+        gpt_result = await utilTool.lama3_news_sum(digest_news, SYSTEM_PROMPT)        
+        
+    else:
+        gpt_result = {"error": "Invalid action"}
+    
+    return {"result": gpt_result}    
 ############################## [2ND_GNB][1ST_MENU] 국내 뉴스정보 구현 ::  네이버 검색 API + 금융메뉴 스크래핑 활용 시작 Ends ######################    
 
 ############################## [2ND_GNB][2ND_MENU] 국내 뉴스정보 구현 ::  국내 주식종목 유사국면 찾기 화면 개발 Starts   ################################
@@ -301,9 +318,13 @@ async def find_similar_period(request: StockRequest):
     series_ref = np.array(hist_ref['Close'], dtype=np.double)
     series_full = np.array(hist_full['Close'], dtype=np.double)
     
+    hist_full.index = hist_full.index.tz_localize(None)
+    hist_ref.index = hist_ref.index.tz_localize(None)
+    
     # 참조 기간의 인덱스 찾기
-    ref_start_idx = hist_full.index.get_loc(hist_ref.index[0])
-    ref_end_idx = hist_full.index.get_loc(hist_ref.index[-1])    
+    ref_start_idx = hist_full.index.searchsorted(hist_ref.index[0])
+    ref_end_idx = hist_full.index.searchsorted(hist_ref.index[-1], side='right') - 1
+  
    
     # 참조 기간의 길이
     len_ref = len(series_ref)    

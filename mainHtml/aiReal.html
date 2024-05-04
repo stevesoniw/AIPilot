@@ -12,6 +12,7 @@
         <meta content="AISolutionDivision.pilot" name="keywords" />
         <!-- Favicons -->
         <link rel="shortcut icon" href="/static/assets/images/favicon.ico" />
+        <!-----------  PRODUCT  JS        ----------->        
         <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
         <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
         <script type="text/javascript" src="/static/assets/js/aos.js"></script>
@@ -35,14 +36,12 @@
         <script src="/static/assets/js/frNews.js"></script>
         <script src="/static/assets/js/frSocialData.js"></script>
         <script src="/static/assets/js/frCalendar.js"></script>
-        <script src="/static/assets/js/frPhaseAnalysis.js"></script>
+        <script src="/static/assets/js/frBdPhaseAnalysis.js"></script>
+        <script src="/static/assets/js/frStPhaseAnalysis.js"></script>
         <script src="/static/assets/js/dmNews.js"></script>
         <script src="/static/assets/js/dmPhaseAnalysis.js"></script>
         <script src="/static/assets/js/researchRAG.js"></script>
-        <script src="/static/assets/js/newEx.js"></script>
-        <!-----------  PRODUCT  JS        ----------->
-        <script type="text/javascript" src="/static/assets/js/jquery-3.6.4.min.js"></script>
-        <script type="text/javascript" src="/static/assets/js/jquery-ui.min.js"></script>
+        <script src="/static/assets/js/researchAISummarize.js"></script>
         <!-- fullcalendar Lib-->  
         <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -55,6 +54,7 @@
         <script src="https://code.highcharts.com/modules/exporting.js"></script>
         <script src="https://code.highcharts.com/modules/export-data.js"></script>
         <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+        <script src="https://code.highcharts.com/modules/timeline.js"></script>        
         <!--     datepicker    -->
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
         <!--      Select      -->  
@@ -83,14 +83,17 @@
                                     <a href="#">뉴스 데이터 분석</a>
                                 </li>
                                 <li class="list-dep" data-tab="menud" data-html="/static/frSocialData.html">
-                                    <a href="#">소셜 데이터 분석</a>
+                                    <a href="#">FOMC 데이터 분석</a>
                                 </li>
                                 <li class="list-dep" data-tab="menue" data-html="/static/frCalendar.html">
                                     <a href="#">Economic 캘린더</a>
                                 </li>
-                                <li class="list-dep" data-tab="menuf" data-html="/static/frPhaseAnalysis.html">
-                                    <a href="#">유사국면 분석</a>
+                                <li class="list-dep" data-tab="menuf" data-html="/static/frBdPhaseAnalysis.html">
+                                    <a href="#">유사국면 분석 - 채권</a>
                                 </li>
+                                <li class="list-dep" data-tab="menug" data-html="/static/frStPhaseAnalysis.html">
+                                    <a href="#">유사국면 분석 - 해외주식</a>
+                                </li>                                
                             </ul>
                         </div>
                         <h3 class="menu02"><a href="#" class="acc-tit">[국내] 마켓데이터 분석</a></h3>
@@ -108,8 +111,11 @@
                         <div>
                             <ul>
                                 <li class="list-dep" data-tab="menu_3rd_a" data-html="/static/researchRAG.html">
-                                    <a href="#">Research Report [RAG]</a>
+                                    <a href="#">Report 쉽게 읽기</a>
                                 </li>
+                                <li class="list-dep" data-tab="menu_3rd_b" data-html="/static/researchAISummarize.html">
+                                    <a href="#">[실험실] 1. AI Summarize</a>
+                                </li>                                
                             </ul>
                         </div>
                     </div>
@@ -121,26 +127,80 @@
         <script>
             $(document).ready(function(){
                 guideTab();
+                initializeAccordion();
+                var menu = getUrlParameter('menu');
+                openAccordionBasedOnMenu(menu); //아코디언 제어하기.
+            });
+            
+            function initializeAccordion() {
                 $('#accordion').accordion({
                     collapsible: true,
                     animate: 300,
-                    active: 0,
                     heightStyle: 'content',
                     classes: {
-                        'ui-accordion':'nav-acc',
+                        'ui-accordion': 'nav-acc',
                         'ui-accordion-header': 'nav-acc-header',
                         'ui-accordion-content': 'nav-acc-content'
                     },
                     icons: {
-                        header:'nav-acc-ic',
-                        activeHeader:'nav-acc-ic-active'
+                        header: 'nav-acc-ic',
+                        activeHeader: 'nav-acc-ic-active'
                     }
                 });
-                $('.left-area .list-dep[data-tab="menua"]').click();
-            });
-
+            }
+            function openAccordionBasedOnMenu(menu) {
+                let index = 0; 
+                if (menu === 'menu2') {
+                    index = 1; 
+                } else if (menu === 'menu3') {
+                    index = 2; 
+                }
+                $('#accordion').accordion('option', 'active', index);
+                // Immediately after setting the active panel, load the appropriate content
+                setTimeout(() => {
+                    loadContentForActivePanel(menu);
+                }, 10); 
+            }
+            function loadContentForActivePanel(menu) {
+                var selectedTab;
+                if (menu === 'menu2') {
+                    selectedTab = $('.left-area .menu02').next().find('.list-dep[data-tab="menu_2nd_a"]'); 
+                } else if (menu === 'menu3') {
+                    selectedTab = $('.left-area .menu03').next().find('.list-dep[data-tab="menu_3rd_a"]'); 
+                } else {
+                    selectedTab = $('.left-area .menu01').next().find('.list-dep[data-tab="menua"]'); 
+                }
+                if (selectedTab.length > 0) {
+                    var htmlPath = selectedTab.data('html');
+                    if (htmlPath) {
+                        fetch(htmlPath)
+                            .then(response => response.text())
+                            .then(html => {
+                                $('#right-area').html(html); 
+                                selectedTab.click(); 
+                            })
+                            .catch(error => console.error('Error loading the HTML:', error));
+                    }
+                } else {
+                    console.error("No tab found for the specified menu parameter:", menu);
+                }
+            }
+            function getUrlParameter(sParam) {
+                var sPageURL = window.location.search.substring(1),
+                    sURLVariables = sPageURL.split('&'),
+                    sParameterName,
+                    i;
+                for (i = 0; i < sURLVariables.length; i++) {
+                    sParameterName = sURLVariables[i].split('=');
+        
+                    if (sParameterName[0] === sParam) {
+                        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                    }
+                }
+            }
             function guideTab(){
-                $('.left-area .list-dep').click(function(event){
+                //$('.left-area').on('click', '.list-dep', function(event){
+                $('.left-area').off('click', '.list-dep').on('click', '.list-dep', function(event){
                     event.preventDefault(); // 기본 동작 방지
                     var htmlPath = $(this).data('html'); // data-html 속성에서 HTML 파일 경로를 가져옴
                     $('.list-dep').removeClass('on');
@@ -161,6 +221,7 @@
                     }
                 });
             }
+            
             function initializeSelect2(selector, placeholderText) {
                 $(selector).select2({
                     placeholder: placeholderText,
@@ -175,242 +236,420 @@
                     minimumResultsForSearch: Infinity
                 }).val(null).trigger("change");
             }            
-             //html 로드 되어야만 제어할수 있는 자바스크립트 처리를 위한 함수 
-            function executeScriptsByTabId(tabId) {
-                switch (tabId) {
-                    case 'menua':
-                        $('#foreign_ticker').select2({
-                            ajax: {
-                                url: '/api/get_foreign_stock_symbols',
-                                dataType: 'json',
-                                delay: 550,
-                                data: function (params) {
-                                    return {
-                                        q: params.term,
-                                        page: params.page
-                                    };
-                                },
-                                processResults: function (data, params) {
-                                    // 입력값이 한글인 경우 minimumInputLength를 4로 설정하고, 특정 함수를 실행
-                                    var minimumInputLength = params.term.length >= 4 ? 4 : 1;
-                                    if (/^[가-힣]+$/.test(params.term)) {
-                                        yourFunction(params.term); // 여기에 특정 함수 호출 코드를 넣으세요.
-                                    }
-                        
-                                    // stock.symbol 대신 stock.description을 우선으로 검색하여 정렬
-                                    data.sort((a, b) => {
-                                        if (a.description.includes(params.term)) return -1;
-                                        if (b.description.includes(params.term)) return 1;
-                                        return 0;
+
+            //해외종목 검색코드 함수를 공통으로 만들어 메인 영역으로 뺌 (*여러 메뉴에서 계속 동일한 기능 사용하게 될것같음)
+            var isSearchingKorean = false; // 전역으로 한글 검색 상태 추적
+            function setupSelect2(selector, apiUrl) {
+                $(selector).select2({
+                    ajax: {
+                        url: apiUrl,
+                        dataType: 'json',
+                        delay: 550,
+                        data: function (params) {
+                            return {
+                                q: params.term,
+                                page: params.page
+                            };
+                        },
+                        processResults: function (data, params) {
+                            const term = params.term.toUpperCase();
+                            data.sort((a, b) => {
+                                const aInSymbol = a.symbol.toUpperCase().includes(term);
+                                const bInSymbol = b.symbol.toUpperCase().includes(term);
+                                const aInDescription = a.description.toUpperCase().includes(term);
+                                const bInDescription = b.description.toUpperCase().includes(term);
+            
+                                if (aInSymbol && !bInSymbol) {
+                                    return -1;
+                                } else if (!aInSymbol && bInSymbol) {
+                                    return 1;
+                                } else if (aInSymbol && bInSymbol) {
+                                    return 0;
+                                } else if (aInDescription && !bInDescription) {
+                                    return 1;
+                                } else if (!aInDescription && bInDescription) {
+                                    return -1;
+                                } else {
+                                    return 0;
+                                }
+                            });
+                            return {
+                                results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
+                            };
+                        },
+                        cache: true
+                    },
+                    placeholder: '원하시는 종목을 검색해주세요!',
+                    minimumInputLength: 1,
+                    allowClear: true,
+                    language: {
+                        noResults: function () {
+                            return isSearchingKorean ? "한글로 검색어를 찾고 있습니다. 조금 기다려주세요." : "검색 결과가 없습니다.";
+                        }
+                    }
+                }).on('select2:select', function (e) {
+                    // 선택 이벤트가 발생했을 때 실행할 함수들
+                    removeButtonOn('getEarningInfo');
+                    removeButtonOn('getStockInfo');
+                    removeButtonOn('getForeignStockNews');
+                }).on('select2:open', function (e) {
+                    var searchField = $('.select2-search__field').last();
+                    var debounceTimer;
+                    searchField.off('input.select2minLength');
+                    searchField.on('input.select2minLength', function () {
+                        var term = $(this).val();
+                        clearTimeout(debounceTimer);
+                        if (/[\u3131-\uD79D\uAC00-\uD7A3]/.test(term)) {
+                            if (term.length >= 2) {
+                                isSearchingKorean = true;
+                                debounceTimer = setTimeout(function() {
+                                    getEngNameFromGoogle(term).then(stockCode => {
+                                        if (stockCode) {
+                                            searchField.val(stockCode).trigger('input');
+                                            searchField.trigger('input.select2minLength');
+                                        }
+                                        isSearchingKorean = false;
                                     });
-                        
-                                    return {
-                                        // 검색 결과를 symbol과 description 형식으로 표시하되, symbol에 포함된 경우 상단으로 정렬
-                                        results: data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
-                                    };
-                                },
-                                cache: true
-                            },
-                            placeholder: '원하시는 종목을 검색해주세요!',
-                            minimumInputLength: 1, // minimumInputLength 기본값 1로 설정
-                            allowClear: true,
-                            language: {
-                                noResults: function() {
-                                    return "검색 결과가 없습니다."; 
+                                }, 3000);
+                            }
+                        } else {
+                            isSearchingKorean = false;
+                        }
+                    });
+                });
+            }
+            /* 툴팁 공통함수 시작 */
+            function jTooltip(){
+                $('.chat-info.-right-ver').tooltip({
+                    position: {
+                        my: 'left bottom-10',
+                        at: 'left top',
+                        using: function(position, feedback){
+                            $(this).css(position);
+                            $('<div>').addClass('arrow').addClass(feedback.vertical).addClass(feedback.horizontal).appendTo(this);
+                        }
+                    },
+                    content: function(){
+                        return $(this).attr('title');
+                    },
+                    show: {
+                        duration: 100
+                    }
+                });
+            }
+            /* 툴팁 끝 */
+            //html 로드 되어야만 제어할수 있는 자바스크립트 처리를 위한 함수 
+            function executeScriptsByTabId(tabId) {
+                setTimeout(function() {
+                    switch (tabId) {
+                        case 'menua':
+                        setupSelect2('#foreign_ticker', '/api/get_foreign_stock_symbols');
+                            /** FILE READ 가 속도가 더 느려서 일단 보류
+                            function fetchDataAndInitialize() {
+                                var data = localStorage.getItem('us_symbols');
+                                if (data) { 
+                                    // 캐시된 데이터가 있으면 바로 초기화
+                                    initializeSelect2(JSON.parse(data));
+                                } else {
+                                    // 캐시된 데이터가 없으면 서버에서 가져와서 초기화
+                                    $.getJSON('/batch/stockcode/US_symbols.json', function(json) {
+                                        localStorage.setItem('us_symbols', JSON.stringify(json)); // 데이터를 로컬 스토리지에 저장
+                                        initializeSelect2(json); // Select2 초기화
+                                    });
                                 }
                             }
-                        });
-                                       
-                        /** FILE READ 가 속도가 더 느려서 일단 보류
-                        function fetchDataAndInitialize() {
-                            var data = localStorage.getItem('us_symbols');
-                            if (data) {
-                                // 캐시된 데이터가 있으면 바로 초기화
-                                initializeSelect2(JSON.parse(data));
-                            } else {
-                                // 캐시된 데이터가 없으면 서버에서 가져와서 초기화
-                                $.getJSON('/batch/stockcode/US_symbols.json', function(json) {
-                                    localStorage.setItem('us_symbols', JSON.stringify(json)); // 데이터를 로컬 스토리지에 저장
-                                    initializeSelect2(json); // Select2 초기화
+                            function initializeSelect2(data) {
+                                var formattedData = data.map(stock => ({
+                                    id: stock.symbol,
+                                    text: `${stock.description} (${stock.symbol})`
+                                }));
+                                formattedData.unshift({id: "", text: "원하시는 종목을 검색해주세요!"}); // 기본 플레이스홀더 항목 추가
+                        
+                                $('#foreign_ticker').select2({
+                                    data: formattedData,
+                                    minimumInputLength: 2,
+                                    allowClear: true,
+                                    language: {
+                                        noResults: function() {
+                                            return "검색 결과가 없습니다.";
+                                        }
+                                    }
                                 });
                             }
-                        }
-                        function initializeSelect2(data) {
-                            var formattedData = data.map(stock => ({
-                                id: stock.symbol,
-                                text: `${stock.description} (${stock.symbol})`
-                            }));
-                            formattedData.unshift({id: "", text: "원하시는 종목을 검색해주세요!"}); // 기본 플레이스홀더 항목 추가
-                    
-                            $('#foreign_ticker').select2({
-                                data: formattedData,
-                                minimumInputLength: 2,
-                                allowClear: true,
-                                language: {
-                                    noResults: function() {
-                                        return "검색 결과가 없습니다.";
+                            // 페이지 로드 시 데이터를 가져오고 Select2를 초기화
+                            fetchDataAndInitialize();     **/           
+                
+                            /********* AI가 말해주는 주식정보(해외) - #4. Ask AI Anything 채팅영역 ************/
+                            document.getElementById('chatInput').addEventListener('keypress', function(e) { //엔터쳤을때 메시지보이게하고, 데이터요청 함수콜한다
+                                if (e.key === 'Enter' && this.value.trim() !== '') {
+                                    sendChatMessage(this.value.trim()); 
+                                    this.value = '';
+                                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                                }
+                            });
+                            /*
+                            document.getElementById('aiStockChat').addEventListener('click', function() { //채팅창 숨기고 보이게 하는기능
+                                var chatApp = document.getElementById('chatApp');
+                                if (chatApp.style.display === 'none') {
+                                    chatApp.style.display = 'flex'; 
+                                    document.querySelector('#chatTitle').scrollIntoView({ behavior: 'smooth' });
+                                } else {
+                                    chatApp.style.display = 'none'; 
+                                }
+                            }); */     
+                            /** 디폴트 메시지 보여주기 **/
+                            function addServerMessage(message) {
+                                const responseDiv = document.createElement('div');
+                                responseDiv.classList.add('message', 'system'); // 'message'와 'server' 클래스 추가
+                                responseDiv.textContent = message; // 메시지 내용 설정
+                                document.getElementById('chatMessages').appendChild(responseDiv); // #chatMessages에 메시지 추가
+                            }
+                            addServerMessage("질문을 해주세요!^^");
+                            addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
+                            addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
+                            break;
+                        case 'menub': //글로벌 주요 경제지표영역
+                            $('#indicator_select').select2();
+                            $("#indicatorFromDate, #indicatorToDate").datepicker({
+                                dateFormat: "yy-mm-dd",
+                                changeMonth: true,
+                                changeYear: true
+                            });
+                            $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정
+                            $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                        
+                            break;
+                        case 'menuc':  //뉴스 데이터 분석
+                            // News영역 컨트롤 ::'All Market News' 체크박스 관련 스크립트
+                            document.getElementById('all').addEventListener('click', function() {
+                                const allCheckbox = this;
+                                const otherCheckboxes = document.querySelectorAll("#categoryForm input[name='categories']:not(#all)");
+                                otherCheckboxes.forEach(checkbox => {
+                                    checkbox.checked = false;
+                                });
+                            });
+                            // 다른 체크박스를 클릭할 때 'All Market News' 체크박스 해제
+                            document.querySelectorAll("#categoryForm input[name='categories']:not(#all)").forEach(checkbox => {
+                                checkbox.addEventListener('click', function() {
+                                    if (this.checked) {
+                                        document.getElementById('all').checked = false;
                                     }
-                                }
+                                });
                             });
-                        }
-                        // 페이지 로드 시 데이터를 가져오고 Select2를 초기화
-                        fetchDataAndInitialize();     **/           
-            
-                        /********* AI가 말해주는 주식정보(해외) - #4. Ask AI Anything 채팅영역 ************/
-                        document.getElementById('chatInput').addEventListener('keypress', function(e) { //엔터쳤을때 메시지보이게하고, 데이터요청 함수콜한다
-                            if (e.key === 'Enter' && this.value.trim() !== '') {
-                                sendChatMessage(this.value.trim()); 
-                                this.value = '';
-                                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-                            }
-                        });
-                        /*
-                        document.getElementById('aiStockChat').addEventListener('click', function() { //채팅창 숨기고 보이게 하는기능
-                            var chatApp = document.getElementById('chatApp');
-                            if (chatApp.style.display === 'none') {
-                                chatApp.style.display = 'flex'; 
-                                document.querySelector('#chatTitle').scrollIntoView({ behavior: 'smooth' });
-                            } else {
-                                chatApp.style.display = 'none'; 
-                            }
-                        }); */     
-                        /** 디폴트 메시지 보여주기 **/
-                        function addServerMessage(message) {
-                            const responseDiv = document.createElement('div');
-                            responseDiv.classList.add('message', 'system'); // 'message'와 'server' 클래스 추가
-                            responseDiv.textContent = message; // 메시지 내용 설정
-                            document.getElementById('chatMessages').appendChild(responseDiv); // #chatMessages에 메시지 추가
-                        }
-                        addServerMessage("질문을 해주세요!^^");
-                        addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
-                        addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
-                        break;
-                    case 'menub':
-                        $('#indicator_select').select2();
-                        $("#indicatorFromDate, #indicatorToDate").datepicker({
-                            dateFormat: "yy-mm-dd",
-                            changeMonth: true,
-                            changeYear: true
-                        });
-                        $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정
-                        $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                        
-                        break;
-                    case 'menuc':
-                        // News영역 컨트롤 ::'All Market News' 체크박스 관련 스크립트
-                        document.getElementById('all').addEventListener('click', function() {
-                            const allCheckbox = this;
-                            const otherCheckboxes = document.querySelectorAll("#categoryForm input[name='categories']:not(#all)");
-                            otherCheckboxes.forEach(checkbox => {
-                                checkbox.checked = false;
+                            break;
+                        case 'menud':
+                                getFOMCSpeeches();      
+                                //getArticleData();                                               
+                            break;
+                        case 'menue':  // Economic 캘린더
+                                goCalendar(); 
+                            break;
+                        case 'menuf': //유사국면-채권
+                                document.querySelector('.similarity-tab-link').click(); //첫번째 탭 디폴트 로딩
+                                // 복수지표에서 weight값 계산하기 
+                                document.getElementById('multi-generateButton').addEventListener('click', function() {
+                                    const sum = Array.from(document.querySelectorAll('.multi-select-weight'))
+                                                    .reduce((acc, input) => acc + parseFloat(input.value), 0);
+                                    if (sum > 1) {
+                                        alert("The total sum of weights must equal 1 before proceeding.");
+                                        return;
+                                    }
+                                });  
+                                setTimeout(() => {
+                                    jTooltip();
+                                }, 50);                            
+                            break;    
+                        case 'menug':
+                            setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
+                            break;
+                        case 'menu_2nd_a':
+                            // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
+                            naverScrapingNews(1);
+                            const buttons = document.querySelectorAll('.news-btn');
+                            buttons.forEach(button => {
+                                button.addEventListener('click', function() {
+                                    buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
+                                    this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
+                                });
                             });
-                        });
-                        // 다른 체크박스를 클릭할 때 'All Market News' 체크박스 해제
-                        document.querySelectorAll("#categoryForm input[name='categories']:not(#all)").forEach(checkbox => {
-                            checkbox.addEventListener('click', function() {
-                                if (this.checked) {
-                                    document.getElementById('all').checked = false;
-                                }
-                            });
-                        });
-                        break;
-                    case 'menue': 
-                            goCalendar(); 
-                         break;
-                    case 'menu_2nd_a':
-                        // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
-                        naverScrapingNews(1);
-                        const buttons = document.querySelectorAll('.news-btn');
-                        buttons.forEach(button => {
-                            button.addEventListener('click', function() {
-                                buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
-                                this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
-                            });
-                        });
-                        break;
-                    case 'menu_2nd_b':
-                        //국내 유사국면 분석에서 종목코드 검색 모듈 컨트롤
-                        fetchStockCodes();
-                        initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");
-                        /********* [2nd GNB] 국내마켓데이터 - 유사국면분석에서 데이트피커 컨트롤 ************/
-                        $("#fromDate, #toDate").datepicker({
-                            dateFormat: "yy-mm-dd",
-                            changeMonth: true,
-                            changeYear: true
-                        });
-                        $("#fromDate_2, #toDate_2").datepicker({
-                            dateFormat: "yy-mm-dd",
-                            changeMonth: true,
-                            changeYear: true
-                        });            
-                        $("#fromDate").datepicker("setDate", "2023-02-16"); // fromDate 기본값 설정
-                        $("#toDate").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정
-                        $("#fromDate_2").datepicker("setDate", "2017-02-24"); // fromDate 기본값 설정
-                        $("#toDate_2").datepicker("setDate", new Date()); // toDate를 오늘 날짜로 설정            
-                        /*******************************************************************************/                        
-                        break;
-                    case 'menu_3rd_a':
-                        /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
-                        document.getElementById('fileRagInput').onchange = function() {
-                            const fileInput = document.getElementById('fileRagInput');
-                            if (fileInput.files.length > 0) {
-                                const fileNameSpan = document.getElementById('fileRagName');
-                                fileNameSpan.textContent = `[${fileInput.files[0].name}]`; // 선택된 파일이름 표시
-                                uploadRagFile(); // 파일 업로드 함수 호출
-                            }
-                        };
-                        const inputField = document.querySelector('.rag-chat-input input');
-                        const inputField2 = document.getElementById('aiSecInput');
-                        
-                        // 채팅 창에서 엔터키 처리
-                        inputField.addEventListener('keypress', function(e) {
-                            if (e.key === 'Enter') {
-                                e.preventDefault(); 
-                                if (inputField.value.trim() !== '') {
-                                    const messageText = inputField.value.trim();
-                                    ragSendMessage(); 
-                                }
-                            }                
-                        });
-                        inputField2.addEventListener('keypress', function(e) {
-                            if (e.key === 'Enter') {
-                                e.preventDefault(); 
-                                if (inputField2.value.trim() !== '') {
-                                    const messageText = inputField2.value.trim();
-                                    aiSecTalk(); 
-                                }
-                            }                
-                        });    
-                        break;
-                    case 'menu_3rd_b':
-                        /********* [3rd GNB] AI 투자비서 컨트롤 onChange *********/
-                        // 드래그 앤 드롭 기능
-                        var dragDropArea = document.getElementById('ai_invest_sec_dragDropArea');
-                        dragDropArea.addEventListener('dragover', function(e) {
-                            e.preventDefault();
-                            this.style.backgroundColor = "#f0f0f0";
-                        });
+                            break;
+                        case 'menu_2nd_b':
+                            /************************************************************/
+                            function formatPickDate(date) {
+                                return date.toISOString().split('T')[0];
+                            }                        
 
-                        dragDropArea.addEventListener('dragleave', function(e) {
-                            e.preventDefault();
-                            this.style.backgroundColor = "transparent";
-                        });
+                            console.log($("#fromDate").length);  // 요소가 있는지 확인
+                            console.log($("#toDate").length);    // 요소가 있는지 확인
+                            console.log($("#fromDate_2").length); // 요소가 있는지 확인
+                            console.log($("#toDate_2").length);   // 요소가 있는지 확인
+                                                        
+                            //국내 유사국면 분석 date 세팅
+                            $("#fromDate, #toDate, #fromDate_2, #toDate_2").datepicker({
+                                dateFormat: "yy-mm-dd",
+                                changeMonth: true,
+                                changeYear: true
+                            });                            
+                    
+                            let today = new Date();
+                            let oneMonthAgo = new Date();
+                            oneMonthAgo.setMonth(today.getMonth() - 1);
+                            let oneYearAgo = new Date();
+                            oneYearAgo.setFullYear(today.getFullYear() - 1);
+                            let thirteenMonthsAgo = new Date();
+                            thirteenMonthsAgo.setMonth(today.getMonth() - 13);
+                            thirteenMonthsAgo.setFullYear(today.getFullYear() - 1);
+                            
+                            // datepicker에 설정할 날짜를 문자열로 변환
+                            const formattedToday = formatPickDate(today);
+                            const formattedOneMonthAgo = formatPickDate(oneMonthAgo);
+                            const formattedOneYearAgo = formatPickDate(oneYearAgo);
+                            const formattedThirteenMonthsAgo = formatPickDate(thirteenMonthsAgo);
+                            console.log(formattedToday);
+                            console.log(formattedOneMonthAgo);
+                            console.log(formattedThirteenMonthsAgo);
 
-                        dragDropArea.addEventListener('drop', function(e) {
-                            e.preventDefault();
-                            this.style.backgroundColor = "transparent";
-                            var files = e.dataTransfer.files;
-                            const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
-                            if (employeeId.length !== 7) {
-                                alert("사번을 먼저 입력해주세요");
-                                return;
-                            }                
-                            //appendData("나의 DB에 적용된 데이터", files[0].name); // 단순화를 위해 첫 번째 파일명만 표시
-                            uploadAiFileToServer(files[0]);
-                        });     
-                        break;                 
-                    default:
-                        console.log('No specific script for this tab');
-                }
+                            $("#fromDate").datepicker("setDate", formattedOneMonthAgo);
+                            $("#toDate").datepicker("setDate", formattedToday);
+                            $("#fromDate_2").datepicker("setDate", formattedThirteenMonthsAgo);
+                            $("#toDate_2").datepicker("setDate", formattedOneMonthAgo);
+
+                            /*******************************************************************************/      
+                            //국내 유사국면 분석에서 종목코드 검색 모듈 컨트롤
+                            fetchStockCodes();
+                            initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");                  
+                            break;
+                        case 'menu_3rd_a':
+                            //파일저장한것 서버쪽 메모리 클리어해주기
+                            navigator.sendBeacon('/rag/clear_data');
+                            const sendButton = document.getElementById('ragchat_button'); //채팅 버튼
+                            const inputField = document.getElementById('ragchat'); //채팅 textArea
+                            sendButton.addEventListener('click', processInput);
+                            inputField.addEventListener('keypress', function (event) {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault(); 
+                                    processInput();
+                                }
+                            });  
+
+                            function setupEventListeners() {
+                                var chooser = document.getElementById('chooseFile'); //파일선택 버튼
+                                if (chooser) {
+                                    chooser.removeEventListener('change', handleFileChange);
+                                    chooser.addEventListener('change', handleFileChange); 
+                                }
+                                window.dropFile = new DropFile('drop-file', 'showfiles');
+                            }
+                            
+                            function handleFileChange(e) {
+                                e.stopPropagation(); // Stop the event from bubbling up
+                                if (!window.dropFile) {
+                                    window.dropFile = new DropFile("drop-file", "showfiles");
+                                }
+                                window.dropFile.handleFiles(this.files);
+                            }
+                            setupEventListeners();
+
+                            //프롬프트 셀렉트창 감시
+                            document.getElementById('promptSelect').addEventListener('change', function() {
+                                if (this.value && this.value.trim() !== "default") {
+                                    getAnswerUsingPrompt(this.value);
+                                }
+                            });
+                            
+                            //체크박스 감시 
+                            document.querySelectorAll('.upload-checkbox input[type="checkbox"]').forEach(checkbox => {
+                                checkbox.addEventListener('change', function() {
+                                    let otherCheckboxId = this.id === 'researchGPT4' ? 'researchLama3' : 'researchGPT4';
+                                    document.getElementById(otherCheckboxId).checked = false;
+                                });
+                            });
+                            setTimeout(() => {
+                                jTooltip();
+                            }, 50);                             
+                            
+                            break;                        
+                            /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
+                            /*
+                            document.getElementById('fileRagInput').onchange = function() {
+                                const fileInput = document.getElementById('fileRagInput');
+                                if (fileInput.files.length > 0) {
+                                    const fileNameSpan = document.getElementById('fileRagName');
+                                    fileNameSpan.textContent = `[${fileInput.files[0].name}]`; // 선택된 파일이름 표시
+                                    uploadRagFile(); // 파일 업로드 함수 호출
+                                }
+                            };
+                            const inputField = document.querySelector('.rag-chat-input input');
+                            const inputField2 = document.getElementById('aiSecInput');
+                            
+                            // 채팅 창에서 엔터키 처리
+                            inputField.addEventListener('keypress', function(e) {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault(); 
+                                    if (inputField.value.trim() !== '') {
+                                        const messageText = inputField.value.trim();
+                                        ragSendMessage(); 
+                                    }
+                                }                
+                            });
+                            inputField2.addEventListener('keypress', function(e) {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault(); 
+                                    if (inputField2.value.trim() !== '') {
+                                        const messageText = inputField2.value.trim();
+                                        aiSecTalk(); 
+                                    }
+                                }                
+                            });    
+                            break;
+                            */
+                        case 'menu_3rd_b':
+                            /********* [3rd GNB] AI 투자비서 컨트롤 onChange *********/
+                            // 드래그 앤 드롭 기능
+                            var dragDropArea = document.getElementById('ai_invest_sec_dragDropArea');
+                            dragDropArea.addEventListener('dragover', function(e) {
+                                e.preventDefault();
+                                this.style.backgroundColor = "#f0f0f0";
+                            });
+
+                            dragDropArea.addEventListener('dragleave', function(e) {
+                                e.preventDefault();
+                                this.style.backgroundColor = "transparent";
+                            });
+
+                            dragDropArea.addEventListener('drop', function(e) {
+                                e.preventDefault();
+                                this.style.backgroundColor = "transparent";
+                                var files = e.dataTransfer.files;
+                                const employeeId = document.getElementById('ai_invest_sec_employeeId').value;
+                                if (employeeId.length !== 7) {
+                                    alert("사번을 먼저 입력해주세요");
+                                    return;
+                                }                
+                                //appendData("나의 DB에 적용된 데이터", files[0].name); // 단순화를 위해 첫 번째 파일명만 표시
+                                uploadAiFileToServer(files[0]);
+                            });     
+                            
+                            //엔터키 처리해도 먹히게 수정
+                            const aiSecInput = document.getElementById('aiSecInput');
+                            aiSecInput.addEventListener('keydown', function(event) {
+                                if (event.key === 'Enter') {
+                                    aiSecTalk(); // 
+                                    event.preventDefault(); 
+                                }
+                            });
+                            const employeeIdInput = document.getElementById('ai_invest_sec_employeeId');
+                            const confirmButton = document.getElementById('ai_invest_sec_confirmButton');
+                            employeeIdInput.addEventListener('keydown', function(event) {
+                                if (event.key === 'Enter') {
+                                    confirmEmployeeId();
+                                    event.preventDefault(); // 폼 제출 방지
+                                }
+                            });                            
+                            break;                 
+                        default:
+                            console.log('No specific script for this tab');
+                    }
+                }, 100);                     
             }
         </script>        
     </body>

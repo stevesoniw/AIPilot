@@ -1,4 +1,4 @@
-//****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Starts *****************************//
+//****************************** [1ST GNB][5TH MENU]Economic 캘린더 함수 Starts *****************************//
 async function goCalendar(calendarFile = '/batch/calendar/eco_calendar_eng.json') {
     document.getElementById('loading_bar_calendar').style.display = 'block';
 
@@ -91,8 +91,8 @@ function translateCalendar() {
         btn.innerText = 'Economic Calendar(한글)';
     }
 }
-//****************************** [1ST GNB][5TH MENU]증시캘린더 함수 Ends *****************************//                
-//****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Starts *****************************//                
+//****************************** [1ST GNB]증시캘린더 함수 Ends *****************************//                
+//****************************** [1ST GNB]IPO캘린더 함수 Starts *****************************//                
 async function ipoCalendar() {
     document.getElementById('loading_bar_calendar').style.display = 'block';
     let ipoCalendarData;
@@ -332,6 +332,11 @@ function displayEvents(events) {
         const toDate = document.getElementById('toCalChartDate').value;
         fetchCalendarUSChart(fromDate, toDate);
     };
+    // 제일 밑으로 내려주자
+    setTimeout(() => {
+        const element = document.getElementById('fancyCalendarDetails');
+        element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 200); 
 }
 
 // 실제 차트 그리는 함수 (feat.하이차트)
@@ -370,9 +375,11 @@ async function fetchCalendarUSChart(userDate) {
         if (!response.ok) throw new Error('Network response was not ok.');
         const responseData = await response.json();
         document.getElementById('loading_bar_calchart').style.display = 'none';
-        console.log("***************************");
+        console.log("chartData ::");
         console.log(responseData.chartData);
-        drawCalendarChart(responseData.chartData); // 차트그리기
+        setTimeout(() => {
+            drawCalendarChart(responseData.chartData);
+        }, 100);
     } catch (error) {
         document.getElementById('loading_bar_calchart').style.display = 'none';
         console.error('Error fetching calendar chart data:', error);
@@ -424,16 +431,19 @@ function drawCalendarChart(chartData) {
         events: {
             load: function() {
                 container.style.display = 'block';
+                this.reflow(); 
                 container.scrollIntoView({behavior: "smooth", block: "end"});
             }
         }
     });
     container.style.display = 'block';
-    container.scrollIntoView({behavior: "smooth", block: "end"});
-    const spacer = document.createElement('div');
-    spacer.style.height = '200px';
-    document.body.appendChild(spacer);
+    //const spacer = document.createElement('div');
+    //spacer.style.height = '200px';
+    //document.body.appendChild(spacer);
+    setTimeout(() => {
+        const element = document.getElementById('calendarChartContainer');
+        element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 200);     
 
-    window.scrollTo(0, document.body.scrollHeight);;
 }
 //****************************** [1ST GNB][6TH MENU]IPO캘린더 함수 Ends *******************************//   

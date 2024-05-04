@@ -69,28 +69,46 @@ function naverScrapingNews(newsType) {
 }
 // NAVER 뉴스 상세 컨텐츠 스크래핑 해오기
 function fetchDetaildNews(url, event) {
-    fetch('/api/news-detail', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: url })
-    })
-    .then(response => response.text())
-    .then(html => {
-        const detailedNewsDiv = document.createElement('div');
-        detailedNewsDiv.className = 'naver-news-detailed';
-        detailedNewsDiv.innerHTML = html;
-        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', detailedNewsDiv);
-    })
-    .catch(error => {
-        console.error('Error fetching detailed news:', error);
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'naver-news-detailed';
-        errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
-        event.target.closest('.naver-news-item').insertAdjacentElement('afterend', errorDiv);
-    });
+    const button = event.target;
+    const newsItem = button.closest('.naver-news-item');
+    let detailedDiv = newsItem.nextElementSibling;
+
+    // 자세히보기 버튼 Toggle 시키기. 
+    if (detailedDiv && detailedDiv.classList.contains('naver-news-detailed')) {
+        if (detailedDiv.style.display === 'none') {
+            detailedDiv.style.display = 'block';
+            button.textContent = '상세내용 닫기'; 
+        } else {
+            detailedDiv.style.display = 'none'; 
+            button.textContent = '자세히 보기'; 
+        }
+    } else {
+        fetch('/api/news-detail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url })
+        })
+        .then(response => response.text())
+        .then(html => {
+            const detailedNewsDiv = document.createElement('div');
+            detailedNewsDiv.className = 'naver-news-detailed';
+            detailedNewsDiv.innerHTML = html;
+            newsItem.insertAdjacentElement('afterend', detailedNewsDiv);
+            button.textContent = '상세내용 닫기'; 
+        })
+        .catch(error => {
+            console.error('Error fetching detailed news:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'naver-news-detailed';
+            errorDiv.innerHTML = '<p>자세한 뉴스를 가져오는 중 오류가 발생했습니다.</p>';
+            newsItem.insertAdjacentElement('afterend', errorDiv);
+            button.textContent = '상세내용 닫기'; 
+        });
+    }
 }
+
 // 네이버 키워드 입력란 보이게 하는 함수
 function naverKeyword() {
     // 'naver-api-search-area' 요소가 이미 있는지 확인
@@ -165,6 +183,9 @@ async function naverSearchAPI() {
 }
 //네이버 뉴스 GPT(AI) 의견보기 함수 ::  요약보여주기
 function displaySummary(summary) {
+    // 데이터 가공
+    summary = summary.replace(/\*\*(.*?)\*\*/g, '<br/><br/><span style="color: #ff1480; text-transform: uppercase;">$1</span><br/>');
+    summary = summary.replace(/(?:^|\s)\*(.*?)(?=\s|$)/g, '<br>*$1');
     const summaryContainer = document.querySelector('.ai-summary-result');
     summaryContainer.innerHTML = `<div class="summary-content">${summary}</div>`;
     summaryContainer.style.display = 'block';
@@ -191,13 +212,52 @@ async function naverGptAsk() {
             }),
         });
         if (!response.ok) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';             
             throw new Error('서버 오류가 발생했습니다.');
-            document.getElementById('loading_bar_navergpt').style.display = 'none';  
         }
         const data = await response.json();
         if (data.result.error) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';              
             throw new Error(data.result.error);
+        } else {
             document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            displaySummary(data.result); 
+        }
+    } catch (error) {
+        console.error('요약 데이터를 가져오는 중 오류가 발생했습니다:', error);
+        document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        alert('데이터를 가져오는 중 오류가 발생했습니다. 오류 메시지: ' + error.message);
+    }
+}
+
+async function naverLamaAsk() {
+    const newsSummaryElements = document.querySelectorAll('.naver-news-summary');
+    let send_news = Array.from(newsSummaryElements).map(elem => elem.textContent.trim()).join('\n');
+    if (!send_news) {
+        alert('분석할 뉴스 데이터가 없습니다.');
+        return;
+    }
+    document.getElementById('loading_bar_navergpt').style.display = 'block';  
+//console.log(send_news);
+    try {
+        const response = await fetch('/groqLamaTest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: "navergpt",
+                g_news: send_news
+            }),
+        });
+        if (!response.ok) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            throw new Error('서버 오류가 발생했습니다.');
+        }
+        const data = await response.json();
+        if (data.result.error) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';  
+            throw new Error(data.result.error);            
         } else {
             document.getElementById('loading_bar_navergpt').style.display = 'none';  
             displaySummary(data.result); 

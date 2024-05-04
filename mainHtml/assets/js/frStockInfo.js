@@ -15,11 +15,35 @@ function removeButtonOn(buttonId) {
     }
 }
 
+//종목검색 한글로 했을때 구글 검색해와서 맞는종목 세팅해주기
+async function getEngNameFromGoogle(term) {
+    const requestBody = {
+        userInputCN: term
+    };
+    try {
+        const response = await fetch("/foreignStock/get-frstock-code/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+        if (response.ok) {
+            console.log("Received stock code:", data.stockCode);
+            return data.stockCode;
+        } else {
+            console.error("Error from server:", data);
+            return null; 
+        }
+    } catch (error) {
+        console.error("Network or fetch error:", error);
+        return null; 
+    }
+}
+
 //FinGPT 최근 실적발표 History 및 애널리스트 추천 트렌드 차트보여주기
 async function loadEarningData() {
-    addButtonOn('getEarningInfo');
-    removeButtonOn('getStockInfo');
-    removeButtonOn('getForeignStockNews'); 
     const ticker = document.getElementById('foreign_ticker').value;             
     try {
         //로딩바
@@ -27,6 +51,7 @@ async function loadEarningData() {
         document.getElementById('loading_bar_fingpt').style.display = 'block';                    
         //뉴스
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
+        document.getElementById('foreignTickerNewsSum').style.display = 'none';
         document.getElementById('foreignTickerNewsArea').style.display = 'none';
         document.getElementById('fomc-press-releases').style.display = 'none';
         //기본정보
@@ -40,6 +65,9 @@ async function loadEarningData() {
             document.getElementById('loading_bar_fingpt').style.display = 'none';  
             return;
         }
+        addButtonOn('getEarningInfo');
+        removeButtonOn('getStockInfo');
+        removeButtonOn('getForeignStockNews'); 
 
         const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
         const fileUrl = `/batch/earning_data/${ticker}/earningChart_${ticker}_${todayDate}.json`;
@@ -146,7 +174,6 @@ async function gptAnalysis(ticker) {
     }                
 }
 //FinGPT 최근 1년 주가 흐름과 거래량 추이 보여주기 (이미지 호출->하이차트로 변경 2024.04.10)
-
 async function gptStockWave(ticker) {
     try {
         document.getElementById('loading_bar_fingpt').style.display = 'block';  
@@ -246,9 +273,6 @@ async function gptStockWave(ticker) {
 //********************************** AI가 말해주는 주식정보 함수 Starts [#2.Get ForeignStockNewsInfo]**************************************//
 //Finnhub에서 해외 종목 뉴스데이터 가져오기 
 async function loadForeignStockNews() {
-    addButtonOn('getForeignStockNews');
-    removeButtonOn('getEarningInfo');
-    removeButtonOn('getStockInfo');  
     //실적
     document.getElementById('loading_bar_fingpt').style.display = 'none';
     document.getElementById('fingptChartArea').style.display = 'none';
@@ -269,12 +293,28 @@ async function loadForeignStockNews() {
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         return;
     }
+    addButtonOn('getForeignStockNews');
+    removeButtonOn('getEarningInfo');
+    removeButtonOn('getStockInfo');      
     document.getElementById('loading_bar_foreignnews').style.display = 'block';
+    //뉴스써머리 함수 따로 호출!
+    loadNewsSummary(ticker);
     try {
-        const response = await fetch(`/foreignStock/financials/news/${ticker}`);
-        if (!response.ok) throw new Error('Failed to fetch foreign stock news info data');
-        
-        const data = await response.json();
+        //파일 있는지 먼저 체크하도록 수정
+        const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        const fileUrl = `/batch/stocknews/${ticker}/news_${ticker}_${todayDate}.json`;
+    
+        const checkResponse = await fetch(fileUrl);
+        let data;
+        if (checkResponse.ok) {
+            console.log("file exists");
+            data = await checkResponse.json();
+        } else {
+            const newsResponse = await fetch(`/foreignStock/financials/news/${ticker}`);
+            if (!newsResponse.ok) throw new Error('Failed to fetch foreign stock news data');
+            data = await newsResponse.json();
+        }
+
         const newsContainer = document.getElementById('foreignTickerNewsArea');
         newsContainer.innerHTML = '';
         if (data.length === 0) {
@@ -284,7 +324,7 @@ async function loadForeignStockNews() {
         // 뉴스 항목 너무 많아서 최대 15개까지만 표시함
         data.slice(0, 15).forEach(news => {
             const newsDate = new Date(news.datetime * 1000).toISOString().slice(0, 10);
-            const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 5) + 1}.jpg`;
+            const imageSrc = news.image || `/static/assets/images/defaultNews${Math.floor(Math.random() * 25) + 1}.jpg`;
             const newsElement = `
                     <div class="foreignTickerNews-container" data-news-id="${news.id}">
                     <span class="foreignTickerNews-datetime">${newsDate}</span>
@@ -299,7 +339,7 @@ async function loadForeignStockNews() {
                         <p class="foreignTickerNews-summary">${news.summary}</p>
                         <div class="foreignTickerNews-buttons-container">
                             <a class="foreignTickerNews-link" href="${news.url}" target="_blank">read more</a>
-                            <button class="foreignTickerNews-analysis" onclick="analyzeStockArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석</button>
+                            <button class="foreignTickerNews-analysis" onclick="analyzeStockArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석 보기</button>
                         </div>
                     </div>
                 </div>
@@ -312,7 +352,7 @@ async function loadForeignStockNews() {
     } finally {
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         //FOMC 호출 연이어서..
-        fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');
+        //fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');
     }
 }
 function toggleVisibility(element) {
@@ -327,11 +367,46 @@ function toggleVisibility(element) {
         element.style.maxHeight = '0';
     }
 }
+//많이 보는 종목만 newsSummary 첨에 생성해서 보여주기 
+async function loadNewsSummary(ticker) {
+    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const container = document.getElementById('foreignTickerNewsSum');
+    container.innerHTML = ''; 
+    const url = `/batch/stocknews/${ticker}/aisummary_${ticker}_${todayDate}.txt`;
+  
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Failed to fetch the summary file');
+        }
+        let textData = await response.text();
+        textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
+        textData = textData.replace(/- \s*/g, '<br>');
+        textData = textData.replace(/###\s*/g, '<br><br>');
+        textData = textData.replace(/(\d+\.\s+)/g, '<br>$1');
+        
+        container.innerHTML = `<p>${textData}</p>`;
+        container.style.display='block';
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = ''; 
+    }
+}
 
 function analyzeStockArticle(webUrl, newsId) {
     var loadingText = document.getElementById('loading-text-foreignnews');
-    loadingText.textContent = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다. (*Finnhub뉴스는 차단당하는 경우가 존재하여 조치중입니다.)';
+    loadingText.innerHTML  = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.<br/>(※Finnhub뉴스는 차단당하는 경우가 존재하여 조치중입니다.)';
     document.getElementById('loading_bar_foreignnews').style.display = 'block';
+
+    const existingAnalysisContainer = document.querySelector(`.analysisResultContainer[data-news-id="${newsId}"]`);
+    if (existingAnalysisContainer) {
+        // Toggle visibility of the existing analysis container
+        existingAnalysisContainer.style.display = existingAnalysisContainer.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('loading_bar_foreignnews').style.display = 'none';
+        loadingText.textContent = '데이터 로딩중입니다.';
+        return; // Exit the function to prevent reloading the data
+    }
+
 
     const ticker = document.getElementById('foreign_ticker').value;
     // 배치로 떨궈놓은 파일 있으면 일단 읽게한다. 
@@ -351,7 +426,7 @@ function analyzeStockArticle(webUrl, newsId) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url: webUrl })
+                body: JSON.stringify({ url: webUrl, ticker: ticker, newsId: newsId })
             })
             .then(response => {
                 if (!response.ok) {
@@ -383,11 +458,17 @@ function analyzeStockArticle(webUrl, newsId) {
 function displayAnalysisResult(data, webUrl, newsId) {
     const analysisContainer = document.createElement('div');
     analysisContainer.className = 'analysisResultContainer';
+    analysisContainer.setAttribute('data-news-id', newsId); // Set a data attribute for toggling visibility    
     let modifiedData = data.replace(/\n/g, '<br>');
     modifiedData = modifiedData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
+    modifiedData = modifiedData.replace(/```html\s+\{([\s\S]*?)\}```/g, '$1');
+    modifiedData = modifiedData.replace(/([\s\S]+)/g, '<div class="styled-html-content">$1</div>');
+    modifiedData = modifiedData.replace('```html', "");
+    modifiedData = modifiedData.replace('```', "");
+
     analysisContainer.innerHTML = `
-        <div class="analysisTitle">해당 원본뉴스 사이트(<span class="webUrl">${webUrl}</span>)를 분석한 내용입니다.</div>
-        <div class="analysisContent">${modifiedData}</div>
+        <div class="frNewsAnalysisTitle">해당 원본뉴스 사이트(<span class="frNewsWebUrl">${webUrl}</span>)를 분석한 내용입니다.</div>
+        <div class="frNewsAnalysisContent">${modifiedData}</div>
     `;
     const newsElement = document.querySelector(`[data-news-id="${newsId}"]`);
     if (newsElement) {
@@ -395,6 +476,7 @@ function displayAnalysisResult(data, webUrl, newsId) {
     }
 }
 // FOMC 사이트가서 데이터 긁어온다 
+/**
 async function fomcScrapingAPI(url) {
     try {
         const response = await fetch(url);
@@ -503,7 +585,6 @@ async function fetchFomcReleaseDetail(link, detailContainer) {
         if (response.ok) {
             let detailData = await response.text();
             // \n을 <br>로 변환
-            detailData = detailData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
             detailData = detailData.replace(/\\n/g, '\n').replace(/\n/g, '<br>');
             // 상세 데이터를 표시할 새로운 div 생성
             let detailDiv = document.createElement('div');
@@ -532,7 +613,7 @@ async function fetchFomcReleaseDetail(link, detailContainer) {
         loadingText.textContent = '데이터 로딩중입니다.';
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
     }
-}
+}**/
 
             
 //********************************** AI가 말해주는 주식정보 함수 Ends [#2.Get ForeignStockNewsInfo]**************************************//        
@@ -564,9 +645,6 @@ async function fetchForeignStockCodes() {
 }
 //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 (Get Stock Info)
 async function loadBasicInfo() {
-    addButtonOn('getStockInfo');
-    removeButtonOn('getEarningInfo');
-    removeButtonOn('getForeignStockNews');   
     //실적
     document.getElementById('loading_bar_fingpt').style.display = 'none';
     document.getElementById('fingptChartArea').style.display = 'none';
@@ -575,6 +653,7 @@ async function loadBasicInfo() {
     document.getElementById('gptStockwaveArea').style.display = 'none';
     //뉴스
     document.getElementById('loading_bar_foreignnews').style.display = 'none';
+    document.getElementById('foreignTickerNewsSum').style.display = 'none';
     document.getElementById('foreignTickerNewsArea').style.display = 'none';
     document.getElementById('fomc-press-releases').style.display = 'none';
     //기본정보
@@ -586,6 +665,9 @@ async function loadBasicInfo() {
         document.getElementById('loading_bar_stockbasic').style.display = 'none';
         return;
     }
+    addButtonOn('getStockInfo');
+    removeButtonOn('getEarningInfo');
+    removeButtonOn('getForeignStockNews');       
     document.getElementById('loading_bar_stockbasic').style.display = 'block';
     document.getElementById('chatApp').style.display = 'none';
     try {
@@ -867,7 +949,7 @@ function displayQuarterlyGrowthChart(chartData) {
 //********************************* AI가 말해주는 주식정보 함수 Starts [#4.Ask AI Anything]****************************************//
 function loadAiChat() {
     alert("기능 준비중입니다.");
-    return
+    return;
     try {
         //앞선 데이터들 모두 클리어(?!) 기획을.. 어케할지 고민
             /**

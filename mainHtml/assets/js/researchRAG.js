@@ -1,78 +1,151 @@
 //******************************** 3RD GNB::  리서치 PDF Starts **********************************************//
 /* 파일 업로드 시작 */
-function DropFile(dropAreaId, fileListId) {
-    let dropArea = document.getElementById(dropAreaId);
-    let fileList = document.getElementById(fileListId);
+class DropFile {
+    constructor(dropAreaId, fileListId) {
+        this.dropArea = document.getElementById(dropAreaId);
+        this.fileList = document.getElementById(fileListId);
+        this.init();
+        this.attachDeleteHandler(); 
+    }
 
-    function preventDefaults(e) {
+    init() {
+        this.dropArea.addEventListener("dragenter", this.highlight.bind(this), false);
+        this.dropArea.addEventListener("dragover", this.highlight.bind(this), false);
+        this.dropArea.addEventListener("dragleave", this.unhighlight.bind(this), false);
+        this.dropArea.addEventListener("drop", this.handleDrop.bind(this), false);
+    }
+
+    attachDeleteHandler() {
+        // Listen for clicks on the fileList container
+        this.fileList.addEventListener('click', (event) => {
+            console.log("Clicked within fileList:", event.target);
+            const deleteButton = event.target.closest('.upload-delete');
+            if (deleteButton) {
+                // Confirm the delete button was targeted
+                console.log("Delete button was clicked:", deleteButton);
+
+                const fileElement = deleteButton.closest('.file');
+                if (fileElement) {
+                    // Confirm the file DOM is correctly identified
+                    console.log("File element found for deletion:", fileElement);
+
+                    const fileId = fileElement.getAttribute('data-file-id');
+                    if (fileId) {
+                        console.log("File ID found:", fileId);
+                        this.handleFileDeletion(fileId);
+                        fileElement.remove(); // This removes the file DOM element
+                        console.log("File element removed from DOM.");
+                    } else {
+                        console.log("No file ID found on the element to delete.");
+                    }
+                } else {
+                    console.log("No file element found surrounding the delete button.");
+                }
+            }
+        });
+    }
+
+    updateMetainfoAfterDeletion(fileId) {
+        const metainfo = document.getElementById('metainfo');
+        const fileMetadataDiv = document.querySelector(`div[data-file-id="${fileId}"]`);
+        if (fileMetadataDiv) {
+            fileMetadataDiv.remove();
+        }
+    }  
+
+    handleFileDeletion(fileId) {
+        fetch(`/file/${fileId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Server response after deletion:", data.message);
+            this.updateMetainfoAfterDeletion(fileId);
+            //storeFileMetadata(data.files_metadata);
+        })
+        .catch(error => console.error('Error deleting file:', error));
+    } 
+    
+    preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
     }
 
-    function highlight(e) {
-        preventDefaults(e);
-        dropArea.classList.add("highlight");
+    highlight(e) {
+        this.preventDefaults(e);
+        this.dropArea.classList.add("highlight");
     }
 
-    function unhighlight(e) {
-        preventDefaults(e);
-        dropArea.classList.remove("highlight");
+    unhighlight(e) {
+        this.preventDefaults(e);
+        this.dropArea.classList.remove("highlight");
     }
 
-    function handleDrop(e) {
-        unhighlight(e);
+    handleDrop(e) {
+        this.preventDefaults(e);
         let dt = e.dataTransfer;
         let files = dt.files;
-
-        handleFiles(files);
-
-        const fileList = document.getElementById(fileListId);
-        if (fileList) {
-        fileList.scrollTo({ top: fileList.scrollHeight });
-        }
-    }
-
-    function handleFiles(files) {
-        files = [...files];
-        files.forEach(previewFile);
-
-        /* 첨부파일 삭제 */
-        $('.upload-delete').click(function(){
-            // $('#chooseFile').val('');
-            $(this).parent('.file').remove();
-        });
-        /* 첨부파일 삭제 */
-    }
-
-    function previewFile(file) {
-        const fileDOM = renderFile(file); // renderFile에서 DOM 요소 또는 null 반환
-        // fileDOM이 null이 아닌 경우에만 appendChild 호출
-        if (fileDOM !== null) {
-            fileList.appendChild(renderFile(file));
+        console.log("Dropped files:", files); // 드롭된 파일 로그 출력
+        if (files.length > 0) { 
+            this.handleFiles(files);
+            this.updateInputFiles(files); 
+            this.fileList.scrollTo({ top: this.fileList.scrollHeight });
         } else {
-            // null인 경우, 적절한 처리를 여기서 진행한다
-            console.log("파일 검증 실패: 올바른 파일을 첨부해주세요.");
+            console.error("No files dropped");
         }
     }
 
-    function renderFile(file) {
-        // 파일 크기 체크 (30MB 이하만 허용)
+    updateInputFiles(files) {
+        const fileInput = document.getElementById('chooseFile');
+        const dataTransfer = new DataTransfer(); // 새 DataTransfer 객체 생성
+        for (let file of files) {
+            console.log("filesssssssss:", file);
+            dataTransfer.items.add(file); // 파일을 DataTransfer 아이템에 추가
+        }
+        fileInput.files = dataTransfer.files; // input 요소의 files 속성 업데이트
+    }
+
+    handleFiles(files) {
+        var element = document.getElementById('loading-text-ragprompt'); 
+        var loading = document.getElementById('loading_bar_ragprompt');
+        if (element && loading) {
+          element.textContent = '리포트 업로드 중입니다'; 
+          loading.style.display = 'block';
+        }        
+        console.log("Handling files are:", files);
+        files = [...files];
+        files.forEach(file => this.previewFile(file));
+    }
+
+    previewFile(file) {
+        let fileDOM = this.renderFile(file);
+        if (fileDOM) {
+            this.fileList.appendChild(fileDOM); // Add the file preview to the fileList
+            this.fileList.style.display = 'block'; // Make sure fileList is visible
+            setTimeout(submitFiles, 100); 
+        } else {
+            document.getElementById('loading_bar_ragprompt').style.display = 'none';
+            console.log("File verification failed");
+        }
+    }
+
+    renderFile(file) {
         const maxSize = 30 * 1024 * 1024; // 30MB
         if (file.size > maxSize) {
+            console.log("파일 크기 검증 실패");
             alert("파일 크기가 너무 큽니다. 30MB 이하의 파일만 업로드 가능합니다.");
-            return null; // 혹은 적절한 에러 처리
+            return null;
         }
-        
-        // 파일 확장자 체크 (PDF만 허용)
+    
         const validExtensions = ['pdf'];
-        // 파일 이름에서 마지막 '.'을 기준으로 확장자 추출
         const fileExtension = file.name.split('.').pop().toLowerCase();
         if (!validExtensions.includes(fileExtension)) {
+            console.log("파일 확장자 검증 실패: " + fileExtension);
             alert("지원하지 않는 파일 형식입니다. PDF 파일만 업로드 가능합니다.");
-            return null; // 혹은 적절한 에러 처리
+            return null;
         }
-
-        // 파일 정보를 담을 DOM 요소 생성
+    
+        // 파일 정보를 담을 DOM 요소 생성 및 반환
         let fileDOM = document.createElement("div");
         fileDOM.className = "file";
         fileDOM.innerHTML = `
@@ -92,71 +165,204 @@ function DropFile(dropAreaId, fileListId) {
             </div>
             <a title="첨부파일 삭제" class="upload-delete"><span>첨부파일 삭제</span></a>
         `;
-        return fileDOM; // 조건을 모두 만족하면 DOM요소 반환
+        return fileDOM;
+    }
+}
+//const dropFile = new DropFile("drop-file", "files");
+
+/* 실제 파일 업로드 Class 끝 */
+
+/* 파일 파이썬 서버로 올리기 */
+async function submitFiles() {
+    const form = document.getElementById('file-upload-form');
+    const formData = new FormData(form);
+    try {
+        const response = await fetch(`/rag/prompt-pdf-upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log("Files uploaded successfully:", result);
+            const fileElements = document.querySelectorAll('#showfiles .file'); 
+            document.getElementById('loading_bar_ragprompt').style.display = 'none';
+            result.files_metadata.forEach((meta, index) => {
+                if (fileElements[index]) {
+                    fileElements[index].setAttribute('data-file-id', meta.file_id);
+                }
+            });
+        } else {
+            console.error("Failed to upload files. Status:", response.status);
+            document.getElementById('loading_bar_ragprompt').style.display = 'none';
+            if (response.headers.get("Content-Type")?.includes("application/json")) {
+                console.error("Error details:", await response.json());
+            }
+        }
+    } catch (error) {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+        console.error("Error uploading files:", error);
+    }
+}
+
+
+function storeFileMetadata(filesMetadata) {
+    const filesContainer = document.getElementById('metainfo');
+    filesContainer.innerHTML = '';
+
+    filesMetadata.forEach(file => {
+        const fileEntry = document.createElement('div');
+        fileEntry.className = 'file-metadata';
+        fileEntry.setAttribute('data-file-id', file.file_id);  
+        fileEntry.innerHTML = `
+            <div>
+                File ID: ${file.file_id}, Name: ${file.file_name}
+            </div>
+        `;
+        filesContainer.appendChild(fileEntry);
+    });
+}
+
+//Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
+function getAnswerUsingPrompt(selectedPrompt){
+    const fileElements = document.querySelectorAll('#showfiles .file');
+    console.log("selectedPrompt=", selectedPrompt);
+    if (selectedPrompt === 'default') {
+        console.log("Default prompt selected - no action taken.");
+        return;  
+    }
+    if (fileElements.length === 0) {
+        alert('PDF 파일을 업로드 후에 선택해주세요!');
+        return;
+    }
+    //정수로 변환필요 (python 서버에 int 선언되어있음)
+    const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+    console.log(selectedPrompt);
+    console.log(fileIds);
+    var element = document.getElementById('loading-text-ragprompt'); 
+    var loading = document.getElementById('loading_bar_ragprompt');
+    if (element && loading) {
+      element.textContent = '리포트 분석중 입니다'; 
+      loading.style.display = 'block';
+    }        
+    // 체크박스 value 체킹
+    let checkboxValue = null;
+    if (document.getElementById('researchGPT4').checked) {
+        checkboxValue = document.getElementById('researchGPT4').value;
+    } else if (document.getElementById('researchLama3').checked) {
+        checkboxValue = document.getElementById('researchLama3').value;
     }
 
-    dropArea.addEventListener("dragenter", highlight, false);
-    dropArea.addEventListener("dragover", highlight, false);
-    dropArea.addEventListener("dragleave", unhighlight, false);
-    dropArea.addEventListener("drop", handleDrop, false);
-
-    return {
-        handleFiles
-    };
-}
-const dropFile = new DropFile("drop-file", "files");
-/* 파일 업로드 끝 */
-
-/* 툴팁 시작 */
-function jTooltip(){
-    $('.chat-info.-right-ver').tooltip({
-        position: {
-            my: 'left bottom-10',
-            at: 'left top',
-            using: function(position, feedback){
-                $(this).css(position);
-                $('<div>').addClass('arrow').addClass(feedback.vertical).addClass(feedback.horizontal).appendTo(this);
-            }
+    fetch(`/rag/answer-from-prompt`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
         },
-        content: function(){
-            return $(this).attr('title');
-        },
-        show: {
-            duration: 100
-        }
+        body: JSON.stringify({
+            prompt_option: selectedPrompt,
+            file_ids: fileIds,
+            tool_used: checkboxValue
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Server response:', data);
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+        const answerWrap = document.querySelector('.answer-wrap');
+        answerWrap.innerText = data;  
+
+        const selectedOptionText = document.querySelector('#promptSelect option:checked').text;
+        document.querySelector('.question-wrap').textContent = selectedOptionText;
+        customScrollTo('top');
+    })
+    .catch(error => {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';        
+        console.error('getAnswerUsingPrompt error:', error);
     });
 }
-/* 툴팁 끝 */
+/* 채팅 창 컨트롤 하기 */
+function processInput() {
+    const inputField = document.getElementById('ragchat'); 
+    const userInput = inputField.value.trim();
+    if (userInput) {
+        sendChatRequest(userInput);
+        inputField.value = ''; 
+    }
+}
 
-$(document).ready(function(){
-    
-    guideTab();
+function displayQuestion(question) {
+    const questionWrap = document.createElement('div');
+    const talkListWrap = document.querySelector('.talk-list-wrap');
+    questionWrap.className = 'question-wrap';
+    questionWrap.textContent = question;
+    talkListWrap.appendChild(questionWrap);
+    talkListWrap.style.display = 'flex'; // 보이게하는거
+}
 
-    $('#accordion').accordion({
-        collapsible: true,
-        animate: 300,
-        active: 2,
-        heightStyle: 'content',
-        classes: {
-            'ui-accordion':'nav-acc',
-            'ui-accordion-header': 'nav-acc-header',
-            'ui-accordion-content': 'nav-acc-content'
+function customScrollTo(position) {
+    if (position === 'bottom') {
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    } else if (position === 'top') {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+}
+
+function sendChatRequest(question) {
+    const fileElements = document.querySelectorAll('#showfiles .file');
+    if (fileElements.length === 0) {
+        alert('PDF 파일을 먼저 업로드 후 질문해주세요\n(※해당 채팅은 PDF 내용을 바탕으로만 답변합니다.)');
+        return;
+    }
+    displayQuestion(question);
+    const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+    // 체크박스 value 체킹
+    let checkboxValue = null;
+    if (document.getElementById('researchGPT4').checked) {
+        checkboxValue = document.getElementById('researchGPT4').value;
+    } else if (document.getElementById('researchLama3').checked) {
+        checkboxValue = document.getElementById('researchLama3').value;
+    }
+    document.getElementById('loading_bar_ragprompt').style.display = 'block';
+
+    fetch(`/rag/answer-from-prompt`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
         },
-        icons: {
-            header:'nav-acc-ic',
-            activeHeader:'nav-acc-ic-active'
-        },
-        beforeActivate: function(){
-            // 활성화되기 전에 코드를 실행합니다.
-            console.log('활성화되기 전에 코드를 실행합니다.');
-        },
-        activate: function(){
-            // 활성화된 후에 코드를 실행합니다.
-            console.log('활성화된 후에 코드를 실행합니다.');
-        }
+        body: JSON.stringify({
+            question: question,
+            file_ids: fileIds,
+            tool_used: checkboxValue
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+        displayAnswer(data);
+    })
+    .catch(error => {
+        console.error('Error fetching the answer:', error);
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+        displayAnswer('API 서버가 불안정해요. 다시 질문해주세요!');
+    })
+    .finally(() => {
+        document.getElementById('loading_bar_ragprompt').style.display = 'none';
     });
+};
 
-    jTooltip();
+function displayAnswer(answer) {
+    const answerWrap = document.createElement('div');
+    answerWrap.className = 'answer-wrap';
+    answerWrap.innerHTML = answer; 
+    const talkListWrap = document.querySelector('.talk-list-wrap');
+    talkListWrap.appendChild(answerWrap);
+    answerWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
 
-});
 //******************************** 3RD GNB::  리서치RAG Ends   ***********************************************//   

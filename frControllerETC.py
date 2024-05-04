@@ -2,6 +2,8 @@
 import json
 import requests
 import httpx
+import os
+import logging
 import asyncio
 from typing import Optional, List
 import base64
@@ -10,22 +12,34 @@ from datetime import datetime, timedelta
 from google.cloud import vision
 from google.oauth2 import service_account
 from pydantic import BaseModel
+from urllib.parse import urlparse, parse_qs
 import pandas as pd
 import matplotlib
+from bs4 import BeautifulSoup
 matplotlib.use('Agg')
+import multiprocessing
+from functools import lru_cache
 #금융관련 APIs
 import finnhub
 import fredpy as fp
 from fredapi import Fred
 from openai import OpenAI
 import yfinance as yf
+from groq import Groq
+#from serpapi import GoogleSearch
+import serpapi
 #personal 파일
 import config
 import utilTool
 #FAST API 관련
-import logging
 from fastapi import HTTPException, Request, APIRouter
 from fastapi.responses import JSONResponse
+#Langchain 관련
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+from langchain.chains.llm import LLMChain
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain.docstore.document import Document as Doc
 
 # 라우터 설정
 logging.basicConfig(level=logging.DEBUG)
@@ -37,7 +51,7 @@ client = OpenAI(api_key = config.OPENAI_API_KEY)
 fp.api_key =config.FRED_API_KEY
 fred = Fred(api_key=config.FRED_API_KEY)
 rapidAPI = config.RAPID_API_KEY
-
+groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 ################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [1.핵심지표] Starts #########################################
 
 # series id 받아서 데이터 갖고오는 공통함수 
@@ -196,11 +210,9 @@ async def fetch_indicator_news(date_range: DateRange):
         print(from_date)
         selected_eng_names = ['market-news::financials', 'market-news::issuance', 'market-news::us-economy']
         news_json = rapidapi_indicator_news(selected_eng_names, from_date, to_date)
-        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-        print(news_json)
+        #print(news_json)
         extracted_data = extract_news_data(news_json) 
-        print("ccccccccccccccccccccccccccc")
-        print(extracted_data)
+        #print(extracted_data)
         return extracted_data
     except Exception as e:
         # 오류 처리
@@ -224,6 +236,38 @@ def translate_gpt(text):
         logging.error("An error occurred in translate_gpt function: %s", str(e))
         return None       
 
+def translate_lama(text):
+    try:
+        SYSTEM_PROMPT = "다음 내용을 한국어로 번역해줘. url이나 링크 부분만 번역하지마" 
+        prompt = f"영어를 반드시 한국어로 번역해서 알려줘. url과 링크를 제외한 답변내용은 반드시 한국어여야해. 내용은 다음과 같아\n{text}"
+        response = groq_client.chat.completions.create(
+            model="mixtral-8x7b-32768",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in translate_lama function: %s", str(e))
+        return None    
+
+class FrNewsTranslateRequest(BaseModel):
+    title: str
+    content: str
+    method: str  # Method to decide the translation function (e.g., "lama" or "gpt")
+@frControllerETC.post("/frnews-translate")
+async def translate_text(request: FrNewsTranslateRequest):
+    if request.method.lower() == "lama":
+        translate_func = translate_lama
+    else:
+        translate_func = translate_gpt
+
+    translated_title = translate_func(request.title)
+    translated_content = translate_func(request.content)
+    
+    return {"title": translated_title, "content": translated_content}
+
 class TranslateRequest(BaseModel):
     title: str
     content: str
@@ -234,8 +278,6 @@ async def translate_text(request: TranslateRequest):
     translated_content = translate_gpt(request.content)
     
     return {"title": translated_title, "content": translated_content}
-
-
 ##################################[1ST_GNB][2ND_MENU] 글로벌 주요경제지표 보여주기 [2.채권가격 차트] Ends ##################################
 ##################################[1ST_GNB][5TH_MENU] CALENDAR 보여주기 Starts #####################################################
 # 증시 캘린더 관련 함수 
@@ -355,30 +397,36 @@ def extract_title_and_content(json_str):
 async def gpt_request(request_data: dict):
     action = request_data.get("action")
     g_news = request_data.get("g_news")
+    llm = request_data.get("llm", None)
+    if llm == 'lama':
+        #news_sum_function = utilTool.lama3_news_sum
+        news_sum_function = utilTool.mixtral_news_sum        
+    else:
+        news_sum_function = utilTool.gpt4_news_sum    
 
     SYSTEM_PROMPT = ""
     if action == "translate":
         # 한국어로 번역하기에 대한 처리
         SYSTEM_PROMPT = "You are an expert in translation. Translate the title and content from the following JSON data into Korean. Return the translated content in the same JSON format, but only translate the title and content into Korean. Do not provide any other response besides the JSON format."
-        gpt_result = await utilTool.gpt4_news_sum(g_news, SYSTEM_PROMPT)
+        gpt_result = await news_sum_function(g_news, SYSTEM_PROMPT)
 
     elif action == "opinions":
         # AI 의견보기에 대한 처리
         SYSTEM_PROMPT = "Given the provided news data, please provide your expert analysis and insights on the current market trends and future prospects. Consider factors such as recent developments, market sentiment, and potential impacts on various industries based on the news. Your analysis should be comprehensive, well-informed, and forward-looking, offering valuable insights for investors and stakeholders. Thank you for your expertise"
-        digest_news = extract_title_and_content(g_news)        
-        gpt_result = await utilTool.gpt4_news_sum(digest_news, SYSTEM_PROMPT)
+        #digest_news = extract_title_and_content(g_news)        
+        gpt_result = await news_sum_function(g_news, SYSTEM_PROMPT)
 
     elif action == "summarize":
         # 내용 요약하기에 대한 처리
         SYSTEM_PROMPT = "You're an expert in data summarization. Given the provided JSON data, please summarize its contents systematically and comprehensively into about 20 sentences, ignoring JSON parameters unrelated to news articles."        
-        digest_news = extract_title_and_content(g_news)
-        gpt_result = await utilTool.gpt4_news_sum(digest_news, SYSTEM_PROMPT)
+        #digest_news = extract_title_and_content(g_news)
+        gpt_result = await news_sum_function(g_news, SYSTEM_PROMPT)
 
     elif action == "navergpt":
         # 네이버 뉴스에 대한 GPT 의견 묻기임 
         SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications."        
         digest_news = g_news
-        gpt_result = await utilTool.gpt4_news_sum(digest_news, SYSTEM_PROMPT)        
+        gpt_result = await news_sum_function(digest_news, SYSTEM_PROMPT)        
         
     else:
         gpt_result = {"error": "Invalid action"}
@@ -397,7 +445,7 @@ async def gpttest():
     print(gpt_summary)
     
 asyncio.run(gpttest()) '''
-##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 Starts ###################################################
+#####################################[TEST 없어진 MENU] 해외 증시 마켓 PDF 분석 Starts ################################################
 
 class ImageData(BaseModel):
     image: str  # Base64 인코딩된 이미지 데이터
@@ -478,4 +526,356 @@ async def gpt4_pdf_talk(response_data):
     except Exception as e:
         print("An error occurred in gpt4_chart_talk:", str(e))
         return None
-##################################[1ST_GNB][4TH_MENU] 해외 증시 마켓 PDF 분석 ENDS ################################################### 
+##################################[TEST 없어진 메뉴] 해외 증시 마켓 PDF 분석 ENDS ################################################### 
+################################### [1ST GNB][4TH LNB] FOMC 데이터 분석 Starts############################################
+
+#############(1. FOMC PRESS Release 분석 )
+
+# FOMC 데이터 스크래핑 [1차 press relase 타이틀목록 조회용] 
+@frControllerETC.get("/fomc-scraping-release/")    
+def fetch_fomc_press_release(url: str):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
+            data = response.content.decode('utf-8-sig')
+            json_data = json.loads(data)[:10]  
+            data_list = []
+            for item in json_data:
+                datetime = item.get("d")
+                title = item.get("t")
+                press_type = item.get("pt")
+                link = "https://www.federalreserve.gov" + item.get("l") 
+                
+                data_list.append({
+                    'datetime': datetime,
+                    'title': title,
+                    'link': link,
+                    'press_type': press_type
+                })
+            return data_list
+        else:
+            return "Failed to fetch FOMC title data with status code: {}".format(response.status_code)
+    except Exception as e:  
+        raise HTTPException(status_code=400, detail=str(e))    
+
+#print(fetch_fomc_press_release('https://www.federalreserve.gov/json/ne-press.json'))
+# FOMC 데이터 스크래핑 [1차 press relase 상세내용 조회용] 
+@frControllerETC.get("/fomc-scraping-details-release/")    
+async def fetch_fomc_press_release(url: str):
+    try:
+        response = requests.get(url)
+        # URL 예시 :: https://www.federalreserve.gov/newsevents/pressreleases/bcreg20240424a.htm
+        if response.status_code == 200:
+            # UTF-8 BOM이 있을 경우를 대비하여 utf-8-sig로 디코드
+            data = response.content.decode('utf-8-sig')
+            
+            soup = BeautifulSoup(data, 'html.parser')
+            # 타이틀을 뽑고
+            title = soup.find('h3', class_='title').text.strip()
+            # 콘텐츠를 뽑고
+            contents = soup.find('div', id='article').find_all('p')
+            contents_text = '\n'.join(p.text for p in contents if 'article__time' not in p.get('class', []))
+            # join해서 gpt로 던지자 
+            data_list = f"Title: {title}\nContents:\n{contents_text}"
+
+            SYSTEM_PROMPT = "너는 뉴스데이터 분석전문가야. 다음 뉴스 데이터를 7줄로 심도있게 요약해줘. 타이틀과 요약으로 나누어서 내용을 보여주고 이 뉴스가 향후 시장경제에 미치게 될 너의 전망도 같이 알려줘"
+            summary = await utilTool.gpt4_news_sum(data_list, SYSTEM_PROMPT)
+            
+            ##### 파일 저장도 따로 한다!! (속도개선) #####
+                        # 파일 이름 추출
+            filename = url.split('/')[-1].split('.')[0] + '.txt'
+            save_path = f"batch/fomc/fomc_detail_{filename}"
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            with open(save_path, 'w', encoding='utf-8') as file:
+                file.write(summary)
+            
+            return summary            
+        else:
+            return f"Failed to fetch FOMC release detail data with status code: {response.status_code}"
+    except Exception as e:  
+        raise HTTPException(status_code=400, detail=str(e))
+    
+#############(2.FOMC 위원들 Speech 요약 및  분석 )
+
+def scrape_speeches(url):
+    """
+    URL 입력했을 때 최근 FOMC 스피치 리스트를 가져오는 함수
+    """
+    try: 
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+   
+        # Find the parent div with class 'row eventlist'
+        eventlist_div = soup.find('div', class_='row eventlist')
+
+        # Find the desired section within the parent div
+        desired_section = eventlist_div.find('div', class_='col-xs-12 col-sm-8 col-md-8')
+
+        speeches = []
+
+        for speech in desired_section.find_all('div', class_='row'):
+            # print(speech)
+            # print("*****")
+            date = speech.find('time').text
+            link = 'https://www.federalreserve.gov' + speech.find('div', class_='col-xs-9 col-md-10 eventlist__event').find('a', href=True)['href']
+            title = speech.find('em').text
+            author = speech.find('p', class_='news__speaker').text
+            # youtube = speech.find('a', class_='watchLive')
+            # if youtube:
+            #     youtube_link = speech.find('a', class_='watchLive')['href']
+            #     speeches.append({'date': date, 'link': link, 'title': title, 'author': author, 'youtube_link': youtube_link})
+            # else: # youtube link doesn't exist
+            speeches.append({'date': date, 'link': link, 'title': title, 'author': author})
+
+        return speeches
+    except requests.exceptions.RequestException as e:
+        return "An error occurred while fetching speech news: {}".format(e)  
+    
+def scrape_speech_content(url):
+    """
+    URL 입력했을 때 URL 안에 있는 스피치 텍스트를 가져오는 함수
+    """
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    desired_section = soup.find('div', class_='col-xs-12 col-sm-8 col-md-8')
+    
+    ### 비디오 내용 제거
+    unwanted_div = desired_section.find('div', class_='col-xs-12 col-md-7 pull-right')
+    if unwanted_div:
+        unwanted_div.decompose()
+    ## 엔딩을 가리키는 hr태그 찾기
+    hr_tag = desired_section.find('hr')
+    # Extract the content before the <hr> tag
+    if hr_tag:
+        previous_content = hr_tag.find_previous_siblings()
+        result_str = ""
+        for tag in reversed(previous_content):
+            # print(tag)
+            result_str += tag.text + "\n\n"
+    else:
+        result_str = desired_section.text.strip()
+    
+    return result_str    
+
+@frControllerETC.get("/frSocialData")
+async def get_fr_social_data(request: Request):
+    scraped_data_2024 = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2024-speeches.htm")
+    scraped_data_2023 = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2023-speeches.htm")
+    scraped_data = scraped_data_2024 + scraped_data_2023
+    
+    
+    logging.info("======GETTING SOCIAL DATA =======")
+    return {"data": scraped_data}
+
+class SpeechData(BaseModel):
+    title: str
+    link: str
+    
+
+@lru_cache(maxsize=None)  # 요약이 너무 오래 걸려서 한번 나온 결과는 캐싱한다
+def generate_content(text):
+    # Your function logic here
+    prompt_template = """You are an economist tasked with summarizing speeches by Federal Open Market Committee (FOMC) members.
+    Explain as if you are talking to someone who knows nothing about FOMC or economics. So, you have to explain economics terminology used in the text as well.
+    너한테 FOMC 연설문 전체 내용을 줄 거야. 연설문의 주요 내용을 요약해줘. 고유명사는 괄호로 영어 원문도 보여줘.
+    대답은 한국어로 해줘. 답변은 500자 이내로 해줘. Speech에 없는 내용은 언급하지 마.
+    연설자를 가리킬 때는 항상 "연설자" 라고 말해. 다른 명칭을 사용하지 마. 
+    답은 항상 -입니다, -습니다 체로 해줘. 
+    
+    Speech:
+    "{text}"
+
+    답변: """
+
+    prompt = PromptTemplate.from_template(prompt_template)
+
+    # Define LLM chain
+    llm = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo", api_key=config.OPENAI_API_KEY, 
+                     streaming=True)
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+
+    # Define StuffDocumentsChain
+    stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text", verbose=True)
+    docs = Doc(page_content=text)
+    return stuff_chain.run([docs])
+
+
+@frControllerETC.post("/summarizeSpeech")
+async def summarize_speech(data: SpeechData):
+    try:    
+        #파일 저장용 이름따내기
+        parsed_url = urlparse(data.link)
+        file_name_with_extension = os.path.basename(parsed_url.path)   
+        file_id = file_name_with_extension.split('.')[0]   
+        
+        speech_title = translate_gpt(data.title)  #타이틀 번역하기
+        speech_text = scrape_speech_content(data.link) # 링크 가서 내용 크롤링하기
+        summary = generate_content(speech_text)    
+            
+        result = {"title": speech_title, "summary": summary}
+        
+        #retrun 할 데이터를 파일로도 저장시킴(for 속도개선)
+        file_path = f"batch/fomc/fomc_speech_ai_sum_{file_id}.json"
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(result, f, ensure_ascii=False)  
+        return result    
+    except Exception as e:
+        print(f"Error saving file(at summarize_speech): {e}")
+        #파일저장에서 에러나도 어쨌든 리턴은 되게..
+        return result
+    
+
+#### 사람별로 관련 로이터 article 가져오는 함수 (serp api 활용)
+def get_articles_by_person(person):
+    """
+    사람 이름 (ex. John Williams) 입력했을 때 구글서치로 뜨는 로이터 기사들 가져오는 함수
+    """
+    params = {
+        #   "engine": "google_news",
+        "tbm": "nws",
+        "q": f"{person} Reuters",
+        "api_key": config.SERPAPI_API_KEY,
+        #   "tbs": "sbd:1", ##sort by date
+        "num": 20        
+    }
+
+    try:
+        #search = GoogleSearch(params)
+        search = serpapi.search(params)
+        results = search.get_dict()
+        news_results = results["news_results"]
+        # print(news_results)
+        
+        # 출처가 로이터 인것만 필터링
+        reuters_articles = [article for article in news_results if article['source'] == 'Reuters']
+        
+        # 타이틀에 사람 이름이 들어간 것만 필터링
+        filtered_articles = [article for article in reuters_articles if person.split()[-1].lower() in article['title'].lower()]
+        
+        # 날짜 중복인 것들 중에 중복 제거
+        encountered_dates = set()
+        final_articles = []
+        
+        for article in filtered_articles:
+            if article['date'] not in encountered_dates:
+                final_articles.append(article)
+                encountered_dates.add(article['date'])
+                
+        return final_articles
+    except Exception as e: 
+        raise HTTPException(status_code=400, detail=str(e))   
+        
+
+class ArticleRequest(BaseModel):
+    name: str
+@frControllerETC.post("/articleData")
+async def get_article_data(request: ArticleRequest):
+    return get_articles_by_person(request.name)
+
+
+
+class SentimentAnalysisRequest(BaseModel):
+    speeches: List
+
+@lru_cache(maxsize=None)    
+def extract_main_sentence(url):
+    """
+    url에 대해 url 텍스트 전체를 크롤링하고 텍스트 중 주요 문장 추출하는 함수
+    """
+    text = scrape_speech_content(url)
+    prompt_template = """
+    You are an economist determining dovish/hawkish orientation from FOMC members' speeches.
+    You will be given a speech from a FOMC member. 
+    Return the main sentence from the speech that shows author's orientation. 
+    If the speech does not contain such sentence, return None.
+    
+    The output should just be the sentence(s). Do not include other explanations.
+        <Example>
+        "There is no rush in cutting interest rates."
+
+    Speech:
+    "{text}"
+
+    Answer: """
+    prompt = PromptTemplate.from_template(prompt_template)
+
+    # Define LLM chain
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo", streaming=True,
+                     api_key=config.OPENAI_API_KEY)
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+
+    # Define StuffDocumentsChain
+    stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text", verbose=True)
+        
+    docs = Doc(page_content=text)
+    # #     # # result1 = stuff_chain.invoke(docs)['output_text']
+    # #     # # print(stuff_chain.invoke(docs))
+    # #     # # # print(stuff_chain.run(docs))
+    # #     # # print(type(docs))
+    return stuff_chain.run([docs])
+
+
+
+@frControllerETC.post("/sentimentAnalysis")
+async def get_sentiment_data(request: SentimentAnalysisRequest):
+    speeches = request.speeches
+    if len(speeches) > 15:
+        speeches = speeches[0:15] # 15개로 제한
+
+    with multiprocessing.Pool(processes=10) as pool:
+        # 주요 문장 뽑기 병렬처리
+        results = [pool.apply_async(extract_main_sentence, (speech["link"],)) for speech in speeches]
+        
+        # Gather results as they become available
+        final_results = [{"date": speech["date"], "title": speech["title"], "result": result.get()} for speech, result in zip(speeches, results)]
+        
+        print("Final Results:", final_results)
+    
+    return final_results
+
+### FOMC Sentiment Analysis 모델에 텍스트 보내고 스코어 받아오는 함수
+def query(payload):
+    """
+    fomc-roberta 모델에 내가 원하는 문장을 보내서 문장에 대한 성향분석 점수를 받아오는 함수
+    """
+    API_URL = "https://api-inference.huggingface.co/models/gtfintechlab/FOMC-RoBERTa"
+    headers = {"Authorization": f"Bearer {config.HUGGINGFACE_API_KEY}"}
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
+	
+        
+class SentimentScoreRequest(BaseModel):
+    speeches: List
+    is_speech: bool
+    
+@frControllerETC.post("/sentimentScore")
+async def get_sentiment_data(request: SentimentScoreRequest):
+    speeches = request.speeches
+    final_results = []
+    for speech in speeches:
+        if request.is_speech == True: # 연설문 주요문장에서 점수 추출
+            if speech["result"] != "None": 
+                output = query({
+                    "inputs": speech["result"],
+                    "options": {
+                        "wait_for_model": True
+                    }
+                })
+                final_results.append({"date": speech["date"], "scores": output, "result": speech["result"]})    
+            else:
+                continue
+        else: # 기사 제목에서 점수 추출
+            output = query({
+                "inputs": speech["title"],
+                "options": {
+                    "wait_for_model": True
+                    }
+                })
+            final_results.append({"date": speech["date"], "scores": output, "result": speech["title"]})    
+        
+    logging.info(final_results)
+    return final_results
+
+################################### [1ST GNB][4TH LNB] FOMC 데이터 분석 Ends############################################        

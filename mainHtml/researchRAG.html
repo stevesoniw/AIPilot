@@ -8,33 +8,49 @@
         </div>
     </div>
 
-    <div class="upload-file-wrap">
-        <div class="upload-box">
-            <div id="drop-file" class="drag-file">
-                <img src="/static/assets/images/upload-file-ic.png" class="image" alt="" />
-                <p class="message">Drag and drop files here</p>
-                <label for="chooseFile" class="upload-label">Choose File</label>
+    <form id="file-upload-form" enctype="multipart/form-data">    
+    <div class="upload-area-wrap">        
+        <div class="upload-file-wrap">
+            <div class="upload-box">
+                <div id="drop-file" class="drag-file">
+                    <img src="/static/assets/images/upload-file-ic.png" class="image" alt="" />
+                    <p class="message">Drag and drop files here</p>
+                    <label for="chooseFile" class="upload-label">Choose File</label>
+                </div>
+                <input type="file" id="chooseFile" name="files" class="file"  multiple />
             </div>
-            <input type="file" id="chooseFile" class="file" onchange="dropFile.handleFiles(this.files)"  multiple />
-        </div>
-        <div id="files" class="files">
-            
-        </div>
-    </div> 
+            <div id="showfiles" class="files"></div>
+            <div id="metainfo" class="layerHidden"></div>
+        </div> 
+        <div class="upload-check-area">
+            <label class="upload-checkbox">
+                <input type="checkbox" name="researchGPT4" id="researchGPT4" value="gpt" checked>
+                <span class="checkbox-label">GPT4 활용</span>
+            </label>
+            <label class="upload-checkbox">
+                <input type="checkbox" name="researchLama3" id="researchLama3" value="lama">
+                <span class="checkbox-label">Lama3 활용</span>
+            </label>
+        </div>        
+    </div>
+    </form>
+
 
     <div class="select-wrap">
-        <label for="promptSelect">프롬프트 예시</label>
+        <label for="promptSelect">프롬프트 선택</label>
         <select id="promptSelect" class="research-select">
-            <option value="리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘">리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘</option>
+            <option value="default">파일을 업로드 후, 프롬프트를 선택해 주세요.</option>
+            <option value="A">1. 리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘</option>
+            <option value="B">2. 리포트를 읽고 해당 기업의 이번 분기 실적이 어땠는지 알려줘. 뭘 근거로 리포트에서 그렇게 판단했는지도 알려줘</option>
+            <option value="C">3. 리포트에 쓰인 전문 용어가 있으면 설명해줘. 이 기업에서 하는 사업과 관련된 용어들 중에 생소한 것들은 꼭 알려줘</option>
         </select>
     </div>
-
     <div class="chat-list-wrap">
-        <div class="question-wrap">
-            리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 정리해줘.
+        <div class="question-wrap prompt-ver">
+            [예시] 리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 정리해줘.
         </div>
         <div class="answer-wrap">
-            삼성전자의 애널리스트 리포트를 바탕으로 사업 분야별 Byll과 Bear 포인트를 정리하면 다음과 같습니다.
+            [예시] 삼성전자의 애널리스트 리포트를 바탕으로 사업 분야별 Bull & Bear 포인트를 정리하면 다음과 같습니다.
             <br />
             <table>
                 <colgroup>
@@ -69,10 +85,19 @@
             </table>
         </div>
     </div>
+    <div class="talk-list-wrap">
+            <!--채팅 Q&A 영역-->
+    </div>    
+    <div id="loading_bar_ragprompt" class="loading_bar_ragprompt">
+        <div class="loading_ragprompt_content">
+            <img src="/static/assets/images/LoadingBar_D.gif" alt="Loading...">
+            <p class="loading-text-ragprompt" id="loading-text-ragprompt">리포트 분석중입니다.</p>
+        </div>
+    </div>      
     <div class="chat-ipt-wrap">
         <div class="pr">
-            <textarea id="" class="chat-ipt"></textarea>
-            <button type="button" class="send-btn">보내기</button>
+            <textarea id="ragchat" class="chat-ipt"></textarea>
+            <button type="button" class="send-btn" id="ragchat_button">보내기</button>
         </div>
     </div>
 </div> 

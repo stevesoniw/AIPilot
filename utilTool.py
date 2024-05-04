@@ -8,11 +8,13 @@ import base64
 import json 
 import logging
 from openai import OpenAI
+from groq import Groq
 import config
 
 # API KEY 설정
 
 client = OpenAI(api_key = config.OPENAI_API_KEY)
+groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 
 # 현재날짜 계산
 def get_curday():
@@ -126,3 +128,52 @@ def handle_nan(obj):
     if isinstance(obj, float) and np.isnan(obj):
         return None
     return obj
+
+# GPT4 일반호출 함수
+async def gpt4_request(prompt):
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4-0125-preview",
+            messages=[
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
+        return None
+    
+
+# Lama3 API TEST 해보기
+async def lama3_news_sum(newsData, SYSTEM_PROMPT):
+    try:
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. korean 외의 언어로는 절대 답변하지 말고, 화면 가독성이 좋도록 줄바꿈도 해서 답변해줘. 뉴스 데이터 : " + str(newsData)
+        completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ],
+            model="llama3-8b-8192",
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in lama3_news_sum function: %s", str(e))
+        return None    
+
+async def mixtral_news_sum(newsData, SYSTEM_PROMPT):
+    try:
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. korean 외의 언어로는 절대 답변하지 말고, 화면 가독성이 좋도록 줄바꿈도 해서 답변해줘. 뉴스 데이터 : " + str(newsData)
+        completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ],
+            model="mixtral-8x7b-32768",
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in lama3_news_sum function: %s", str(e))
+        return None    
+    
+        
+    

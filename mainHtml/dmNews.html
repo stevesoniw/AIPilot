@@ -11,11 +11,12 @@
         <button class="news-btn" data-news-type="채권,선물" onclick="naverScrapingNews(4)">채권,선물</button>
         <button class="news-btn" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</button>
         <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
-        <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">그냥 내가 검색</button>
+        <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">일반 검색</button>
     </div>
             <!-- AI 요약 버튼 추가 -->
     <div class="ai-summary-button-container">
-        <button class="ai-summary-button" onclick="naverGptAsk()">아래 기사들에 대한 AI 요약 및 의견 보기</button>
+        <button class="ai-summary-button" onclick="naverGptAsk()">아래 기사들에 대한 AI 요약 및 의견 보기(GPT4)</button>
+        <button class="ai-summary-button" onclick="naverLamaAsk()">(LAMA3)</button>
     </div>
     <div class="ai-summary-result" style="display:none;"></div>
     <div id="loading_bar_navergpt" class="loading_bar" style="margin-left: 0px;">

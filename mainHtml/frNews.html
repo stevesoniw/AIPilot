@@ -109,8 +109,12 @@
 </div>
     <div class="buttons-container">
     <!--<button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>-->
-    <button class="btn" onclick="javascript:gptRequest('opinions')">AI 의견보기</button>
-    <button class="btn" onclick="javascript:gptRequest('summarize')">내용 요약하기</button>
+    <button class="fr-news-btn-alt" onclick="javascript:gptRequest('opinions', 'lama')">AI 의견 [Lama3]</button>
+    <button class="fr-news-btn" onclick="javascript:gptRequest('opinions', 'gpt')">AI 의견 [GPT4]</button>
+    <button class="fr-news-btn-alt" onclick="javascript:gptRequest('summarize', 'lama')">내용 요약 [Lama3]</button>
+    <button class="fr-news-btn" onclick="javascript:gptRequest('summarize', 'gpt')">내용 요약 [GPT4]</button>
+   
+
 </div>
 <div id="gpt-thoughts-container" style="display:none;">
     <h3 class="gpt_t">GPT Thoughts</h3>
