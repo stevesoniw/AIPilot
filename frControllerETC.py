@@ -726,6 +726,8 @@ async def summarize_speech(data: SpeechData):
         #파일저장에서 에러나도 어쨌든 리턴은 되게..
         return result
     
+    
+#############(3.FOMC 위원들 성향분석 )###############
 
 #### 사람별로 관련 로이터 article 가져오는 함수 (serp api 활용)
 def get_articles_by_person(person):
@@ -743,9 +745,9 @@ def get_articles_by_person(person):
 
     try:
         #search = GoogleSearch(params)
-        search = serpapi.search(params)
-        results = search.get_dict()
-        news_results = results["news_results"]
+        search_result  = serpapi.search(params)
+        #results = search.get_dict()
+        news_results = search_result ["news_results"]
         # print(news_results)
         
         # 출처가 로이터 인것만 필터링

@@ -136,59 +136,42 @@ async function getFOMCSpeeches() {
         return null; 
     }
 }
+//날짜 한국식으로 표현하자
+function formatFomcDate(dateStr) {
+    const parts = dateStr.split('/');
+    return `${parts[2]}/${parts[0]}/${parts[1]}`; // 년도, 월, 일 순서로 재배치
+}
 
 //최근 10개를 화면에 뿌려주는 함수
 async function displayData(datas) {
     const fomcSpeechList = document.querySelector('.fomc-speach-list');
     fomcSpeechList.innerHTML = '';
-    //10개 이하면 다 보여주고, 10개 넘어가면 최근 10개만 잘라서 보여준다
-    if (datas.data.length < 10) {
-        for (let i = 0; i < datas.data.length; i++) {
-            const item = datas.data[i]
-            const div = document.createElement('div');
-            div.className = 'fomc-speach-list';
-            div.innerHTML = `
-                <div class="box-flex-wrap">
-                    <span class="date-label">${item.date}</span>
-                    <div class="left-img-wrap">
-                        <img src="/static/assets/images/${decodeURIComponent(item.author.split(" ").pop().toLowerCase())}.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">${item.title}</h4>
-                    <p class="box-content-stit">${item.author}</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
-                    </div>
+
+    // 10개 이하면 10개이하. 이상이면 10개 보여주기
+    const itemsToShow = datas.data.length < 10 ? datas.data : datas.data.slice(0, 10);
+    
+    for (let i = 0; i < itemsToShow.length; i++) {
+        const item = itemsToShow[i];
+        const div = document.createElement('div');
+        div.className = 'fomc-speach-list';
+        div.innerHTML = `
+            <div class="box-flex-wrap">
+                <span class="date-label">${formatFomcDate(item.date)}</span>
+                <div class="left-img-wrap">
+                    <img src="/static/assets/images/${decodeURIComponent(item.author.split(" ").pop().toLowerCase())}.png" alt="" />
+            </div>
+            <div class="box-content">
+                <h4 class="box-content-tit">${item.title}</h4>
+                <p class="box-content-stit">${item.author}</p>
+                <div class="box-content-btn-wrap">
+                    <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
+                    <button class="box-content-btn orange ai-summary-pop" onClick='dialogPop(this);'>AI 요약하기</button>
                 </div>
             </div>
-            `;
-            fomcSpeechList.appendChild(div);
-        }
+        </div>
+        `;
+        fomcSpeechList.appendChild(div);
     }
-    else {
-        for (let i = 0; i < 10; i++) {
-            const item = datas.data[i]
-            const div = document.createElement('div');
-            div.className = 'fomc-speach-list';
-            div.innerHTML = `
-                <div class="box-flex-wrap">
-                    <span class="date-label">${item.date}</span>
-                    <div class="left-img-wrap">
-                        <img src="/static/assets/images/${decodeURIComponent(item.author.split(" ").pop().toLowerCase())}.png" alt="" />
-                </div>
-                <div class="box-content">
-                    <h4 class="box-content-tit">${item.title}</h4>
-                    <p class="box-content-stit">${item.author}</p>
-                    <div class="box-content-btn-wrap">
-                        <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop" onClick='dialogPop(this)';>AI 요약하기</button>
-                    </div>
-                </div>
-            </div>
-            `;
-            fomcSpeechList.appendChild(div);
-    }}
 }
 
 // 요약하기 버튼 눌렀을 때 팝업 띄우고 내용 보여주는 함수
@@ -362,7 +345,7 @@ function filterSpeeches(event) {
 
 }}
 
-/*****************************  [ 성향분석 ] *********************************************/
+/******************************************  [ 성향분석 ] ************************************************/
 
 // Radio Box 에 있는 value를 읽어 그 사람에 해당하는 스피치나 기사를 가져온다.
 // 스피치나 기사를 가져온 후 LLM에게 던진다
@@ -497,8 +480,29 @@ function plotScore(data) {
     });
 }
 
+function generateScore(data, isSpeech, lastName) {
+    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fileName = `senti_score_${lastName}_${todayDate}.json`;
+    const filePath = `/batch/fomc/sentiment/${fileName}`;
 
-function generateScore(data, isSpeech) {
+    fetch(filePath)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Local score file not found, fetching data from server...');
+            }
+            return response.json();
+        })
+        .then(scoreData => {
+            console.log('Local score data loaded:', scoreData);
+            plotScore(scoreData);
+        })
+        .catch(error => {
+            console.log(error.message);
+            fetchSentimentScore(data, isSpeech);
+        });
+}
+
+function fetchSentimentScore(data, isSpeech) {
     // post 요청으로 데이터에 대한 성향분석 점수를 받아옴
     // {date: "2020/04/04", scores: [], result: " "} 이런식으로 결과가 와야됨
     // api 호출해서 점수 받아오기
@@ -512,7 +516,8 @@ function generateScore(data, isSpeech) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
+        //console.log("************generate score*************");
+        //console.log(data);
         plotScore(data);
     
     })
@@ -522,115 +527,153 @@ function generateScore(data, isSpeech) {
     });
 
 }
+//배치파일 데이터 읽어오게 하는 함수  
+function fetchLocalFileData(lastName, isBoardMember) {
+    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fileName = `senti_timeline_${lastName}_${todayDate}.json`;
+    const filePath = `/batch/fomc/sentiment/${fileName}`;
 
-function generateTimeline() {
-    var selectedValue = getSelectedRadioValue();
-    if (selectedValue) {
-        // 선택된 값이 있다면 여기에 원하는 동작을 수행할 수 있습니다.
-        console.log("선택된 라디오 버튼의 값:", selectedValue);
-    
-        const boardMembers = ['Jerome Powell', 'Philip Jefferson', 'Michael Barr',
-         'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'];
-        // 7명의 사람들에 해당될 경우 스피치
-        if (boardMembers.includes(selectedValue)) {
-            const lastName = selectedValue.split(" ").pop(); //Jerome Powell => Powell만 저장
-
-            let filtered_list = [];
-            // console.log(data);
-            // data.data 배열을 순회하면서 speaker list에 있는 저자인지 확인
-            data.data.forEach(item => {
-                // console.log(item);
-                const itemLastName = decodeURIComponent(item.author.split(" ").pop());
-                // console.log(lastNames)
-                if (lastName === itemLastName) {
-                    filtered_list.push(item);
-                }  
-            });
-
-            fetch('/sentimentAnalysis', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({speeches: filtered_list})
-                    //n_graphs: parseInt(nGraphs, 10)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                var chartData = data.map(function(item) {
-                    // const parts = item.date.split('/');
-                    // const jsDate = new Date(parts[2], parts[0] - 1, parts[1]);
-                    return {
-                        x: new Date(item.date),
-                        name: item.title,
-                        label: item.title,
-                        description: item.result
-                    };
-                });
-                plotTimeline(chartData, true);
-                generateScore(data, true);
-            })
-            .catch(error => {
-                console.error('Error fetching similarity data:', error);
-                // document.getElementById('loading_bar_similarity').style.display = 'none'; 
-            });
-            
-        }       
-        else {
-            //5명의 사람들에 해당될 경우 기사
-            //selectedValue = John Williams, Thomas Barkin, Raphael Bostic, Mary Daly, Loretta Mester
-            fetch('/articleData', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({name: selectedValue})
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                // regex를 사용해서 link 끝에 있는 날짜 섹션 (ex. 2024-04-04)을 추출해서 date로 바꾼다
-                data.forEach(item => {
-                    // console.log(item);
-                    const regex = /(\d{4}-\d{2}-\d{2})/;
-                    const match = item.link.match(regex);
-    
-                    // 매칭된 부분을 출력
-                    const date = match ? match[0] : null;
-                    // console.log(date);
-                    item.date = date; //바꿔버려
-                });
-                //데이터를 날짜순으로 정렬
-                data.sort((a, b) => new Date(b.date) - new Date(a.date));
-                // console.log(data);
-                var chartData = data.map(function(item) {
-                    // const parts = item.date.split('/');
-                    // const jsDate = new Date(parts[2], parts[0] - 1, parts[1]);
-                    return {
-                        x: new Date(item.date),
-                        name: item.title,
-                        label: item.title,
-                        description: item.snippet
-                    };
-                });
-               
-                plotTimeline(chartData, false);
-                generateScore(data, false);
-            })
-            .catch(error => {
-                console.error('Error fetching similarity data:', error);
-                // document.getElementById('loading_bar_similarity').style.display = 'none'; 
-            });
-
-        }
-
-    } else {
-        // 선택된 값이 없을 경우에 대한 처리
-        console.log("라디오 버튼이 선택되지 않았습니다.");
-        alert("성향 분석 변화 추이를 보고 싶은 연사를 선택해주세요.");
-    }
+    return fetch(filePath)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Local file not found, fetching data from server...');
+            }
+            return response.json();
+        });
 }
 
+
+function generateTimeline() {
+    const selectedValue = getSelectedRadioValue();
+    if (!selectedValue) {
+        console.log("라디오 버튼이 선택되지 않았습니다.");
+        alert("성향 분석 변화 추이를 보고 싶은 연사를 선택해주세요.");
+        return;
+    }
+
+    console.log("선택된 라디오 버튼의 값:", selectedValue);
+    
+    const lastName = selectedValue.split(" ").pop();
+    const boardMembers = ['Jerome Powell', 'Philip Jefferson', 'Michael Barr',
+         'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'];
+    const isBoardMember = boardMembers.includes(selectedValue);
+
+    fetchLocalFileData(lastName, isBoardMember)
+    .then(data => {
+        // Local data was found and loaded
+        console.log('Local data loaded:', data);
+        var chartData = data.map(function(item) {
+            return {
+                x: new Date(item.date),
+                name: item.title,
+                label: item.title,
+                description: item.result
+            };
+        });
+        plotTimeline(chartData, isBoardMember);
+        generateScore(data, isBoardMember, lastName);
+    })
+    .catch(error => {
+        console.log(error.message);
+        // Local file not found or error in loading, proceed to fetch from server
+        fetchSentimentAnalysisFromServer(selectedValue, isBoardMember);
+    });
+}
+
+function fetchSentimentAnalysisFromServer(selectedValue) {
+    const boardMembers = ['Jerome Powell', 'Philip Jefferson', 'Michael Barr',
+        'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'];
+    const lastName = selectedValue.split(" ").pop(); //Jerome Powell => Powell만 저장
+    // 7명의 사람들에 해당될 경우 스피치
+    if (boardMembers.includes(selectedValue)) {
+        let filtered_list = [];
+        // data.data 배열을 순회하면서 speaker list에 있는 저자인지 확인
+        data.data.forEach(item => {
+            // console.log(item);
+            const itemLastName = decodeURIComponent(item.author.split(" ").pop());
+            // console.log(lastNames)
+            if (lastName === itemLastName) {
+                filtered_list.push(item);
+            }  
+        });
+        fetch('/sentimentAnalysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({speeches: filtered_list})
+                //n_graphs: parseInt(nGraphs, 10)
+        })
+        .then(response => response.json())
+        .then(data => {
+            print("timelines data!!!===");
+            console.log(data);
+            var chartData = data.map(function(item) {
+                // const parts = item.date.split('/');
+                // const jsDate = new Date(parts[2], parts[0] - 1, parts[1]);
+                return {
+                    x: new Date(item.date),
+                    name: item.title,
+                    label: item.title,
+                    description: item.result
+                };
+            });
+            plotTimeline(chartData, true);
+            generateScore(data, true, lastName);
+        })
+        .catch(error => {
+            console.error('Error fetching fetchSentimentAnalysisFromServer data:', error);
+            // document.getElementById('loading_bar_similarity').style.display = 'none'; 
+        });
+        
+    }       
+    else {
+        //5명의 사람들에 해당될 경우 기사
+        //selectedValue = John Williams, Thomas Barkin, Raphael Bostic, Mary Daly, Loretta Mester
+        fetch('/articleData', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({name: selectedValue})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            // regex를 사용해서 link 끝에 있는 날짜 섹션 (ex. 2024-04-04)을 추출해서 date로 바꾼다
+            data.forEach(item => {
+                // console.log(item);
+                const regex = /(\d{4}-\d{2}-\d{2})/;
+                const match = item.link.match(regex);
+
+                // 매칭된 부분을 출력
+                const date = match ? match[0] : null;
+                // console.log(date);
+                item.date = date; //바꿔버려
+            });
+            //데이터를 날짜순으로 정렬
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // console.log(data);
+            var chartData = data.map(function(item) {
+                // const parts = item.date.split('/');
+                // const jsDate = new Date(parts[2], parts[0] - 1, parts[1]);
+                return {
+                    x: new Date(item.date),
+                    name: item.title,
+                    label: item.title,
+                    description: item.snippet
+                };
+            });
+            
+            plotTimeline(chartData, false);
+            generateScore(data, false, lastName);
+        })
+        .catch(error => {
+            console.error('Error fetching similarity data:', error);
+            // document.getElementById('loading_bar_similarity').style.display = 'none'; 
+        });
+
+    }
+} 
 
 

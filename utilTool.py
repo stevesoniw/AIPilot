@@ -174,6 +174,13 @@ async def mixtral_news_sum(newsData, SYSTEM_PROMPT):
     except Exception as e:
         logging.error("An error occurred in lama3_news_sum function: %s", str(e))
         return None    
-    
-        
+
+# 공백기준으로 이름 뒤에를 리턴  
+def get_last_name(full_name):
+    parts = full_name.split()
+    # 마지막 부분(성)을 반환
+    return parts[-1] if parts else ''
+
+
+
     
