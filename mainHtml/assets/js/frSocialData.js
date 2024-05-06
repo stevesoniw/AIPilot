@@ -1,4 +1,4 @@
-let data = null;
+let dataFomcSum = null;
 let selectedSpeakers = [];
 let articleData = null;
 // FOMC 페이지 내에서 Menu탭 이동
@@ -9,7 +9,9 @@ function fomcMenuChange(type){
         fomcScrapingAPI('/fomc-scraping-release/?url=https://www.federalreserve.gov/json/ne-press.json');        
     }else if(type === 'summary'){
         htmlPath = 'frSocialData.html';
-        getFOMCSpeeches();
+        setTimeout(() => {
+            getFOMCSpeeches();
+        }, 20);         
     }else{
         htmlPath = 'frSocialAnalysis.html';
         //getArticleData();
@@ -119,16 +121,43 @@ async function fetchFomcReleaseDetail(link, detailContainer) {
 /*********************************  [ 요약 ] **************************************************/
 // FOMC Speech 크롤링하는 함수
 async function getFOMCSpeeches() {
+    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fileName = `speech_all_${todayDate}.json`;
+    const filePath = `/batch/fomc/all/${fileName}`;
+    try {
+        fetch(filePath)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Local speech_all_todaydate.json Not Found. Call Server data...');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Local data loaded:', data);
+            dataFomcSum = data;
+            displayFomcSpeech(data);
+        })
+        .catch(error => {
+            console.log(error.message);
+            fetchFromServer();
+        });
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        return null; 
+    }
+}
+    
+async function fetchFromServer() {
     try {
         const response = await fetch("/frSocialData", {
             method: "GET"
         });
-        data = await response.json();
+        dataFomcSum = await response.json();
         if (response.ok) {
-            console.log("Received Speech Data:", data);
-            displayData(data);
+            console.log("Received Speech Data:", dataFomcSum);
+            displayFomcSpeech(dataFomcSum);
         } else {
-            console.error("Error from server:", data);
+            console.error("Error from server:", dataFomcSum);
             return null; 
         }
     } catch (error) {
@@ -136,42 +165,66 @@ async function getFOMCSpeeches() {
         return null; 
     }
 }
+
 //날짜 한국식으로 표현하자
 function formatFomcDate(dateStr) {
     const parts = dateStr.split('/');
     return `${parts[2]}/${parts[0]}/${parts[1]}`; // 년도, 월, 일 순서로 재배치
 }
 
+
 //최근 10개를 화면에 뿌려주는 함수
-async function displayData(datas) {
+async function displayFomcSpeech(datas) {
     const fomcSpeechList = document.querySelector('.fomc-speach-list');
     fomcSpeechList.innerHTML = '';
-
-    // 10개 이하면 10개이하. 이상이면 10개 보여주기
-    const itemsToShow = datas.data.length < 10 ? datas.data : datas.data.slice(0, 10);
-    
-    for (let i = 0; i < itemsToShow.length; i++) {
-        const item = itemsToShow[i];
-        const div = document.createElement('div');
-        div.className = 'fomc-speach-list';
-        div.innerHTML = `
-            <div class="box-flex-wrap">
-                <span class="date-label">${formatFomcDate(item.date)}</span>
-                <div class="left-img-wrap">
-                    <img src="/static/assets/images/${decodeURIComponent(item.author.split(" ").pop().toLowerCase())}.png" alt="" />
-            </div>
-            <div class="box-content">
-                <h4 class="box-content-tit">${item.title}</h4>
-                <p class="box-content-stit">${item.author}</p>
-                <div class="box-content-btn-wrap">
-                    <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
-                    <button class="box-content-btn orange ai-summary-pop" onClick='dialogPop(this);'>AI 요약하기</button>
+    //10개 이하면 다 보여주고, 10개 넘어가면 최근 10개만 잘라서 보여준다
+    if (datas.data.length < 10) {
+        for (let i = 0; i < datas.data.length; i++) {
+            const item = datas.data[i]
+            const div = document.createElement('div');
+            div.className = 'fomc-speach-list';
+            div.innerHTML = `
+                <div class="box-flex-wrap">
+                    <span class="date-label">${formatFomcDate(item.date)}</span>
+                    <div class="left-img-wrap">
+                        <img src="/static/assets/images/${decodeURIComponent(item.author.split(" ").pop().toLowerCase())}.png" alt="" />
+                </div>
+                <div class="box-content">
+                    <h4 class="box-content-tit">${item.title}</h4>
+                    <p class="box-content-stit">${item.author}</p>
+                    <div class="box-content-btn-wrap">
+                        <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
+                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        `;
-        fomcSpeechList.appendChild(div);
+            `;
+            fomcSpeechList.appendChild(div);
+        }
     }
+    else {
+        for (let i = 0; i < 10; i++) {
+            const item = datas.data[i]
+            const div = document.createElement('div');
+            div.className = 'fomc-speach-list';
+            div.innerHTML = `
+                <div class="box-flex-wrap">
+                    <span class="date-label">${formatFomcDate(item.date)}</span>
+                    <div class="left-img-wrap">
+                        <img src="/static/assets/images/${decodeURIComponent(item.author.split(" ").pop().toLowerCase())}.png" alt="" />
+                </div>
+                <div class="box-content">
+                    <h4 class="box-content-tit">${item.title}</h4>
+                    <p class="box-content-stit">${item.author}</p>
+                    <div class="box-content-btn-wrap">
+                        <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
+                        <button class="box-content-btn orange ai-summary-pop" onClick='dialogPop(this)';>AI 요약하기</button>
+                    </div>
+                </div>
+            </div>
+            `;
+            fomcSpeechList.appendChild(div);
+    }}
 }
 
 // 요약하기 버튼 눌렀을 때 팝업 띄우고 내용 보여주는 함수
@@ -326,11 +379,11 @@ function filterSpeeches(event) {
         const lastNames = selectedSpeakers.map(speaker => {
         return speaker.split(" ").pop();
     }); // Governor Cook -> Cook만 저장
-    console.log(lastNames);
+    //console.log(lastNames);
     let filtered_list = [];
-    // console.log(data);
+    //console.log(dataFomcSum);
     // data.data 배열을 순회하면서 speaker list에 있는 저자인지 확인
-    data.data.forEach(item => {
+    dataFomcSum.data.forEach(item => {
         // console.log(item);
         const lastName = decodeURIComponent(item.author.split(" ").pop());
         // console.log(lastNames)
@@ -341,11 +394,13 @@ function filterSpeeches(event) {
     //필터링된 데이터를 다시 JSON 화 시킨다
     const filtered = JSON.parse(JSON.stringify({"data": filtered_list}));
     //화면에 뿌려주기
-    displayData(filtered);
+    displayFomcSpeech(filtered);
 
 }}
 
-/******************************************  [ 성향분석 ] ************************************************/
+
+
+/*****************************  [ 성향분석 ] *********************************************/
 
 // Radio Box 에 있는 value를 읽어 그 사람에 해당하는 스피치나 기사를 가져온다.
 // 스피치나 기사를 가져온 후 LLM에게 던진다
@@ -365,18 +420,24 @@ function getSelectedRadioValue() {
     return null;
 }
 
-// 타임라인 그래프 그려주는 함수
-// chartData가 실제데이터고 isSpeech는 스피치데이터인지 기사데이터인지 가리는 boolean값임
 function plotTimeline(chartData, isSpeech) {
-    // 스피치냐 기사냐에 따라 제목 바꿔주기
-    let titleText;
-    if (isSpeech) {
-        titleText = 'Speech';
-    } else {
-        titleText = 'Article';
-    }
+    //번역 영역 보여주도록 수정
+    document.getElementById('fomc_toggle_container').style.display = 'block';
+    // 제목 설정
+    let titleText = isSpeech ? 'Speech' : 'Article';
+    // UTC 설정
+    Highcharts.setOptions({
+        global: {
+            useUTC: false   //GMT 때문에 날짜 밀리는 문제 수정하기
+        }
+    });
 
-    // Highcharts 그래프 생성
+    // 데이터 정렬 (날짜 기준)
+    chartData.sort(function(a, b) {
+        return new Date(a.x).getTime() - new Date(b.x).getTime();
+    });
+
+    // Highcharts 차트 생성
     Highcharts.chart('timelineContainer', {
         chart: {
             zoomType: 'x',
@@ -384,6 +445,9 @@ function plotTimeline(chartData, isSpeech) {
         },
         xAxis: {
             type: 'datetime',
+            dateTimeLabelFormats: { // x 값을 년, 월, 일로 설정
+                day: '%e %b %Y'
+            },
             visible: false
         },
         yAxis: {
@@ -391,6 +455,14 @@ function plotTimeline(chartData, isSpeech) {
             title: null,
             labels: {
                 enabled: false
+            }
+        },
+        exporting: {
+            enabled: false,
+            buttons: {
+                contextButton: {
+                    enabled: false  // 자꾸 인쇄창이 뜸. 이유를 모르겠어서 강제로 막기
+                }
             }
         },
         title: {
@@ -404,28 +476,44 @@ function plotTimeline(chartData, isSpeech) {
         series: [{
             dataLabels: {
                 allowOverlap: false,
-                // format: '<span style="color:{point.color}">● </span><span style="font-weight: bold;" > ' +
-                //     '{point.x:%d %b %Y}</span><br/>{point.label}',
                 formatter: function() {
-                    return '<span style="color:' + this.point.color + '">● </span><span style="font-weight: bold;" > ' +
-                    Highcharts.dateFormat('%e %b %Y', this.x) + '</span><br/>' + this.point.label;
+                    return '<span style="color:' + this.point.color + '">● </span><span style="font-weight: bold;">' +
+                           Highcharts.dateFormat('%e %b %Y', this.x) + '</span><br/>' + this.point.label;
                 }
             },
-
             marker: {
                 symbol: 'circle'
             },
-            data: chartData
+            data: chartData,
+            //showInLegend: true,  // 범례에 시리즈 표시 활성화
+            enableMouseTracking: true  // 마우스 트래킹 활성화
         }]
     });
 }
 
+//자기 만족 컬러바꾸기 
+function getRandomColor(colors) {
+    return colors[Math.floor(Math.random() * colors.length)];
+}
 
-//감성분석 점수 보여주는 함수
 function plotScore(data) {
-    data = data.reverse() //오래전이 제일 먼저 오게 하기
+    document.getElementById('fomc_score_container').style.display = 'flex';
+    data = data.reverse(); // 오래된 데이터가 먼저 오도록 설정
+    var chartData = data.map(function(item) {
+        var scores = item.scores[0];
+        var neutralScore = scores.find(score => score.label === "LABEL_2").score;
+        var dovishScore = scores.find(score => score.label === "LABEL_0").score;
+        var hawkishScore = scores.find(score => score.label === "LABEL_1").score;
+        
+        return {
+            date: item.date,
+            neutral: neutralScore,
+            dovish: dovishScore,
+            hawkish: hawkishScore
+        };
+    });
 
-    // 차트 그리기
+    // Highcharts를 사용하여 차트 생성
     Highcharts.chart('scoreContainer', {
         chart: {
             type: 'column'
@@ -434,7 +522,7 @@ function plotScore(data) {
             text: 'Dovish-Hawkish Score Timeline'
         },
         xAxis: {
-            categories: data.map(item => item.date)
+            categories: chartData.map(item => item.date)
         },
         yAxis: {
             min: 0,
@@ -456,26 +544,23 @@ function plotScore(data) {
             }
         },
         series: [{
+            // 노란색 계열 #F5DF4D (2021 올해의 색상) , #F0C05A (2009 올해의 색상), #CDB127 (2024 올해의 색상)
+            // #CA9456, #FFD400
             name: 'Neutral',
-            color: '#F5DF4D',
-            data: data.map(item => {
-                var neutralScore = item.scores[0].find(score => score.label === "LABEL_2").score;
-                return neutralScore * 100; // converting to percentage
-            })
+            data: chartData.map(item => item.neutral * 100),
+            color: getRandomColor(['#F5DF4D', '#F0C05A', '#CDB127', '#CA9456', '#FFD400']) // 노란색 계열
         }, {
+            // 파란색 계열 #93A9D1 (2016 올해의 색상), #5A5B9F (2008 올해의 색상), #53B0AE (2005 올해의 색상)
+            // #8398CA , #5D9CA4
             name: 'Dovish',
-            color: '#93A9D1',
-            data: data.map(item => {
-                var dovishScore = item.scores[0].find(score => score.label === "LABEL_0").score;
-                return dovishScore * 100; // converting to percentage
-            })
+            data: chartData.map(item => item.dovish * 100), 
+            color: getRandomColor(['#93A9D1', '#5A5B9F', '#53B0AE', '#8398CA', '#5D9CA4']) // 파란색 계열
         }, {
+            // 빨간색 계열 #FF6F61(2019 올해의 색상), #D94F70(2011 올해의색상), #DD4124(2012 올해의 색상)
+            // #C54966, #BB2649 
             name: 'Hawkish',
-            color: '#FF6F61',
-            data: data.map(item => {
-                var hawkishScore = item.scores[0].find(score => score.label === "LABEL_1").score;
-                return hawkishScore * 100; // converting to percentage
-            })
+            data: chartData.map(item => item.hawkish * 100), 
+            color: getRandomColor(['#FF6F61', '#D94F70', '#DD4124', '#C54966', '#BB2649']) // 빨간색 계열
         }]
     });
 }
@@ -484,7 +569,6 @@ function generateScore(data, isSpeech, lastName) {
     const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const fileName = `senti_score_${lastName}_${todayDate}.json`;
     const filePath = `/batch/fomc/sentiment/${fileName}`;
-
     fetch(filePath)
         .then(response => {
             if (!response.ok) {
@@ -506,6 +590,7 @@ function fetchSentimentScore(data, isSpeech) {
     // post 요청으로 데이터에 대한 성향분석 점수를 받아옴
     // {date: "2020/04/04", scores: [], result: " "} 이런식으로 결과가 와야됨
     // api 호출해서 점수 받아오기
+    document.getElementById('loading_bar_fomc_senti').style.display = 'block';
     fetch('/sentimentScore', {
         method: 'POST',
         headers: {
@@ -518,20 +603,30 @@ function fetchSentimentScore(data, isSpeech) {
     .then(data => {
         //console.log("************generate score*************");
         //console.log(data);
+        document.getElementById('loading_bar_fomc_senti').style.display = 'none';
         plotScore(data);
     
     })
     .catch(error => {
+        document.getElementById('loading_bar_fomc_senti').style.display = 'none';
         console.error('Error fetching sentiment score:', error);
         // document.getElementById('loading_bar_similarity').style.display = 'none'; 
     });
 
 }
+
 //배치파일 데이터 읽어오게 하는 함수  
-function fetchLocalFileData(lastName, isBoardMember) {
+function fetchLocalFileData(lastName, language) {
     const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const fileName = `senti_timeline_${lastName}_${todayDate}.json`;
-    const filePath = `/batch/fomc/sentiment/${fileName}`;
+    let fileName, filePath;
+
+    if (language === 'kor') {
+        fileName = `senti_timeline_kor_${lastName}_${todayDate}.json`;
+        filePath = `/batch/fomc/sentiment/${fileName}`;
+    } else {
+        fileName = `senti_timeline_${lastName}_${todayDate}.json`;
+        filePath = `/batch/fomc/sentiment/${fileName}`;
+    }
 
     return fetch(filePath)
         .then(response => {
@@ -542,7 +637,6 @@ function fetchLocalFileData(lastName, isBoardMember) {
         });
 }
 
-
 function generateTimeline() {
     const selectedValue = getSelectedRadioValue();
     if (!selectedValue) {
@@ -550,21 +644,21 @@ function generateTimeline() {
         alert("성향 분석 변화 추이를 보고 싶은 연사를 선택해주세요.");
         return;
     }
-
+    document.getElementById('fomc_score_container').style.display = 'none'; //스코어차트 다시 가려주기
+    toggleSlideText('kor_off');
     console.log("선택된 라디오 버튼의 값:", selectedValue);
-    
     const lastName = selectedValue.split(" ").pop();
     const boardMembers = ['Jerome Powell', 'Philip Jefferson', 'Michael Barr',
          'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'];
     const isBoardMember = boardMembers.includes(selectedValue);
 
-    fetchLocalFileData(lastName, isBoardMember)
+    fetchLocalFileData(lastName, 'eng')
     .then(data => {
         // Local data was found and loaded
         console.log('Local data loaded:', data);
         var chartData = data.map(function(item) {
             return {
-                x: new Date(item.date),
+                x: new Date(item.date), // 날짜만 가져오도록 수정. 날짜밀림 문제방지
                 name: item.title,
                 label: item.title,
                 description: item.result
@@ -585,10 +679,11 @@ function fetchSentimentAnalysisFromServer(selectedValue) {
         'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'];
     const lastName = selectedValue.split(" ").pop(); //Jerome Powell => Powell만 저장
     // 7명의 사람들에 해당될 경우 스피치
+    document.getElementById('loading_bar_fomc_senti').style.display = 'block';
     if (boardMembers.includes(selectedValue)) {
         let filtered_list = [];
         // data.data 배열을 순회하면서 speaker list에 있는 저자인지 확인
-        data.data.forEach(item => {
+        dataFomcSum.data.forEach(item => {
             // console.log(item);
             const itemLastName = decodeURIComponent(item.author.split(" ").pop());
             // console.log(lastNames)
@@ -618,10 +713,12 @@ function fetchSentimentAnalysisFromServer(selectedValue) {
                     description: item.result
                 };
             });
+            document.getElementById('loading_bar_fomc_senti').style.display = 'none';
             plotTimeline(chartData, true);
             generateScore(data, true, lastName);
         })
         .catch(error => {
+            document.getElementById('loading_bar_fomc_senti').style.display = 'none';
             console.error('Error fetching fetchSentimentAnalysisFromServer data:', error);
             // document.getElementById('loading_bar_similarity').style.display = 'none'; 
         });
@@ -676,4 +773,60 @@ function fetchSentimentAnalysisFromServer(selectedValue) {
     }
 } 
 
+// 한국어 번역버튼 컨트롤하기
+function toggleLanguage() {
+    //한국어 파일 읽자 
+    const selectedValue = getSelectedRadioValue();
+    console.log("선택된 라디오 버튼의 값:", selectedValue);
 
+    const lastName = selectedValue.split(" ").pop();
+    const boardMembers = ['Jerome Powell', 'Philip Jefferson', 'Michael Barr',
+         'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'];
+    const isBoardMember = boardMembers.includes(selectedValue);
+
+    const languageCode = document.getElementById('kor_on').style.display === 'none' ? 'kor' : 'eng';
+
+    fetchLocalFileData(lastName, languageCode)
+    .then(data => {
+        console.log('Local data loaded:', data);
+        //이상한 값 같이 생성될때 있어서 제거
+        var chartData = data.map(function(item) {
+            return {
+                x: new Date(item.date), 
+                name: item.title,
+                label: item.title,
+                description: item.result
+            };
+        });
+        plotTimeline(chartData, isBoardMember);
+        toggleSlideText(); //정상일때만 바꿔줌
+    })
+    .catch(error => {
+        console.log(error.message);
+        alert("한글로 번역된 데이터가 없습니다. 나중에 다시 시도해주세요")
+    });    
+}
+
+function toggleSlideText(forceText) {
+    var checkbox = document.querySelector('.fomc-toggle.switch input[type="checkbox"]');
+    var korOffText = document.getElementById('kor_off');
+    var korOnText = document.getElementById('kor_on');
+
+    if (forceText === 'kor_off') {
+        korOffText.style.display = "inline-block";
+        korOnText.style.display = "none";
+        checkbox.checked = false; 
+    } else if (forceText === 'kor_on') {
+        korOffText.style.display = "none";
+        korOnText.style.display = "inline-block";
+        checkbox.checked = true; 
+    } else {
+        if (checkbox.checked) {
+            korOffText.style.display = "none";
+            korOnText.style.display = "inline-block";
+        } else {
+            korOffText.style.display = "inline-block";
+            korOnText.style.display = "none";
+        }
+    }
+}

@@ -21,7 +21,7 @@
         </li>
     </ul>
 
-    <div class="form-container">
+    <div class="fomc-form-container">
         <form id="">
             <div class="radio-row">
                 <div class="radio-group">
@@ -70,32 +70,41 @@
                 </div>
                 <div class="radio-group">
                     <input type="radio" id="radio12" name="radio" value="Loretta Mester">
-                    <label for="radio11">Loretta Mester (Cleveland)</label>
+                    <label for="radio12">Loretta Mester (Cleveland)</label>
                 </div>
-            <div class="form-actions">
-                <div class="center-button">
-                    <button type="button" id class="indicatorButton new-show-chart-btn" onclick="generateTimeline()">Generate Timeline</button>
+                <div class="form-actions">
+                    <div class="center-button">
+                        <button type="button" id class="indicatorButton new-show-chart-btn" onclick="generateTimeline()">Generate Timeline</button>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
+    <div class="fomc-toggle-container" id="fomc_toggle_container" style="display:none;">
+        <label class="fomc-toggle switch" onclick="toggleLanguage();">
+            <input type="checkbox">
+            <span class="slider round"></span>
+            <p id="kor_off">KOR Off</p>
+            <p id="kor_on" style="display:none;">KOR On</p>
+        </label>
+    </div>
+
+    <!-- 예시입니다.-->
+    <div id="loading_bar_fomc_senti" class="loading_bar" style="margin-left: 0px; position: fixed;">
+        <img src="/static/assets/images/LoadingBar_C.gif">
+        <p class="loading-text">FOMC Speech 분석중입니다. 잠시만 기다려주세요~</p>
+    </div> 
+    <div id="timelineContainer"></div>
+
+    <div class="highcharts-figure" id="fomc_score_container">
+        <div id="scoreContainer"></div>
+        <ul class="highcharts-description">
+            <li>Chart showing stacked percentage columns, where each column totals 100%,</li>
+            <li>and each element value is visualized by giving it a size relative to the</li>
+            <li>other elements.</li>
+        </ul>
+        <ul class="model-explanation">
+            <li>비둘기파/매파 분석 스코어는 논문 <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4447632" target="_blank" style="TEXT-DECORATION: underline">'Trillion Dollar Words: A New Financial Dataset, Task & Market Analysis'</a>에서 소개된 모델을 기반으로 계산됩니다.</li>
+        </ul>
+    </div>
 </div>
-<!-- 예시입니다.-->
-
-<div id="timelineContainer"></div>
-<div>
-
-</div>
-<figure class="highcharts-figure">
-    <div id="scoreContainer"></div>
-    <p class="highcharts-description">
-        Chart showing stacked percentage columns, where each column totals 100%,
-        and each element value is visualized by giving it a size relative to the
-        other elements.
-    </p>
-    <br>
-    <p class="model-explanation">
-        비둘기파/매파 분석 스코어는 다음 논문 <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4447632" target="_blank" style="TEXT-DECORATION: underline">'Trillion Dollar Words: A New Financial Dataset, Task & Market Analysis'</a>에서 소개된 모델을 기반으로 계산됩니다. 
-    </p>
-</figure>
-

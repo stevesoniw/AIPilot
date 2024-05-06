@@ -8,46 +8,102 @@
         </div>   
     </div>
     <div class="similarity-container">
-        <div class="similarity-section">
-            <div class="similarity-form-group">
-                <label class="similarity-form-label">Target Date Range:</label>
-                <div class="input-date-wrap">
-                    <input type="date" id="frst-targetDateStart" class="similarity-form-input similarity-range-input" value="2024-03-01">
-                    <span>~</span>
-                    <input type="date" id="frst-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-04-20">
-                </div>
-            </div>
-        </div>
-        <div class="similarity-section">
-            <div class="similarity-form-group">
-                <label class="similarity-form-label">Date Range for Analysis From:</label>
-                <div class="input-date-wrap">
-                    <input type="date" id="frst-compareDateStart" class="similarity-form-input similarity-range-input" value="2020-01-01">
-                    <span>~</span>
-                    <input type="date" id="frst-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-12-31">
-                </div>
-            </div>                            
-        </div>
-        <div class="similarity-section">
-            <div class="similarity-form-group">
-                <label for="frst-nSteps" class="similarity-form-label">N-Steps Ahead (in days):</label>
-                <input type="range" id="frst-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('frst-nSteps', 'nFrstStepValue');">
-                <span id="nFrstStepValue" class="similarity-nSteps-value">0</span>
-            </div>
-        </div>
-        <div class="similarity-section bbd8">
-            <div class="similarity-form-group">
-                <label for="frst-nSteps" class="similarity-form-label">No of Graphs:</label>
-                <input type="range" id="frst-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('frst-nGraphs', 'nFrstGraphValue');">
-                <span id="nFrstGraphValue" class="similarity-nSteps-value">1</span>
-            </div>                    
-        </div>
-        <div class="similarity-section bbd8">
-            <div class="similarity-form-group">
-                <label for="frst-nThreshold" class="similarity-form-label">Thresholds:</label>
-                <input type="range" id="frst-nThresholds" min="0" max="1" value="0" step="0.1" class="similarity-form-input" oninput="updateValue('frst-nThresholds', 'nFrstThresholdValue');">
-                <span id="nFrstThresholdValue" class="similarity-nSteps-value">0</span>
-            </div>                    
+        <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
+            <h4 style="font-size: 16px;margin-bottom: 10px;">해외주식 유사국면 분석 프로그램</h4>
+            <ul>
+                <li>- 유사국면 차트분석 프로그램은 Historic 데이터를 통해 현재 시장 상황을 해석하고, 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
+                <li>- 관심있는 해외 주식의 차트를 조회하고, 현재와 유사했던 과거 국면을 찾아보세요 </li>
+            </ul>
+        </div>  
+        <div class="table-wrap02">
+            <table>
+                <caption></caption>
+                <colgroup>
+                    <col style="width:15%" />
+                    <col />
+                </colgroup>
+                <tbody>
+                    <!-- 데이터 선택 -->
+                    <tr>
+                        <th scope="col">
+                            <div class="th-tooltip-wrap">
+                                타겟기간
+                                <div class="chat-info -right-ver tit-left" title="분석 대상 종목의 유사 시기를 찾고자 하는 기준 기간">
+                                    도움말
+                                </div>
+                            </div>
+                        </th>
+                        <td>
+                            <div class="input-date-wrap">
+                                <input type="date" id="frst-targetDateStart" class="similarity-form-input similarity-range-input" value="2024-03-01">
+                                <span>~</span>
+                                <input type="date" id="frst-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-04-20">
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- 분석 기간 -->
+                    <tr>
+                        <th scope="col">
+                            <div class="th-tooltip-wrap">
+                                분석기간
+                                <div class="chat-info -right-ver tit-left" title="유사 시기 Searching에 사용될 총 과거 기간">
+                                    도움말
+                                </div>
+                            </div>
+                        </th>
+                        <td>
+                            <div class="input-date-wrap">
+                                <input type="date" id="frst-compareDateStart" class="similarity-form-input similarity-range-input" value="2020-01-01">
+                                <span>~</span>
+                                <input type="date" id="frst-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-12-31">
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- N-스텝 설정 -->
+                    <tr>
+                        <th scope="col">
+                            <div class="th-tooltip-wrap">
+                                N-스텝
+                                <div class="chat-info -right-ver tit-left" title="분석된 유사 시기 이후 'N일' 동안의 경향을 관찰할 수 있도록 설정하는 데이터">
+                                    도움말
+                                </div>
+                            </div>
+                        </th>
+                        <td>                            
+                            <input type="range" id="frst-nSteps" min="0" max="100" value="0" step="10" class="similarity-form-input" oninput="updateValue('frst-nSteps', 'nFrstStepValue');">
+                            <span id="nFrstStepValue" class="similarity-nSteps-value">0</span>
+                        </td>
+                    </tr>
+                    <!-- 그래프 수 설정 -->
+                    <tr>
+                        <th scope="col">그래프 수</th>
+                        <td>
+                            <input type="range" id="frst-nGraphs" min="1" max="10" value="1" step="1" class="similarity-form-input" oninput="updateValue('frst-nGraphs', 'nFrstGraphValue');">
+                            <span id="nFrstGraphValue" class="similarity-nSteps-value">1</span>
+                        </td>
+                    </tr>
+                    <!-- Threshold 설정 -->
+                    <tr>
+                        <th scope="col">
+                            <div class="th-tooltip-wrap">
+                                Thresholds 설정 
+                                <div class="chat-info -right-ver tit-left" title="유사성 정도를 지정하는 설정. 값이 높을수록 더 유사한 차트를 찾아주지만, 그만큼 데이터를 못찾을 확률이 높아짐">
+                                    도움말
+                                </div>
+                            </div>
+                        </th>
+                        <td>    
+                            <input type="range" id="frst-nThresholds" min="0" max="1" value="0" step="0.1" class="similarity-form-input" oninput="updateValue('frst-nThresholds', 'nFrstThresholdValue');">
+                            <span id="nFrstThresholdValue" class="similarity-nSteps-value">0</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <ul class="list-dep small-ver">
+                    <li>Aligned Comparison 차트는 사용자가 지정한 타겟 차트와 유사국면 차트를 비교 분석하기 용이하게 하기 위해, 두 차트가 동일한 시작 값에서 출발하도록 조정된 참고 차트입니다</li>
+                </ul>
+            </div>   
         </div>        
         <div style="text-align: center;">
             <button class="similarity-button" id="frst-generateButton" onClick="javascript:generateFsSimilarityAnalysis();">Generate</button>
@@ -56,9 +112,15 @@
             <img src="/static/assets/images/LoadingBar_E.gif">
             <p>유사국면 데이터 서치중입니다.</p>
         </div>                          
-                
-        <div id="frstOriginalChartContainer" style="overflow: hidden;width:100%;height:500px;"></div>
-        <div id="frstAlignedChartContainer" style="overflow: hidden;width:100%;height:500px;"></div>
+
+        <div id="frstOriginalChartContainer" style="overflow: hidden;width:100%;height:500px; margin-top:50px;"></div>
+
+        <div id="frstAlignedChartContainer" style="overflow: hidden;width:100%;height:500px; margin-top:50px;"></div>
+
+        <div id="loading_bar_frst_news" class="loading_bar" style="margin-left: 0px;">
+            <img src="/static/assets/images/LoadingBar_C.gif">
+            <p>과거 News Data 서치중입니다.</p>
+        </div>         
         <div id="frstNewsSearch" class="frst-news-container">
             <h2 class="frst-news-main-title">뉴스 검색</h2>
             <h3 class="frst-news-sub-title">과거 유사기간의 뉴스를 검색해보세요</h3>

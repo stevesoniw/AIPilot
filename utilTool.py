@@ -1,4 +1,6 @@
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
+import re
 import matplotlib.pyplot as plt
 from pandas import Timestamp
 from io import BytesIO
@@ -181,6 +183,34 @@ def get_last_name(full_name):
     # 마지막 부분(성)을 반환
     return parts[-1] if parts else ''
 
-
+# 날짜 문자열 변환 함수 
+def parse_date(date_str):
+    """
+    날짜 문자열을 받아 절대 날짜로 변환합니다.
+    예: "3 weeks ago", "2 days ago", "1 month ago" -> 2024/2/16 형식으로 변환
+    """
+    now = datetime.now()
+    relative_match = re.match(r"(\d+) (week|month|day)s? ago", date_str)
+    
+    if relative_match:
+        quantity = int(relative_match.group(1))
+        time_unit = relative_match.group(2)
+        
+        if time_unit == 'day':
+            now -= relativedelta(days=quantity)
+        elif time_unit == 'week':
+            now -= relativedelta(weeks=quantity)
+        elif time_unit == 'month':
+            now -= relativedelta(months=quantity)
+            
+        return now.strftime("%Y/%m/%d")
+    else:
+        try:
+            # 이미 정확한 날짜로 주어진 경우
+            exact_date = datetime.strptime(date_str, '%b %d, %Y')
+            return exact_date.strftime("%Y/%m/%d")
+        except ValueError:
+            # 날짜 형식을 인식할 수 없는 경우
+            return None
 
     

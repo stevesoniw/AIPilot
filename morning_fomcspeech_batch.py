@@ -34,6 +34,7 @@ logging.basicConfig(level=logging.DEBUG)
 ########################################################################################################################
 #@@ 기능정의 : Fomc Sentiment 분석에서 timeline 스피치와 sentiment score를 미리 파일로 저장해놓는 배치 by son (24.05.05)
 #@@ Logic   : 1. fomc 발표 데이터 전체 스크래핑해오고, 선택 멤버별로 데이터필터 할 수 있는 함수 생성. 
+#@@              → 파일명 : 전체데이터는 batch/fomc/all/speech_all_{todaydate}.json 로 따로 저장.(요약 메인탭에서 불러오기용)
 #@@           2. 보드멤버 6명에 대해 순차적으로 speech 처리 및 파일저장 
 #@@           3. 나머지 멤버들은 로이터 기사 fetch 해오기 by 구글검색
 #@@           4. 나머지 멤버들 데이터도 타임라인을 json 형식으로 만들어서 파일저장 
@@ -73,13 +74,18 @@ async def get_fr_social_data():
     scraped_data_2023 = scrape_speeches("https://www.federalreserve.gov/newsevents/speech/2023-speeches.htm")
     scraped_data = scraped_data_2024 + scraped_data_2023
     
+    data_to_store = {"data": scraped_data}
     
     logging.info("======GETTING SOCIAL DATA =======")
+    todaydate = datetime.now().strftime("%Y%m%d")
+    file_name = f"batch/fomc/all/speech_all_{todaydate}.json"
+    with open(file_name, 'w', encoding='utf-8') as file:
+        json.dump(data_to_store, file, ensure_ascii=False, indent=4)    
     #print(scraped_data)
-    return {"data": scraped_data}
+    return data_to_store
 
-async def filter_speeches_by_author(last_name):
-    data = await get_fr_social_data()
+async def filter_speeches_by_author(last_name, data):
+    #data = await get_fr_social_data()
     filtered_list = []
     print(last_name)
     for item in data['data']:
@@ -122,10 +128,12 @@ def fetch_reuters_articles(person):
         final_articles = []
         
         for article in filtered_articles:
-            if article['date'] not in encountered_dates:
+            formatted_date = utilTool.parse_date(article['date'])    #상대적인 날짜 있는 경우 절대날짜로 변환해주기
+            if formatted_date and formatted_date not in encountered_dates:
+                article['date'] = formatted_date
                 final_articles.append(article)
-                encountered_dates.add(article['date'])
-        
+                encountered_dates.add(formatted_date)
+                
         print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         print(final_articles)
         return final_articles
@@ -252,9 +260,9 @@ async def translate_timeline_data(data):
         "You are a highly skilled translator fluent in both English and Korean. "
         "Translate the following json data from English to Korean, "
         "keeping any specific terms related to the US stock market or company names in English."
-        "And you need to translate only the contents of title and result into Korean. Do not translate the keys or property names of the JSON data. The format of the JSON must not be changed at all."
+        "And you need to translate only the contents of title and result into Korean. Do not translate the keys or property names of the JSON data. The format of the JSON must not be changed at all. (Never attach ```json or ``` signs before or after. make sure 'Key-value' pairs in JSON must be enclosed in double quotation marks)"
     )
-    pre_prompt = "Do not provide any other response besides the JSON format. translate only the contents of title and result into Korean. This is JSON data : "
+    pre_prompt = "Do not provide any other response besides the JSON format. Never attach ```json or ``` signs before or after. translate only the contents of title and result into Korean. and 'Key-value pairs' in JSON must be enclosed in 'double quotation marks'. This is JSON data : "
     prompt = f"{pre_prompt}\n\n{data}"
     try:
         completion = client.chat.completions.create(
@@ -270,7 +278,7 @@ async def translate_timeline_data(data):
         return None    
 
 # 메인 배치 처리 로직
-async def process_member(member, is_board_member=True):
+async def process_member(member, data, is_board_member=True):
     """멤버 데이터 처리 및 파일 저장"""
     today = datetime.now().strftime("%Y%m%d")
     last_name= utilTool.get_last_name(member)
@@ -280,21 +288,21 @@ async def process_member(member, is_board_member=True):
  
     if is_board_member:
         # 연설 데이터 수집 및 감정 분석
-        filtered_list = await filter_speeches_by_author(last_name)
-        data = await get_timeline_data(filtered_list)
-        sentiment_data = await get_sentiment_data(data, True)
+        filtered_list = await filter_speeches_by_author(last_name, data)
+        timeline_data  = await get_timeline_data(filtered_list)
+        sentiment_data = await get_sentiment_data(timeline_data, True)
     else:
         # 기사 데이터 수집 및 감정 분석
-        data = fetch_reuters_articles(member)
-        sentiment_data = await get_sentiment_data(data, False)
+        timeline_data  = fetch_reuters_articles(member)
+        sentiment_data = await get_sentiment_data(timeline_data, False)
 
     # 결과 저장
     with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(timeline_data, f, ensure_ascii=False, indent=4)
     with open(file_score_path, 'w', encoding='utf-8') as f:
         json.dump(sentiment_data, f, ensure_ascii=False, indent=4)
 
-    translated_data = await translate_timeline_data(data)
+    translated_data = await translate_timeline_data(timeline_data)
     if translated_data:
         with open(file_kor_path, 'w', encoding='utf-8') as f:
             f.write(translated_data)  
@@ -305,6 +313,9 @@ async def process_member(member, is_board_member=True):
     logging.info(f"Processed data for {member} saved to {file_path} and {file_score_path}")
 
 async def main():
+    
+    initial_data = await get_fr_social_data()
+        
     members = {
         'board': ['Jerome Powell', 'Philip Jefferson', 'Michael Barr', 'Michelle Bowman', 'Lisa Cook', 'Adriana Kugler', 'Christopher Waller'],
         'non_board': ['John Williams', 'Thomas Barkin', 'Raphael Bostic', 'Mary Daly', 'Loretta Mester']
@@ -312,9 +323,9 @@ async def main():
 
     tasks = []
     for member in members['board']:
-        tasks.append(process_member(member, True))
+        tasks.append(process_member(member, initial_data, True))
     for member in members['non_board']:
-        tasks.append(process_member(member, False))
+        tasks.append(process_member(member, initial_data, False))
     
     await asyncio.gather(*tasks)
 

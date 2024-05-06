@@ -761,13 +761,15 @@ def get_articles_by_person(person):
         final_articles = []
         
         for article in filtered_articles:
-            if article['date'] not in encountered_dates:
+            formatted_date = utilTool.parse_date(article['date'])    #상대적인 날짜 있는 경우 절대날짜로 변환해주기
+            if formatted_date and formatted_date not in encountered_dates:
+                article['date'] = formatted_date
                 final_articles.append(article)
-                encountered_dates.add(article['date'])
+                encountered_dates.add(formatted_date)
                 
         return final_articles
     except Exception as e: 
-        raise HTTPException(status_code=400, detail=str(e))   
+        raise HTTPException(status_code=400, detail=str(e))
         
 
 class ArticleRequest(BaseModel):
@@ -827,15 +829,20 @@ async def get_sentiment_data(request: SentimentAnalysisRequest):
         speeches = speeches[0:15] # 15개로 제한
 
     with multiprocessing.Pool(processes=10) as pool:
-        # 주요 문장 뽑기 병렬처리
+        # 주요 문장 뽑기 병렬 처리
         results = [pool.apply_async(extract_main_sentence, (speech["link"],)) for speech in speeches]
-        
-        # Gather results as they become available
-        final_results = [{"date": speech["date"], "title": speech["title"], "result": result.get()} for speech, result in zip(speeches, results)]
-        
+
+        final_results = []
+        for speech, result in zip(speeches, results):
+            extracted_result = result.get()  # 결과 받기
+            if extracted_result is None or extracted_result == "None":  # 결과가 None인 경우 간지나게 바꿈
+                extracted_result = "No significant remarks were made."
+            final_results.append({"date": speech["date"], "title": speech["title"], "result": extracted_result})
+
         print("Final Results:", final_results)
-    
+
     return final_results
+
 
 ### FOMC Sentiment Analysis 모델에 텍스트 보내고 스코어 받아오는 함수
 def query(payload):

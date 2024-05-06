@@ -8,6 +8,11 @@ function generateFsSimilarityAnalysis() {
     const nSteps = document.getElementById('frst-nSteps').value;
     const nGraphs = document.getElementById('frst-nGraphs').value;
 
+    if (!selectedData) {
+        alert('종목을 먼저 선택해주세요!');
+        return;
+    }
+
     if (!targetDateStart || !targetDateEnd || !compareDateStart || !compareDateEnd) {
         alert("날짜 범위를 꼭 지정해주세요!");
         return;
@@ -58,28 +63,34 @@ function generateFsSimilarityAnalysis() {
     });
 }
 
-function generateFrstHighCharts(chartData, containerId) {
+function generateFrstHighCharts(chartDataArray, containerId) {
     let container = document.getElementById(containerId);
     if (!container) {
         console.error('Container not found:', containerId);
         return;
     }
 
-    if (!chartData || !chartData.series) {
+    if (!chartDataArray || !chartDataArray.series) {
         alert('해당 종목의 차트데이터가 존재하지 않습니다.');
         return;
     }    
     let chartTitle = '';
-    if (containerId === 'variationOriginalChartContainer') {
+    if (containerId === 'frstOriginalChartContainer') {
         chartTitle = 'Original Comparison';
-    } else if (containerId === 'variationAlignedChartContainer') {
+    } else if (containerId === 'frstAlignedChartContainer') {
         chartTitle = 'Aligned Comparison';
     }
     document.getElementById('frstNewsSearch').style.display = 'flex';
     const nStepsValue = parseInt(document.getElementById('nFrstStepValue').textContent, 10);
-    let plotLinePosition = null;
+    const categories = chartDataArray.xAxis.categories;
+    const maxXValue = chartDataArray.xAxis.categories.length - 1;
+    const longestSeriesLength = Math.max(...chartDataArray.series.map(series => series.data.length));
+    const plotLineValue = longestSeriesLength - nStepsValue - 1;
 
-    const formattedSeries = chartData.series.map((series, index) => {
+    const allSeries = chartDataArray.series.map((series, index) => {
+        if (index === 0) { 
+            series.data = series.data.slice(0, plotLineValue + 1);
+        }
         if (series.name.startsWith('Graph')) {
             const nameParts = series.name.split(': ');
             const dateRangeParts = nameParts[1].split(' to ');
@@ -99,17 +110,6 @@ function generateFrstHighCharts(chartData, containerId) {
         return series;
     });
 
-    // Find the last index from the target series data
-    if (chartData.series[0] && chartData.series[0].name.startsWith('Target:')) {
-        const targetSeriesData = chartData.series[0].data;
-        //console.log("**************");
-        //console.log(targetSeriesData.length);
-        //console.log("**************");
-        plotLinePosition = targetSeriesData.length - 1 - nStepsValue; 
-        if (plotLinePosition >= targetSeriesData.length) {
-            plotLinePosition = targetSeriesData.length - 1; 
-        }
-    }
     Highcharts.chart(containerId, {
         chart: {
             type: 'line',
@@ -119,36 +119,29 @@ function generateFrstHighCharts(chartData, containerId) {
             text: chartTitle
         },
         xAxis: {
-            categories: chartData.xAxis.categories,
+            type: 'linear',
+            categories: categories,
             title: {
-                text: 'Date'
+                text: 'Index'
             },
+            labels: {
+                enabled: true
+            },           
             crosshair: true,
             plotLines: [{
                 color: 'red',
-                value: plotLinePosition,
+                value: plotLineValue, 
                 dashStyle: 'Dash', 
                 width: 2,
-                zIndex: 5,
                 label: {
-                    text: 'N Steps',
-                    style: {
-                        color: 'red'
-                    }
+                    text: 'N Steps'
                 }
-            }],
-            max: chartData.series[0] ? chartData.series[0].data.length - 1 : null // x축의 최대값 설정
-    },
-    yAxis: {
+            }]
         },
         yAxis: {
             title: {
                 text: 'Value'
             }
-        },
-        tooltip: {
-            shared: true,
-            valueSuffix: ' units'
         },
         legend: {
             layout: 'vertical',
@@ -163,7 +156,7 @@ function generateFrstHighCharts(chartData, containerId) {
                 pointStart: 0
             }
         },
-        series: formattedSeries,
+        series: allSeries,
         responsive: {
             rules: [{
                 condition: {
@@ -183,7 +176,7 @@ function generateFrstHighCharts(chartData, containerId) {
 //과거 시점 뉴스 검색
 async function frstPastNews() {
     try {
-        document.getElementById('loading_bar_frst').style.display = 'block';
+        document.getElementById('loading_bar_frst_news').style.display = 'block';
         const ticker = document.getElementById('frst_phase_ticker').value;
         const fromDate = document.getElementById('frst-news-from-date').value;
         const toDate = document.getElementById('frst-news-to-date').value;   
@@ -202,15 +195,16 @@ async function frstPastNews() {
             }),
         });
         const news_data = await response.json();
-        document.getElementById('loading_bar_frst').style.display = 'none';
         if (news_data && news_data.length > 0) {
             displayFrstNews(news_data);  // Function to process and display data
+            document.getElementById('loading_bar_frst_news').style.display = 'none';            
         } else {
             alert("해당 시점의 뉴스가 존재하지 않습니다.\n다시 검색해주세요.");
+            document.getElementById('loading_bar_frst_news').style.display = 'none';
         }        
     } catch (error) {
         console.error('Error loading fetch frst news', error);
-        document.getElementById('loading_bar_frst').style.display = 'none';
+        document.getElementById('loading_bar_frst_news').style.display = 'none';
     }
 }
 

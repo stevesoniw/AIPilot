@@ -460,6 +460,9 @@
                             break;    
                         case 'menug':
                             setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
+                            setTimeout(() => {
+                                jTooltip();
+                            }, 100);   
                             break;
                         case 'menu_2nd_a':
                             // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
