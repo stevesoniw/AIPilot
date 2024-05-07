@@ -121,7 +121,10 @@ async function fetchFomcReleaseDetail(link, detailContainer) {
 /*********************************  [ 요약 ] **************************************************/
 // FOMC Speech 크롤링하는 함수
 async function getFOMCSpeeches() {
-    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const moment = require('moment');
+    //const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // 어제날짜로 인식해오는 경우가 많아서 moment로 변경함
+    const todayDate = moment().format('YYYYMMDD');
     const fileName = `speech_all_${todayDate}.json`;
     const filePath = `/batch/fomc/all/${fileName}`;
     try {
@@ -566,7 +569,10 @@ function plotScore(data) {
 }
 
 function generateScore(data, isSpeech, lastName) {
-    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const moment = require('moment');
+    //const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // 어제날짜로 인식해오는 경우가 많아서 moment로 변경함
+    const todayDate = moment().format('YYYYMMDD');
     const fileName = `senti_score_${lastName}_${todayDate}.json`;
     const filePath = `/batch/fomc/sentiment/${fileName}`;
     fetch(filePath)
@@ -617,7 +623,10 @@ function fetchSentimentScore(data, isSpeech) {
 
 //배치파일 데이터 읽어오게 하는 함수  
 function fetchLocalFileData(lastName, language) {
-    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const moment = require('moment');
+    //const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // 어제날짜로 인식해오는 경우가 많아서 moment로 변경함
+    const todayDate = moment().format('YYYYMMDD');
     let fileName, filePath;
 
     if (language === 'kor') {

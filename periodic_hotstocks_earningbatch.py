@@ -103,31 +103,35 @@ async def get_both_charts(ticker: str):
 
 
 async def get_historical_eps(ticker, limit=4):
-    earnings = finnhub_client.company_earnings(ticker, limit)
-    earnings_json = [
-        {
-            "period":earning["period"],
-            "actual":earning["actual"],
-            "estimate":earning["estimate"],
-            "surprisePercent":earning["surprisePercent"]
-        } for earning in earnings 
-    ]
-    earnings_json.sort(key = lambda x:x['period'])
-    df_earnings=pd.DataFrame(earnings_json)
-    
-    fig, ax = plt.subplots(figsize=(8,5))
-    ax.scatter(df_earnings['period'], df_earnings['actual'],c='green', s=500, alpha=0.3, label='actual')
-    ax.scatter(df_earnings['period'], df_earnings['estimate'],c='blue', s=500, alpha=0.3, label='estimate')
-    ax.set_xlabel('announcement date', fontsize=15)
-    ax.set_ylabel('eps', fontsize=15)
-    ax.set_title('{} - Historical eps Surprise'.format(ticker), fontsize=17)
-    ax.grid()
-    ax.legend()
+    try:
+        earnings = finnhub_client.company_earnings(ticker, limit)
+        earnings_json = [
+            {
+                "period":earning["period"],
+                "actual":earning["actual"],
+                "estimate":earning["estimate"],
+                "surprisePercent":earning["surprisePercent"]
+            } for earning in earnings 
+        ]
+        earnings_json.sort(key = lambda x:x['period'])
+        df_earnings=pd.DataFrame(earnings_json)
+        
+        fig, ax = plt.subplots(figsize=(8,5))
+        ax.scatter(df_earnings['period'], df_earnings['actual'],c='green', s=500, alpha=0.3, label='actual')
+        ax.scatter(df_earnings['period'], df_earnings['estimate'],c='blue', s=500, alpha=0.3, label='estimate')
+        ax.set_xlabel('announcement date', fontsize=15)
+        ax.set_ylabel('eps', fontsize=15)
+        ax.set_title('{} - Historical eps Surprise'.format(ticker), fontsize=17)
+        ax.grid()
+        ax.legend()
 
-    for i in range(len(df_earnings)):
-        plt.text(df_earnings['period'][i], df_earnings['actual'][i], ('Missed by ' if df_earnings['surprisePercent'][i] <0 else 'Beat by ')+ "{:.2f}".format(df_earnings['surprisePercent'][i])+"%",
-                color='black' if df_earnings['surprisePercent'][i] <0 else 'red' , fontsize=11, ha='left', va='bottom')
-    return fig
+        for i in range(len(df_earnings)):
+            plt.text(df_earnings['period'][i], df_earnings['actual'][i], ('Missed by ' if df_earnings['surprisePercent'][i] <0 else 'Beat by ')+ "{:.2f}".format(df_earnings['surprisePercent'][i])+"%",
+                    color='black' if df_earnings['surprisePercent'][i] <0 else 'red' , fontsize=11, ha='left', va='bottom')
+        return fig
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
     
 async def get_recommend_trend (ticker) : 
     recommend_trend = finnhub_client.recommendation_trends(ticker)
