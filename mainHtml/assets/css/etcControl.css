@@ -100,12 +100,13 @@
 .chat-list-wrap .question-wrap::before{content:'';position:absolute;left:15px;top:17px;width:30px;height:30px;background:url('/static/assets/images/question_ic.png') no-repeat center;background-size:100%;border:1px solid #aaa;border-radius:50%;}
 .chat-list-wrap .question-wrap.prompt-ver{background:#fbeeff;}
 .chat-list-wrap .question-wrap.prompt-ver::before{background:url('/static/assets/images/prompt_ic.png') no-repeat center;border:0;}
-.chat-list-wrap .answer-wrap{position:relative;padding:20px 20px 20px 60px;background:#f5f5ff;line-height:25px;}
+.chat-list-wrap .answer-wrap{position:relative;padding:20px 50px 20px 60px;background:#f5f5ff;line-height:25px;}
 .chat-list-wrap .answer-wrap::before{content:'';position:absolute;left:15px;top:17px;width:30px;height:30px;background:url('/static/assets/images/answer_ic.png') no-repeat center;background-size:100%;border:1px solid #aaa;border-radius:50%;}
 .chat-list-wrap .answer-wrap { position: relative; padding: 20px 20px 20px 60px; background: #f5f5ff; line-height: 25px; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #888 #f0f0f0; } 
 .chat-list-wrap .answer-wrap::-webkit-scrollbar { width: 8px; } 
 .chat-list-wrap .answer-wrap::-webkit-scrollbar-track { background: #f0f0f0; } 
 .chat-list-wrap .answer-wrap::-webkit-scrollbar-thumb { background-color: #888; border-radius: 10px; border: 2px solid #f0f0f0; }
+.chat-list-wrap .answer-wrap li {list-style:inherit;}
 
 .answer-wrap table{margin:20px 0;}
 .answer-wrap table th{background:#f3f5f7;color:#333;}

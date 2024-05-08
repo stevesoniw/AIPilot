@@ -20,7 +20,7 @@ from langchain.agents import load_tools, initialize_agent
 #금융관련 APIs
 import finnhub
 import yfinance as yf
-from openai import OpenAI
+# from openai import OpenAI
 #personal 파일
 import config
 import utilTool

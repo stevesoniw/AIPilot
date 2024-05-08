@@ -133,9 +133,10 @@ async def answer_from_prompt(request: Request):
     print("****************")
     print(tool_used)
     #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
-    #print(documents)
+    #print(documents)문단에서 다음 문단으로 넘어갈 때는 <br>태그를 두번 달아줘. 
     #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
-    
+    # 줄바꿈이 있으면 <br>태그를 달아줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
+    # 1,2 이렇게 나열하고 싶을 때는 1. 2. 포맷으로 하고, 숫자없이 나열하고 싶을 때는 • 기호를 사용해서 나열해줘. 
     if len(documents) == 1:
         if prompt_option:
             ex_prompt = {
@@ -147,13 +148,22 @@ async def answer_from_prompt(request: Request):
             ex_prompt = question       
 
         print(documents[0])
+
         prompt_template = """너는 애널리스트 리포트에 대해 분석하는 리포트 전문가야.
         애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음 요구사항에 맞춰서 리포트를 분석해줘. \n""" + """요구사항: """ + ex_prompt+ """
         
         대답은 한국어로 해줘.
 
-        답변은 800자 이내로 해줘.
-
+        답변은 800자 이내로 해줘. 줄바꿈을 쓰고 싶을 때는 항상 <br>태그를 두번 써. 큰 내용의 변화가 있으면 <br>태그를 두번 달고, 여러 항목을 나열할 때는 <br>태그를 한번만 달아. 줄바꿈이 있으면 <br>태그를 달아줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
+            <맞는 예시>
+            미래에셋증권은 세계 1위 증권사입니다. <br><br>
+            한국투자증권은 세계 2위 증권사입니다. 
+            
+            <틀린 예시>
+            미래에셋증권은 세계 1위 증권사입니다. 
+            
+            한국투자증권은 세계 2위 증권사입니다. 
+         
         리포트에 없는 내용은 언급하지 마.
 
         리포트 내용:
@@ -190,7 +200,7 @@ async def answer_from_prompt(request: Request):
         
         대답은 한국어로 해줘.
 
-        답변은 800자 이내로 해줘.
+        답변은 800자 이내로 해줘. 줄바꿈이 있으면 <br>태그를 달아줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
 
         리포트에 없는 내용은 언급하지 마.
 

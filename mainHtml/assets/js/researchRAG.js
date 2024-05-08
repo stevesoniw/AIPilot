@@ -269,7 +269,13 @@ function getAnswerUsingPrompt(selectedPrompt){
         console.log('Server response:', data);
         document.getElementById('loading_bar_ragprompt').style.display = 'none';
         const answerWrap = document.querySelector('.answer-wrap');
-        answerWrap.innerText = data;  
+        // const md = markdownit({ html: true, breaks: true})
+        // const result = md.render(data);
+        converter = new showdown.Converter(),
+        converter.setOption('tables', true) //테이블 파싱하게 세팅
+        html = converter.makeHtml(data); //markdown --> HTML
+        console.log(html);
+        answerWrap.innerHTML = html;
 
         const selectedOptionText = document.querySelector('#promptSelect option:checked').text;
         document.querySelector('.question-wrap').textContent = selectedOptionText;

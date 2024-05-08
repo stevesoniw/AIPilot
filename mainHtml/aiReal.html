@@ -58,7 +58,10 @@
         <!--     datepicker    -->
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
         <!--      Select      -->  
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>         
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+        <!-- 마크다운 예쁘게 보이기-->
+        <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.0/dist/showdown.min.js"></script>       
     </head>
     <body>
         <div class="wrap" id="chartPilot">
@@ -284,7 +287,7 @@
                     allowClear: true,
                     language: {
                         noResults: function () {
-                            return isSearchingKorean ? "한글로 검색어를 찾고 있습니다. 조금 기다려주세요." : "검색 결과가 없습니다.";
+                            return isSearchingKorean ? "한글로 검색어를 찾고 있습니다. 잠시만 기다려주세요..." : "검색 결과가 없습니다.";
                         }
                     }
                 }).on('select2:select', function (e) {

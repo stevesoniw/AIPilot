@@ -98,13 +98,14 @@
 
     <div class="highcharts-figure" id="fomc_score_container">
         <div id="scoreContainer"></div>
-        <ul class="highcharts-description">
-            <li>Chart showing stacked percentage columns, where each column totals 100%,</li>
-            <li>and each element value is visualized by giving it a size relative to the</li>
-            <li>other elements.</li>
+        <ul class="highcharts-description" style="text-align: left">
+            <li>연설 (혹은 기사)에서 추출한 주요 발언 기준 매파/비둘기파 성향분석을 한 결과입니다.</li>
+            <li>매파, 비둘기파, 중립의 총합 퍼센트를 100으로 하고 매파적인 성향이 두드러지는 문장일 경우 매파의 비율이 더 높게 설정되는 원리입니다.</li>
+            <li>같은 매파적인 발언이라도 어떻게 발언했느냐에 따라 비율은 조금씩 달라질 수 있습니다.</li>
         </ul>
-        <ul class="model-explanation">
-            <li>비둘기파/매파 분석 스코어는 논문 <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4447632" target="_blank" style="TEXT-DECORATION: underline">'Trillion Dollar Words: A New Financial Dataset, Task & Market Analysis'</a>에서 소개된 모델을 기반으로 계산됩니다.</li>
+        <ul class="model-explanation" style="text-align: left">
+            <li>비둘기파/매파 분석 스코어는 다음 논문 <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4447632" target="_blank" style="TEXT-DECORATION: underline">'Trillion Dollar Words: A New Financial Dataset, Task & Market Analysis'</a>에서 소개된 모델을 토대로 계산됩니다.</li>
+            <li>성향분석 결과는 참고용이며, 정확하지 않을 수 있습니다.</li>
         </ul>
     </div>
 </div>

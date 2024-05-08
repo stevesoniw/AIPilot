@@ -160,8 +160,8 @@ async def generate_market_summary():
     market_data, images_name, summary_talk = get_main_marketdata()
     
     # gpt4_news_sum 함수에 전달할 데이터 준비
-    SYSTEM_PROMPT_1 = "You are an exceptionally talented news analyst and a finance expert. Here is the financial news from the past few hours. Also, I will provide you with data on the changes in the Dow Jones, NASDAQ, and S&P 500 indices. Based on this financial news and index data, please analyze the current stock market and deeply consider and explain your forecast for the future."
-    # (이런형태임):: 너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.  또 나는 너에게 다우존스, 나스닥, S&P 500 지수의 변화 데이터도 같이 알려줄거야.  이 금융뉴스와 지수 데이터를 기반으로해서 현재 주식시장에 대해 분석해주고, 앞으로의 너의 전망에 대해서도 심도있게 고민해서 설명해줘. 
+    SYSTEM_PROMPT_1 = "Here is the financial news from the past few hours. I will also provide you with financial data, including the Dow Jones, NASDAQ, and S&P 500 indices. Based on this financial news and index data, please analyze the current stock market and deeply consider your forecast for the future. Simply summarizing the market indices is not meaningful. Think and analyze like a financial expert, considering various news and changes in index data, and provide a meaningful opinion."
+    # (이런형태임):: 너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.  또 나는 너에게 다우존스, 나스닥, S&P 500 지수 등의 금융 데이터도 같이 알려줄거야.  이 금융뉴스와 지수 데이터를 기반으로해서 현재 주식시장에 대해 분석해주고, 앞으로의 너의 전망에 대해서도 심도있게 고민해서 설명해줘.  단순히 시장 지수를 요약해주는 것은 의미가 없어. 여러가지 뉴스와 지수데이터의 변화에 대해서 금융 전문가답게 생각하고 분석해서 의미있는 의견을 제시해줘 
     gpt_summary = await gpt4_news_sum({"news": naver_news_data, "market_summary": summary_talk}, SYSTEM_PROMPT_1)
     #formatted_gpt_summary = gpt_summary.replace("-", "<br>")
     formatted_gpt_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", gpt_summary)
