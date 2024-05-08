@@ -64,7 +64,7 @@ async def scrape_and_save_stocks(client):
 async def load_stocks_from_file():
     try:
         # 두 파일의 경로를 리스트로 관리
-        files = ['batch/hotstocks_earning.txt', 'batch/hotstocks_manual.txt']
+        files = ['batch/hotstocks_manual.txt', 'batch/hotstocks_earning.txt']
         symbols_set = set()  # 중복을 제거하기 위한 세트
 
         # 각 파일을 순회하면서 데이터 읽기
@@ -200,6 +200,7 @@ def get_prompt_earning (ticker):
     prompt_news_after7 = ''
     curday = utilTool.get_curday()
     profile = finnhub_client.company_profile2(symbol=ticker)
+    
     company_template = "[기업소개]:\n{name}은 {ipo}에 상장한 {finnhubIndustry}섹터의 기업입니다.\n"
     intro_company = company_template.format(**profile)    
     
@@ -357,8 +358,12 @@ async def handle_earning_batch(client):
     if success:
         symbols = await load_stocks_from_file()
         for symbol in symbols:
-            await get_both_charts(symbol)
-            await get_analysis(symbol)
+            try:
+                await get_both_charts(symbol)
+                await get_analysis(symbol)
+            except Exception as e:
+                print(f"An error occurred while processing {symbol}: {e}")
+                continue  
 
 if __name__ == "__main__":
     asyncio.run(main())
