@@ -82,25 +82,31 @@ async def load_stocks_from_file():
   
 #[1. 차트 이미지 떨구기] ##################################################### 
 async def get_both_charts(ticker: str):
-    # Generate charts for each symbol
-    fig1 = await get_historical_eps(ticker)
-    earnings_chart_base64 = utilTool.get_chart_base64(fig1)
+    try:    
+        # Generate charts for each symbol
+        fig1 = await get_historical_eps(ticker)
+        print("fig1==================")
+        print(fig1)
+        earnings_chart_base64 = utilTool.get_chart_base64(fig1)
+        
+        fig2 = await get_recommend_trend(ticker)
+        recommendations_chart_base64 = utilTool.get_chart_base64(fig2)
+
+        todayDate = datetime.now().strftime("%Y%m%d")
+        directory = f'batch/earning_data/{ticker}'
+        os.makedirs(directory, exist_ok=True)
+
+        # Save the chart data for each symbol
+        file_path = f'{directory}/earningChart_{ticker}_{todayDate}.json'
+        async with aiofiles.open(file_path, 'w') as file:
+            await file.write(json.dumps({
+                "earnings_chart": earnings_chart_base64,
+                "recommendations_chart": recommendations_chart_base64
+            }))
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
     
-    fig2 = await get_recommend_trend(ticker)
-    recommendations_chart_base64 = utilTool.get_chart_base64(fig2)
-
-    todayDate = datetime.now().strftime("%Y%m%d")
-    directory = f'batch/earning_data/{ticker}'
-    os.makedirs(directory, exist_ok=True)
-
-    # Save the chart data for each symbol
-    file_path = f'{directory}/earningChart_{ticker}_{todayDate}.json'
-    async with aiofiles.open(file_path, 'w') as file:
-        await file.write(json.dumps({
-            "earnings_chart": earnings_chart_base64,
-            "recommendations_chart": recommendations_chart_base64
-        }))
-
 
 async def get_historical_eps(ticker, limit=4):
     try:
