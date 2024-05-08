@@ -85,32 +85,36 @@ async def get_both_charts(ticker: str):
     try:    
         # Generate charts for each symbol
         fig1 = await get_historical_eps(ticker)
-        print("fig1==================")
-        print(fig1)
-        earnings_chart_base64 = utilTool.get_chart_base64(fig1)
-        
+        earnings_chart_base64 = utilTool.get_chart_base64(fig1) if fig1 is not None else None
+       
         fig2 = await get_recommend_trend(ticker)
-        recommendations_chart_base64 = utilTool.get_chart_base64(fig2)
+        recommendations_chart_base64 = utilTool.get_chart_base64(fig2) if fig2 is not None else None
 
         todayDate = datetime.now().strftime("%Y%m%d")
         directory = f'batch/earning_data/{ticker}'
         os.makedirs(directory, exist_ok=True)
 
-        # Save the chart data for each symbol
-        file_path = f'{directory}/earningChart_{ticker}_{todayDate}.json'
-        async with aiofiles.open(file_path, 'w') as file:
-            await file.write(json.dumps({
-                "earnings_chart": earnings_chart_base64,
-                "recommendations_chart": recommendations_chart_base64
-            }))
+        # Only save the chart data if charts are generated
+        if earnings_chart_base64 is not None or recommendations_chart_base64 is not None:
+            file_path = f'{directory}/earningChart_{ticker}_{todayDate}.json'
+            async with aiofiles.open(file_path, 'w') as file:
+                await file.write(json.dumps({
+                    "earnings_chart": earnings_chart_base64,
+                    "recommendations_chart": recommendations_chart_base64
+                }))
+        else:
+            print(f"No chart data available to save for {ticker}.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred while processing charts for {ticker}: {e}")
         return None
-    
+
 
 async def get_historical_eps(ticker, limit=4):
     try:
         earnings = finnhub_client.company_earnings(ticker, limit)
+        if not earnings:  
+            print(f"No earnings data available for {ticker}")
+            return None  
         earnings_json = [
             {
                 "period":earning["period"],

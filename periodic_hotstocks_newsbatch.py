@@ -65,7 +65,7 @@ async def scrape_and_save_stocks(client):
 async def load_stocks_from_file():
     try:
         # 두 파일의 경로를 리스트로 관리
-        files = ['batch/hotstocks.txt', 'batch/hotstocks_manual.txt']
+        files = ['batch/hotstocks_manual.txt', 'batch/hotstocks.txt']
         symbols_set = set()  # 중복을 제거하기 위한 세트
 
         # 각 파일을 순회하면서 데이터 읽기
@@ -90,9 +90,21 @@ async def fetch_news_seekingalpha(client, symbol):
         "X-RapidAPI-Host": "seeking-alpha.p.rapidapi.com"
     }
     querystring = {"id":symbol,"size":"20","number":"1"}
-    response = await client.get(url, headers=headers, params=querystring)
-    print(response.json())
-    return response.json()
+    try:
+        response = await client.get(url, headers=headers, params=querystring)
+        response.raise_for_status()  # 이 부분은 HTTP 요청이 실패했을 때 예외를 발생시킵니다.
+        news_json = response.json()
+        if 'data' in news_json and len(news_json['data']) > 0:
+            return news_json
+        else:
+            print(f"No news data found for symbol: {symbol}")
+            return None  # 뉴스 데이터가 없을 경우 None 반환
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error occurred while fetching news for {symbol}: {e}")
+        return None
+    except Exception as e:
+        print(f"Error fetching news for {symbol}: {e}")
+        return None
 
 # seeking alpha 뉴스에서 쓸데없는 파라미터들 없애기
 async def extract_news_data(news_json):
@@ -167,22 +179,24 @@ async def process_stock_main_news(symbols):
     async with httpx.AsyncClient() as client:
         for symbol in symbols:
             news_json = await fetch_news_seekingalpha(client, symbol)
-            extracted_seekingalpha = await extract_news_data(news_json)
-            extracted_finnhub = await fetch_news_finnhub(symbol)
-            prompt = ("The following content is news data. Execute as the system prompt instructed. "
-                      "Please make sure to respond in Korean. Attach HTML tags so that your forecast "
-                      "can appear in '#ff1480' color. Your response will be displayed on an HTML screen. Therefore, include many appropriate <br> tags and other useful tags to make it easy for people to read."
-                      "News Data : " + str(extracted_seekingalpha) + str(extracted_finnhub))
-            summary = await gpt4_news_sum(prompt)
-            #summary = await lama3_news_sum(prompt)
-            # 결과 저장
-            directory = f'batch/stocknews/{symbol}'
-            os.makedirs(directory, exist_ok=True)
-            todayDate = datetime.now().strftime("%Y%m%d")
-            async with aiofiles.open(f'{directory}/news_{symbol}_{todayDate}.json', 'w', encoding='utf-8') as f:
-                await f.write(json.dumps(extracted_finnhub, ensure_ascii=False, indent=4))
-            async with aiofiles.open(f'{directory}/aisummary_{symbol}_{todayDate}.txt', 'w', encoding='utf-8') as f:
-                await f.write(summary)    
+            if news_json:  # 뉴스 데이터가 있을 때만 처리
+                extracted_seekingalpha = await extract_news_data(news_json)
+                extracted_finnhub = await fetch_news_finnhub(symbol)
+                prompt = ("The following content is news data. Execute as the system prompt instructed. "
+                          "Please make sure to respond in Korean. Attach HTML tags so that your forecast "
+                          "can appear in '#ff1480' color. Your response will be displayed on an HTML screen. Therefore, include many appropriate <br> tags and other useful tags to make it easy for people to read."
+                          "News Data : " + str(extracted_seekingalpha) + str(extracted_finnhub))
+                summary = await gpt4_news_sum(prompt)
+                # 결과 저장
+                directory = f'batch/stocknews/{symbol}'
+                os.makedirs(directory, exist_ok=True)
+                todayDate = datetime.now().strftime("%Y%m%d")
+                async with aiofiles.open(f'{directory}/news_{symbol}_{todayDate}.json', 'w', encoding='utf-8') as f:
+                    await f.write(json.dumps(extracted_finnhub, ensure_ascii=False, indent=4))
+                async with aiofiles.open(f'{directory}/aisummary_{symbol}_{todayDate}.txt', 'w', encoding='utf-8') as f:
+                    await f.write(summary)
+            else:
+                print(f"Skipping processing for {symbol} due to lack of news data.")    
                 
 async def process_stock_detail_news(symbols):
     async with aiohttp.ClientSession() as session:
