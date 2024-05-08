@@ -41,6 +41,7 @@ import utilTool
 logging.basicConfig(level=logging.DEBUG)
 ragController = APIRouter()
 groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
+groq_chat = ChatGroq(temperature=0, groq_api_key=config.GROQ_CLOUD_API_KEY, model_name="mixtral-8x7b-32768")
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 # FastAPI로 ChatPDF 인스턴스 초기화
 assistant = ChatPDF()
@@ -174,7 +175,7 @@ async def answer_from_prompt(request: Request):
         #print(modified_prompt)
         if tool_used == "lama" :
             print("lama3 working on..")
-            llm = chat    
+            llm = groq_chat    
         else :
             llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
         llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
