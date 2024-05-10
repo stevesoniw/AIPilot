@@ -1,7 +1,9 @@
-from fastapi import File, UploadFile, HTTPException, APIRouter, Request, Depends, Form
+from fastapi import File, UploadFile, HTTPException, APIRouter, Request, Depends, Form, WebSocket
 from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 from fastapi.requests import Request  
 from pydantic import BaseModel
+from langchain_core.output_parsers import StrOutputParser
 from typing import Dict, Any, List, Optional
 from tempfile import NamedTemporaryFile
 from langchain_community.document_loaders import PyPDFLoader
@@ -24,6 +26,8 @@ import logging
 import multiprocessing
 from konlpy.tag import Okt
 from konlpy.tag import Kkma
+import httpx
+import json
 okt = Okt()
 # 유튜브
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -108,6 +112,7 @@ async def delete_file_data(file_id: int):
     return {"message": "File deleted successfully", "files_metadata": uploaded_files_metadata}
 
 
+
 @ragController.post("/rag/answer-from-prompt/")
 async def answer_from_prompt(request: Request):
     try:
@@ -138,6 +143,39 @@ async def answer_from_prompt(request: Request):
     #print("ddddddddddddddddddddddddddddddddddddddddddddddddddddddoooooooooccccccccccccccccccccccument!!!!")
     # 줄바꿈이 있으면 <br>태그를 달아줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
     # 1,2 이렇게 나열하고 싶을 때는 1. 2. 포맷으로 하고, 숫자없이 나열하고 싶을 때는 • 기호를 사용해서 나열해줘. 
+    # prompt_template = """너는 애널리스트 리포트에 대해 분석하는 리포트 전문가야.
+    # 애널리스트 리포트를 줄 건데, 이 리포트를 보고 다음 요구사항에 맞춰서 리포트를 분석해줘. \n""" + """요구사항: """ + ex_prompt+ """
+        
+    # 대답은 한국어로 해줘.
+
+    # 답변은 800자 이내로 해줘. 줄바꿈을 쓰고 싶을 때는 항상 <br>태그를 두번 써. 큰 내용의 변화가 있으면 <br>태그를 두번 달고, 여러 항목을 나열할 때는 <br>태그를 한번만 달아. 줄바꿈이 있으면 <br>태그를 달아줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
+    #     <맞는 예시>
+    #     미래에셋증권은 세계 1위 증권사입니다. <br><br>
+    #     한국투자증권은 세계 2위 증권사입니다. 
+            
+    #     <틀린 예시>
+    #     미래에셋증권은 세계 1위 증권사입니다. 
+            
+    #     한국투자증권은 세계 2위 증권사입니다. 
+         
+    # 리포트에 없는 내용은 언급하지 마.
+
+    # 리포트 내용:
+    # "{text}"
+    
+    async def stream_answer(prompt, input_text):
+        parser = StrOutputParser()
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+        chain = prompt | llm | parser
+        
+
+        async for chunk in chain.astream({"text": input_text}):
+            # data = {"value": chunk}
+            # print(chunk)
+            yield chunk
+        
+
+    # 답변: """
     if len(documents) == 1:
         if prompt_option:
             ex_prompt = {
@@ -155,15 +193,7 @@ async def answer_from_prompt(request: Request):
         
         대답은 한국어로 해줘.
 
-        답변은 800자 이내로 해줘. 줄바꿈을 쓰고 싶을 때는 항상 <br>태그를 두번 써. 큰 내용의 변화가 있으면 <br>태그를 두번 달고, 여러 항목을 나열할 때는 <br>태그를 한번만 달아. 줄바꿈이 있으면 <br>태그를 달아줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
-            <맞는 예시>
-            미래에셋증권은 세계 1위 증권사입니다. <br><br>
-            한국투자증권은 세계 2위 증권사입니다. 
-            
-            <틀린 예시>
-            미래에셋증권은 세계 1위 증권사입니다. 
-            
-            한국투자증권은 세계 2위 증권사입니다. 
+        답변은 800자 이내로 해줘. 표 안에 여러 항목이 있으면 다른 항목일 때마다 <br> 태그를 달아.
          
         리포트에 없는 내용은 언급하지 마.
 
@@ -175,12 +205,14 @@ async def answer_from_prompt(request: Request):
         #print(modified_prompt)
         if tool_used == "lama" :
             print("lama3 working on..")
-            llm = groq_chat    
+            llm = groq_chat        
         else :
             llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
         llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
         stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
-        result = stuff_chain.run(documents[0])    
+        # result = stuff_chain.run(documents[0])
+        print("******streaming answer**********")
+        return StreamingResponse(stream_answer(prompt=modified_prompt, input_text=documents[0]), media_type='text/event-stream')
 
     else:
         if prompt_option:

@@ -223,8 +223,16 @@ function storeFileMetadata(filesMetadata) {
     });
 }
 
+let questionCounter = 0;
 //Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
-function getAnswerUsingPrompt(selectedPrompt){
+async function getAnswerUsingPrompt(selectedPrompt){
+    if (questionCounter === 0) {
+        const talkListWrap = document.querySelector('.chat-list-wrap');
+        talkListWrap.innerHTML = ""; //예시 지워
+
+    }
+    //다음부턴 이전답변 지우지마
+    questionCounter++; 
     const fileElements = document.querySelectorAll('#showfiles .file');
     console.log("selectedPrompt=", selectedPrompt);
     if (selectedPrompt === 'default') {
@@ -243,7 +251,7 @@ function getAnswerUsingPrompt(selectedPrompt){
     var loading = document.getElementById('loading_bar_ragprompt');
     if (element && loading) {
       element.textContent = '리포트 분석중 입니다'; 
-      loading.style.display = 'block';
+    //   loading.style.display = 'block';
     }        
     // 체크박스 value 체킹
     let checkboxValue = null;
@@ -252,40 +260,71 @@ function getAnswerUsingPrompt(selectedPrompt){
     } else if (document.getElementById('researchLama3').checked) {
         checkboxValue = document.getElementById('researchLama3').value;
     }
+    //Question-wrap 클라스 새로 생성
+    const questionWrap = document.createElement('div');
+    questionWrap.className = 'question-wrap prompt-ver';
+    const talkListWrap = document.querySelector('.chat-list-wrap');
+    // prompt 가져오고 클라스에 prompt를 집어넣는다
+    const selectedOptionText = document.querySelector('#promptSelect option:checked').text;
+    var question = document.createTextNode(selectedOptionText)
+    questionWrap.appendChild(question); 
+    talkListWrap.appendChild(questionWrap);
 
-    fetch(`/rag/answer-from-prompt`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            prompt_option: selectedPrompt,
-            file_ids: fileIds,
-            tool_used: checkboxValue
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Server response:', data);
-        document.getElementById('loading_bar_ragprompt').style.display = 'none';
-        const answerWrap = document.querySelector('.answer-wrap');
-        // const md = markdownit({ html: true, breaks: true})
-        // const result = md.render(data);
-        converter = new showdown.Converter(),
-        converter.setOption('tables', true) //테이블 파싱하게 세팅
-        html = converter.makeHtml(data); //markdown --> HTML
-        console.log(html);
-        answerWrap.innerHTML = html;
+    //gpt에 프롬프트 날리기
+    const response = await fetch('/rag/answer-from-prompt',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                prompt_option: selectedPrompt,
+                file_ids: fileIds,
+                tool_used: checkboxValue
+            })}
+    );
+    console.log(response);
 
-        const selectedOptionText = document.querySelector('#promptSelect option:checked').text;
-        document.querySelector('.question-wrap').textContent = selectedOptionText;
-        customScrollTo('top');
-    })
-    .catch(error => {
-        document.getElementById('loading_bar_ragprompt').style.display = 'none';        
-        console.error('getAnswerUsingPrompt error:', error);
+    converter = new showdown.Converter(),
+    converter.setOption('tables', true) //테이블 파싱하게 세팅
+     //markdown --> HTML
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+
+    //Answer 클라스 생성
+    const answerWrap = document.createElement('div');
+    answerWrap.className = 'answer-wrap';
+    talkListWrap.appendChild(answerWrap);
+    // document.querySelector('.answer-wrap').innerHTML = "";
+
+    reader.read().then(function processResult(result) {    
+        if (result.done) {
+            converter = new showdown.Converter({smoothLivePreview: true}),
+            converter.setOption('tables', true) //테이블 파싱하게 세팅
+            html = converter.makeHtml(answerWrap.innerHTML); //markdown --> HTML
+            console.log(html);
+            answerWrap.innerHTML = html;
+            talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            // talkListWrap.scrollIntoView({ behavior: "smooth", block: "end"});
+            // window.scrollTo(0, answerWrap.scrollHeight);
+
+            
+            customScrollTo('top');
+            return;}
+
+        let token = decoder.decode(result.value);
+        
+        answerWrap.innerHTML += token 
+
+        talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+        return reader.read().then(processResult);
     });
+
+
 }
+
+
 /* 채팅 창 컨트롤 하기 */
 function processInput() {
     const inputField = document.getElementById('ragchat'); 
@@ -298,11 +337,11 @@ function processInput() {
 
 function displayQuestion(question) {
     const questionWrap = document.createElement('div');
-    const talkListWrap = document.querySelector('.talk-list-wrap');
+    const talkListWrap = document.querySelector('.chat-list-wrap');
     questionWrap.className = 'question-wrap';
     questionWrap.textContent = question;
     talkListWrap.appendChild(questionWrap);
-    talkListWrap.style.display = 'flex'; // 보이게하는거
+    // talkListWrap.style.display = 'flex'; // 보이게하는거
 }
 
 function customScrollTo(position) {
@@ -319,8 +358,9 @@ function customScrollTo(position) {
     }
 }
 
-function sendChatRequest(question) {
+async function sendChatRequest(question) {
     const fileElements = document.querySelectorAll('#showfiles .file');
+    const talkListWrap = document.querySelector('.chat-list-wrap');
     if (fileElements.length === 0) {
         alert('PDF 파일을 먼저 업로드 후 질문해주세요\n(※해당 채팅은 PDF 내용을 바탕으로만 답변합니다.)');
         return;
@@ -334,9 +374,8 @@ function sendChatRequest(question) {
     } else if (document.getElementById('researchLama3').checked) {
         checkboxValue = document.getElementById('researchLama3').value;
     }
-    document.getElementById('loading_bar_ragprompt').style.display = 'block';
 
-    fetch(`/rag/answer-from-prompt`, {
+    const response = await fetch(`/rag/answer-from-prompt`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -347,19 +386,69 @@ function sendChatRequest(question) {
             tool_used: checkboxValue
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('loading_bar_ragprompt').style.display = 'none';
-        displayAnswer(data);
-    })
-    .catch(error => {
-        console.error('Error fetching the answer:', error);
-        document.getElementById('loading_bar_ragprompt').style.display = 'none';
-        displayAnswer('API 서버가 불안정해요. 다시 질문해주세요!');
-    })
-    .finally(() => {
-        document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    console.log(response);
+    converter = new showdown.Converter(),
+    converter.setOption('tables', true) //테이블 파싱하게 세팅
+     //markdown --> HTML
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+
+    //Answer 클라스 생성
+    const answerWrap = document.createElement('div');
+    answerWrap.className = 'answer-wrap';
+    talkListWrap.appendChild(answerWrap);
+    // document.querySelector('.answer-wrap').innerHTML = "";
+
+    reader.read().then(function processResult(result) {    
+        if (result.done) {
+            converter = new showdown.Converter({smoothLivePreview: true}),
+            converter.setOption('tables', true) //테이블 파싱하게 세팅
+            html = converter.makeHtml(answerWrap.innerHTML); //markdown --> HTML
+            console.log(html);
+            answerWrap.innerHTML = html;
+            talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            // talkListWrap.scrollIntoView({ behavior: "smooth", block: "end"});
+            // window.scrollTo(0, answerWrap.scrollHeight);
+
+            
+            // customScrollTo('bottom');
+            return;}
+
+        let token = decoder.decode(result.value);
+        
+        answerWrap.innerHTML += token 
+
+        talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+        return reader.read().then(processResult);
     });
+    // document.getElementById('loading_bar_ragprompt').style.display = 'block';
+
+    // fetch(`/rag/answer-from-prompt`, {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify({
+    //         question: question,
+    //         file_ids: fileIds,
+    //         tool_used: checkboxValue
+    //     })
+    // })
+    // .then(response => response.json())
+    // .then(data => {
+    //     document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    //     displayAnswer(data);
+    // })
+    // .catch(error => {
+    //     console.error('Error fetching the answer:', error);
+    //     document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    //     displayAnswer('API 서버가 불안정해요. 다시 질문해주세요!');
+    // })
+    // .finally(() => {
+    //     document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    // });
 };
 
 function displayAnswer(answer) {

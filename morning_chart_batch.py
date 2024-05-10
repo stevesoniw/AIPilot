@@ -32,6 +32,7 @@ from fastapi.responses import JSONResponse
 
 # API KEY 설정
 finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
+rapidAPI = config.RAPID_API_KEY
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 CONTROLLER = True
 ####################################################################################################################################
@@ -213,29 +214,60 @@ def fs_create_figure(sample_data, target_date, selected_data, values_list, subtr
 def draw_chart_from_json(json_data, ticker_name):
     data = json.loads(json_data)
 
-    # Create the figure
     fig = go.Figure()
-
-    # Extract chart details
-    title_text = data['title']['text']
-    x_axis_categories = data['xAxis']['categories']
     
+    x_axis_categories = data['xAxis']['categories']
+    first = True
     # Adding series to the chart
     for series in data['series']:
+        clean_series_name = re.sub(r"\s*\([^)]*\)", "", series['name'])
+
+        simple_dates = re.findall(r'\d{4}-\d{2}-\d{2}', clean_series_name)
+        detailed_dates = re.findall(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', clean_series_name)
+        
+        if first:
+            start_date = simple_dates[0] if len(simple_dates) > 0 else ''
+            end_date = simple_dates[1] if len(simple_dates) > 1 else ''
+        else:
+            start_date = detailed_dates[0][:10] if len(detailed_dates) > 0 else '' 
+            past_start_date = start_date
+            end_date = detailed_dates[1][:10] if len(detailed_dates) > 1 else '' 
+            past_end_date = end_date
+                         
+        
+        # Formatting the name with dates
+        name = f"현재 차트 ({start_date} ~ {end_date})" if first else f"과거 유사국면 차트 ({start_date} ~ {end_date})"
+       
+        color = 'blue' if first else '#ff1480'
+        line_width = 3 if first else 3
+
         fig.add_trace(go.Scatter(
             x=x_axis_categories,
             y=series['data'],
-            mode='lines+markers',
-            name=series['name']
+            mode='lines',
+            line=dict(color=color, width=line_width, shape='spline', smoothing=0.8),  # Smooth lines
+            name=name
         ))
-
-    # Update layout with titles and labels
+        first = False
+    # Update layout with custom styles and revised titles
     fig.update_layout(
-        title=title_text,
+        title=f'다우지수 :: 과거 유사국면 분석 - {ticker_name}',
         xaxis_title="Index",
         yaxis_title="Value",
-        template="plotly_white"
+        template="plotly_white",
+        autosize=False,
+        width=800,
+        height=600,
+        margin=dict(l=50, r=50, b=100, t=100, pad=4),
+        legend=dict(
+            orientation="h",
+            xanchor="center",
+            x=0.5,
+            y=-0.3
+        ),
+        plot_bgcolor='rgba(173, 216, 230, 0.5)'  # light sky blue background
     )
+
 
     # Define the file path for the image
     today_date = datetime.now().strftime('%Y%m%d')
@@ -249,7 +281,57 @@ def draw_chart_from_json(json_data, ticker_name):
     # Save the figure
     fig.write_image(file_path)
     print(f"Chart saved to {file_path}")
+    
+    find_past_history(past_start_date, past_end_date)
+    
+def extract_news_data(news_json):
+    extracted_data = []
+    for item in news_json['data']:
+        news_item = item['attributes']
+        extracted_item = {
+            'publishOn': news_item.get('publishOn', None),
+            'gettyImageUrl': news_item.get('gettyImageUrl', None),
+            'title': news_item.get('title', None),
+            'content': news_item.get('content', None)
+        }
+        extracted_data.append(extracted_item)
+    return extracted_data
+    
 
+def rapidapi_indicator_news(from_date, to_date):
+    print("to_date=",  to_date)
+    print("from_date=", from_date)
+    #New로 하니깐 옛날 데이터가 안나옴. Article로 바꿔서 해보자
+    #url = "https://seeking-alpha.p.rapidapi.com/news/v2/list"
+    #querystring = {"category": "market-news::all", "until": to_date, "since" : from_date, "size": "20", "number": "1"}
+    url = "https://seeking-alpha.p.rapidapi.com/articles/v2/list"
+    querystring = {"until": to_date, "since" : from_date, "size": "40", "number": "1"}
+    headers = {
+	    "X-RapidAPI-Key": rapidAPI,
+	    "X-RapidAPI-Host": "seeking-alpha.p.rapidapi.com"
+    }    
+        
+    response = requests.get(url, headers=headers, params=querystring)
+    print(response.json())
+    print("********************************")
+    return response.json()
+    
+def find_past_history(past_start_date, past_end_date):
+    
+    # 문자열 날짜를 datetime 객체로 변환
+    start_date = datetime.strptime(past_start_date, '%Y-%m-%d')
+    end_date = datetime.strptime(past_end_date, '%Y-%m-%d')
+    
+    # datetime 객체를 Unix timestamp로 변환 (timezone을 UTC로 가정)
+    start_timestamp = int(datetime.timestamp(start_date))
+    end_timestamp = int(datetime.timestamp(end_date))
+    # 변환된 timestamp를 사용하여 rapidapi_indicator_news 함수 호출
+    past_news_result = rapidapi_indicator_news(start_timestamp, end_timestamp)
+    
+    gpt4_news_sum()
+    
+    print(past_news_result)
+    return
     
 def analyze():
     target_start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
@@ -318,7 +400,10 @@ def analyze():
     })  
 print(analyze())
 
+#print(find_past_history("2006-05-01", "2006-08-10"))
 
+  
+    
     
 '''async def morning_batch():
     make_morning_batch = await market_data()

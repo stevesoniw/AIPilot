@@ -26,8 +26,8 @@ from fredapi import Fred
 from openai import OpenAI
 import yfinance as yf
 from groq import Groq
-#from serpapi import GoogleSearch
-import serpapi
+from serpapi import GoogleSearch
+# import serpapi
 #personal 파일
 import config
 import utilTool
@@ -744,10 +744,12 @@ def get_articles_by_person(person):
     }
 
     try:
-        #search = GoogleSearch(params)
-        search_result  = serpapi.search(params)
-        #results = search.get_dict()
-        news_results = search_result ["news_results"]
+        # search = GoogleSearch(params)
+        # search_result  = serpapi.search(params)
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        print(results)
+        news_results = results["news_results"]
         # print(news_results)
         
         # 출처가 로이터 인것만 필터링
