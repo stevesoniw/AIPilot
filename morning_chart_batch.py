@@ -31,93 +31,19 @@ from fastapi.responses import JSONResponse
 
 
 # API KEY 설정
-finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
-rapidAPI = config.RAPID_API_KEY
-client = OpenAI(api_key = config.OPENAI_API_KEY)
 CONTROLLER = True
 ####################################################################################################################################
 #@@ 기능정의 : AI솔루션 PILOT웹사이트의 메인화면에서 부를 마켓지수 유사국면 차트를 을 생성하는 파일 by son (24.05.08)
-#@@ Logic   : 1. yfinance 로부터 주요지수(dow,nasdqa등) 데이터를 얻어옴
-#@@         : 2. 해당 데이터들로부터 차트를 생성해 이미지로 떨궈놓음
-#@@         : 3. 네이버 해외증시 사이트로부터 주요 뉴스들을 스크래핑 해옴
-#@@         : 4. 주요지수 데이터와 네이버 뉴스를 gpt 에 던져서 AI daily briefing 가져옴
-#@@         : 5. Finnhub로 부터 밤 사이 뉴스를 따로 받아옴
-#@@         : 6. Finnhub 뉴스를 gpt 에 던져서 요약. 정리함
-#@@         : 7. a)주요지수 b)차트이미지 c)AI briefing, d)네이버뉴스타이틀요약
-#@@              d)Finnhub 뉴스  e) Finnhub 요약 데이터들을 모아 html로 생성 (*파일형식 :mainHtml\main_summary\summary_2024-03-30.html)
-#@@          ** → 최종적으로 이것을 chat_pilot.html 에서 불러와 div에 꽂아준다.
-#@@         : 8. 추가적으로 해외주식 종목코드를 finnhub(*stock_symbols) 통해서 가져와 파일로 떨궈놓는다.(batch\stockcode\US_symbols.json)
+#@@ Logic   : 1. yfinance 로부터 주요지수(dow,nasdqa등) 2000년 이후의 데이터를 얻어옴
+#@@         : 2. 해당 데이터들로부터 dtw 알고리즘을 이용해서 현재 3개월간 데이터와 가장 유사했던 기간을 뽑아옴
+#@@         : 3. 이를 다우, 나스탁, S&P500, KOSPI 4개지수에 대해서 차트이미지로 생성해서 떨궈놓음
+#@@         **  → mainHtml/main_chart/similar_{지수명}_{date.png} (예 : similar_나스닥종합_20240511.png)
+#@@         : 4. (**진행하다가 포기) 해당 유사기간 날짜에 해당하는 글로벌 뉴스데이터를 Fetch해옴
+#@@         : 5. (못함) GPT 에 유사국면 차트데이터와 뉴스데이터를 전달해서 이야기를 생성
+#@@         : 6. (못함) 이야기를 txt로 저장 (추후 main화면에서 보여주도록..)
+#@@             → 과거뉴스가 거의 안나와서 일단 포기. finnhub, seeking alpha 모두 2010년 이전은 뉴스데이터가 없다.
+#@@             → 나중에 혹시 진행하게 된다면 KDI 경제전망사이트 같은데 분기별로 정리된 글로벌경제시황을 DB나 파일에 넣어놓고 이것을 읽게해야될듯함. 
 #####################################################################################################################################
-
-# GPT4 에 뉴스요약을 요청하는 공통함수
-async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
-    try:
-        prompt = "This is the 'news data' mentioned by the system. Execute as instructed by the system prompt. However, please make sure to respond in Korean. Your response will be displayed on an HTML screen. Therefore, include appropriate <br> tags and other useful tags to make it easy for people to read. Please provide your perspective with a <span> tag. Also, you can insert a special icon(e.g., ★) when the subject of the content changes. 'News data':" + str(newsData)
-        completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-                ]
-        )
-        return completion.choices[0].message.content
-    except Exception as e:
-        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
-        return None
-
-def get_main_marketdata():
-    yf.pdr_override()
-    start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
-    tickers = {
-        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^KS11': 'KOSPI' 
-    }
-    market_summary = []
-    summary_talk = []
-    images_name = []  
-    
-    image_dir = 'mainHtml/main_chart'
-    if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
-            
-    for ticker, name in tickers.items():
-        df = pdr.get_data_yahoo(ticker, start_date)
-        df.reset_index(inplace=True)
-        
-        # 일단 마지막 두 날짜 데이터만 가져와 변화량을 계산하자
-        last_day = df.iloc[-1]
-        prev_day = df.iloc[-2]
-        change = (last_day['Adj Close'] - prev_day['Adj Close']) / prev_day['Adj Close'] * 100
-        summary_for_gpt = f"{name} 지수는 전일 대비 {change:.2f}% 변화하였습니다. 전일 가격은 {prev_day['Adj Close']:.2f}이며, 오늘 가격은 {last_day['Adj Close']:.2f}입니다."
-        summary = {
-            "name": name,
-            "change": f"{change:.2f}%",
-            "prev_close": f"{prev_day['Adj Close']:.2f}",
-            "last_close": f"{last_day['Adj Close']:.2f}",
-            "date": last_day['Date'].strftime('%Y-%m-%d')
-        }        
-        market_summary.append(summary)
-        summary_talk.append(summary_for_gpt)
-
-        # 차트 생성 코드. 4개만 생성한당
-        if name in ['다우지수', '나스닥종합', 'S&P500', 'KOSPI']:
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df['Date'], y=df['Adj Close'], mode='lines', line=dict(color='red'), name='Adj Close'))
-            fig.update_layout(
-                title=name,
-                xaxis_title='Date',
-                yaxis_title='Price',
-                template='plotly_dark',
-                autosize=False,
-                width=800,
-                height=600,
-                margin=dict(l=50, r=50, b=100, t=100, pad=4)
-            )
-            # 이미지 저장 로직 
-            image_path = f"{image_dir}/{name}_{datetime.now().strftime('%Y-%m-%d')}.png"
-            fig.write_image(image_path)
-            images_name.append(image_path.split('/')[-1])
-
-    return market_summary, images_name, summary_talk
 
 def fs_have_overlap(range1, range2):
     start1, end1, _ = range1
@@ -165,8 +91,8 @@ def fs_compute_distance(df: pd.DataFrame, target_input: Tuple[str, str], compare
     return matrix
 
 
-def fs_create_figure(sample_data, target_date, selected_data, values_list, subtract=False, n_steps = 0):
 
+def fs_create_figure(sample_data, target_date, selected_data, values_list, subtract=True, n_steps=20):
     chart_data = {
         "chart": {"type": "line"},
         "title": {"text": "Graphs"},
@@ -175,147 +101,114 @@ def fs_create_figure(sample_data, target_date, selected_data, values_list, subtr
         "series": []
     }
 
-    if n_steps > 0:
-        get_length = len(sample_data.loc[target_date[0]: target_date[1]])
-        target_data = sample_data[target_date[0]:][: get_length + n_steps]
-        target_data.reset_index(drop=True, inplace=True)
-    else:
-        target_data = sample_data.loc[target_date[0]: target_date[1]]
-        target_data.reset_index(drop=True, inplace=True)
-
-    if subtract:
-        target_trace = (target_data[selected_data] / target_data[selected_data].iloc[0])
-        target_trace = (target_trace - target_trace[0])
-    else:
-        target_trace = target_data[selected_data]
-
-    chart_data["xAxis"]["categories"] = target_data.index.tolist()
+    # Prepare the target data without n_steps extension
+    target_data = sample_data.loc[pd.to_datetime(target_date[0]):pd.to_datetime(target_date[1])]
+    target_data.reset_index(drop=True, inplace=True)
+    target_trace = (target_data[selected_data] / target_data[selected_data].iloc[0] - 1) if subtract else target_data[selected_data]
+    
+    # Setting x-axis categories for the target data
+    chart_data["xAxis"]["categories"] = list(range(len(target_data)))
     chart_data["series"].append({"name": f"Target: {target_date[0]} to {target_date[1]}", "data": target_trace.tolist()})
 
+    # Process each comparable period, applying n_steps
     for i, (start_date, end_date, score) in enumerate(values_list, 1):
-        if n_steps > 0:
-            get_length = len(sample_data.loc[start_date:end_date])
-            sliced_data = sample_data[start_date:][:get_length + n_steps]
-            sliced_data.reset_index(drop=True, inplace=True)
-        else:
-            sliced_data = sample_data.loc[start_date:end_date]
-            sliced_data.reset_index(drop=True, inplace=True)
+        start_date, end_date = pd.to_datetime(start_date), pd.to_datetime(end_date)
 
-        if subtract:
-            sliced_trace = (sliced_data[selected_data] / sliced_data[selected_data].iloc[0])
-            sliced_trace = (sliced_trace - sliced_trace[0])
-        else:
-            sliced_trace = sliced_data[selected_data]
+        # Extend end_date by n_steps for all graphs
+        end_date += pd.Timedelta(days=n_steps)
 
-        chart_data["series"].append({"name": f"Graph {i}: {start_date} to {end_date} ({round(score, 5)})", "data": sliced_trace.tolist()})
+        # Ensure the end_date does not exceed the data range
+        end_date = min(end_date, sample_data.index.max())
+
+        # Slicing the data according to the adjusted date range
+        sliced_data = sample_data.loc[start_date:end_date]
+        sliced_data.reset_index(drop=True, inplace=True)
+
+        # Calculate the normalized or raw trace for each graph
+        sliced_trace = (sliced_data[selected_data] / sliced_data[selected_data].iloc[0] - 1) if subtract else sliced_data[selected_data]
+
+        # Extend the x-axis categories based on the length of sliced_data
+        chart_data["xAxis"]["categories"] = list(range(len(sliced_data)))
+
+        # Assembling the graph name with additional info
+        graph_name = f"Graph {i}: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')} +{n_steps} days ({round(score, 2)})"
+        chart_data["series"].append({"name": graph_name, "data": sliced_trace.tolist()})
 
     return json.dumps(chart_data)
+
 
 def draw_chart_from_json(json_data, ticker_name):
     data = json.loads(json_data)
 
     fig = go.Figure()
-    
-    x_axis_categories = data['xAxis']['categories']
-    first = True
-    # Adding series to the chart
-    for series in data['series']:
-        clean_series_name = re.sub(r"\s*\([^)]*\)", "", series['name'])
 
-        simple_dates = re.findall(r'\d{4}-\d{2}-\d{2}', clean_series_name)
-        detailed_dates = re.findall(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', clean_series_name)
-        
-        if first:
-            start_date = simple_dates[0] if len(simple_dates) > 0 else ''
-            end_date = simple_dates[1] if len(simple_dates) > 1 else ''
+    x_axis_categories = data['xAxis']['categories']
+    max_x_length = len(x_axis_categories)
+    first = True
+
+    target_proportion = 90 / 110
+    target_x_length = int(max_x_length * target_proportion)
+
+    for series in data['series']:
+        # 간소화된 정규식을 사용하여 날짜 추출
+        date_pattern = r"\d{4}-\d{2}-\d{2}"
+        dates = re.findall(date_pattern, series['name'])
+        if dates and len(dates) >= 2:
+            start_date, end_date = dates[:2]
         else:
-            start_date = detailed_dates[0][:10] if len(detailed_dates) > 0 else '' 
-            past_start_date = start_date
-            end_date = detailed_dates[1][:10] if len(detailed_dates) > 1 else '' 
-            past_end_date = end_date
-                         
-        
-        # Formatting the name with dates
-        name = f"현재 차트 ({start_date} ~ {end_date})" if first else f"과거 유사국면 차트 ({start_date} ~ {end_date})"
-       
-        color = 'blue' if first else '#ff1480'
-        line_width = 3 if first else 3
+            start_date = end_date = ''
+
+        if first:
+            x_categories = x_axis_categories[:target_x_length]
+            y_data = series['data'][:target_x_length]
+            color = '#0055ff'
+        else:
+            x_categories = x_axis_categories
+            y_data = series['data']
+            color = '#ff1480'
+
+        name_suffix = ' <span style="color:#FFD700">+20 days</span>' if not first else ''
+        name = f"{start_date} ~ {end_date}{name_suffix}"
 
         fig.add_trace(go.Scatter(
-            x=x_axis_categories,
-            y=series['data'],
+            x=x_categories,
+            y=y_data,
             mode='lines',
-            line=dict(color=color, width=line_width, shape='spline', smoothing=0.8),  # Smooth lines
+            line=dict(color=color, width=3, shape='spline', smoothing=0.5),
             name=name
         ))
+
+        if first:
+            fig.add_shape(
+                type="line",
+                x0=target_x_length, y0=0, x1=target_x_length, y1=1,
+                line=dict(color="#FFD700", width=2, dash="dash"),
+                xref="x", yref="paper"
+            )
         first = False
-    # Update layout with custom styles and revised titles
+
     fig.update_layout(
-        title=f'다우지수 :: 과거 유사국면 분석 - {ticker_name}',
+        title=f'{ticker_name} :: 과거 유사기간 비교',
         xaxis_title="Index",
         yaxis_title="Value",
-        template="plotly_white",
-        autosize=False,
-        width=800,
-        height=600,
-        margin=dict(l=50, r=50, b=100, t=100, pad=4),
-        legend=dict(
-            orientation="h",
-            xanchor="center",
-            x=0.5,
-            y=-0.3
-        ),
-        plot_bgcolor='rgba(173, 216, 230, 0.5)'  # light sky blue background
+        legend_title_text='',
+        legend=dict(orientation="h", xanchor="center", x=0.5, y=-0.15),
+        template="plotly_dark",
+        plot_bgcolor='rgba(10,10,10,1)',
+        paper_bgcolor='rgba(10,10,10,1)'
     )
 
-
-    # Define the file path for the image
     today_date = datetime.now().strftime('%Y%m%d')
     file_path = f"mainHtml/main_chart/similar_{ticker_name}_{today_date}.png"
 
-    # Ensure directory exists
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    # Save the figure
     fig.write_image(file_path)
     print(f"Chart saved to {file_path}")
     
-    find_past_history(past_start_date, past_end_date)
-    
-def extract_news_data(news_json):
-    extracted_data = []
-    for item in news_json['data']:
-        news_item = item['attributes']
-        extracted_item = {
-            'publishOn': news_item.get('publishOn', None),
-            'gettyImageUrl': news_item.get('gettyImageUrl', None),
-            'title': news_item.get('title', None),
-            'content': news_item.get('content', None)
-        }
-        extracted_data.append(extracted_item)
-    return extracted_data
-    
-
-def rapidapi_indicator_news(from_date, to_date):
-    print("to_date=",  to_date)
-    print("from_date=", from_date)
-    #New로 하니깐 옛날 데이터가 안나옴. Article로 바꿔서 해보자
-    #url = "https://seeking-alpha.p.rapidapi.com/news/v2/list"
-    #querystring = {"category": "market-news::all", "until": to_date, "since" : from_date, "size": "20", "number": "1"}
-    url = "https://seeking-alpha.p.rapidapi.com/articles/v2/list"
-    querystring = {"until": to_date, "since" : from_date, "size": "40", "number": "1"}
-    headers = {
-	    "X-RapidAPI-Key": rapidAPI,
-	    "X-RapidAPI-Host": "seeking-alpha.p.rapidapi.com"
-    }    
-        
-    response = requests.get(url, headers=headers, params=querystring)
-    print(response.json())
-    print("********************************")
-    return response.json()
-    
+   
 def find_past_history(past_start_date, past_end_date):
     
     # 문자열 날짜를 datetime 객체로 변환
@@ -340,68 +233,50 @@ def analyze():
     analysis_end_date = (datetime.now() - timedelta(days=91)).strftime('%Y-%m-%d')   
 
     target_date = [target_start_date, target_end_date]
-    compare_date =  [analysis_start_date, analysis_end_date]
+    compare_date = [analysis_start_date, analysis_end_date]
             
-    # Tickers dictionary
     tickers = {
         '^DJI': '다우지수', 
-        #'^IXIC': '나스닥종합', 
-        #'^GSPC': 'S&P500', 
-        #'^KS11': 'KOSPI'
+        '^IXIC': '나스닥종합', 
+        '^GSPC': 'S&P500', 
+        '^KS11': 'KOSPI'
     }
-    ticker = '^DJI'
+
     n_steps = 20
-    n_graphs = 1
     threshold = 0.5
-    
-    # Download data using yfinance
-    df = yf.download(list(tickers.keys()), start=analysis_start_date, end=target_end_date)
+    n_graphs = 1
 
-    # Ensure df is a DataFrame, even if only one column is downloaded
-    if isinstance(df, pd.Series):
-        df = df.to_frame()  # Convert Series to DataFrame
-    df = df[['Close']].rename(columns={'Close': '다우지수'})
-    df.index = pd.to_datetime(df.index)
-    df.sort_index(ascending=True, inplace=True)
-    print("Data after download and processing:")
-    print(df)
-    
-    
-    target_distance = len(df.loc[target_date[0]: target_date[1]])
+    for ticker_symbol, ticker_name in tickers.items():
+        print(f"Processing: {ticker_name}")
 
-    similarity_scores = fs_compute_distance(df, target_date, compare_date, target_distance)
-    start_end_distance_list = fs_get_start_end_score(df, similarity_scores, target_distance)
-    start_end_distance_list = sorted(start_end_distance_list, key=lambda x: x[2], reverse=CONTROLLER)
-    filtered_start_end_distance_list = fs_remove_overlaps(start_end_distance_list)
+        df = yf.download(ticker_symbol, start=analysis_start_date, end=target_end_date)
+        if isinstance(df, pd.Series):
+            df = df.to_frame(name='Close')
+        
+        df = df[['Close']].rename(columns={'Close': ticker_name})
+        df.index = pd.to_datetime(df.index)
+        df.sort_index(ascending=True, inplace=True)        
 
-    filtered_start_end_distance_list = [entry for entry in filtered_start_end_distance_list if entry[2] >= threshold][:n_graphs]
+        if not df.empty:
+            target_distance = len(df.loc[target_date[0]: target_date[1]])
 
-    selected_data = '다우지수'    
+            similarity_scores = fs_compute_distance(df, target_date, compare_date, target_distance)
+            start_end_distance_list = fs_get_start_end_score(df, similarity_scores, target_distance)
+            start_end_distance_list = sorted(start_end_distance_list, key=lambda x: x[2], reverse=CONTROLLER)
+            filtered_start_end_distance_list = fs_remove_overlaps(start_end_distance_list)
+            filtered_start_end_distance_list = [entry for entry in filtered_start_end_distance_list if entry[2] >= threshold][:n_graphs]
 
-    fs_superimpose_target_original = fs_create_figure(df, target_date, selected_data, filtered_start_end_distance_list, subtract=False, n_steps = n_steps)
-    fs_superimpose_target_aligned = fs_create_figure(df, target_date, selected_data, filtered_start_end_distance_list, subtract=True, n_steps = n_steps)
+            selected_data = ticker_name
+            if filtered_start_end_distance_list:
+                fs_superimpose_target_aligned = fs_create_figure(df, target_date, selected_data, filtered_start_end_distance_list, subtract=True, n_steps = n_steps)
+                draw_chart_from_json(fs_superimpose_target_aligned, selected_data)    
+            else:
+                print(f"No significant patterns found for {ticker_name}")
+        else:
+            print(f"No data retrieved for {ticker_name}")
 
-    print(fs_superimpose_target_original)
-    print("********************")
-    print(fs_superimpose_target_aligned)
-    print("********************")
-    
-    #chart_data = {
-    #    "original": fs_superimpose_target_original.to_json(),
-    #    "aligned": fs_superimpose_target_aligned.to_json()
-    #}
-    draw_chart_from_json(fs_superimpose_target_aligned, "dow")    
-    
-    return JSONResponse(content={
-        "chart_data": {
-            "original": fs_superimpose_target_original,  
-            "aligned": fs_superimpose_target_aligned     
-        }
-    })  
-print(analyze())
-
-#print(find_past_history("2006-05-01", "2006-08-10"))
-
+if __name__ == "__main__":
+    analyze()
   
     
     

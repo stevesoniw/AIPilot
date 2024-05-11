@@ -20,7 +20,7 @@ from langchain.agents import load_tools, initialize_agent
 #금융관련 APIs
 import finnhub
 import yfinance as yf
-# from openai import OpenAI
+from openai import OpenAI as RealOpenAI
 #personal 파일
 import config
 import utilTool
@@ -35,7 +35,7 @@ frControllerAI = APIRouter()
 
 # API KEY 설정
 finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
-client = OpenAI(api_key = config.OPENAI_API_KEY)
+client = RealOpenAI(api_key = config.OPENAI_API_KEY)
 
 #################################[1ST_GNB][1ST_MENU] AI가 말해주는 주식정보  Starts #################################
 ############  [해외 종목 검색] - 한글로 검색시 영어 종목코드 리턴해주기 #################
