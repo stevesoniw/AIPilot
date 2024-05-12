@@ -724,4 +724,25 @@ async def extract_youtube_script(request_data: YouTubeDataRequest):
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     
-  
+
+# AI 투자비서 [레이어팝업 내용 요약or번역 해주기]
+class LayerRequestData(BaseModel):
+    requestType: str
+    content: str
+@ragController.post("/rag/layer_trans_sum/")
+async def layer_trans_sum(data: LayerRequestData):
+    prompt = ""
+    if data.requestType == "summarize":
+        prompt = f"You are the best at summarizing. Please summarize the following data neatly. Summarize in the same language as requested. Do not include any content other than the summary. [Data]:\n {data.content}"
+    elif data.requestType == "translate":
+        prompt = f"You are the best translator. Translate the following content. If the content is primarily in English, translate everything into Korean; if it is primarily in Korean, translate everything into English. Do not respond with anything other than the translated content. [Data]:\n : {data.content}"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid request type")
+    try:
+        response = await utilTool.gpt4_request(prompt)
+        print("*****************************")
+        print(response)
+        print("*****************************")
+        return {"result": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,7 +1,7 @@
 <!-- AI가 말해주는 주식 정보(해외) 시작-->                
 <div id="menua" class="menu-cont">
     <h2 class="s-tit">AI가 말해주는 주식 정보 [해외]</h2>
-    <h3 class="s-tit">종목코드를 선택해주세요!<p>(*종목에 따라 데이터가 일부 조회되지 않을 수 있습니다)</p>
+    <h3 class="s-tit">AI가 제공하는 심층 분석을 통해 투자의 인사이트를 얻어보세요.<p>(*종목에 따라 데이터가 일부 조회되지 않을 수 있습니다)</p>
     <p>Tip: 종목코드가 기억이 나지 않으신가요? 하단 검색창에 회사명을 한글 (엔비디아)이나 영어 (NVIDIA) 로 입력하면 맞는 종목코드 (NVDA)를 생성해줍니다. </p></h3>
     <div class="input-container">
         <!--<input type="text" id="ticker" placeholder="(예 : AAPL) " class="input-ticker">--> 
@@ -9,10 +9,10 @@
             <select id="foreign_ticker" style="width: 100%" data-select2-id="foreign_ticker" tabindex="-1" class="select2-hidden-accessible" aria-hidden="true"></select>
         </div>                         
         <div class="foreign-buttons-container">
-            <button class="earningBtn slt-search-opt-btn" id="getEarningInfo" onclick="loadEarningData();">Get Earning Info (실적 데이터)</button>                               
-            <button class="foreignNewsBtn slt-search-opt-btn" id="getForeignStockNews" onclick="loadForeignStockNews();">Get News Info (소셜 데이터)</button>
-            <button class="basicInfoBtn slt-search-opt-btn" id="getStockInfo" onclick="loadBasicInfo();">Get Stock Info (종목 기본정보)</button>
-            <button class="aiChatBtn slt-search-opt-btn" id="aiStockChat" onclick="loadAiChat();">Ask AI Anything <span id="aiChatStatus">[OFF]</span></button>
+            <button class="earningBtn slt-search-opt-btn" id="getEarningInfo" onclick="loadEarningData();">Earning Info (실적 데이터)</button>                               
+            <button class="foreignNewsBtn slt-search-opt-btn" id="getForeignStockNews" onclick="loadForeignStockNews();">News Info (뉴스 데이터)</button>
+            <button class="basicInfoBtn slt-search-opt-btn" id="getStockInfo" onclick="loadBasicInfo();">Stock Info (종목 데이터)</button>
+            <button class="aiChatBtn slt-search-opt-btn" id="aiStockChat" onclick="loadAiChat();">Ask AI Anything <span id="aiChatStatus">[준비중]</span></button>
         </div>
     </div>
     <div class="dotted-line"></div> 

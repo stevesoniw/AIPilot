@@ -459,4 +459,46 @@ function clearTypingIndicator(loadingDiv) {
     clearInterval(loadingDiv.interval); 
     loadingDiv.remove(); 
 }  
+
+async function layerPopupGptCall(requestType, sourceDivId) {
+    const apiUrl = '/rag/layer_trans_sum/';
+    console.log("aaaaaaaaaaaaaa");
+    console.log(document.getElementById(sourceDivId).innerText);
+    const data = {
+        requestType: requestType,
+        content: document.getElementById(sourceDivId).innerText
+    };
+    var loadingText = document.getElementById('loading_research_ai_text');
+    loadingText.textContent = "데이터 Searching 중입니다.";
+    var loadingBar = document.getElementById('loading_bar_research_ai');
+    loadingBar.style.display = 'block';  // 로딩 바 표시
+    loadingBar.style.position = 'fixed';  // 화면 중앙 고정
+    loadingBar.style.top = '50%';         // 수직 중앙
+    loadingBar.style.left = '50%';        // 수평 중앙
+    loadingBar.style.transform = 'translate(-50%, -50%)'; // 정확한 중앙    
+    loadingBar.style.transform = 'translate(-50%, -50%)'; // 정확한 중앙
+    loadingBar.style.zIndex = '9999';  
+    try {
+        // Fetch API를 사용하여 POST 요청 전송
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const responseData = await response.json();
+        console.log('Server response:', responseData);
+        document.getElementById('loading_bar_research_ai').style.display = 'none';   
+        document.getElementById(sourceDivId).innerText = responseData.result;
+
+    } catch (error) {
+        console.error('Error during fetch:', error);
+        document.getElementById('loading_bar_research_ai').style.display = 'none';   
+    }
+}
 //******************************** 3RD GNB::  AI 투자비서 Ends **********************************************//          

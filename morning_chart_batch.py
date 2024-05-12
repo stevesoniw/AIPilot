@@ -209,23 +209,6 @@ def draw_chart_from_json(json_data, ticker_name):
     print(f"Chart saved to {file_path}")
     
    
-def find_past_history(past_start_date, past_end_date):
-    
-    # 문자열 날짜를 datetime 객체로 변환
-    start_date = datetime.strptime(past_start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(past_end_date, '%Y-%m-%d')
-    
-    # datetime 객체를 Unix timestamp로 변환 (timezone을 UTC로 가정)
-    start_timestamp = int(datetime.timestamp(start_date))
-    end_timestamp = int(datetime.timestamp(end_date))
-    # 변환된 timestamp를 사용하여 rapidapi_indicator_news 함수 호출
-    past_news_result = rapidapi_indicator_news(start_timestamp, end_timestamp)
-    
-    gpt4_news_sum()
-    
-    print(past_news_result)
-    return
-    
 def analyze():
     target_start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     target_end_date = datetime.now().strftime('%Y-%m-%d')
