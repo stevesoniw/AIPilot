@@ -244,10 +244,6 @@ async def market_data():
     html_content += """
                 </div>
             </div>"""
-    html_content += f"""                
-        <div class="main-tb-box" data-aos="fade-up">
-            설명문구 영역입니다.
-        </div>"""               
     html_content += '<ul class="main-graph-wrap" data-aos="fade-up">'
     for data, image_name in zip(market_data, images_name):
         image_path = f"/static/main_chart/{image_name}"
@@ -263,6 +259,9 @@ async def market_data():
     html_content += """
             </ul>"""  # Move </ul> outside the for loop
     html_content += f"""                
+        <div class="main-tb-box" data-aos="fade-up">
+            아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다. 
+        </div>     
         <div class="main-summary-chart" data-aos="fade-up">
             <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_다우지수_{today_date_fixed}.png"></div>
             <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>
