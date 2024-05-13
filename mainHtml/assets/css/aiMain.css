@@ -201,12 +201,23 @@ main{width:100%;height:100%;}
 .main-tb-box{margin-top:50px;padding:30px;background:#fff;text-align:center;border:1px solid #efefef;font-family:'Spoqa Han Sans Neo';}
 .main-summary-chart{display:flex;justify-content:space-between;gap:20px;margin-top:50px;}
 .main-summary-chart .main-summary-chart-box{flex:1;background:#fff;border:1px solid #efefef;}
-
 .news-show-wrap{margin-top:30px;text-align:center;}
 .news-show-wrap .news-show-btn{display:inline-block;padding:15px 30px;font-size:18x;color:#2970ff;background:#fff;border:1px solid #2970ff;border-radius:50px;}
 .main-news-wrap{position:relative;z-index:2;}
-
 .main .finnhub-wrap .cont-tit{color:#111;}
 .bg-lightpink{background:#f7f7f2;}
 .main .finnhub-list{background:#fff;}
-
+.fixed-cont.v01{height:300px;}
+.scroll-ic{bottom:25px;}
+.main .general-cont .cont-tit{margin:0 0 20px;font-size:28px;}
+.main .general-cont .cont-tit span{padding:10px;border-top:1px solid #333;border-bottom:1px solid #333;letter-spacing:2px;}
+.main .finnhub-list{margin-top:40px;}
+.main .analysis-wrap .cont-tit{font-size:40px;border:0;letter-spacing:0;}
+.main .analysis-wrap .cont-tit span{border:0;letter-spacing:0;}
+.answer-wrap .answer-btn-wrap{position:absolute;right:20px;top:20px;display:flex;gap:10px;}
+.answer-wrap .answer-btn-wrap .answer-btn{padding:5px 10px;font-size:13px;background:#fff;border:1px solid #aaa;border-radius:5px;}
+.chat-ipt-wrap label{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:14px;color:#666;}
+.textbox-common{margin-top:30px;padding:20px;font-size:14px;line-height:24px;background:#fff;border:1px solid #d8d8d8;}
+.main-graph-wrap img, .main-summary-chart-box img {transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; cursor: pointer;  border: 2px solid transparent; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);  opacity: 0.8; }
+.main-graph-wrap img:hover, .main-summary-chart-box img:hover {transform: scale(1.2); z-index: 10; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-color: #007bff; opacity: 1.0;}

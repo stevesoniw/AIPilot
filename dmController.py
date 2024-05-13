@@ -224,7 +224,13 @@ async def groq_cloud_lama_test(request_data: dict):
         # 네이버 뉴스에 대한 GPT 의견 묻기임 
         SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications. answer in Korean."        
         digest_news = g_news
+        print("***********************************")
+        print(digest_news)
+        
         gpt_result = await utilTool.lama3_news_sum(digest_news, SYSTEM_PROMPT)        
+        
+        print("return***************************************")
+        print(gpt_result)
         
     else:
         gpt_result = {"error": "Invalid action"}

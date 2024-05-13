@@ -60,9 +60,10 @@ def get_main_marketdata():
     yf.pdr_override()
     start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     tickers = {
-        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^KS11': 'KOSPI', '^FTSE': '영국 FTSE100',
-        '^FCHI': '프랑스 CAC40', '^GDAXI': '독일 DAX', '^N225': '니케이 225', '000001.SS': '상해종합', 
-        '^HSI': '항셍', 'DX-Y.NYB': '미국 USD', '^SOX': '필라델피아 반도체', 'CL=F': 'WTI 지수'
+        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^FTSE': '영국 FTSE100',
+        '^FCHI': '프랑스 CAC40', '^GDAXI': '독일 DAX', '^KS11': 'KOSPI', '^N225': '니케이 225', '000001.SS': '상해종합', 
+        'DX-Y.NYB': '미국 USD', '^SOX': '필라델피아 반도체', 'CL=F': 'WTI 지수'
+        #'^HSI': '항셍',
     }
     market_summary = []
     summary_talk = []
@@ -185,112 +186,132 @@ def format_text(input_text):
 # 메인페이지 로딩때마다 부르면 속도이슈가 있어서, html 파일로 미리 떨궈놓자. 
 async def market_data():
     gpt_summary, market_data, images_name, naver_news_data, gpt_additional_news = await generate_market_summary()
-    
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    today_date_fixed = datetime.now().strftime('%Y%m%d')
     # Initialize the HTML content with the main structure
+
     html_content = f"""
     <main class="clear">
         <section class="fixed-cont v01">
             <div class="overlay"></div>
             <div class="tit-wrap" data-aos="fade-down" data-aos-duration="500">
-                <h2 class="main-tit">MiraeAsset <span>M</span>orning <span>B</span>riefing</h2>
+                <h2 class="main-tit">AI <span>M</span>orning <span>B</span>riefing</h2>
                 <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equtiy솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
             </div>
             <div class="scroll-ic" data-aos="fade-right" data-aos-delay="500"></div>
         </section>
-        
         <section class="general-cont bg-lightgrey">
-            <h4 class="cont-tit" data-aos="fade-up">Market Summary</h4>
-                <table data-aos="fade-up">
-                    <caption>market summary morning brief</caption>
-                    <thead>
-                        <tr>
-                            <th class="bg-white" scope="col"></th>"""
+            <h4 class="cont-tit" data-aos="fade-up">
+                <span>Market Summary</span>
+            </h4>
+            <div data-aos="fade-up">
+                <div class="main-tb-date">기준일 : {today_date}</div>
+                <div class="main-new-tb">"""
+                
+    for i in range(1, 5):
+        html_content += f"""
+                    <table class="tb-bg0{i}">
+                        <caption>Market Data Table {i}</caption>
+                        <colgroup>
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th scope="col">종목</th>
+                                <th scope="col">Change</th>
+                                <th scope="col">Previous Close</th>
+                                <th scope="col">Last Close</th>
+                            </tr>
+                        </thead>
+                        <tbody>"""                
 
-    market_names = [data["name"] for data in market_data]  # Extract market names
-    for name in market_names:
-        html_content += f'<th scope="col">{name}</th>'
-    html_content += "</tr></thead><tbody>"
+        for data in market_data[(i-1)*3:i*3]:  # Assuming 3 rows per table for simplicity
+            change_color = 'red' if not '-' in data['change'] else 'blue'
+            html_content += f"""
+                            <tr>
+                                <td>{data['name']}</td>
+                                <td style="color:{change_color};">{data['change']}</td>
+                                <td>{data['prev_close']}</td>
+                                <td style="color:{change_color};">{data['last_close']}</td>
+                            </tr>"""
+        html_content += """
+                        </tbody>
+                    </table>"""
 
-    keys = ["change", "prev_close", "last_close", "date"]
-    for key in keys:
-        html_content += f"<tr><td>{key.capitalize()}</td>"
-        for data in market_data:
-            value = data[key]
-            color = "black"  # Default color
-            if key == "change":
-                if "-" in value:
-                    color = "blue"
-                elif value != "0.00%":
-                    color = "red"
-            if key == "last_close" and "change" in data:
-                color = "blue" if "-" in data["change"] else "red" if data["change"] != "0.00%" else "black"
-            html_content += f'<td style="color:{color};">{utilTool.format_number_with_comma(value)}</td>'
-        html_content += "</tr>"
-    
     html_content += """
-                    </tbody>
-                </table>"""
-
-    # Dynamically add images
+                </div>
+            </div>"""
+    html_content += f"""                
+        <div class="main-tb-box" data-aos="fade-up">
+            설명문구 영역입니다.
+        </div>"""               
     html_content += '<ul class="main-graph-wrap" data-aos="fade-up">'
-    for name, image in zip(market_data, images_name):
+    for data, image_name in zip(market_data, images_name):
+        image_path = f"/static/main_chart/{image_name}"
         html_content += f"""
-                        <li>
-                            <img src="/static/main_chart/{image}" alt="Market Chart">
-                            <div class="chart-label-wrap">
-                                <p>{name["name"]}</p>
-                                <p>(종가: {utilTool.format_number_with_comma(name["last_close"])})</p>
-                            </div>
-                        </li>"""
-    html_content += """
-                    </ul>
-            </section>"""
+                <li>
+                    <img src="{image_path}" alt="Market Chart for {data['name']}">
+                    <div class="chart-label-wrap">
+                        <p>{data['name']}</p>
+                        <p>(종가: {utilTool.format_number_with_comma(data["last_close"])})</p>
+                    </div>
+                </li>"""
 
-    # Add AI Market Analysis
-    html_content += f"""
-            <section class="general-cont fixed-cont v02">
-                <div class="overlay v02"></div>
-                <div class="analysis-wrap">
-                    <div class="analysis-area">
-                        <div class="analysis-tit-wrap">
-                            <h4 class="cont-tit" data-aos="fade-right">AI Market <span>Analysis</span></h4>
-                            <div class="analysis-bg" data-aos="fade-right"></div>
-                        </div>
-                        <div class="analysis-text" data-aos="fade-left">
-                            {gpt_summary}
-                        </div>
+    html_content += """
+            </ul>"""  # Move </ul> outside the for loop
+    html_content += f"""                
+        <div class="main-summary-chart" data-aos="fade-up">
+            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_다우지수_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_나스닥종합_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_KOSPI_{today_date_fixed}.png"></div>
+        </div>   
+    </section>"""
+    html_content += f"""                                       
+    <section class="general-cont fixed-cont v02">
+        <div class="overlay v02"></div>
+        <div class="analysis-wrap">
+            <div class="analysis-area">
+                <div class="analysis-tit-wrap">
+                    <h4 class="cont-tit" data-aos="fade-right">AI Market <span>Analysis</span></h4>
+                    <div class="analysis-bg" data-aos="fade-right"></div>
+                </div>
+                <div class="analysis-text" data-aos="fade-left">
+                    {gpt_summary}
+                    <div class="news-show-wrap">
+                        <a href="#none" class="news-show-btn">근거자료 Market Major News 보기</a>
                     </div>
                 </div>
-            </section>"""
-
-    # Add News Section
-    html_content += """
-            <section class="general-cont bg-lightgrey">
-                <div class="news-wrap">
-                    <h4 class="cont-tit" data-aos="fade-up">근거자료<br />Market Major News</h4>
-                    <ul class="new-list" data-aos="fade-up">"""
+            </div>
+        </div>
+        <div class="main-news-wrap" style="display:none;">
+            <ul class="new-list">"""
     for news in naver_news_data:
-        html_content += f"""
-                        <li>
-                            <p>{news['title']}</p>
-                            <p>{news['summary']}</p>
-                        </li>"""
+        html_content += f"""                              
+                    <li>
+                        <p>{news['title']}</p>
+                        <p>{news['summary']}</p>
+                    </li>"""
     html_content += """
-                    </ul>
+                </ul>
+            </div>                    
+                
+        </section>"""
+    html_content += f"""        
+        <section class="general-cont bg-lightpink sub-news-wrap" style="display:none;">
+            <div class="finnhub-wrap">
+                <h4 class="cont-tit" data-aos="fade-left">
+                    <span>Finnhub News</span>
+                </h4>
+                <div class="finnhub-list" data-aos="fade-right">
+                    {gpt_additional_news}
                 </div>
-            </section>"""
-
-    # Add Additional News Section
-    html_content += f"""
-            <section class="general-cont bg-green">
-                <div class="finnhub-wrap">
-                    <h4 class="cont-tit" data-aos="fade-left">기타 해외뉴스<br />Finnhub News</h4>
-                    <div class="finnhub-list" data-aos="fade-right">
-                        {gpt_additional_news}
-                    </div>
-                </div>
-            </section>
-        </main>"""
+            </div>
+        </section>
+    </main>"""
 
     # Save the HTML content to a file
     file_path = f'mainHtml/main_summary/summary_{datetime.now().strftime("%Y-%m-%d")}.html'

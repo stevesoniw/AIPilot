@@ -355,6 +355,14 @@
                     duration: 1000,
                     once: false, // 모든 요소에 대해 스크롤할 때마다 애니메이션 반복 실행
                 });
+                $('.news-show-btn').click(function(){
+                    var toggleBtn = $(this);
+                    var toggleBtnTxt = toggleBtn.text() === '근거자료 Market Major News 보기'?'근거자료 Market Major News 숨기기':'근거자료 Market Major News 보기'
+                    
+                    toggleBtn.text(toggleBtnTxt);
+
+                    $('.main-news-wrap').fadeToggle();
+                });                
             });
     
         </script>
