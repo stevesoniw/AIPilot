@@ -23,61 +23,86 @@
 
     <div class="fomc-form-container">
         <form id="">
-            <div class="radio-row">
-                <div class="radio-group">
-                    <input type="radio" id="radio01" name="radio" value="Jerome Powell">
-                    <label for="radio01">Jerome Powell (Chair)</label>
+            <div class="radio-group-ofh">
+                <div class="radio-group-float">
+                    <h4 class="radio-separation-tit">Governor</h4>
+                    <div class="radio-group-separation">
+                        <!-- 2024-05.13 수정 checkbox-column 태그로 감싸줌 -->
+                        <div class="checkbox-column">
+                            <div class="radio-group">
+                                <input type="radio" id="radio01" name="radioFomc" value="Jerome Powell">
+                                <label for="radio01">Jerome Powell (Chair)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio02" name="radioFomc" value="Philip Jefferson">
+                                <label for="radio02">Philip Jefferson (Vice Chair)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio03" name="radioFomc" value="Michael Barr">
+                                <label for="radio03">Michael Barr (Vice Chair)</label>                                
+                            </div>
+                        </div>
+
+                        <div class="checkbox-column">
+                            <div class="radio-group">
+                                <input type="radio" id="radio04" name="radioFomc" value="Michelle Bowman">
+                                <label for="radio04">Michelle Bowman (Governor)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio05" name="radioFomc" value="Lisa Cook">
+                                <label for="radio05">Lisa Cook (Governor)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio06" name="radioFomc" value="Adriana Kugler">
+                                <label for="radio06">Adriana Kugler (Governor)</label>
+                            </div>
+                        </div>
+                        <div class="checkbox-column">
+                            <div class="radio-group">
+                                <input type="radio" id="radio07" name="radioFomc" value="Christopher Waller">
+                                <label for="radio07">Christopher Waller (Governor)</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio02" name="radio" value="Philip Jefferson">
-                    <label for="radio02">Philip Jefferson (Vice Chair)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio03" name="radio" value="Michael Barr">
-                    <label for="radio03">Michael Barr (Vice Chair)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio04" name="radio" value="Michelle Bowman">
-                    <label for="radio04">Michelle Bowman (Governor)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio05" name="radio" value="Lisa Cook">
-                    <label for="radio05">Lisa Cook (Governor)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio06" name="radio" value="Adriana Kugler">
-                    <label for="radio06">Adriana Kugler (Governor)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio07" name="radio" value="Christopher Waller">
-                    <label for="radio07">Christopher Waller (Governor)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio08" name="radio" value="John Williams">
-                    <label for="radio08">John Williams (New York)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio09" name="radio" value="Thomas Barkin">
-                    <label for="radio09">Thomas Barkin (Richmond)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio10" name="radio" value="Raphael Bostic">
-                    <label for="radio10">Raphael Bostic (Atlanta)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio11" name="radio" value="Mary Daly">
-                    <label for="radio11">Mary Daly (San Francisco)</label>
-                </div>
-                <div class="radio-group">
-                    <input type="radio" id="radio12" name="radio" value="Loretta Mester">
-                    <label for="radio12">Loretta Mester (Cleveland)</label>
-                </div>
+
+                <div class="radio-group-float">
+                    <h4 class="radio-separation-tit">지역</h4>
+                    <div class="radio-group-separation">
+                        <div class="checkbox-column">
+                            <div class="radio-group">
+                                <input type="radio" id="radio08" name="radioFomc" value="John Williams">
+                                <label for="radio08">John Williams (NewYork)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio09" name="radioFomc" value="Thomas Barkin">
+                                <label for="radio09">Thomas Barkin (Richmond)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio10" name="radioFomc" value="Raphael Bostic">
+                                <label for="radio10">Raphael Bostic (Atlanta)</label>
+                            </div>
+                        </div>
+                        <div class="checkbox-column">
+                            <div class="radio-group">
+                                <input type="radio" id="radio11" name="radioFomc" value="Mary Daly">
+                                <label for="radio11">Mary Daly (SanFrancisco)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="radio12" name="radioFomc" value="Loretta Mester">
+                                <label for="radio12">Loretta Mester (Cleveland)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>                                    
+            </div>
+            <!--
                 <div class="form-actions">
                     <div class="center-button">
                         <button type="button" id class="indicatorButton new-show-chart-btn" onclick="generateTimeline()">Generate Timeline</button>
                     </div>
                 </div>
-            </div>
+            </div>-->
         </form>
     </div>
     <div class="fomc-toggle-container" id="fomc_toggle_container" style="display:none;">

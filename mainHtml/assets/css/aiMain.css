@@ -43,6 +43,8 @@
 #chartPilot .menu-cont.on{display:block;}
 #chartPilot h2.s-tit{position:relative;display:inline-block;margin-bottom:24px;font-size:24px;line-height:24px;}
 #chartPilot h2.s-tit::before{content:'';position:absolute;bottom:0px;left:0;width:100%;height:7px;background:#fad58c;z-index:-1;}
+#chartPilot h2.s-tit{padding-left:17px;}
+#chartPilot h2.s-tit::before{top:-3px;bottom:auto;width:15px;height:16px;background:url('/static/assets/images/tit-ic.png') no-repeat center;background-size:100%;}
 #chartPilot h3.s-tit{margin-bottom:30px;color:#333;font-weight:400;}
 #chartPilot h3.s-tit p{margin-bottom:30px;color:#333;font-weight:400; font-size:13px;}
 #chartPilot .chart-area{width:100%;height:550px;border:1px solid #ccc;}
@@ -161,7 +163,7 @@ main{width:100%;height:100%;}
 
 .left-area{width:338px;background:#fff;padding:30px;border-right:1px solid #d8d8d8;box-sizing:border-box;}
 .left-area::before{display:none;}
-.left-area .title-wrap{width:230px;height:60px;padding:0;}
+.left-area .title-wrap{width:250px;height:60px;padding:0;}
 
 .ui-accordion.nav-acc .ui-accordion-header.nav-acc-header{margin-top:20px;color:#333;line-height:24px;font-weight:700;}
 .ui-accordion.nav-acc .ui-accordion-header.nav-acc-header:first-child{margin-top:50px;}
@@ -198,8 +200,9 @@ main{width:100%;height:100%;}
 .main .tb-bg04 td:first-child{background:#f8efff;color:#333;font-weight:500;}
 .main td:nth-child(odd), .main td:nth-child(even){background:#fff;}
 .main tbody td:first-child{background:#fff;}
-.main-tb-box{margin-top:50px;padding:30px;background:#fff;text-align:center;border:1px solid #efefef;font-family:'Spoqa Han Sans Neo';}
-.main-summary-chart{display:flex;justify-content:space-between;gap:20px;margin-top:50px;}
+.main-tb-box{margin-top:50px;text-align:center;font-family:'Spoqa Han Sans Neo';}
+.main-tb-box span{display:inline-block;padding:10px 20px;color:#333;font-size:13px;background:#fafaff;border:1px solid #555;border-radius:20px;}
+.main-summary-chart{display:flex;justify-content:space-between;gap:20px;margin-top:30px;}
 .main-summary-chart .main-summary-chart-box{flex:1;background:#fff;border:1px solid #efefef;}
 .news-show-wrap{margin-top:30px;text-align:center;}
 .news-show-wrap .news-show-btn{display:inline-block;padding:15px 30px;font-size:18x;color:#2970ff;background:#fff;border:1px solid #2970ff;border-radius:50px;}
@@ -220,4 +223,14 @@ main{width:100%;height:100%;}
 .textbox-common{margin-top:30px;padding:20px;font-size:14px;line-height:24px;background:#fff;border:1px solid #d8d8d8;}
 .main-graph-wrap img, .main-summary-chart-box img {transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; cursor: pointer;  border: 2px solid transparent; 
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);  opacity: 0.8; }
-.main-graph-wrap img:hover, .main-summary-chart-box img:hover {transform: scale(1.2); z-index: 10; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-color: #007bff; opacity: 1.0;}
+.main-graph-wrap img:hover, .main-summary-chart-box img:hover {transform: scale(1.4); z-index: 10; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-color: #007bff; opacity: 1.0;}
+.analysis{padding:0 !important;}
+.fixed-cont.v01{height:300px;}
+.scroll-ic{bottom:25px;}
+.main .general-cont .cont-tit{margin:0 0 20px;font-size:28px;}
+.main .general-cont .cont-tit span{padding:10px;border-top:1px solid #333;border-bottom:1px solid #333;letter-spacing:2px;}
+.main .finnhub-list{margin-top:40px;}
+.main .analysis-wrap .cont-tit{font-size:40px;border:0;letter-spacing:0;}
+.main .analysis-wrap .cont-tit span{border:0;letter-spacing:0;}
+
+.nav-acc .menu04.nav-acc-header .ui-icon{background:url('/static/assets/images/left_acc_ic04.png') no-repeat center;}

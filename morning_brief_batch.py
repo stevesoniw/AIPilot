@@ -60,8 +60,8 @@ def get_main_marketdata():
     yf.pdr_override()
     start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     tickers = {
-        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^FTSE': '영국 FTSE100',
-        '^FCHI': '프랑스 CAC40', '^GDAXI': '독일 DAX', '^KS11': 'KOSPI', '^N225': '니케이 225', '000001.SS': '상해종합', 
+        '^DJI': '다우지수', '^IXIC': '나스닥종합', '^GSPC': 'S&P500', '^KS11': 'KOSPI', '^N225': '니케이 225', 
+         '000001.SS': '상해종합', '^FTSE': '영국 FTSE100', '^FCHI': '프랑스 CAC40', '^GDAXI': '독일 DAX', 
         'DX-Y.NYB': '미국 USD', '^SOX': '필라델피아 반도체', 'CL=F': 'WTI 지수'
         #'^HSI': '항셍',
     }
@@ -260,13 +260,13 @@ async def market_data():
             </ul>"""  # Move </ul> outside the for loop
     html_content += f"""                
         <div class="main-tb-box" data-aos="fade-up">
-            아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다. 
+            <span>아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다.</span>
         </div>     
         <div class="main-summary-chart" data-aos="fade-up">
-            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_다우지수_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_나스닥종합_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box" style="height:400px;"><img src= "/static/main_chart/similar_KOSPI_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_다우지수_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_나스닥종합_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_KOSPI_{today_date_fixed}.png"></div>
         </div>   
     </section>"""
     html_content += f"""                                       

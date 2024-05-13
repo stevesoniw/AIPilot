@@ -110,14 +110,10 @@
 .chat-list-wrap .answer-wrap p {margin: 15px 0px;}
 .chat-list-wrap .answer-wrap ol {padding-left: 40px;}
 .chat-list-wrap .answer-wrap ul {padding-left: 40px;}
-
-
-
 .answer-wrap table{margin:20px 0;}
 .answer-wrap table th{background:#f3f5f7;color:#333;}
 .answer-wrap table tr{background:#fff;}
 .answer-wrap table th, .answer-wrap table td{padding:12px 20px;}
-
 .chat-ipt-wrap{position:fixed;left:408px;right:70px;bottom:0;padding:30px 0;background:#fff;box-shadow:rgb(255 255 255) 0px 10px 20px 20px;}
 .pr{position:relative;}
 .chat-ipt-wrap .chat-ipt{padding-right:65px;font-size:15px;border:1px solid #2970ff;box-sizing: border-box;}
@@ -135,6 +131,9 @@
 .loading-text-ragprompt{ font-size:14px; background-color: rgb(255, 255, 255); color: rgba(0, 0, 0, 0.829); font-weight: bold; border-radius: 10px; padding: 10px; margin-top: 10px;}
 .ragprompt_highlight{ color: rgb(227, 0, 235); font-weight:bold;} 
 
+.answer-wrap .answer-btn-wrap{position:absolute;right:20px;top:20px;display:flex;gap:10px;}
+.answer-wrap .answer-btn-wrap .answer-btn{padding:5px 10px;font-size:13px;background:#fff;border:1px solid #aaa;border-radius:5px;}
+.chat-ipt-wrap label{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:14px;color:#666;}
 
 /**********************************************[ 다이얼로그 팝업 ] **********************************************/
 .ui-dialog{padding:0;}

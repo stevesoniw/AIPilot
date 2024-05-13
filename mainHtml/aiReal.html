@@ -91,12 +91,13 @@
                                 <li class="list-dep" data-tab="menue" data-html="/static/frCalendar.html">
                                     <a href="#">Economic 캘린더</a>
                                 </li>
+                                <!-- 대메뉴로 이동 
                                 <li class="list-dep" data-tab="menuf" data-html="/static/frBdPhaseAnalysis.html">
                                     <a href="#">유사국면 분석 - 마켓지표</a>
                                 </li>
                                 <li class="list-dep" data-tab="menug" data-html="/static/frStPhaseAnalysis.html">
                                     <a href="#">유사국면 분석 - 해외주식</a>
-                                </li>                                
+                                </li>   -->                             
                             </ul>
                         </div>
                         <h3 class="menu02"><a href="#" class="acc-tit">[국내] 마켓데이터 분석</a></h3>
@@ -106,7 +107,7 @@
                                     <a href="#">뉴스 데이터 분석</a>
                                 </li>
                                 <li class="list-dep" data-tab="menu_2nd_b" data-html="/static/dmPhaseAnalysis.html">
-                                    <a href="#">유사국면 분석</a>
+                                    <a href="#">유사 기간 분석</a>
                                 </li>
                             </ul>
                         </div>
@@ -121,6 +122,17 @@
                                 </li>                                
                             </ul>
                         </div>
+                        <h3 class="menu04"><a href="#" class="acc-tit">유사국면 분석</a></h3>
+                        <div>
+                            <ul>
+                                <li class="list-dep" data-tab="menu_4th_a" data-html="/static/frBdPhaseAnalysis.html">
+                                    <a href="#">유사기간 분석 - 마켓지표</a>
+                                </li>
+                                <li class="list-dep" data-tab="menu_4th_b" data-html="/static/frStPhaseAnalysis.html">
+                                    <a href="#">유사기간 분석 - 해외주식</a>
+                                </li>
+                            </ul>
+                        </div>                        
                     </div>
                 </div>
                 <div class="right-area" id="right-area">
@@ -157,7 +169,10 @@
                     index = 1; 
                 } else if (menu === 'menu3') {
                     index = 2; 
+                } else if (menu === 'menu4') {
+                    index = 3; 
                 }
+
                 $('#accordion').accordion('option', 'active', index);
                 // Immediately after setting the active panel, load the appropriate content
                 setTimeout(() => {
@@ -170,6 +185,8 @@
                     selectedTab = $('.left-area .menu02').next().find('.list-dep[data-tab="menu_2nd_a"]'); 
                 } else if (menu === 'menu3') {
                     selectedTab = $('.left-area .menu03').next().find('.list-dep[data-tab="menu_3rd_a"]'); 
+                } else if (menu === 'menu4') {
+                    selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_a"]'); 
                 } else {
                     selectedTab = $('.left-area .menu01').next().find('.list-dep[data-tab="menua"]'); 
                 }
@@ -441,31 +458,10 @@
                             break;
                         case 'menud':
                                 getFOMCSpeeches();      
-                                //getArticleData();                                               
+                                //getArticleData();  
                             break;
                         case 'menue':  // Economic 캘린더
                                 goCalendar(); 
-                            break;
-                        case 'menuf': //유사국면-채권
-                                document.querySelector('.similarity-tab-link').click(); //첫번째 탭 디폴트 로딩
-                                // 복수지표에서 weight값 계산하기 
-                                document.getElementById('multi-generateButton').addEventListener('click', function() {
-                                    const sum = Array.from(document.querySelectorAll('.multi-select-weight'))
-                                                    .reduce((acc, input) => acc + parseFloat(input.value), 0);
-                                    if (sum > 1) {
-                                        alert("The total sum of weights must equal 1 before proceeding.");
-                                        return;
-                                    }
-                                });  
-                                setTimeout(() => {
-                                    jTooltip();
-                                }, 100);                            
-                            break;    
-                        case 'menug':
-                            setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
-                            setTimeout(() => {
-                                jTooltip();
-                            }, 100);   
                             break;
                         case 'menu_2nd_a':
                             // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
@@ -571,7 +567,8 @@
                             });
                             setTimeout(() => {
                                 jTooltip();
-                            }, 50);                             
+                                textareaTxt();                                
+                            }, 70);                             
                             
                             break;                        
                             /********* [3rd GNB] 디지털리서치 RAG 테스트에서 파일 업로드 컨트롤 onChange *********/
@@ -651,7 +648,28 @@
                                     event.preventDefault(); // 폼 제출 방지
                                 }
                             });                            
-                            break;                 
+                            break;  
+                         case 'menu_4th_a': //유사국면-채권
+                            document.querySelector('.similarity-tab-link').click(); //첫번째 탭 디폴트 로딩
+                            // 복수지표에서 weight값 계산하기 
+                            document.getElementById('multi-generateButton').addEventListener('click', function() {
+                                const sum = Array.from(document.querySelectorAll('.multi-select-weight'))
+                                                .reduce((acc, input) => acc + parseFloat(input.value), 0);
+                                if (sum > 1) {
+                                    alert("The total sum of weights must equal 1 before proceeding.");
+                                    return;
+                                }
+                            });  
+                            setTimeout(() => {
+                                jTooltip();
+                            }, 100);                            
+                            break;    
+                        case 'menu_4th_b':
+                            setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
+                            setTimeout(() => {
+                                jTooltip();
+                            }, 100);   
+                            break;                                           
                         default:
                             console.log('No specific script for this tab');
                     }

@@ -192,7 +192,16 @@ def draw_chart_from_json(json_data, ticker_name):
         xaxis_title="Index",
         yaxis_title="Value",
         legend_title_text='',
-        legend=dict(orientation="h", xanchor="center", x=0.5, y=-0.15),
+        legend=dict(
+            orientation="h",
+            xanchor="center",
+            x=0.5,
+            y=-0.15,
+            font=dict(  # Setting the font size for the legend
+                family="Courier New, monospace",
+                size=14
+            )
+        ),
         template="plotly_dark",
         plot_bgcolor='rgba(10,10,10,1)',
         paper_bgcolor='rgba(10,10,10,1)'

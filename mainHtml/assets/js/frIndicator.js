@@ -25,6 +25,12 @@ async function fetchAndDisplayIndicators() {
         const selectedIndicators = formData.getAll('indicators');
         document.getElementById('loading_bar_economics').style.display = 'block';
 
+        if (selectedIndicators.length === 0) {
+            alert('Please select at least one indicator before proceeding.');
+            document.getElementById('loading_bar_economics').style.display = 'none'; 
+            return; 
+        }        
+
         // 각 인디케이터에 대해 파일에서 데이터를 읽어옴
         const promises = selectedIndicators.map(async (series_id) => {
             const response = await fetch(`/batch/fred_indicators/${series_id}.json`);

@@ -15,6 +15,9 @@ function fomcMenuChange(type){
     }else{
         htmlPath = 'frSocialAnalysis.html';
         //getArticleData();
+        setTimeout(() => {
+            radioMonitor();
+        }, 50);        
     }
     $('#right-area').load(htmlPath); // HTML 파일의 내용을 로드하여 right-area에 삽입
 }
@@ -406,9 +409,18 @@ function filterSpeeches(event) {
 // 스피치나 기사를 가져온 후 LLM에게 던진다
 // 스피치 --> 주요문장 추출 --> 감성분석 결과와 주요문장
 // 기사 --> 그냥 제목을 보내서 --> 감성분석 결과와 타이틀
+function radioMonitor(){
+    const radioButtons = document.querySelectorAll('input[type="radio"][name="radioFomc"]');
+    radioButtons.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            generateTimeline();
+        });
+    });  
+
+}
 
 function getSelectedRadioValue() {
-    var radioButtons = document.getElementsByName('radio');
+    var radioButtons = document.getElementsByName('radioFomc');
 
     for (var i = 0; i < radioButtons.length; i++) {
         if (radioButtons[i].checked) {

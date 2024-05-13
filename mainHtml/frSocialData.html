@@ -28,43 +28,56 @@
         <!-- <p class="form-header">분석을 원하는 <span>지표들</span>을 선택해주세요.</p> -->
         <form id="">
             <div class="checkbox-row">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name01" name="name01" value="Chair Powell" onclick="getCheckboxValue(event)">
-                    <label for="name01">Chair Powell</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name01" name="name01" value="Chair Powell" onclick="getCheckboxValue(event)">
+                        <label for="name01">Chair Powell</label>
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name02" name="name02" value="Vice Chair Jefferson" onclick="getCheckboxValue(event)">
-                    <label for="name02">Vice Chair Jefferson</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name02" name="name02" value="Vice Chair Jefferson" onclick="getCheckboxValue(event)">
+                        <label for="name02">Vice Chair Jefferson</label>
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name03" name="name03" value="Vice Chair for Supervision Barr" onclick="getCheckboxValue(event)">
-                    <label for="name03">Vice Chair for Supervision Barr</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name03" name="name03" value="Vice Chair for Supervision Barr" onclick="getCheckboxValue(event)">
+                        <label for="name03">Vice Chair for Supervision Barr</label>
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name04" name="name04" value="Governor Bowman" onclick="getCheckboxValue(event)">
-                    <label for="name04">Governor Bowman</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name04" name="name04" value="Governor Bowman" onclick="getCheckboxValue(event)">
+                        <label for="name04">Governor Bowman</label>
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name05" name="name05" value="Governor Cook" onclick="getCheckboxValue(event)">
-                    <label for="name05">Governor Cook</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name05" name="name05" value="Governor Cook" onclick="getCheckboxValue(event)">
+                        <label for="name05">Governor Cook</label>
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name06" name="name06" value="Governor Kugler" onclick="getCheckboxValue(event)">
-                    <label for="name06">Governor Kugler</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name06" name="name06" value="Governor Kugler" onclick="getCheckboxValue(event)">
+                        <label for="name06">Governor Kugler</label>
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="name07" name="name07" value="Governor Waller" onclick="getCheckboxValue(event)">
-                    <label for="name07">Governor Waller</label>
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="name07" name="name07" value="Governor Waller" onclick="getCheckboxValue(event)">
+                        <label for="name07">Governor Waller</label>
+                    </div>
                 </div>
-                </div>
-
-                <div class="form-actions">
-                    <div class="center-button">
-                        <button type="button" id="" class="indicatorButton new-show-chart-btn" onclick="filterSpeeches(event)">Apply Filter</button>
-                    </div>                        
-                    <button type="button" id="clearButton" onclick="clearCheckboxes(event)">초기화</button>
-                </div> 
             </div>
+
+            <div class="form-actions">
+                <div class="center-button">
+                    <button type="button" id="" class="indicatorButton new-show-chart-btn" onclick="filterSpeeches(event)">Apply Filter</button>
+                </div>                        
+                <button type="button" id="clearButton" onclick="clearCheckboxes(event)">초기화</button>
+            </div> 
         </form>            
         
         <div class="fomc-speach-list">  

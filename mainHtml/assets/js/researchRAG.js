@@ -460,4 +460,13 @@ function displayAnswer(answer) {
     answerWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
+function textareaTxt(){
+    $('.chat-ipt').focus(function(){
+        $('.chat-ipt-wrap label').hide();
+    });
+    $('.chat-ipt').blur(function(){
+        $('.chat-ipt-wrap label').show();
+    });
+}
+
 //******************************** 3RD GNB::  리서치RAG Ends   ***********************************************//   

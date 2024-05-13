@@ -7,73 +7,90 @@
     <form id="indicatorForm">
         <div class="checkbox-row">
             <!-- 기존 체크박스 -->
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="CPIAUCSL" id="CPIAUCSL">
-                <label for="CPIAUCSL">미국 소비자물가지수 (CPI)</label>
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="CPIAUCSL" id="CPIAUCSL">
+                    <label for="CPIAUCSL">소비자물가지수(CPI)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="PCEPI" id="PCEPI">
+                    <label for="PCEPI">개인소비지출(PCE)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="PPIFID" id="PPIFID">
+                    <label for="PPIFID">생산자물가지수(PPI)</label>
+                </div>
             </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="PCEPI" id="PCEPI">
-                <label for="PCEPI">미국 개인소비지출 (PCE)</label>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="DFEDTARU" id="DFEDTARU">
+                    <label for="DFEDTARU">연방기금금리(DFEDTARU)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="CSUSHPISA" id="CSUSHPISA">
+                    <label for="CSUSHPISA">주택가격지수(CSUSHPISA)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="GDPC1" id="GDPC1">
+                    <label for="GDPC1">실질 국내총생산(GDP)</label>
+                </div>
             </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="PPIFID" id="PPIFID">
-                <label for="PPIFID">미국 생산자물가지수(PPI)</label>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="ECIWAG" id="ECIWAG">
+                    <label for="ECIWAG">고용비용지수(ECIWAG)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="STLFSI4" id="STLFSI4">
+                    <label for="STLFSI4">금융스트레스지수</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="NGDPSAXDCUSQ" id="NGDPSAXDCUSQ">
+                    <label for="NGDPSAXDCUSQ">명목 국내총생산</label>
+                </div>
             </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="DFEDTARU" id="DFEDTARU">
-                <label for="DFEDTARU">미국 연방기금금리(DFEDTARU)</label>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="GFDEGDQ188S" id="GFDEGDQ188S">
+                    <label for="GFDEGDQ188S">GDP 대비 공공부채 비율</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="MEHOINUSA672N" id="MEHOINUSA672N">
+                    <label for="MEHOINUSA672N">실질 중위 가구소독</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="INDPRO" id="INDPRO">
+                    <label for="INDPRO">산업생산지수</label>
+                </div>
             </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="CSUSHPISA" id="CSUSHPISA">
-                <label for="CSUSHPISA">미국 주택가격지수(CSUSHPISA)</label>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="UNRATE" id="UNRATE">
+                    <label for="UNRATE">실업률</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="FEDFUNDS" id="FEDFUNDS">
+                    <label for="FEDFUNDS">금리</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="DGS10" id="DGS10">
+                    <label for="DGS10">미국채 10년이자율</label>
+                </div>
             </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="GDPC1" id="GDPC1">
-                <label for="GDPC1">미국 실질 국내총생산(GDP)</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="ECIWAG" id="ECIWAG">
-                <label for="ECIWAG">미국 고용비용지수(ECIWAG)</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="STLFSI4" id="STLFSI4">
-                <label for="STLFSI4">미국 금융스트레스지수</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="NGDPSAXDCUSQ" id="NGDPSAXDCUSQ">
-                <label for="NGDPSAXDCUSQ">미국 명목 국내총생산</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="GFDEGDQ188S" id="GFDEGDQ188S">
-                <label for="GFDEGDQ188S">미국 GDP 대비 공공부채 비율</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="MEHOINUSA672N" id="MEHOINUSA672N">
-                <label for="MEHOINUSA672N">미국 실질 중위 가구소득</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="INDPRO" id="INDPRO">
-                <label for="INDPRO">미국 산업생산지수</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="UNRATE" id="UNRATE">
-                <label for="UNRATE">미국 실업률</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="FEDFUNDS" id="FEDFUNDS">
-                <label for="FEDFUNDS">미국 금리</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="DGS10" id="DGS10">
-                <label for="DGS10">미국채 10년이자율</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="DGS2" id="DGS2">
-                <label for="DGS2">미국채 2년이자율</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="indicators" value="DGS3MO" id="DGS3MO">
-                <label for="DGS3MO">미국채 3개월이자율</label>
+            
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="DGS2" id="DGS2">
+                    <label for="DGS2">미국채 2년이자율</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="indicators" value="DGS3MO" id="DGS3MO">
+                    <label for="DGS3MO">미국채 3개월이자율</label>
+                </div>
             </div>
         </div>
         
