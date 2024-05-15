@@ -57,6 +57,7 @@ async function loadEarningData() {
         //기본정보
         document.getElementById('loading_bar_stockbasic').style.display = 'none';
         document.getElementById('stockBasic').style.display = 'none';
+        document.getElementById('stockinfo_total').style.display = "none";
         //챗
         document.getElementById('chatApp').style.dispaly = 'none';
 
@@ -286,6 +287,7 @@ async function loadForeignStockNews() {
     //기본정보
     document.getElementById('loading_bar_stockbasic').style.display = 'none';
     document.getElementById('stockBasic').style.display = 'none';
+    document.getElementById('stockinfo_total').style.display = "none";
 
     const ticker = document.getElementById('foreign_ticker').value;
     if (!ticker) {
@@ -380,6 +382,8 @@ async function loadNewsSummary(ticker) {
             throw new Error('Failed to fetch the summary file');
         }
         let textData = await response.text();
+        const md = window.markdownit();
+        textData = md.render(textData);        
         textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
         textData = textData.replace(/- \s*/g, '<br>');
         textData = textData.replace(/###\s*/g, '<br><br>');
@@ -395,7 +399,7 @@ async function loadNewsSummary(ticker) {
 
 function analyzeStockArticle(webUrl, newsId) {
     var loadingText = document.getElementById('loading-text-foreignnews');
-    loadingText.innerHTML  = '해당 뉴스의 원문사이트 분석중입니다. 뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.<br/>(※Finnhub뉴스는 차단당하는 경우가 존재하여 조치중입니다.)';
+    loadingText.innerHTML  = '해당 뉴스의 원문사이트 분석중입니다.<br/>뉴스출처에 따라 시간이 매우 오래걸릴수 있습니다.)';
     document.getElementById('loading_bar_foreignnews').style.display = 'block';
 
     const existingAnalysisContainer = document.querySelector(`.analysisResultContainer[data-news-id="${newsId}"]`);
@@ -452,14 +456,13 @@ function analyzeStockArticle(webUrl, newsId) {
         document.getElementById('loading_bar_foreignnews').style.display = 'none';
         loadingText.textContent = '데이터 로딩중입니다.';
     });
-
 }
-
 function displayAnalysisResult(data, webUrl, newsId) {
     const analysisContainer = document.createElement('div');
     analysisContainer.className = 'analysisResultContainer';
     analysisContainer.setAttribute('data-news-id', newsId); // Set a data attribute for toggling visibility    
     let modifiedData = data.replace(/\n/g, '<br>');
+    modifiedData = modifiedData.replace('<br><br>','<br>');
     modifiedData = modifiedData.replace(/\*\*(.*?)\*\*/g, '<span class="highlight_news">$1</span>');
     modifiedData = modifiedData.replace(/```html\s+\{([\s\S]*?)\}```/g, '$1');
     modifiedData = modifiedData.replace(/([\s\S]+)/g, '<div class="styled-html-content">$1</div>');
@@ -645,19 +648,20 @@ async function fetchForeignStockCodes() {
 }
 //해외 주식 기본 정보 및 차트 데이터 갖고와서 보여주기 (Get Stock Info)
 async function loadBasicInfo() {
-    //실적
+    // 실적 관련 요소 숨기기
     document.getElementById('loading_bar_fingpt').style.display = 'none';
     document.getElementById('fingptChartArea').style.display = 'none';
     document.getElementById('gptEarningTableArea').style.display = 'none';
     document.getElementById('gptMessageArea').style.display = 'none';
     document.getElementById('gptStockwaveArea').style.display = 'none';
-    //뉴스
+    // 뉴스 관련 요소 숨기기
     document.getElementById('loading_bar_foreignnews').style.display = 'none';
     document.getElementById('foreignTickerNewsSum').style.display = 'none';
     document.getElementById('foreignTickerNewsArea').style.display = 'none';
     document.getElementById('fomc-press-releases').style.display = 'none';
-    //기본정보
+    // 기본 정보 표시
     document.getElementById('stockBasic').style.display = 'flex';
+    document.getElementById('stockinfo_total').style.display = "none"; //일단 숨김. 데이터오면 보여줌. 
 
     const ticker = document.getElementById('foreign_ticker').value;
     if (!ticker) {
@@ -670,16 +674,67 @@ async function loadBasicInfo() {
     removeButtonOn('getForeignStockNews');       
     document.getElementById('loading_bar_stockbasic').style.display = 'block';
     document.getElementById('chatApp').style.display = 'none';
-    try {
-        const response = await fetch(`/foreignStock/financials/${ticker}`);
-        if (!response.ok) throw new Error('Failed to fetch foreign stock basic info data');
 
-        const data = await response.json();
+    let fileData = null;
+    const todayDate = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const fileUrl = `/batch/stocknews/${ticker}/${ticker}_basicinfo_${todayDate}.txt`;
+
+    try {
+        document.getElementById('stockinfo_total').innerHTML = "";        
+        const fileResponse = await fetch(fileUrl);
+        if (fileResponse.ok) {
+            fileData = await fileResponse.text();
+            console.log(fileData);
+            document.getElementById('stockinfo_total').style.display = "block";
+            document.getElementById('stockinfo_total').innerHTML = fileData;
+        } else {
+            document.getElementById('stockinfo_total').style.display = "none";
+            console.log('Basic info file not found.');
+        }
+    } catch (error) {
+        document.getElementById('stockinfo_total').style.display = "none";
+        console.log('Error fetching basic info file, proceeding with fetching data from API.', error);
+    }
+
+    try {
+        const apiResponse = await fetch(`/foreignStock/financials/${ticker}`);
+        if (!apiResponse.ok) throw new Error('Failed to fetch foreign stock basic info data');
+        const data = await apiResponse.json();
         displayFinancialData(data);
+        if (!fileData) {
+            getStockInfoTotal();
+        }
+    } catch (apiError) {
+        console.error('Error fetching stock info:', apiError);
+    }
+
+    document.getElementById('loading_bar_stockbasic').style.display = 'none';
+}
+// stock info total 추가함 (24.05.15)
+async function getStockInfoTotal() {
+    const ticker = document.getElementById('foreign_ticker').value;
+    if (!ticker) {
+        alert('종목을 먼저 선택해주세요!');
+        return;
+    }
+    try {
+        document.getElementById('stockinfo_total').innerHTML = "";
+        const response = await fetch(`/foreignStock/financials/getTotalInfo/${ticker}`);
+        if (!response.ok) {
+            document.getElementById('stockinfo_total').style.display = "none";
+            throw new Error(`Failed to fetch stock info: ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data && data.summary) {
+            document.getElementById('stockinfo_total').style.display = "block";
+            document.getElementById('stockinfo_total').innerHTML = data.summary;
+        } else {
+            document.getElementById('stockinfo_total').style.display = "none";
+            throw new Error('Invalid data received from the server');
+        }
     } catch (error) {
         console.error('Error fetching stock info:', error);
-    } finally {
-        document.getElementById('loading_bar_stockbasic').style.display = 'none';
+        document.getElementById('stockinfo_total').style.display = "none";
     }
 }
 

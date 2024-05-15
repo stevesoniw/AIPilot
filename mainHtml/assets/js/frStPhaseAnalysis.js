@@ -1,4 +1,4 @@
-//****************************** [1ST GNB][7TH MENU]유사국면-해외주식 함수 Starts *******************************//  
+//****************************** [4TH GNB][3RD MENU]유사국면-해외주식 함수 Starts *******************************//  
 function generateFsSimilarityAnalysis() {
     const selectedData = document.getElementById('frst_phase_ticker').value;
     const targetDateStart = document.getElementById('frst-targetDateStart').value;
@@ -239,4 +239,4 @@ function displayFrstNews(news_data) {
 
 
 
-//********************************* [1ST GNB][7TH MENU]유사국면-해외주식 함수 Ends ***************************************//   
+//****************************** [4TH GNB][3RD MENU]유사국면-해외주식 함수 Ends *******************************//  

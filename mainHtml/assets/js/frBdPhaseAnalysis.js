@@ -1,4 +1,4 @@
-//****************************** [1ST GNB][6TH MENU]유사국면-채권 함수 Starts *******************************//  
+//****************************** [4TH GNB][1ST MENU]유사국면-마켓지표 함수 Starts *******************************//  
 function openSimTab(evt, tabName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("similarity-tab-content");
@@ -634,4 +634,4 @@ function generateVariationHighCharts(chartData, containerId) {
 }
 
 
-//********************************* [1ST GNB][6TH MENU]유사국면-채권 함수 Ends ***************************************//   
+//****************************** [4TH GNB][1ST MENU]유사국면-마켓지표 함수 Ends *******************************//  

@@ -192,7 +192,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .financial-title h2{font-size:20px;}
 .stockAnnualFinancialsTable{margin-top:10px;}
 .stockAnnualFinancialsTable th{background:#fafaff;color:#333;}
-.textbox-common{margin-top:30px;padding:20px;font-size:14px;line-height:24px;background:#fff;border:1px solid #d8d8d8;}
+.textbox-common{margin-top:30px;padding:20px;font-size:14px;line-height:24px;background:#f4fffe;border:1px solid #d8d8d8; display:none;}
 
 /* AI가 말해주는 주식정보(해외)  #4. Ask AI Anything **/
 #chatApp {box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; width: 1000px; margin: 0 auto; margin-bottom: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; position: relative; justify-content: space-between; height: 600px;}

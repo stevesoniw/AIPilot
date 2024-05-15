@@ -75,7 +75,8 @@ async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
         prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            #model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
@@ -135,7 +136,8 @@ def handle_nan(obj):
 async def gpt4_request(prompt):
     try:
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            #model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "user", "content": prompt}
                 ]

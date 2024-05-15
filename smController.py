@@ -792,10 +792,10 @@ async def analyze_time_series(data: AnalysisRequestFrStock):
     fs_superimpose_target_original = fs_create_figure(df, target_date, data.selected_data, filtered_start_end_distance_list, subtract=False, n_steps = data.n_steps)
     fs_superimpose_target_aligned = fs_create_figure(df, target_date, data.selected_data, filtered_start_end_distance_list, subtract=True, n_steps = data.n_steps)
 
-    #print(fs_superimpose_target_original)
-    #print("********************")
-    #print(fs_superimpose_target_aligned)
-    #print("********************")
+    print(fs_superimpose_target_original)
+    print("********************")
+    print(fs_superimpose_target_aligned)
+    print("********************")
     
     #chart_data = {
     #    "original": fs_superimpose_target_original.to_json(),
@@ -871,4 +871,10 @@ async def frst_past_news(date_range: DateRange):
         print("Error fetching bond news:", e)
         return {"error": "Failed to fetch bond news"}
 
+#################################################### ["해외 주요 마켓지수" >> 유사국면 분석] Starts #################################################
+
+
+
+
+#################################################### ["해외 주요 마켓지수" >> 유사국면 분석] Ends #################################################
 

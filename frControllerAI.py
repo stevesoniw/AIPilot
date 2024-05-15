@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 import pandas as pd
 import matplotlib
+import markdown
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from functools import lru_cache
@@ -21,6 +22,7 @@ from langchain.agents import load_tools, initialize_agent
 import finnhub
 import yfinance as yf
 from openai import OpenAI as RealOpenAI
+from serpapi import GoogleSearch
 #personal 파일
 import config
 import utilTool
@@ -349,6 +351,107 @@ def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+### 종목 Total INFO 만들어주기
+async def get_news_info(ticker):
+    params = {
+    "engine": "google_news",
+    "q": "pizza",
+    "api_key": config.SERPAPI_API_KEY
+    }
+    search = GoogleSearch(params)
+    results = search.get_dict()
+    news_results = results["news_results"]
+    return news_results    
+
+async def get_finance_info(ticker):
+    params = {
+        "engine": "google_finance",
+        "q": ticker,
+        "api_key": config.SERPAPI_API_KEY
+    }
+    search = GoogleSearch(params)
+    results = search.get_dict()
+    return results
+
+async def get_all_info_together(ticker):
+    stock = yf.Ticker(ticker)
+    info = stock.info
+    company_name = info.get('shortName')
+    finance_info = await get_finance_info(ticker)     
+    news_info = await get_news_info(company_name)   
+    basic_info = {
+        'company_info': {
+            'company name': info.get('shortName'),
+            'company sector': info.get('sector'),
+            'current stock price': info.get('currentPrice', np.nan),
+            '50일 평균가': info.get('fiftyDayAverage'),
+            '52주 신고가': info.get('fiftyTwoWeekHigh'),
+            '52주 신저가': info.get('fiftyTwoWeekLow'),
+            'market cap': info.get('marketCap'),
+            'total debt': info.get('totalDebt', np.nan),
+            'operating cashflow': info.get('operatingCashflow', np.nan)
+        }
+    }
+    return basic_info, finance_info, news_info 
+
+async def get_data_from_gpt(prompt):
+    try:
+        SYSTEM_PROMPT = '''You are an expert economist and news analyst. You will provide basic information and news data about a specific company. 
+        Utilizing this, please describe the general information and current situation of the company. 
+        As a financial expert, connect various pieces of information to neatly summarize and explain objective and insightful information. 
+        For news-related content, write 3-4 lines in the form of "Recently, there was this news." 
+        Please provide insightful and in-depth content by linking it with basic company information. Be sure to explain in Korean. 
+        Also, do not provide any other responses besides the requested content.
+        Since this content will be displayed on a web page, it's okay to include some HTML tags for font color and other formatting to enhance readability.'''        
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
+        return None
+
+@frControllerAI.get("/foreignStock/financials/getTotalInfo/{ticker}")
+async def get_foreign_stock_totalinfo(ticker: str):
+    try:
+        basic_info, finance_info, news_info = await get_all_info_together(ticker)
+        prompt = f'''You are a financial expert and analyst. I will provide you with information about a specific corporation.
+        Please review the data and organize it neatly and systematically. 
+        Analyze various financial data to explain the company in a comprehensive and in-depth manner from multiple perspectives, and provide additional insightful commentary
+        on the news data as well. 
+        It would be even better if you could analyze the news data alongside the current finance data and provide insights into future prospects, trends, and possibilities as a financial expert. 
+        [data start]
+        1. Basic Company Information: {basic_info}
+        2. Company Financial Information: {finance_info}
+        3. News Data: {news_info}'''
+        
+        gpt_result = await get_data_from_gpt(prompt)
+        summary = markdown.markdown(gpt_result)
+        
+        # 파일 저장
+        try:
+            directory = f'batch/stocknews/{ticker}'
+            today_date = datetime.now().strftime("%Y%m%d")
+            filename = f"{ticker}_basicinfo_{today_date}.txt"
+            
+            os.makedirs(directory, exist_ok=True)
+            filepath = os.path.join(directory, filename)
+            
+            with open(filepath, "w", encoding='utf-8') as file:
+                file.write(summary)
+        except Exception as e:
+            print(f"File total stock info failed :: {ticker}: {e}")
+        
+        return {"summary": summary}
+    
+    except Exception as e:
+        print(f"Failed to process {ticker}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process the ticker information.")
+    
 ############ [1ST_GNB][1ST_MENU][GET EARNING INFO (실적발표)] #################
 def get_news (ticker, Start_date, End_date, count=20):
     news=finnhub_client.company_news(ticker, Start_date, End_date)
@@ -494,7 +597,8 @@ def query_gpt4(ticker: str):
 
     # OpenAI GPT-4 호출
     completion = client.chat.completions.create(
-        model="gpt-4-0125-preview",
+        #model="gpt-4-0125-preview",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt}

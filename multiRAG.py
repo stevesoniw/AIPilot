@@ -37,7 +37,8 @@ from pprint import pprint
 from bs4 import BeautifulSoup as Soup
 
 class multiRAG:
-    LLM_MODEL_NAME = "gpt-4-0125-preview"
+    #LLM_MODEL_NAME = "gpt-4-0125-preview"
+    LLM_MODEL_NAME = "gpt-4o"
     #OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
     OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 

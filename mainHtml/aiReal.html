@@ -38,6 +38,7 @@
         <script src="/static/assets/js/frCalendar.js"></script>
         <script src="/static/assets/js/frBdPhaseAnalysis.js"></script>
         <script src="/static/assets/js/frStPhaseAnalysis.js"></script>
+        <script src="/static/assets/js/indexPhaseAnalysis.js"></script>
         <script src="/static/assets/js/dmNews.js"></script>
         <script src="/static/assets/js/dmPhaseAnalysis.js"></script>
         <script src="/static/assets/js/researchRAG.js"></script>
@@ -128,9 +129,12 @@
                                 <li class="list-dep" data-tab="menu_4th_a" data-html="/static/frBdPhaseAnalysis.html">
                                     <a href="#">유사기간 분석 - 마켓지표</a>
                                 </li>
-                                <li class="list-dep" data-tab="menu_4th_b" data-html="/static/frStPhaseAnalysis.html">
-                                    <a href="#">유사기간 분석 - 해외주식</a>
+                                <li class="list-dep" data-tab="menu_4th_b" data-html="/static/indexPhaseAnalysis.html">
+                                    <a href="#">유사기간 분석 - 주요 주가지수</a>
                                 </li>
+                                <li class="list-dep" data-tab="menu_4th_c" data-html="/static/frStPhaseAnalysis.html">
+                                    <a href="#">유사기간 분석 - 개별 해외주식</a>
+                                </li>                                
                             </ul>
                         </div>                        
                     </div>
@@ -649,7 +653,7 @@
                                 }
                             });                            
                             break;  
-                         case 'menu_4th_a': //유사국면-채권
+                         case 'menu_4th_a': //유사국면-마켓지수
                             document.querySelector('.similarity-tab-link').click(); //첫번째 탭 디폴트 로딩
                             // 복수지표에서 weight값 계산하기 
                             document.getElementById('multi-generateButton').addEventListener('click', function() {
@@ -663,8 +667,10 @@
                             setTimeout(() => {
                                 jTooltip();
                             }, 100);                            
-                            break;    
-                        case 'menu_4th_b':
+                            break;  
+                        case 'menu_4th_b': //유사국면-주요주가지수
+                            break;                                
+                        case 'menu_4th_c': //유사국면-개별해외주식
                             setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
                             setTimeout(() => {
                                 jTooltip();

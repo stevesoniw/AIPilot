@@ -36,7 +36,8 @@ class ChatPDF:
     vector_store = None
     retriever = None
     chain = None
-    LLM_MODEL_NAME = "gpt-4-turbo"
+    #LLM_MODEL_NAME = "gpt-4-turbo"
+    LLM_MODEL_NAME = "gpt-4o"
     #OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002"
     OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 

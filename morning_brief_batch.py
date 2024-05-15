@@ -11,6 +11,7 @@ from matplotlib.figure import Figure
 import os
 import asyncio
 import re
+import markdown
 #금융관련 APIs
 import finnhub
 import yfinance as yf
@@ -81,10 +82,12 @@ def get_main_marketdata():
         last_day = df.iloc[-1]
         prev_day = df.iloc[-2]
         change = (last_day['Adj Close'] - prev_day['Adj Close']) / prev_day['Adj Close'] * 100
+        change_price = last_day['Adj Close'] - prev_day['Adj Close'] 
         summary_for_gpt = f"{name} 지수는 전일 대비 {change:.2f}% 변화하였습니다. 전일 가격은 {prev_day['Adj Close']:.2f}이며, 오늘 가격은 {last_day['Adj Close']:.2f}입니다."
         summary = {
             "name": name,
             "change": f"{change:.2f}%",
+            "change_price" : f"{change_price:.2f}",
             "prev_close": f"{prev_day['Adj Close']:.2f}",
             "last_close": f"{last_day['Adj Close']:.2f}",
             "date": last_day['Date'].strftime('%Y-%m-%d')
@@ -170,6 +173,7 @@ async def generate_market_summary():
     gpt_additional_news = await gpt4_news_sum({"news": finnhub_news_data}, SYSTEM_PROMPT_2)
     #formatted_additional_news = gpt_additional_news.replace("-", "<br>")
     formatted_additional_news = re.sub(r"```html\s*(.*?)\s*```", r"\1", gpt_additional_news)
+    formatted_additional_news = markdown.markdown(formatted_additional_news)
     formatted_additional_news = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", formatted_additional_news)
     formatted_additional_news = re.sub(r"(\d+)\.", r"<br>\1.", formatted_additional_news)    
     
@@ -222,7 +226,7 @@ async def market_data():
                             <tr>
                                 <th scope="col">종목</th>
                                 <th scope="col">Change</th>
-                                <th scope="col">Previous Close</th>
+                                <th scope="col">전일 대비</th>
                                 <th scope="col">Last Close</th>
                             </tr>
                         </thead>
@@ -234,8 +238,8 @@ async def market_data():
                             <tr>
                                 <td>{data['name']}</td>
                                 <td style="color:{change_color};">{data['change']}</td>
-                                <td>{data['prev_close']}</td>
-                                <td style="color:{change_color};">{data['last_close']}</td>
+                                <td style="color:{change_color};">{utilTool.format_number_with_comma(data['change_price'])}</td>
+                                <td style="color:{change_color};">{utilTool.format_number_with_comma(data['last_close'])}</td>
                             </tr>"""
         html_content += """
                         </tbody>

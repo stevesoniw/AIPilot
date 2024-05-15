@@ -10,6 +10,7 @@ import httpx
 import json 
 import os
 from bs4 import BeautifulSoup
+import markdown
 #금융관련 APIs
 from openai import OpenAI
 import finnhub
@@ -34,6 +35,7 @@ logging.basicConfig(level=logging.DEBUG)
 ##################################################################################################################################
 #@@ 기능정의 : hot trend 해외종목 25여개에 대해서 종목뉴스를 미리 호출하고, 이들에 대한 AI의견분석을 미리 생성하는 배치 by son (24.03.31)
 #@@ Logic   : 1. yahoo finance 의 most active 종목 25개 페이지를 크롤링 해와서 종목들을 list up 시킴
+#@@              → batch/hotstocks.txt 로 저장.  **처음보는 종목이 많아, hostocks_manual.txt(수기로 지정하는 종목)도 같이 읽게 바꿈.
 #@@           2. seeking alpah 종목뉴스(by RapidAPI)를 이용하여 해당 종목들의 뉴스 20개를 가져와서 json으로 저장시킴
 #@@              (**파일명 :: batch/stocknews/종목코드/news_종목코드_{todayDate}.json)               
 #@@           3. 개별 종목뉴스에 대한 AI의 요약 및 의견 파일을 GPT를 활용하여 생성시킴 
@@ -187,6 +189,7 @@ async def process_stock_main_news(symbols):
                           "can appear in '#ff1480' color. Your response will be displayed on an HTML screen. Therefore, include many appropriate <br> tags and other useful tags to make it easy for people to read."
                           "News Data : " + str(extracted_seekingalpha) + str(extracted_finnhub))
                 summary = await gpt4_news_sum(prompt)
+                summary = markdown.markdown(summary)
                 # 결과 저장
                 directory = f'batch/stocknews/{symbol}'
                 os.makedirs(directory, exist_ok=True)
