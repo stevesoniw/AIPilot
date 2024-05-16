@@ -148,7 +148,7 @@ async def gpt4_news_sum(prompt):
     try:
         SYSTEM_PROMPT = "You are an expert in analyzing news data. Please provide an in-depth summary of the following news data in 10 lines. Divide the content into title and summary, and also share your forecast on how this news will impact the future market economy and the stock price of this company"        
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
@@ -229,7 +229,7 @@ async def process_stock_detail_news(symbols):
 async def webNewsAnalyzer(url):
     text_splitter = CharacterTextSplitter(chunk_size=1024, chunk_overlap=100, length_function=len, separator= "\n\n\n")    
     docs = WebBaseLoader(url).load_and_split(text_splitter) #BSHTMLLoader 가 WebBaseLoader 보다 더 가벼운듯함. 컴팩트하게 긁어옴
-    LLM_MODEL_NAME = "gpt-4-0125-preview"
+    LLM_MODEL_NAME = "gpt-4o"
     combine_template = '''{text}
     위 내용을 반드시 한국어로 요약해줘
     Your response will be displayed on an HTML screen. Therefore, include appropriate <br> tags and other useful tags to make it easy for people to read.

@@ -62,12 +62,7 @@
         <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
         <!-- 마크다운 예쁘게 보이기-->
         <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.0/dist/showdown.min.js"></script>
-        <!-- HTML 이미지 파일로 다운로드-->
-        <!-- <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script> -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
-        <!-- 스피너 -->
-        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.0/dist/showdown.min.js"></script>       
     </head>
     <body>
         <div class="wrap" id="chartPilot">

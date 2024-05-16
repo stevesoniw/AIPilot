@@ -60,6 +60,8 @@ class DropFile {
         .then(response => response.json())
         .then(data => {
             console.log("Server response after deletion:", data.message);
+            console.log(data.files_metadata);
+            createOptions(data.files_metadata.length);
             this.updateMetainfoAfterDeletion(fileId);
             //storeFileMetadata(data.files_metadata);
         })
@@ -109,24 +111,42 @@ class DropFile {
         var element = document.getElementById('loading-text-ragprompt'); 
         var loading = document.getElementById('loading_bar_ragprompt');
         if (element && loading) {
-          element.textContent = '리포트 업로드 중입니다'; 
-          loading.style.display = 'block';
+            //파일 한번 안 올리고 안 올렸을 때 에러잡기
+            if (files.length === 0) {
+                alert("파일을 업로드하지 않았습니다");
+            }
+            else {
+                element.textContent = '리포트 업로드 중입니다'; 
+                loading.style.display = 'block';
+            }
+
         }        
-        console.log("Handling files are:", files);
-        files = [...files];
-        files.forEach(file => this.previewFile(file));
+        if (files.length != 0) {
+            console.log("Handling files are:", files);
+            files = [...files];
+            this.previewFile(files);
+        }
     }
 
-    previewFile(file) {
-        let fileDOM = this.renderFile(file);
-        if (fileDOM) {
-            this.fileList.appendChild(fileDOM); // Add the file preview to the fileList
-            this.fileList.style.display = 'block'; // Make sure fileList is visible
-            setTimeout(submitFiles, 100); 
-        } else {
-            document.getElementById('loading_bar_ragprompt').style.display = 'none';
-            console.log("File verification failed");
+    previewFile(files) {
+        var flag = 0;
+        for (let i = 0; i < files.length; i++) {
+            let fileDOM = this.renderFile(files[i]);
+            if (fileDOM) {
+                this.fileList.appendChild(fileDOM); // Add the file preview to the fileList
+                this.fileList.style.display = 'block'; // Make sure fileList is visible
+                flag = 1;
+                
+            } else {
+                document.getElementById('loading_bar_ragprompt').style.display = 'none';
+                console.log("File verification failed");
+                
+            }
         }
+        // console.log(this.fileList);
+
+        if( flag == 1 ) {
+            setTimeout(submitFiles, 100);}
     }
 
     renderFile(file) {
@@ -146,6 +166,21 @@ class DropFile {
         }
     
         // 파일 정보를 담을 DOM 요소 생성 및 반환
+        const fileTitles = document.getElementsByClassName('file-tit');
+        if (fileTitles) {
+            for (let i = 0; i < fileTitles.length; i++) {
+                // 현재 요소의 텍스트 내용을 가져옴
+                const text = fileTitles[i].textContent;
+                
+                // 만약 텍스트에 'A.pdf'가 포함되어 있다면
+                if (text.includes(file.name)) {
+                    alert("이미 추가한 파일입니다. 다시 업로드해주세요.");
+                    // 실행을 하지 않고 함수를 종료
+                    return null;
+                }     
+            }
+        }
+
         let fileDOM = document.createElement("div");
         fileDOM.className = "file";
         fileDOM.innerHTML = `
@@ -171,10 +206,48 @@ class DropFile {
 //const dropFile = new DropFile("drop-file", "files");
 
 /* 실제 파일 업로드 Class 끝 */
+// 파일 개수에 따라 프롬프트 예시 바꿔주는 함수
+const createOptions = (numFiles) => {
+    const select = document.getElementById('promptSelect');
 
+    // Clear existing options
+    select.innerHTML = '';
+    select.className = "research-select";
+
+    if (numFiles > 1) {
+        // More than 1 file: options D, E, F
+        const options = [["default", "질문이 떠오르지 않으신다면, 다음 예시 질문들을 사용해보세요."],
+        ["A", "리포트들을 보고 해당 기업의 Bull, Bear 포인트들을 사업부 별로 정리해서 표로 보여줘."],
+        ["B", "각 리포트에서 공통적으로 언급되는 주제/키워드를 몇가지 선정하고, 의견이 일치하는 부분과 일치하지 않는 부분을 정리해줘.\
+        하위 문장의 구분은 숫자가 아닌 '•'으로 구분해주고 개별 문장은 한문장씩 끊어서 답변하되 '-합니다', '-입니다'는 빼고 문장을 만들어줘."],
+        ["C", "각 리포트들에서 전문용어/약어를 사용한 경우 이에 대한 설명을 추가해줘.\
+        앞으로 용어를 설명할 때 '-입니다', '-됩니다'는 빼고 간결하게 대답해줘.\
+        답변의 시작은 '용어 설명'으로 하고, 용어들은 1,2,3 순서를 매겨서 알려줘.\
+        정리할 때, 재무적 용어 (ex. QoQ, YoY)나 리포트용 약어는 제외하고 정리해줘."]]
+        options.forEach((option) => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option[0];
+            optionElement.textContent = option[1];
+            select.appendChild(optionElement);
+        });
+    } else {
+        // 1 file: options A, B, C
+        const options = [["default", "질문이 떠오르지 않으신다면, 다음 예시 질문들을 사용해보세요."],
+            ["A", "1. 리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘"],
+            ["B", "2. 리포트를 읽고 해당 기업의 이번 분기 실적이 어땠는지 알려줘. 뭘 근거로 리포트에서 그렇게 판단했는지도 알려줘"],
+            ["C", "3. 리포트에 쓰인 전문 용어가 있으면 설명해줘. 이 기업에서 하는 사업과 관련된 용어들 중에 생소한 것들은 꼭 알려줘"]]
+        options.forEach((option) => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option[0];
+            optionElement.textContent = option[1];
+            select.appendChild(optionElement);
+        });
+    }
+};
 /* 파일 파이썬 서버로 올리기 */
 async function submitFiles() {
     const form = document.getElementById('file-upload-form');
+    // console.log(form.innerHTML);
     const formData = new FormData(form);
     try {
         const response = await fetch(`/rag/prompt-pdf-upload`, {
@@ -184,6 +257,7 @@ async function submitFiles() {
 
         if (response.ok) {
             const result = await response.json();
+            createOptions(result.files_metadata.length);
             console.log("Files uploaded successfully:", result);
             const fileElements = document.querySelectorAll('#showfiles .file'); 
             document.getElementById('loading_bar_ragprompt').style.display = 'none';
@@ -223,16 +297,136 @@ function storeFileMetadata(filesMetadata) {
     });
 }
 
+//Helper function
+
+function copyText(button) {
+    var answerWrap = button.closest(".answer-wrap");
+        
+    if (answerWrap) {
+        var answerTxt = answerWrap.querySelector(".answer-txt");
+        if (answerTxt) {
+            var textToCopy = answerTxt.textContent.trim();
+            navigator.clipboard.writeText(textToCopy)
+                .then(function() {
+                    alert("텍스트가 성공적으로 복사되었습니다.");
+                })
+                .catch(function(error) {
+                    console.error("텍스트 복사 중 오류가 발생하였습니다:", error);
+                });
+        } else {
+            console.error(".answer-txt를 찾을 수 없습니다.");
+        }
+    } else {
+        console.error(".answer-wrap을 찾을 수 없습니다.");
+    }
+
+}
+
+function captureWithBackgroundColor(element) {
+    // Set background color to white temporarily
+    element.style.backgroundColor = "white";
+
+    // Capture the element
+    return domtoimage.toPng(element)
+        .then(function (dataUrl) {
+            // Reset background color to transparent
+            element.style.backgroundColor = "transparent";
+            return dataUrl;
+        })
+        .catch(function (error) {
+            console.error('Error capturing element:', error);
+            // Reset background color to transparent in case of error
+            element.style.backgroundColor = "transparent";
+            throw error; // rethrow the error
+        });
+}
+
+function saveAsImage(button) {
+    // var answerWrap = button.closest(".answer-wrap");
+        
+    // if (answerWrap) {
+    //     var answerTxt = answerWrap.querySelector(".answer-txt");
+    //     if (answerTxt) {
+    //         // HTML 캔버스 생성
+    //         html2canvas(answerTxt).then(function(canvas) {
+    //             // 캔버스를 이미지 데이터 URL로 변환
+    //             var imageData = canvas.toDataURL("image/png");
+                
+    //             // 이미지 다운로드 링크 생성
+    //             var downloadLink = document.createElement("a");
+    //             downloadLink.href = imageData;
+    //             downloadLink.download = "answer_image.png";
+                
+    //             // 링크를 클릭하여 이미지 다운로드
+    //             downloadLink.click();
+    //         });
+    //     } else {
+    //     console.error(".answer-txt를 찾을 수 없습니다.");
+    //     }
+    // } else {
+    //     console.error("부모 요소인 .answer-wrap을 찾을 수 없습니다.");
+    // }
+    var answerWrap = button.closest(".answer-wrap");
+        
+    if (answerWrap) {
+        var answerTxt = answerWrap.querySelector(".answer-txt");
+        if (answerTxt) {
+            captureWithBackgroundColor(answerTxt).then(function(dataUrl) {
+                // Create download link
+                var downloadLink = document.createElement("a");
+                downloadLink.href = dataUrl;
+                downloadLink.download = "answer_image.png";
+
+                // Click the link to trigger download
+                downloadLink.click();
+            })
+            .catch(function(error) {
+                console.error("이미지 다운로드 중 오류가 발생하였습니다:", error);
+            });
+            // // Use dom-to-image library
+            // domtoimage.toBlob(answerTxt)
+            //     .then(function(blob) {
+            //         // Create download link
+            //         var downloadLink = document.createElement("a");
+            //         downloadLink.href = URL.createObjectURL(blob);
+            //         downloadLink.download = "answer_image.png";
+
+            //         // Click the link to trigger download
+            //         downloadLink.click();
+            //     })
+            //     .catch(function(error) {
+            //         console.error("이미지 다운로드 중 오류가 발생하였습니다:", error);
+            //     });
+            } else {
+                    console.error(".answer-txt를 찾을 수 없습니다.");
+                    }
+
+    } else {
+        console.error("부모 요소인 .answer-wrap을 찾을 수 없습니다.");
+    }
+
+}
+// function showSpinner() {
+//     // spinner 영역을 가져옴
+//     const spinnerTarget = document.getElementById('spinner');
+  
+//     // Spin.js를 사용하여 spinner를 생성
+//     const spinner = new Spinner().spin(spinnerTarget);
+//   }
+  
+//   // 요청이 완료되면 spinner를 감추는 함수
+//   function hideSpinner() {
+//     // spinner 영역을 가져옴
+//     const spinnerTarget = document.getElementById('spinner');
+  
+//     // spinner를 감춤
+//     spinnerTarget.innerHTML = '';
+//   }
+
+
 let questionCounter = 0;
 //Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
 async function getAnswerUsingPrompt(selectedPrompt){
-    if (questionCounter === 0) {
-        const talkListWrap = document.querySelector('.chat-list-wrap');
-        talkListWrap.innerHTML = ""; //예시 지워
-
-    }
-    //다음부턴 이전답변 지우지마
-    questionCounter++; 
     const fileElements = document.querySelectorAll('#showfiles .file');
     console.log("selectedPrompt=", selectedPrompt);
     if (selectedPrompt === 'default') {
@@ -243,6 +437,15 @@ async function getAnswerUsingPrompt(selectedPrompt){
         alert('PDF 파일을 업로드 후에 선택해주세요!');
         return;
     }
+
+    if (questionCounter === 0) {
+        const talkListWrap = document.querySelector('.chat-list-wrap');
+        talkListWrap.innerHTML = ""; //예시 지워
+
+    }
+    //다음부턴 이전답변 지우지마
+    questionCounter++; 
+
     //정수로 변환필요 (python 서버에 int 선언되어있음)
     const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
     console.log(selectedPrompt);
@@ -270,7 +473,33 @@ async function getAnswerUsingPrompt(selectedPrompt){
     questionWrap.appendChild(question); 
     talkListWrap.appendChild(questionWrap);
 
+    //Answer 클라스 생성
+    const answerWrap = document.createElement('div');
+    answerWrap.className = 'answer-wrap';
+    talkListWrap.appendChild(answerWrap);
+        
+    
+    // 버튼 클라스 생성
+    // 새로운 div 요소 생성
+    var newDiv = document.createElement("div");
+    newDiv.classList.add("answer-btn-wrap"); // div에 버튼 클래스 추가
+    
+    // 내부 HTML 코드 설정
+    newDiv.innerHTML = `
+    <button type="button" class="answer-btn answer-copy" onclick=copyText(this)>copy</button>
+    <button type="button" class="answer-btn answer-save" onclick="saveAsImage(this)">save</button>
+    `;
+    
+    answerWrap.appendChild(newDiv);
+    
+    var textDiv = document.createElement("div");
+    textDiv.classList.add("answer-txt"); // div에 answer-txt 클라스 추가
+    textDiv.style.padding = "30px 10px 10px 10px"; //버튼 아래로 답이 나오게 패딩 세팅
+    answerWrap.appendChild(textDiv);
+
     //gpt에 프롬프트 날리기
+    textDiv.innerHTML = '<p>리포트를 읽고 있습니다... (리포트 개수가 많을수록 시간이 더 걸릴 수 있습니다)</p>'
+    talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' })
     const response = await fetch('/rag/answer-from-prompt',{
             method: 'POST',
             headers: {
@@ -283,6 +512,7 @@ async function getAnswerUsingPrompt(selectedPrompt){
             })}
     );
     console.log(response);
+    textDiv.innerHTML = '';
 
     converter = new showdown.Converter(),
     converter.setOption('tables', true) //테이블 파싱하게 세팅
@@ -290,19 +520,16 @@ async function getAnswerUsingPrompt(selectedPrompt){
     var reader = response.body.getReader();
     var decoder = new TextDecoder('utf-8');
 
-    //Answer 클라스 생성
-    const answerWrap = document.createElement('div');
-    answerWrap.className = 'answer-wrap';
-    talkListWrap.appendChild(answerWrap);
-    // document.querySelector('.answer-wrap').innerHTML = "";
+
+
 
     reader.read().then(function processResult(result) {    
         if (result.done) {
             converter = new showdown.Converter({smoothLivePreview: true}),
             converter.setOption('tables', true) //테이블 파싱하게 세팅
-            html = converter.makeHtml(answerWrap.innerHTML); //markdown --> HTML
+            html = converter.makeHtml(textDiv.innerHTML); //markdown --> HTML
             console.log(html);
-            answerWrap.innerHTML = html;
+            textDiv.innerHTML = html;
             talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
             // talkListWrap.scrollIntoView({ behavior: "smooth", block: "end"});
@@ -314,7 +541,7 @@ async function getAnswerUsingPrompt(selectedPrompt){
 
         let token = decoder.decode(result.value);
         
-        answerWrap.innerHTML += token 
+        textDiv.innerHTML += token 
 
         talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
@@ -359,13 +586,24 @@ function customScrollTo(position) {
 }
 
 async function sendChatRequest(question) {
+    console.log(questionCounter);
     const fileElements = document.querySelectorAll('#showfiles .file');
     const talkListWrap = document.querySelector('.chat-list-wrap');
     if (fileElements.length === 0) {
         alert('PDF 파일을 먼저 업로드 후 질문해주세요\n(※해당 채팅은 PDF 내용을 바탕으로만 답변합니다.)');
         return;
     }
+
+    if (questionCounter === 0) {
+        const talkListWrap = document.querySelector('.chat-list-wrap');
+        talkListWrap.innerHTML = ""; //예시 지워
+
+    }
+    //다음부턴 이전답변 지우지마
+    questionCounter++;
     displayQuestion(question);
+ 
+    
     const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
     // 체크박스 value 체킹
     let checkboxValue = null;
@@ -374,6 +612,32 @@ async function sendChatRequest(question) {
     } else if (document.getElementById('researchLama3').checked) {
         checkboxValue = document.getElementById('researchLama3').value;
     }
+
+    //Answer 클라스 생성
+    const answerWrap = document.createElement('div');
+    answerWrap.className = 'answer-wrap';
+    talkListWrap.appendChild(answerWrap);
+    // document.querySelector('.answer-wrap').innerHTML = "";
+    // 버튼 클라스 생성
+    // 새로운 div 요소 생성
+    var newDiv = document.createElement("div");
+    newDiv.classList.add("answer-btn-wrap"); // div에 버튼 클래스 추가
+    
+    // 내부 HTML 코드 설정
+    newDiv.innerHTML = `
+    <button type="button" class="answer-btn answer-copy" onclick=copyText(this)>copy</button>
+    <button type="button" class="answer-btn answer-save" onclick="saveAsImage(this)">save</button>
+    `;
+    
+    answerWrap.appendChild(newDiv);
+    
+    var textDiv = document.createElement("div");
+    textDiv.classList.add("answer-txt"); // div에 answer-txt 클라스 추가
+    textDiv.style.padding = "30px 10px 10px 10px"; //버튼 아래로 답이 나오게 패딩 세팅
+    answerWrap.appendChild(textDiv);
+
+    textDiv.innerHTML = '<p>리포트를 읽고 있습니다... (리포트 개수가 많을수록 시간이 더 걸릴 수 있습니다)</p>'
+    talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' })
 
     const response = await fetch(`/rag/answer-from-prompt`, {
         method: 'POST',
@@ -387,25 +651,22 @@ async function sendChatRequest(question) {
         })
     })
     console.log(response);
+    textDiv.innerHTML = ''; 
     converter = new showdown.Converter(),
     converter.setOption('tables', true) //테이블 파싱하게 세팅
      //markdown --> HTML
     var reader = response.body.getReader();
     var decoder = new TextDecoder('utf-8');
 
-    //Answer 클라스 생성
-    const answerWrap = document.createElement('div');
-    answerWrap.className = 'answer-wrap';
-    talkListWrap.appendChild(answerWrap);
-    // document.querySelector('.answer-wrap').innerHTML = "";
+
 
     reader.read().then(function processResult(result) {    
         if (result.done) {
             converter = new showdown.Converter({smoothLivePreview: true}),
             converter.setOption('tables', true) //테이블 파싱하게 세팅
-            html = converter.makeHtml(answerWrap.innerHTML); //markdown --> HTML
+            html = converter.makeHtml(textDiv.innerHTML); //markdown --> HTML
             console.log(html);
-            answerWrap.innerHTML = html;
+            textDiv.innerHTML = html;
             talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
             // talkListWrap.scrollIntoView({ behavior: "smooth", block: "end"});
@@ -417,7 +678,7 @@ async function sendChatRequest(question) {
 
         let token = decoder.decode(result.value);
         
-        answerWrap.innerHTML += token 
+        textDiv.innerHTML += token 
 
         talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 

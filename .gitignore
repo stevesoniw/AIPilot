@@ -5,3 +5,5 @@ config.py
 .venv
 chroma_database/
 batch/
+mainHtml/main_chart
+mainHtml/main_summary

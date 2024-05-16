@@ -188,7 +188,7 @@ def draw_chart_from_json(json_data, ticker_name):
         first = False
 
     fig.update_layout(
-        title=f'{ticker_name} :: 과거 유사기간 비교',
+        title=f'{ticker_name} :: Similarity Analysis',
         xaxis_title="Index",
         yaxis_title="Value",
         legend_title_text='',
@@ -228,8 +228,8 @@ def analyze():
     compare_date = [analysis_start_date, analysis_end_date]
             
     tickers = {
-        '^DJI': '다우지수', 
-        '^IXIC': '나스닥종합', 
+        '^DJI': 'Dow Jones Industrial Average', 
+        '^IXIC': 'NASDAQ Composite', 
         '^GSPC': 'S&P500', 
         '^KS11': 'KOSPI'
     }

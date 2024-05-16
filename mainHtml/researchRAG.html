@@ -3,7 +3,7 @@
     <h2 class="s-tit">리서치 리포트 분석</h2>
     <div class="tooltip-wrap">
         <h3 class="s-tit mb0">PDF 포맷의 리서치 리포트를 여러 개 업로드해 분석할 수 있는 도구입니다<div class="+"></div></h3>
-        <div class="chat-info -right-ver" title="PDF 업로드 할 때 여러 파일을 올리고 싶으신 경우 한번에 여러 개를 선택해 업로드해주세요.">
+        <div class="chat-info -right-ver" title="파일을 하나씩 업로드하거나 여러 개를 동시에 업로드할 수 있어요.">
             도움말
         </div>
     </div>
@@ -37,9 +37,9 @@
 
 
     <div class="select-wrap">
-        <label for="promptSelect">프롬프트 선택</label>
+        <label for="promptSelect">프롬프트 예시</label>
         <select id="promptSelect" class="research-select">
-            <option value="default">파일을 업로드 후, 프롬프트를 선택해 주세요.</option>
+            <option value="default">질문이 떠오르지 않으신다면, 다음 예시 질문들을 사용해보세요.</option>
             <option value="A">1. 리포트를 읽고 해당 기업의 Bull, Bear 포인트를 사업분야 별로 표로 정리해줘</option>
             <option value="B">2. 리포트를 읽고 해당 기업의 이번 분기 실적이 어땠는지 알려줘. 뭘 근거로 리포트에서 그렇게 판단했는지도 알려줘</option>
             <option value="C">3. 리포트에 쓰인 전문 용어가 있으면 설명해줘. 이 기업에서 하는 사업과 관련된 용어들 중에 생소한 것들은 꼭 알려줘</option>
@@ -101,9 +101,9 @@
     </div>      
     <div class="chat-ipt-wrap">
         <div class="pr">
-            <textarea id="aa" class="chat-ipt"></textarea>
-            <label for="aa">플레이스홀더 대체 라벨입니다.</label>
-            <button type="button" class="send-btn">보내기</button>
+            <textarea id="ragchat" class="chat-ipt"></textarea>
+            <label for="ragchat">프롬프트를 직접 입력해주세요.</label>
+            <button type="button" class="send-btn" id="ragchat_button">보내기</button>
         </div>
     </div>
 </div> 

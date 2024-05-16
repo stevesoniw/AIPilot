@@ -165,14 +165,23 @@ async def answer_from_prompt(request: Request):
     
     async def stream_answer(prompt, input_text):
         parser = StrOutputParser()
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=config.OPENAI_API_KEY)
         chain = prompt | llm | parser
         
-
+        buffer = ''
         async for chunk in chain.astream({"text": input_text}):
             # data = {"value": chunk}
             # print(chunk)
-            yield chunk
+            if '<' in chunk or 'br' in chunk:
+                buffer += chunk
+                
+            elif '>' in chunk:
+                buffer += chunk
+                yield buffer
+                buffer = ''
+        
+            else:
+                yield chunk
         
 
     # 답변: """
@@ -207,7 +216,7 @@ async def answer_from_prompt(request: Request):
             print("lama3 working on..")
             llm = groq_chat        
         else :
-            llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+            llm = ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=config.OPENAI_API_KEY)
         llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
         stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
         # result = stuff_chain.run(documents[0])
@@ -222,7 +231,7 @@ async def answer_from_prompt(request: Request):
                         하위 문장의 구분은 숫자가 아닌 '•'으로 구분해주고 개별 문장은 한문장씩 끊어서 답변하되 '-합니다', '-입니다'는 빼고 문장을 만들어줘.""",
                 'C': """각 리포트들에서 전문용어/약어를 사용한 경우 이에 대한 설명을 추가해줘.
                     앞으로 용어를 설명할 때 '-입니다', '-됩니다'는 빼고 간결하게 대답해줘.
-                    답변의 시작은 "<용어 설명>"으로 하고, 용어들은 1,2,3 순서를 매겨서 알려줘.
+                    답변의 시작은 "용어 설명"으로 하고, 용어들은 1,2,3 순서를 매겨서 알려줘.
                     정리할 때, 재무적 용어 (ex. QoQ, YoY)나 리포트용 약어는 제외하고 정리해줘."""
             }.get(prompt_option, "")
         else:
@@ -253,12 +262,7 @@ async def answer_from_prompt(request: Request):
         llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo", openai_api_key=config.OPENAI_API_KEY, streaming=True)
         llm_chain = LLMChain(llm=llm, prompt=modified_prompt, verbose=True) 
         stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
-        result = stuff_chain.run(final_results)
-        
-    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-    print(result)
-    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-    return result
+        return StreamingResponse(stream_answer(prompt=modified_prompt, input_text=final_results), media_type='text/event-stream')
 
 def create_summary(docs):
     # Define prompt
@@ -281,7 +285,7 @@ def create_summary(docs):
     답변: """
     prompt = PromptTemplate.from_template(prompt_template)
     
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo-preview", openai_api_key=config.OPENAI_API_KEY)
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=config.OPENAI_API_KEY)
     llm_chain = LLMChain(llm=llm, prompt=prompt)
     # Define StuffDocumentsChain
     stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")

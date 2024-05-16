@@ -176,7 +176,8 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 .stockBasicInfo-toggle-visibility-btn{margin:40px auto 0;padding:15px 50px;font-size:16px;background:#2970ff;color:#fff;border:1px solid #2970ff;border-radius:4px;font-family:'Spoqa Han Sans Neo';transition:none;}
 .stockBasicInfo-toggle-visibility-btn:hover{background:inherit;color:#2970ff;}
 .stockBasic-input-container{width:100%;justify-content:space-between !important;flex-wrap:wrap;margin:0 auto;}
-.infoSection{flex:0 0 700px;margin-top:50px;padding:0;}
+/*.infoSection{flex:0 0 700px;margin-top:50px;padding:0;}*/
+.infoSection{flex:0 0 600px;margin-top:50px;padding:0;}
 .stockBasicInfoTable{border:0;}
 .stockBasicInfoTable th{font-weight:500;}
 .stockBasicInfoTable th:first-child, .stockBasicInfoTable td:first-child{background:#008296;}
