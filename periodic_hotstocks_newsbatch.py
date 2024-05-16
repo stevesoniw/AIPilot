@@ -242,7 +242,6 @@ async def webNewsAnalyzer(url):
     '''
     prompt = PromptTemplate(template=combine_template, input_variables=['text'])
     #combine_prompt = PromptTemplate(template=combine_template, input_variables=['text'])
-    
     llm = ChatOpenAI(temperature=0, model=LLM_MODEL_NAME, openai_api_key=config.OPENAI_API_KEY)
     chain = LLMChain(
                     prompt=prompt, 
@@ -250,8 +249,6 @@ async def webNewsAnalyzer(url):
                     llm=llm)
     result = chain.invoke(docs)
     return result                
-
-
                
 async def main():
     timeout_config = httpx.Timeout(10000.0)

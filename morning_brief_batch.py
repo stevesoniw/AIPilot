@@ -267,9 +267,9 @@ async def market_data():
             <span>아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다.</span>
         </div>     
         <div class="main-summary-chart" data-aos="fade-up">
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_다우지수_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_나스닥종합_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_DOW_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_NASDAQ_{today_date_fixed}.png"></div>
+            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>            
             <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_KOSPI_{today_date_fixed}.png"></div>
         </div>   
     </section>"""

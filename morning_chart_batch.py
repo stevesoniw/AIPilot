@@ -206,9 +206,16 @@ def draw_chart_from_json(json_data, ticker_name):
         plot_bgcolor='rgba(10,10,10,1)',
         paper_bgcolor='rgba(10,10,10,1)'
     )
+    
+    if ticker_name.startswith("Dow"):
+        save_name = "DOW"
+    elif ticker_name.startswith("NASDAQ"):
+        save_name = "NASDAQ"
+    else:
+        save_name = ticker_name    
 
     today_date = datetime.now().strftime('%Y%m%d')
-    file_path = f"mainHtml/main_chart/similar_{ticker_name}_{today_date}.png"
+    file_path = f"mainHtml/main_chart/similar_{save_name}_{today_date}.png"
 
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):

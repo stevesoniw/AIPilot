@@ -529,7 +529,7 @@ async function getAnswerUsingPrompt(selectedPrompt){
                 tool_used: checkboxValue
             })}
     );
-    console.log(response);
+    //console.log(response);
     textDiv.innerHTML = '';
 
     converter = new showdown.Converter(),

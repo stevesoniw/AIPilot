@@ -382,8 +382,8 @@ async function loadNewsSummary(ticker) {
             throw new Error('Failed to fetch the summary file');
         }
         let textData = await response.text();
-        const md = window.markdownit();
-        textData = md.render(textData);        
+        //const md = window.markdownit();
+        //textData = md.render(textData);        
         textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
         textData = textData.replace(/- \s*/g, '<br>');
         textData = textData.replace(/###\s*/g, '<br><br>');
