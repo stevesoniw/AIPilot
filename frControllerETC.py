@@ -7,6 +7,7 @@ import logging
 import asyncio
 from typing import Optional, List
 import base64
+import httpx
 from datetime import datetime, timedelta
 # 기존 Util 함수들
 from google.cloud import vision
@@ -34,6 +35,7 @@ import utilTool
 #FAST API 관련
 from fastapi import HTTPException, Request, APIRouter
 from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 #Langchain 관련
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
@@ -47,7 +49,8 @@ frControllerETC = APIRouter()
 
 # API KEY 설정
 finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
-client = OpenAI(api_key = config.OPENAI_API_KEY)
+client = OpenAI(api_key = config.OPENAI_API_KEY, http_client= httpx.Client(verify=False))
+#client = OpenAI(api_key = config.OPENAI_API_KEY)
 fp.api_key =config.FRED_API_KEY
 fred = Fred(api_key=config.FRED_API_KEY)
 rapidAPI = config.RAPID_API_KEY
@@ -427,12 +430,46 @@ async def gpt_request(request_data: dict):
         # 네이버 뉴스에 대한 GPT 의견 묻기임 
         SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications."        
         digest_news = g_news
-        gpt_result = await news_sum_function(digest_news, SYSTEM_PROMPT)        
+        gpt_result = await news_sum_function(digest_news, SYSTEM_PROMPT)   
         
     else:
         gpt_result = {"error": "Invalid action"}
     
     return {"result": gpt_result}
+
+@frControllerETC.post("/gptRequestStream")
+async def gpt_request_stream(request_data: dict):
+
+    action = request_data.get("action")
+    g_news = request_data.get("g_news")
+    llm = request_data.get("llm", None)
+
+    if llm == 'lama':        
+        news_sum_function = utilTool.mixtral_news_sum_stream        
+    else:
+        news_sum_function = utilTool.gpt4_news_sum_stream   
+
+    SYSTEM_PROMPT = ""
+    if action == "translate":
+        # 한국어로 번역하기에 대한 처리
+        SYSTEM_PROMPT = "You are an expert in translation. Translate the title and content from the following JSON data into Korean. Return the translated content in the same JSON format, but only translate the title and content into Korean. Do not provide any other response besides the JSON format."        
+
+    elif action == "opinions":
+        # AI 의견보기에 대한 처리
+        SYSTEM_PROMPT = "Given the provided news data, please provide your expert analysis and insights on the current market trends and future prospects. Consider factors such as recent developments, market sentiment, and potential impacts on various industries based on the news. Your analysis should be comprehensive, well-informed, and forward-looking, offering valuable insights for investors and stakeholders. Thank you for your expertise"             
+
+    elif action == "summarize":
+        # 내용 요약하기에 대한 처리
+        SYSTEM_PROMPT = "You're an expert in data summarization. Given the provided JSON data, please summarize its contents systematically and comprehensively into about 20 sentences, ignoring JSON parameters unrelated to news articles."                      
+
+    elif action == "navergpt":
+        # 네이버 뉴스에 대한 GPT 의견 묻기임 
+        SYSTEM_PROMPT = "You have a remarkable ability to grasp the essence of written materials and are adept at summarizing news data. Presented below is a collection of the latest news updates. Please provide a summary of this content in about 10 lines. Additionally, offer a logical and systematic analysis of the potential effects these news items could have on the financial markets or society at large, along with a perspective on future implications."                       
+    
+    return StreamingResponse(news_sum_function(g_news, SYSTEM_PROMPT), media_type='text/event-stream')
+
+
+
 
 ##################################[1ST_GNB][3RD_MENU] 해외 증시 NEWS 보여주기 ENDS ###################################################
 

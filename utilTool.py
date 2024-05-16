@@ -9,13 +9,17 @@ import numpy as np
 import base64
 import json 
 import logging
+import httpx
+from fastapi.responses import StreamingResponse
 from openai import OpenAI
 from groq import Groq
 import config
 
 # API KEY 설정
 
+clientstream = OpenAI(api_key = config.OPENAI_API_KEY, http_client= httpx.Client(verify=False))
 client = OpenAI(api_key = config.OPENAI_API_KEY)
+groq_clientstream = Groq(api_key=config.GROQ_CLOUD_API_KEY, http_client= httpx.Client(verify=False))
 groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 
 # 현재날짜 계산
@@ -87,6 +91,28 @@ async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
         logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
         return None
     
+#GPT4 스트리밍방식    
+async def gpt4_news_sum_stream(newsData, SYSTEM_PROMPT):
+    try:
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
+        completion = clientstream.chat.completions.create(
+            #model="gpt-4-0125-preview",
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ],
+            stream=True          
+        ) 
+
+        for chunk in completion:
+            if chunk.choices[0].delta.content is not None:            
+                yield chunk.choices[0].delta.content            
+        
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
+        yield None     
+    
 # 데이터를 JSON 파일로 저장 (종목코드 save에서 사용)
 def save_data_to_file(data, filename):
     with open(filename, 'w') as f:
@@ -157,7 +183,7 @@ async def lama3_news_sum(newsData, SYSTEM_PROMPT):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
                 ],
-            model="llama3-8b-8192",
+            model="llama3-8b-8192"
         )
         return completion.choices[0].message.content
     except Exception as e:
@@ -179,6 +205,26 @@ async def mixtral_news_sum(newsData, SYSTEM_PROMPT):
         logging.error("An error occurred in lama3_news_sum function: %s", str(e))
         return None    
 
+async def mixtral_news_sum_stream(newsData, SYSTEM_PROMPT):
+    try:
+        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. korean 외의 언어로는 절대 답변하지 말고, 화면 가독성이 좋도록 줄바꿈도 해서 답변해줘. 뉴스 데이터 : " + str(newsData)
+        completion = groq_clientstream.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ],
+            model="mixtral-8x7b-32768",
+            stream= True
+        )
+
+        for chunk in completion:
+            if chunk.choices[0].delta.content is not None:            
+                yield chunk.choices[0].delta.content                           
+        
+    except Exception as e:
+        logging.error("An error occurred in lama3_news_sum function: %s", str(e))
+        yield None
+        
 # 공백기준으로 이름 뒤에를 리턴  
 def get_last_name(full_name):
     parts = full_name.split()
@@ -214,5 +260,4 @@ def parse_date(date_str):
         except ValueError:
             # 날짜 형식을 인식할 수 없는 경우
             return None
-
-    
+   

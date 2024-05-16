@@ -306,13 +306,31 @@ function copyText(button) {
         var answerTxt = answerWrap.querySelector(".answer-txt");
         if (answerTxt) {
             var textToCopy = answerTxt.textContent.trim();
-            navigator.clipboard.writeText(textToCopy)
-                .then(function() {
-                    alert("텍스트가 성공적으로 복사되었습니다.");
-                })
-                .catch(function(error) {
-                    console.error("텍스트 복사 중 오류가 발생하였습니다:", error);
-                });
+            var tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            // Make the textarea invisible
+            tempTextArea.style.position = 'fixed';
+            tempTextArea.style.top = 0;
+            tempTextArea.style.left = 0;
+            tempTextArea.style.opacity = 0;
+            // Append the textarea to the body
+            document.body.appendChild(tempTextArea);
+            // Select the textarea's content
+            tempTextArea.select();
+            // Execute the browser's built-in copy command
+            document.execCommand('copy');
+            // Remove the textarea from the DOM
+            document.body.removeChild(tempTextArea);
+            alert('텍스트가 복사되었습니다.');
+            // var textToCopy = answerTxt.textContent.trim();
+            // navigator.clipboard.writeText(textToCopy)
+            //     .then(function() {
+            //         alert("텍스트가 성공적으로 복사되었습니다.");
+            //     })
+            //     .catch(function(error) {
+            //         console.error("텍스트 복사 중 오류가 발생하였습니다:", error);
+            //     });
+
         } else {
             console.error(".answer-txt를 찾을 수 없습니다.");
         }

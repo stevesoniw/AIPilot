@@ -230,6 +230,56 @@ async function naverGptAsk() {
     }
 }
 
+async function naverGptAskStream() {
+    let fullSumMessage  = "";
+    const newsSummaryElements = document.querySelectorAll('.naver-news-summary');
+    let send_news = Array.from(newsSummaryElements).map(elem => elem.textContent.trim()).join('\n');
+    if (!send_news) {
+        alert('분석할 뉴스 데이터가 없습니다.');
+        return;
+    }
+    document.getElementById('loading_bar_navergpt').style.display = 'block';     
+    const summaryContainer = document.querySelector('.ai-summary-result');
+    summaryContainer.style.display = 'block';   
+    $(".ai-summary-result").html('<div class="summary-content"></div>');   
+    try {
+        const response = await fetch('/gptRequestStream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: "navergpt",
+                g_news: send_news
+            }),
+        });
+        if (!response.ok) {
+            document.getElementById('loading_bar_navergpt').style.display = 'none';             
+            throw new Error('서버 오류가 발생했습니다.');
+        }
+        document.getElementById('loading_bar_navergpt').style.display = 'none';             
+        const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+        while (true) {
+            const res = await reader?.read();           
+            if (res?.done) {
+                //console.log("fullSumMessage:" + fullSumMessage)    
+                fullSumMessage = fullSumMessage.replace(/\*\*(.*?)\*\*/g, '<br/><br/><span style="color: #ff1480; text-transform: uppercase;">$1</span><br/>');
+                fullSumMessage = fullSumMessage.replace(/(?:^|\s)\*(.*?)(?=\s|$)/g, '<br>*$1');
+                $(".summary-content").html(fullSumMessage);                  
+                break;
+            }
+            let resValue = res?.value
+            //console.log("res:" + resValue)    
+            fullSumMessage   = fullSumMessage + resValue
+            $(".summary-content").append(resValue)
+        }        
+    } catch (error) {
+        console.error('요약 데이터를 가져오는 중 오류가 발생했습니다:', error);
+        document.getElementById('loading_bar_navergpt').style.display = 'none';  
+        alert('데이터를 가져오는 중 오류가 발생했습니다. 오류 메시지: ' + error.message);
+    }
+}
+
 async function naverLamaAsk() {
     const newsSummaryElements = document.querySelectorAll('.naver-news-summary');
     let send_news = Array.from(newsSummaryElements).map(elem => elem.textContent.trim()).join('\n');

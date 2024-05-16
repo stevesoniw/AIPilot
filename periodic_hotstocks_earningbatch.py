@@ -324,7 +324,7 @@ def query_gpt4(ticker: str):
 
     # OpenAI GPT-4 호출
     completion = client.chat.completions.create(
-        model="gpt-4-0125-preview",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
