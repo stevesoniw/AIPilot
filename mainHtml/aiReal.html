@@ -91,9 +91,10 @@
                                 <li class="list-dep" data-tab="menuc" data-html="/static/frNews.html">
                                     <a href="#">뉴스 데이터 분석</a>
                                 </li>
+                                <!-- AI 솔루션 툴킷 메뉴로 옮기기로 함.  menud는 나중에 신규메뉴 생기면 쓰자. 
                                 <li class="list-dep" data-tab="menud" data-html="/static/frSocialData.html">
                                     <a href="#">FOMC 데이터 분석</a>
-                                </li>
+                                </li>-->
                                 <li class="list-dep" data-tab="menue" data-html="/static/frCalendar.html">
                                     <a href="#">Economic 캘린더</a>
                                 </li>
@@ -123,21 +124,25 @@
                                 <li class="list-dep" data-tab="menu_3rd_a" data-html="/static/researchRAG.html">
                                     <a href="#">Report 쉽게 읽기</a>
                                 </li>
+                                <!-- 일단 메뉴 막음.
                                 <li class="list-dep" data-tab="menu_3rd_b" data-html="/static/researchAISummarize.html">
                                     <a href="#">[실험실] 1. AI Summarize</a>
-                                </li>                                
+                                </li>-->                                
                             </ul>
                         </div>
                         <h3 class="menu04"><a href="#" class="acc-tit">유사기간 분석</a></h3>
                         <div>
                             <ul>
-                                <li class="list-dep" data-tab="menu_4th_a" data-html="/static/frBdPhaseAnalysis.html">
+                                <li class="list-dep" data-tab="menu_4th_a" data-html="/static/frSocialData.html">
+                                    <a href="#">FOMC 데이터 분석</a>
+                                </li>                                
+                                <li class="list-dep" data-tab="menu_4th_b" data-html="/static/frBdPhaseAnalysis.html">
                                     <a href="#">마켓지표</a>
                                 </li>
-                                <li class="list-dep" data-tab="menu_4th_b" data-html="/static/indexPhaseAnalysis.html">
+                                <li class="list-dep" data-tab="menu_4th_c" data-html="/static/indexPhaseAnalysis.html">
                                     <a href="#">주요 주가지수</a>
                                 </li>
-                                <li class="list-dep" data-tab="menu_4th_c" data-html="/static/frStPhaseAnalysis.html">
+                                <li class="list-dep" data-tab="menu_4th_d" data-html="/static/frStPhaseAnalysis.html">
                                     <a href="#">개별 해외주식</a>
                                 </li>                                
                             </ul>
@@ -466,8 +471,6 @@
                             });
                             break;
                         case 'menud':
-                                getFOMCSpeeches();      
-                                //getArticleData();  
                             break;
                         case 'menue':  // Economic 캘린더
                                 goCalendar(); 
@@ -658,7 +661,10 @@
                                 }
                             });                            
                             break;  
-                         case 'menu_4th_a': //유사국면-마켓지수
+                         case 'menu_4th_a':  //FOMC 메뉴 여기로 옮김
+                            getFOMCSpeeches();      
+                            break;
+                         case 'menu_4th_b': //유사국면-마켓지수
                             document.querySelector('.similarity-tab-link').click(); //첫번째 탭 디폴트 로딩
                             // 복수지표에서 weight값 계산하기 
                             document.getElementById('multi-generateButton').addEventListener('click', function() {
@@ -673,9 +679,9 @@
                                 jTooltip();
                             }, 100);                            
                             break;  
-                        case 'menu_4th_b': //유사국면-주요주가지수
+                        case 'menu_4th_c': //유사국면-주요주가지수
                             break;                                
-                        case 'menu_4th_c': //유사국면-개별해외주식
+                        case 'menu_4th_d': //유사국면-개별해외주식
                             setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
                             setTimeout(() => {
                                 jTooltip();
