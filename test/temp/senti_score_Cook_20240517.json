@@ -1,0 +1,302 @@
+[
+    {
+        "date": "5/14/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "5/8/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "5/4/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "4/1/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "3/25/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9959365129470825
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0037003369070589542
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0003631559666246176
+                }
+            ]
+        ],
+        "result": "\"Fully restoring price stability may take a cautious approach to easing monetary policy over time.\""
+    },
+    {
+        "date": "2/22/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.6866934895515442
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.2814783453941345
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0318281315267086
+                }
+            ]
+        ],
+        "result": "\"I would like to have greater confidence that inflation is converging to 2 percent before beginning to cut the policy rate.\""
+    },
+    {
+        "date": "11/16/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9992522597312927
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0003950668324250728
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.00035257733543403447
+                }
+            ]
+        ],
+        "result": "\"With inflation unacceptably high, monetary policy turned toward tightening.\""
+    },
+    {
+        "date": "11/13/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "11/8/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "11/6/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9857707023620605
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0126934964209795
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.00153583032079041
+                }
+            ]
+        ],
+        "result": "\"In my view, our financial system is substantially more resilient than it was in the mid-2000s, reflecting progress by regulators and the private sector in boosting resilience.\""
+    },
+    {
+        "date": "10/18/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "9/28/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "9/22/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "5/15/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "5/13/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    }
+]

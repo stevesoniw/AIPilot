@@ -1,0 +1,222 @@
+[
+    {
+        "date": "2024/04/17",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.5693902373313904
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.42960718274116516
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.001002602744847536
+                }
+            ]
+        ],
+        "result": "Fed should not act urgently to cut rates unless required, Daly says"
+    },
+    {
+        "date": "2024/02/16",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9906871914863586
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0069066062569618225
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.002406185492873192
+                }
+            ]
+        ],
+        "result": "Fed needs time, data, patience on inflation fight: Daly"
+    },
+    {
+        "date": "2024/01/19",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9969505071640015
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.002417377196252346
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.000632044393569231
+                }
+            ]
+        ],
+        "result": "Fed's Daly: Policy in a 'good place,' risks 'balanced'"
+    },
+    {
+        "date": "2023/11/15",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.7740647196769714
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.2250293642282486
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0009059542207978666
+                }
+            ]
+        ],
+        "result": "Fed President Daly warns against calling time on rate-rising cycle too soon - FT"
+    },
+    {
+        "date": "2023/12/18",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.793415904045105
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.19274435937404633
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.013839674182236195
+                }
+            ]
+        ],
+        "result": "Fed's Daly: rate cuts may be needed next year to prevent overtightening -WSJ"
+    },
+    {
+        "date": "2023/11/10",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9979270696640015
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0017413244349882007
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.00033157150028273463
+                }
+            ]
+        ],
+        "result": "Fed's Daly: Still too soon to say rate hike cycle is over -CNBC"
+    },
+    {
+        "date": "2024/03/06",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.854738175868988
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.14405697584152222
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.001204830827191472
+                }
+            ]
+        ],
+        "result": "Fed 'focused and resolute' on beating inflation, Daly says"
+    },
+    {
+        "date": "2023/08/10",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9993979930877686
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.000424788857344538
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.00017723155906423926
+                }
+            ]
+        ],
+        "result": "Daly: Premature to say if Fed has done enough on rates"
+    },
+    {
+        "date": "2023/07/10",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.974876880645752
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.024569498375058174
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0005536947282962501
+                }
+            ]
+        ],
+        "result": "Fed's Daly: two more rate hikes likely needed this year"
+    },
+    {
+        "date": "2023/09/22",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9994545578956604
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.00038428232073783875
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.00016116531332954764
+                }
+            ]
+        ],
+        "result": "Fed's Daly says she is not sure if need to hold rates, or go higher"
+    },
+    {
+        "date": "2023/03/04",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9978460073471069
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0016373482067137957
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0005166598712094128
+                }
+            ]
+        ],
+        "result": "Fed's Daly: tighter policy, for a longer time, 'likely' needed"
+    }
+]

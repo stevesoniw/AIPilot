@@ -1,0 +1,282 @@
+[
+    {
+        "date": "2024/02/06",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9515998959541321
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.03199000656604767
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.016410119831562042
+                }
+            ]
+        ],
+        "result": "Fed's Mester open to rate cuts if it's clear inflation is easing further"
+    },
+    {
+        "date": "2024/04/17",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.5188294649124146
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.47814005613327026
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.003030461259186268
+                }
+            ]
+        ],
+        "result": "Fed to cut US rates 'at some point, but no hurry, Mester says"
+    },
+    {
+        "date": "2024/03/07",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9839473962783813
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.014943580143153667
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0011090101907029748
+                }
+            ]
+        ],
+        "result": "Fed's Mester still sees rate cuts later this year"
+    },
+    {
+        "date": "2024/01/11",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.6548295021057129
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.3048522174358368
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.040318313986063004
+                }
+            ]
+        ],
+        "result": "Fed's Mester says March \"probably\" too early for rate cut"
+    },
+    {
+        "date": "2024/03/01",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.999268114566803
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.000495877698995173
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.00023596042592544109
+                }
+            ]
+        ],
+        "result": "Fed's Mester said banks' Discount Window access needs tweaks"
+    },
+    {
+        "date": "2023/11/29",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9984399676322937
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0008045905851759017
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0007553986506536603
+                }
+            ]
+        ],
+        "result": "Current policy rate lets Fed be 'nimble' with incoming data, Mester says"
+    },
+    {
+        "date": "2023/12/18",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.796979546546936
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.12995703518390656
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0730634555220604
+                }
+            ]
+        ],
+        "result": "Fed's Mester says next phase is to see how long its policy needs to remain 'restrictive' - FT"
+    },
+    {
+        "date": "2023/10/03",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.6575397253036499
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.34168264269828796
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0007776629645377398
+                }
+            ]
+        ],
+        "result": "Fed's Mester open to another rate hike if economy stays on current path"
+    },
+    {
+        "date": "2023/10/20",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9922371506690979
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.006506548263132572
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0012563193449750543
+                }
+            ]
+        ],
+        "result": "Fed's Mester says Fed at or near peak for interest rate target"
+    },
+    {
+        "date": "2023/09/01",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.6332253813743591
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.35488900542259216
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.011885607615113258
+                }
+            ]
+        ],
+        "result": "Fed's Mester says job market remains strong despite some signs of cooling"
+    },
+    {
+        "date": "2023/10/02",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9961879849433899
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0032707834616303444
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0005412377067841589
+                }
+            ]
+        ],
+        "result": "Fed's Mester says one more U.S. rate hike may be needed"
+    },
+    {
+        "date": "2023/08/26",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.49283653497695923
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.4863547682762146
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0208087507635355
+                }
+            ]
+        ],
+        "result": "Fed's Mester sees another rate hike, says rate cuts may have to wait"
+    },
+    {
+        "date": "2023/11/08",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.998805046081543
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0006362628773786128
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0005587508785538375
+                }
+            ]
+        ],
+        "result": "Cleveland Fed begins search for new leader as Mester nears retirement"
+    },
+    {
+        "date": "2023/07/10",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9993404746055603
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0003473600372672081
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0003121088375337422
+                }
+            ]
+        ],
+        "result": "Fed's Mester: More hikes needed to bring inflation back down to target"
+    }
+]

@@ -1,0 +1,282 @@
+[
+    {
+        "date": "2024/05/10",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9829179644584656
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.015522289089858532
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.001559796161018312
+                }
+            ]
+        ],
+        "result": "Fed's Williams says next Fed move likely to be lower rates"
+    },
+    {
+        "date": "2024/05/03",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9207968711853027
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.05231836438179016
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.026884775608778
+                }
+            ]
+        ],
+        "result": "Fed's Williams says 2% inflation target 'critical'"
+    },
+    {
+        "date": "2024/02/28",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9632609486579895
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.03467150032520294
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0020675656851381063
+                }
+            ]
+        ],
+        "result": "Fed's Williams sees more work needed to get inflation back to 2%"
+    },
+    {
+        "date": "2024/03/08",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9489777088165283
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.048559531569480896
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0024628108367323875
+                }
+            ]
+        ],
+        "result": "Fed's Williams: Neutral rate is likely still low"
+    },
+    {
+        "date": "2024/01/10",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.8551398515701294
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.13595816493034363
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.008902025409042835
+                }
+            ]
+        ],
+        "result": "Fed's Williams says more work needed to bring inflation back to target"
+    },
+    {
+        "date": "2023/12/15",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9922879934310913
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.007287247106432915
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0004247922624927014
+                }
+            ]
+        ],
+        "result": "Fed's Williams douses Wall Street's rate-cut speculation"
+    },
+    {
+        "date": "2024/02/29",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9873682856559753
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.011322667822241783
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0013090018182992935
+                }
+            ]
+        ],
+        "result": "Fed's Williams reiterates rate cut likely later this year"
+    },
+    {
+        "date": "2024/02/23",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9798637628555298
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.018314074724912643
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0018220910569652915
+                }
+            ]
+        ],
+        "result": "Fed's Williams says rate cuts likely to happen 'later this year'"
+    },
+    {
+        "date": "2024/04/17",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.9625771045684814
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.01930173672735691
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.01812118850648403
+                }
+            ]
+        ],
+        "result": "Fed's Williams: Banks should be prepared to use discount window if needed"
+    },
+    {
+        "date": "2023/09/07",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.8899494409561157
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.10079236328601837
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.009258166886866093
+                }
+            ]
+        ],
+        "result": "Fed's Williams: An 'open question' whether Fed will need to hike again"
+    },
+    {
+        "date": "2023/11/08",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9992480874061584
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0005200512241572142
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0002318381011718884
+                }
+            ]
+        ],
+        "result": "Fed's Williams says US central bank's policymaking now more strategic"
+    },
+    {
+        "date": "2023/07/05",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9744167923927307
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.02465800754725933
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0009252562886103988
+                }
+            ]
+        ],
+        "result": "Fed's Williams: June rate pause was right move, but future hikes still in play"
+    },
+    {
+        "date": "2023/07/11",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.8916966915130615
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.10571927577257156
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0025840005837380886
+                }
+            ]
+        ],
+        "result": "Fed's Williams says central bank is not done with rate rises, Financial Times reports"
+    },
+    {
+        "date": "2023/06/26",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9947277903556824
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0036666267551481724
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0016056187450885773
+                }
+            ]
+        ],
+        "result": "Fed's Williams: Restoring price stability is critical goal right now"
+    }
+]

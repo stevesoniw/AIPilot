@@ -1,0 +1,302 @@
+[
+    {
+        "date": "5/10/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "2/27/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "2/16/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9900811314582825
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.00823223777115345
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0016866044607013464
+                }
+            ]
+        ],
+        "result": "\"Since that time, we have been hard at work to address those issues. And while this work will take time, I am committed to getting the job done properly.\""
+    },
+    {
+        "date": "2/14/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.8066744208335876
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.18941687047481537
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.003908787854015827
+                }
+            ]
+        ],
+        "result": "\"As Chair Powell indicated in his most recent press conference, my FOMC colleagues and I are confident we are on a path to 2 percent inflation, but we need to see continued good data before we can begin the process of reducing the federal funds rate.\""
+    },
+    {
+        "date": "1/17/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "12/1/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "11/28/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "11/16/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "10/27/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "10/19/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "10/9/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9951076507568359
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.002846077084541321
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.002046298934146762
+                }
+            ]
+        ],
+        "result": "\"The proposal is projected to raise capital for large banks. This may result in higher funding costs.\""
+    },
+    {
+        "date": "10/2/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9980372786521912
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0016106751281768084
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.00035200928687117994
+                }
+            ]
+        ],
+        "result": "Given how far we have come, we are now at a point where we can proceed carefully as we determine the extent of monetary policy restriction that is needed."
+    },
+    {
+        "date": "9/8/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "7/18/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "7/10/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9560906291007996
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.03280547633767128
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.011103877797722816
+                }
+            ]
+        ],
+        "result": "\"For the reasons I have outlined today, we need to strengthen capital standards for large banks.\""
+    }
+]
