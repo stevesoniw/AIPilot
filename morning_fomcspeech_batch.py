@@ -11,7 +11,7 @@ from fastapi import HTTPException
 import urllib.parse
 #금융관련 or 상용 APIs
 from openai import OpenAI
-import serpapi
+from serpapi import GoogleSearch
 #private made 파일
 import config
 import utilTool
@@ -100,10 +100,12 @@ async def filter_speeches_by_author(last_name, data):
 
 
 # 모델과 유틸리티 함수 정의
+
 def fetch_reuters_articles(person):
     """특정 인물의 로이터 기사를 가져오는 함수"""
     params = {
         #"engine": "google",
+        #"engine": "google_news",
         "tbm": "nws",
         "q": f"{person} Reuters",
         "api_key": API_KEYS['serpapi'],
@@ -111,10 +113,13 @@ def fetch_reuters_articles(person):
     }
     
     try:
-        #search = GoogleSearch(params)
-        search_result  = serpapi.search(params)
+        search = GoogleSearch(params)
+        #search_result  = serpapi.search(params)
         #results = search.get_dict()
-        news_results = search_result ["news_results"]
+        results = search.get_dict()
+        #news_results = search ["news_results"]        
+        news_results = results.get("news_results", [])
+
         # print(news_results)
         
         # 출처가 로이터 인것만 필터링
@@ -331,3 +336,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    #fetch_reuters_articles("Barkin")

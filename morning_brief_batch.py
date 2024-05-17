@@ -200,7 +200,7 @@ async def market_data():
             <div class="overlay"></div>
             <div class="tit-wrap" data-aos="fade-down" data-aos-duration="500">
                 <h2 class="main-tit">AI <span>M</span>orning <span>B</span>riefing</h2>
-                <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equtiy솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
+                <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equity솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
             </div>
             <div class="scroll-ic" data-aos="fade-right" data-aos-delay="500"></div>
         </section>
@@ -225,9 +225,9 @@ async def market_data():
                         <thead>
                             <tr>
                                 <th scope="col">종목</th>
-                                <th scope="col">Change</th>
+                                <th scope="col">등락률</th>
                                 <th scope="col">전일 대비</th>
-                                <th scope="col">Last Close</th>
+                                <th scope="col">종가</th>
                             </tr>
                         </thead>
                         <tbody>"""                

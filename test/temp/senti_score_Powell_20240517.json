@@ -1,0 +1,182 @@
+[
+    {
+        "date": "4/3/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.5804779529571533
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.2935148775577545
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.12600719928741455
+                }
+            ]
+        ],
+        "result": "\"We do not expect that it will be appropriate to lower our policy rate until we have greater confidence that inflation is moving sustainably down toward 2 percent.\""
+    },
+    {
+        "date": "12/1/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9939092397689819
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.005558060482144356
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0005326919490471482
+                }
+            ]
+        ],
+        "result": "\"We are prepared to tighten policy further if it becomes appropriate to do so.\""
+    },
+    {
+        "date": "11/9/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9942139983177185
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.005399648565798998
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0003864147001877427
+                }
+            ]
+        ],
+        "result": "\"If it becomes appropriate to tighten policy further, we will not hesitate to do so.\""
+    },
+    {
+        "date": "11/8/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "10/25/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "10/19/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.6749851107597351
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.3215932250022888
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0034216365311294794
+                }
+            ]
+        ],
+        "result": "\"My colleagues and I are committed to achieving a stance of policy that is sufficiently restrictive to bring inflation sustainably down to 2 percent over time, and to keeping policy restrictive until we are confident that inflation is on a path to that objective.\""
+    },
+    {
+        "date": "9/28/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "8/25/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9986371397972107
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0010500001953914762
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.000312852265778929
+                }
+            ]
+        ],
+        "result": "\"We are prepared to raise rates further if appropriate, and intend to hold policy at a restrictive level until we are confident that inflation is moving sustainably down toward our objective.\""
+    },
+    {
+        "date": "1/10/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9994267225265503
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0003098284068983048
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0002634180709719658
+                }
+            ]
+        ],
+        "result": "\"But restoring price stability when inflation is high can require measures that are not popular in the short term as we raise interest rates to slow the economy.\""
+    }
+]

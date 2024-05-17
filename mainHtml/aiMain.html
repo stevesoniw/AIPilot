@@ -25,7 +25,7 @@
         <link href="/static/assets/css/dmControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/etcControl.css" rel="stylesheet" type="text/css" />
     </head>
-    <body class="main">
+    <body class="main" style="display: none;">
         <div class="wrap" id="chartPilot">
             <header class="myHeader">
                 <h1 class="title-wrap">
@@ -56,7 +56,7 @@
                     <div class="overlay"></div>
                     <div class="tit-wrap" data-aos="fade-down" data-aos-duration="500">
                         <h2 class="main-tit">MiraeAsset <span>M</span>orning <span>B</span>riefing</h2>
-                        <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equtiy솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
+                        <h3 class="sub-tit">해당 사이트는 AI Science팀에서 <span>"채권부문, Equity솔루션본부, 고객자산배분본부, 디지털리서치팀"</span>의 의견을 바탕으로 테스트 개발중입니다.</h3>
                     </div>
                     <div class="scroll-ic" data-aos="fade-right" data-aos-delay="500"></div>
                 </section>
@@ -352,22 +352,40 @@
         </div>
 
         <script>
-            $(document).ready(function(){
-                // AOS.init();
-                AOS.init({
-                    duration: 1000,
-                    once: false, // 모든 요소에 대해 스크롤할 때마다 애니메이션 반복 실행
-                });
-                $('.news-show-btn').click(function(){
-                    var toggleBtn = $(this);
-                    var toggleBtnTxt = toggleBtn.text() === '근거자료 Market Major News 보기'?'근거자료 Market Major News 숨기기':'근거자료 Market Major News 보기'
-                    
-                    toggleBtn.text(toggleBtnTxt);
 
-                    $('.main-news-wrap, .sub-news-wrap').fadeToggle();
-                });                
+            $(document).ready(function(){
+
+                var userAgent = navigator.userAgent.toLowerCase();
+                var isChrome = userAgent.indexOf('chrome') > -1;
+                var isEdge = userAgent.indexOf('edg') > -1;
+
+                if (!isChrome && !isEdge) {                    
+
+                    $('body').hide();
+
+                    alert("크롬 또는 엣지 브라우저를 이용해주세요.");
+
+                }else{                                        
+                    
+                    $('body').show();
+
+                    // AOS.init();
+                    AOS.init({
+                        duration: 1000,
+                        once: false, // 모든 요소에 대해 스크롤할 때마다 애니메이션 반복 실행
+                    });
+                    $('.news-show-btn').click(function(){
+                        var toggleBtn = $(this);
+                        var toggleBtnTxt = toggleBtn.text() === '근거자료 Market Major News 보기'?'근거자료 Market Major News 숨기기':'근거자료 Market Major News 보기'
+                        
+                        toggleBtn.text(toggleBtnTxt);
+
+                        $('.main-news-wrap, .sub-news-wrap').fadeToggle();
+                    }); 
+                }                
+
             });
-    
+                
         </script>
 
     </body>

@@ -1,11 +1,11 @@
 <!-- [#7 메뉴 시작] 유사국면 분석 시스템 -->   
 <div id="menu_4th_a" class="menu-cont">
-    <h2 class="s-tit">해외 마켓지표 유사국면 분석</h2>
-    <h3 class="s-tit">다양한 해외 금융지표들에 대한 유사국면 분석시스템입니다.</p></h3>
+    <h2 class="s-tit">해외 마켓지표 유사기간 분석</h2>
+    <h3 class="s-tit">다양한 해외 금융지표들에 대한 유사기간 분석시스템입니다.</p></h3>
     <div class="similarity-tab-menu">
         <div class="similarity-tabs tab-wrap">
-            <button class="similarity-tab-link active tab-list" onclick="openSimTab(event, 'Tab1')">유사국면 (단일지수)</button>
-            <button class="similarity-tab-link tab-list" onclick="openSimTab(event, 'Tab2')">유사국면 (복수지수)</button>
+            <button class="similarity-tab-link active tab-list" onclick="openSimTab(event, 'Tab1')">유사기간 (단일지수)</button>
+            <button class="similarity-tab-link tab-list" onclick="openSimTab(event, 'Tab2')">유사기간 (복수지수)</button>
             <button class="similarity-tab-link tab-list" onclick="openSimTab(event, 'Tab3')">유사변동분석</button>
         </div>
          <!-- Tab1 유사 국면 분석(단변량)  -->
@@ -14,8 +14,8 @@
                 <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
                     <h4 style="font-size: 16px;margin-bottom: 10px;">Univariate Time Series Analysis Tool</h4>
                     <ul>
-                        <li>- 유사국면 차트분석 프로그램은 역사적 데이터를 통해 현재 시장 상황을 해석하고 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
-                        <li>- 단일지수 유사국면 분석은 단일 지표를 중심으로 과거의 특정 기간 동안의 데이터 흐름을 분석하여, 그 추이가 사용자가 설정한 타겟 기간의 추이와 가장 유사한 시점을 찾아주는 시스템입니다.</li>
+                        <li>- 유사기간 차트분석 프로그램은 역사적 데이터를 통해 현재 시장 상황을 해석하고 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
+                        <li>- 단일지수 유사기간 분석은 단일 지표를 중심으로 과거의 특정 기간 동안의 데이터 흐름을 분석하여, 그 추이가 사용자가 설정한 타겟 기간의 추이와 가장 유사한 시점을 찾아주는 시스템입니다.</li>
                         <li>&nbsp;&nbsp; 주가지수, 금리, 상품가격 등 다양한 금융 지표의 과거 데이터를 분석하여, 현재 시장 상황에 대한 깊이 있는 인사이트를 얻어 보세요!</li>
                     </ul>
                 </div>
@@ -172,7 +172,7 @@
                     <div>
                         <ul class="list-dep small-ver">
                             <li>타겟 기간과 분석 기간이 겹치지 않도록 해야 하며, 분석 기간은 타겟 기간 이전에 위치해 있어야 합니다.</li>
-                            <li>Aligned Comparison 차트는 사용자가 지정한 타겟 차트와 유사국면 차트를 비교 분석하기 용이하게 하기 위해, 두 차트가 동일한 시작 값에서 출발하도록 조정된 참고 차트입니다</li>
+                            <li>Aligned Comparison 차트는 사용자가 지정한 타겟 차트와 유사기간 차트를 비교 분석하기 용이하게 하기 위해, 두 차트가 동일한 시작 값에서 출발하도록 조정된 참고 차트입니다</li>
                         </ul>
                     </div>
                 </div>
@@ -181,7 +181,7 @@
                 </div>
                 <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
                     <img src="/static/assets/images/LoadingBar_E.gif">
-                    <p>유사국면 데이터 서치중입니다.</p>
+                    <p>유사기간 데이터 서치중입니다.</p>
                 </div>    
                 <div id="similarityOriginalChartContainer" style="overflow: hidden;width:100%;height:500px;">
                 </div>
@@ -196,8 +196,8 @@
                 <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
                     <h4 style="font-size: 16px;margin-bottom: 10px;">Multivariate Time Series Analysis</h4>
                     <ul>
-                        <li>- 유사국면 차트분석 프로그램은 역사적 데이터를 통해 현재 시장 상황을 해석하고 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
-                        <li>- 복수지수 유사국면 분석은 여러지표들의 특정 기간 데이터를 종합적으로 분석하여, 이들 지표가 타겟 추이와 가장 유사했던 기간을 찾아내줍니다.</li>
+                        <li>- 유사기간 차트분석 프로그램은 역사적 데이터를 통해 현재 시장 상황을 해석하고 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
+                        <li>- 복수지수 유사기간 분석은 여러지표들의 특정 기간 데이터를 종합적으로 분석하여, 이들 지표가 타겟 추이와 가장 유사했던 기간을 찾아내줍니다.</li>
                         <li>&nbsp;&nbsp; 다양한 금융지표들을 동시에 분석하여, 시장의 복합적인 움직임을 파악해보세요!</li>
                    </div>
                 <div class="table-wrap02">
