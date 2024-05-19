@@ -16,6 +16,7 @@ import markdown
 import finnhub
 import yfinance as yf
 from openai import OpenAI
+from serpapi import GoogleSearch
 #개인 클래스 파일 
 import config
 import utilTool
@@ -44,9 +45,13 @@ client = OpenAI(api_key = config.OPENAI_API_KEY)
 # GPT4 에 뉴스요약을 요청하는 공통함수
 async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "This is the 'news data' mentioned by the system. Execute as instructed by the system prompt. However, please make sure to respond in Korean. Your response will be displayed on an HTML screen. Therefore, include appropriate <br> tags and other useful tags to make it easy for people to read. Please provide your perspective with a <span> tag. Also, you can insert a special icon(e.g., ★) when the subject of the content changes. 'News data':" + str(newsData)
+        prompt = '''This is the "data" mentioned by the system. Execute as instructed by the system prompt. 
+    However, please make sure to respond in Korean. Your response will be displayed on an HTML screen. 
+    Therefore, include appropriate <br/> tags and useful tags to make it easy for people to read.  
+    If there are important keywords or sentences, wrap them in span tags. (example: <span>'주요문장'</span> or <font color="ff1480">핵심문장</font>)
+    However, do not write the CSS codes directly into the response and do not include the title separately in the response.  "data":''' + str(newsData)
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
@@ -57,7 +62,7 @@ async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
         logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
         return None
 
-def get_main_marketdata():
+async def get_main_marketdata():
     yf.pdr_override()
     start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
     tickers = {
@@ -158,27 +163,71 @@ async def get_finnhub_marketnews() :
     market_news = finnhub_client.general_news('general', min_id=0)
     return market_news
 
+#구글 마켓증시 index 및 trends api  
+async def get_google_market_index() :
+    params = {
+    "engine": "google_finance_markets",
+    "trend": "indexes",
+    "api_key": config.SERPAPI_API_KEY
+    }
+
+    search = GoogleSearch(params)
+    results = search.get_dict()
+    market_trends = results["market_trends"]
+    return market_trends
+
+
 async def generate_market_summary():
     naver_news_data = await naver_global_news_scraping()
     finnhub_news_data = await get_finnhub_marketnews()  
-    market_data, images_name, summary_talk = get_main_marketdata()
+    google_market_index = await get_google_market_index()
+    market_data, images_name, summary_talk = await get_main_marketdata()
     
-    # gpt4_news_sum 함수에 전달할 데이터 준비
-    SYSTEM_PROMPT_1 = "Here is the financial news from the past few hours. I will also provide you with financial data, including the Dow Jones, NASDAQ, and S&P 500 indices. Based on this financial news and index data, please analyze the current stock market and deeply consider your forecast for the future. Simply summarizing the market indices is not meaningful. Think and analyze like a financial expert, considering various news and changes in index data, and provide a meaningful opinion."
-    # (이런형태임):: 너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.  또 나는 너에게 다우존스, 나스닥, S&P 500 지수 등의 금융 데이터도 같이 알려줄거야.  이 금융뉴스와 지수 데이터를 기반으로해서 현재 주식시장에 대해 분석해주고, 앞으로의 너의 전망에 대해서도 심도있게 고민해서 설명해줘.  단순히 시장 지수를 요약해주는 것은 의미가 없어. 여러가지 뉴스와 지수데이터의 변화에 대해서 금융 전문가답게 생각하고 분석해서 의미있는 의견을 제시해줘 
-    gpt_summary = await gpt4_news_sum({"news": naver_news_data, "market_summary": summary_talk}, SYSTEM_PROMPT_1)
-    #formatted_gpt_summary = gpt_summary.replace("-", "<br>")
-    formatted_gpt_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", gpt_summary)
-    SYSTEM_PROMPT_2 = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
-    gpt_additional_news = await gpt4_news_sum({"news": finnhub_news_data}, SYSTEM_PROMPT_2)
+    ######### gpt4 로 요약 정리할 내용 던지기 ###############
+    ########## 1. 뉴스요약 ##################
+    SYSTEM_PROMPT_1 = '''You are an exceptionally skilled news analyst and financial expert. The following is financial news from the past few hours. You need to summarize and organize this financial news clearly and systematically.
+Summarize whether each news item is a Bull point or Bear point for the overall financial market and display this information in a table.
+Separate the news into positive news, negative news, and other news (news that does not affect the overall financial market) within the HTML table, and list the content of each news item very briefly and clearly. Create a separate row in the HTML table for a summary section, and write your overall opinion on the news and its impact in 1-2 sentences.'''
+    # (이런형태임)::     너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.이 금융뉴스를 깔끔하고 체계적으로 정리해서 보여줘야해. 해당 뉴스가 전반적인 금융시장에 Bull 포인트 or Bear 포인트가 되는 뉴스인지 아닌지 정리 및 요약해서 표로 보여줘.    html 표 내에서 긍정적인 뉴스, 부정적인 뉴스, 기타 뉴스(=전반적인 금융시장에 영향을 주지 않는 뉴스)로 분리해서  해당 뉴스 내용을 아주 간단하고 
+    #                   깔끔하게 나열해줘. 총평 부분을 html 테이블 내에 따로 행을 만들어서 전반적인 뉴스와 그 영향도에 따른 너의 의견도 1~2줄로 작성해줘.  
+    news_summary = await gpt4_news_sum({"news data 1": naver_news_data, "news data 2": finnhub_news_data}, SYSTEM_PROMPT_1)
+    news_summary = markdown.markdown(news_summary)
+    
+    ########## 2. 증시데이터와 엮어서 설명 ############
+    SYSTEM_PROMPT_2 = '''
+    너는 뛰어난 금융 전문가야. 다음은 현재 증시 index 데이터들이야. 
+    해당 index 들의 상황에 대해서 체계적이고 깔끔하게 html 표형태로 요약해서 알려줘. 단 지수 데이터가 얼마나 변했는지를 하나하나 나열하면 안돼.
+    미국지수는 전반적으로 어떻게 변했는지, 유럽과 아시아지수는 전반적으로 상승했는지 하락했는지 등 문장으로 깔끔하고 이해하기 쉽게 설명해줘. 
+    화면상에 아주 체계적이고 깔끔하게 보여줄수 있게 답변을 주되 모든것을 깔끔하게 html 표로 만들어서 답변해줘.
+    다음은 답변의 예시야.
+      - 미국지수 : 다우지수와 나스닥은 조금 올랐지만 S&P는 적은 수치(0.02%)로 하락했습니다. 
+      - 유럽지수 : 전반적으로 많이 상승했습니다. 독일 DAX(1.3% 상승)가 상승을 주도한 것으로 보입니다. 
+      - 아시아지수 : KOSPI와 항셍지수는 크게 올랐지만 니케이가 소폭 하락했습니다.
+      - OVERALL : 전반적으로 글로벌 상승장이 지속되고 있습니다. 
+    '''
+    index_summary = await gpt4_news_sum({"market index summary :": summary_talk, "market index total(json data)": google_market_index}, SYSTEM_PROMPT_2)    
+    index_summary = markdown.markdown(index_summary)
+    
+    ########## 3. 향후 시장분석 ############
+    SYSTEM_PROMPT_3 = "You are an exceptional news analyst and financial expert. Here are the financial news and market data from the past few hours. There is no need to summarize or re-explain these news and index data. Based solely on this financial news and index data, analyze the current stock market and provide your in-depth outlook for the future. Think and analyze the various news and changes in index data as a financial expert, offering meaningful insights. Summarize only your deep and insightful opinions. Do not provide any other responses beyond the requested content."
+    # (이런형태임)::너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스와 마켓데이터야. 이 뉴스 및 증시 데이터들을 요약하거나 다시 설명해줄 필요는 없어. 오로지 금융뉴스와 지수 데이터를 기반으로해서 현재 주식시장에 대해 분석해주고, 앞으로의 너의 전망에 대해서도 심도있게 고민해서 설명해줘.  여러가지 뉴스와 지수데이터의 변화에 대해서 금융 전문가답게 생각하고 분석해서 의미있는 의견을 제시해줘.  오로지 너의 깊이있고 통찰력있는 의견만을 정리해서 알려줘 
+    opinion_summary = await gpt4_news_sum({"news": naver_news_data, "market_summary": summary_talk}, SYSTEM_PROMPT_3)    
+
+    ########## 4. Finnhub 부가뉴스 번역 및 요약 ##########
+    SYSTEM_PROMPT_4 = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
+    gpt_additional_news = await gpt4_news_sum({"news": finnhub_news_data}, SYSTEM_PROMPT_4)
+
+    formatted_news_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", news_summary)    
+    formatted_index_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", index_summary)  
+    formatted_opinion_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", opinion_summary)  
     #formatted_additional_news = gpt_additional_news.replace("-", "<br>")
     formatted_additional_news = re.sub(r"```html\s*(.*?)\s*```", r"\1", gpt_additional_news)
     formatted_additional_news = markdown.markdown(formatted_additional_news)
     formatted_additional_news = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", formatted_additional_news)
     formatted_additional_news = re.sub(r"(\d+)\.", r"<br>\1.", formatted_additional_news)    
-    
     print(gpt_additional_news)
-    return formatted_gpt_summary, market_data, images_name, naver_news_data, formatted_additional_news
+    
+    return formatted_news_summary, formatted_index_summary, formatted_opinion_summary, market_data, images_name, naver_news_data, formatted_additional_news
 
 def format_text(input_text):
     # 볼드 처리
@@ -189,7 +238,7 @@ def format_text(input_text):
 
 # 메인페이지 로딩때마다 부르면 속도이슈가 있어서, html 파일로 미리 떨궈놓자. 
 async def market_data():
-    gpt_summary, market_data, images_name, naver_news_data, gpt_additional_news = await generate_market_summary()
+    formatted_news_summary, formatted_index_summary, formatted_opinion_summary, market_data, images_name, naver_news_data, gpt_additional_news = await generate_market_summary()
     today_date = datetime.now().strftime('%Y-%m-%d')
     today_date_fixed = datetime.now().strftime('%Y%m%d')
     # Initialize the HTML content with the main structure
@@ -248,50 +297,77 @@ async def market_data():
     html_content += """
                 </div>
             </div>"""
+            
+    html_content += """
+            <div data-aos="fade-up">
+                <div class="main-graph-tit"><span>주요지수 3개월 추이 그래프</span></div>"""
+            
     html_content += '<ul class="main-graph-wrap" data-aos="fade-up">'
     for data, image_name in zip(market_data, images_name):
         image_path = f"/static/main_chart/{image_name}"
         html_content += f"""
-                <li>
-                    <img src="{image_path}" alt="Market Chart for {data['name']}">
-                    <div class="chart-label-wrap">
-                        <p>{data['name']}</p>
-                        <p>(종가: {utilTool.format_number_with_comma(data["last_close"])})</p>
-                    </div>
-                </li>"""
+                    <li>
+                        <img src="{image_path}" alt="Market Chart for {data['name']}">
+                        <div class="chart-label-wrap">
+                            <p>{data['name']}</p>
+                            <p>(종가: {utilTool.format_number_with_comma(data["last_close"])})</p>
+                        </div>
+                    </li>"""
 
     html_content += """
-            </ul>"""  # Move </ul> outside the for loop
+                </ul>
+            </div>"""  # Move </ul> outside the for loop
     html_content += f"""                
-        <div class="main-tb-box" data-aos="fade-up">
-            <span>아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다.</span>
-        </div>     
-        <div class="main-summary-chart" data-aos="fade-up">
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_DOW_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_NASDAQ_{today_date_fixed}.png"></div>
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>            
-            <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_KOSPI_{today_date_fixed}.png"></div>
-        </div>   
-    </section>"""
+            <div class="flex-center">
+                <div class="main-tb-box" data-aos="fade-up">            
+                   <span>아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다.</span>
+                    <ul class="main-graph-coment">
+                        <li class="blue-square">는 최근 3개월 동안의 지표 흐름,</li>
+                        <li class="red-square">는 현재 가장 유사한 과거 기간의 흐름,</li>
+                        <li class="yellow-square">이후의 그래프는 과거 기간 당시 시장 흐름의 변화입니다.</li>
+                    </ul>       
+                </div>         
+            </div>     
+            <div class="main-summary-chart" data-aos="fade-up">
+                <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_DOW_{today_date_fixed}.png"></div>
+                <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_NASDAQ_{today_date_fixed}.png"></div>
+                <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_S&P500_{today_date_fixed}.png"></div>            
+                <div class="main-summary-chart-box"><img src= "/static/main_chart/similar_KOSPI_{today_date_fixed}.png"></div>
+            </div>   
+        </section>"""
     html_content += f"""                                       
-    <section class="general-cont fixed-cont v02">
-        <div class="overlay v02"></div>
-        <div class="analysis-wrap">
-            <div class="analysis-area">
-                <div class="analysis-tit-wrap">
-                    <h4 class="cont-tit" data-aos="fade-right">AI Market <span>Analysis</span></h4>
-                    <div class="analysis-bg" data-aos="fade-right"></div>
-                </div>
-                <div class="analysis-text" data-aos="fade-left">
-                    {gpt_summary}
-                    <div class="news-show-wrap">
-                        <a href="#none" class="news-show-btn">근거자료 Market Major News 보기</a>
+        <section class="general-cont fixed-cont v02">
+            <div class="overlay v02"></div>
+            <div class="analysis-wrap02">
+                <h4 class="cont-tit aos-init aos-animate" data-aos="fade-up">
+                    <span>AI Market Analysis</span>
+                </h4>
+                <div class="analysis-box-wrap" data-aos="fade-up">
+                    <div class="analysis-box">
+                        <h3 class="sub-tit">주요 뉴스 요약</h3>
+                        <ul class="analysis-text">     
+                            {formatted_news_summary}
+                        </ul>            
+                    </div>  
+                    <div class="analysis-box">
+                        <h3 class="sub-tit">시장 지수 요약</h3>
+                        <ul class="analysis-text">
+                            {formatted_index_summary}
+                        </ul>
                     </div>
+                    <div class="analysis-box">
+                        <h3 class="sub-tit">시장 분석 및 예측</h3>
+                        <p class="analysis-text">
+                           <li>{formatted_opinion_summary}</li> 
+                        </p>
+                    </div>   
+                </div>                                          
+                <div class="news-show-wrap" data-aos="fade-up">
+                    <a href="#none" class="news-show-btn">근거자료 Market Major News 보기</a>
                 </div>
             </div>
-        </div>
-        <div class="main-news-wrap" style="display:none;">
-            <ul class="new-list">"""
+            <div class="main-news-wrap" style="display:none;">
+                <ul class="new-list">"""
     for news in naver_news_data:
         html_content += f"""                              
                     <li>
