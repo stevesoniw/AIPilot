@@ -489,6 +489,8 @@ label:hover {color: #fa7508;}
 .radio-group-float{float:left;padding-right:30px;border-right:1px solid #aaa;}
 .radio-group-float + .radio-group-float{padding:0 0 0 30px;border-right:0;}
 .radio-group-separation{display:flex;gap:20px;flex-wrap:wrap;margin-top:10px;}
+.highcharts-figure{padding:20px;}
+.highcharts-description, .model-explanation{margin-top:20px;padding:15px;color:#333;background:#fafaff; line-height: 22px; border:1px solid #efefef;}
 
 /* FOMC 성향분석 끝 */    
 /* FOMC 연준위원 스피치 요약 및 성향분석 끝 */
