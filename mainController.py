@@ -63,7 +63,11 @@ async def count_visitors(request: Request, call_next):
     if not hasattr(request.app.state, 'db_pool'):
         logger.error("Database pool not available in app state.")
     try:
-        ip_address = request.client.host  # Get client IP address
+        ip_address = request.headers.get('X-Forwarded-For')
+        if ip_address:
+            ip_address = ip_address.split(',')[0]  # Get the first IP address if there are multiple
+        else:
+            ip_address = request.client.host
         async with request.app.state.db_pool.acquire() as conn:
             #logger.debug("Database connection acquired for visitor counting.")
             await conn.execute('''
