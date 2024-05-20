@@ -362,7 +362,7 @@ async def market_data():
                         </p>
                     </div>   
                 </div>                                          
-                <div class="news-show-wrap" data-aos="fade-up">
+                <div class="news-show-wrap">
                     <a href="#none" class="news-show-btn">근거자료 Market Major News 보기</a>
                 </div>
             </div>
