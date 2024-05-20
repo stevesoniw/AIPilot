@@ -383,14 +383,18 @@ async function loadNewsSummary(ticker) {
         }
         let textData = await response.text();
         //const md = window.markdownit();
-        //textData = md.render(textData);        
-        textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
-        textData = textData.replace(/- \s*/g, '<br>');
-        textData = textData.replace(/###\s*/g, '<br><br>');
-        textData = textData.replace(/(\d+\.\s+)/g, '<br>$1');
+        //let htmlData = md.render(textData);
         
-        container.innerHTML = `<p>${textData}</p>`;
-        container.style.display='block';
+        // HTML 변환 후 스타일 적용
+        textData = textData.replace(/```html\s*|```/g, '');
+        textData = textData.replace(/\*\*(.*?)\*\*/g, '<span style="color: #ff1480; text-transform: uppercase;">$1</span>');
+        textData = textData.replace(/- \s*/g, '<br>- ');
+        textData = textData.replace(/###\s*/g, '<br><br>### ');
+        textData = textData.replace(/(\d+\.\s+)/g, '<br>$1');
+
+        // 변환된 HTML을 innerHTML에 설정
+        container.innerHTML = textData;
+        container.style.display = 'block';
     } catch (error) {
         console.error('Error:', error);
         container.innerHTML = ''; 

@@ -184,10 +184,12 @@ async def process_stock_main_news(symbols):
             if news_json:  # 뉴스 데이터가 있을 때만 처리
                 extracted_seekingalpha = await extract_news_data(news_json)
                 extracted_finnhub = await fetch_news_finnhub(symbol)
-                prompt = ("The following content is news data. Execute as the system prompt instructed. "
-                          "Please make sure to respond in Korean. Attach HTML tags so that your forecast "
-                          "can appear in '#ff1480' color. Your response will be displayed on an HTML screen. Therefore, include many appropriate <br> tags and other useful tags to make it easy for people to read."
-                          "News Data : " + str(extracted_seekingalpha) + str(extracted_finnhub))
+                prompt = '''You are an exceptionally skilled news analyst and financial expert. 
+                The following is financial news of a stock. You need to summarize and organize this financial news clearly and systematically.
+Summarize whether each news item is a Bull point or Bear point for this stock and display this information in a table.
+Separate the news into positive news, negative news, and other news (news that does not affect the overall stock market) within the HTML table, and list the content of each news item very briefly and clearly. Create a separate row in the HTML table for a summary section, and write your overall opinion on the news and its impact in 3-4 sentence. Please ensure to respond to all content in Korean only.
+                          "News Data" : ''' + str(extracted_seekingalpha) + str(extracted_finnhub)
+
                 summary = await gpt4_news_sum(prompt)
                 summary = markdown.markdown(summary)
                 # 결과 저장
