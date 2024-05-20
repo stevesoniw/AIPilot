@@ -232,7 +232,7 @@ def analyze(request: AnalysisRequest):
     original_data.index = pd.to_datetime(original_data.index)
     original_data = original_data.sort_index(ascending=True)
     
-    N = 5
+    N = request.n_graphs
     sample_data = normalize_df(original_data)
     sample_data.index = pd.to_datetime(sample_data.index)
     sample_data = sample_data.sort_index(ascending=True)
