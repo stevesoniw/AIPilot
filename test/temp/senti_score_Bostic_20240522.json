@@ -1,0 +1,82 @@
+[
+    {
+        "date": "2024/05/15",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.990050196647644
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.008972354233264923
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.0009775051148608327
+                }
+            ]
+        ],
+        "result": "Fed's Bostic says economy likely slowing, though rate-cut timing uncertain"
+    },
+    {
+        "date": "2024/04/22",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_1",
+                    "score": 0.9978843331336975
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.0017565744929015636
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.0003590840206015855
+                }
+            ]
+        ],
+        "result": "Fed's Bostic: open to a rate hike if inflation progress stalls"
+    },
+    {
+        "date": "2024/03/04",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9320995807647705
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 0.03776568919420242
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.030134787783026695
+                }
+            ]
+        ],
+        "result": "Fed's Bostic: No urgency to cut interest rates given US economy's strength"
+    },
+    {
+        "date": "2024/03/22",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_0",
+                    "score": 0.7152284979820251
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 0.26145124435424805
+                },
+                {
+                    "label": "LABEL_2",
+                    "score": 0.023320205509662628
+                }
+            ]
+        ],
+        "result": "Fed's Bostic scales back to single rate cut on inflation concerns"
+    }
+]

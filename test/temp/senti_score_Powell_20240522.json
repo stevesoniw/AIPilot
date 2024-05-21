@@ -1,0 +1,82 @@
+[
+    {
+        "date": "5/19/2024",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "11/8/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "10/25/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    },
+    {
+        "date": "9/28/2023",
+        "scores": [
+            [
+                {
+                    "label": "LABEL_2",
+                    "score": 0.9998119473457336
+                },
+                {
+                    "label": "LABEL_0",
+                    "score": 9.816375677473843e-05
+                },
+                {
+                    "label": "LABEL_1",
+                    "score": 8.991755748866126e-05
+                }
+            ]
+        ],
+        "result": "No significant remarks were made."
+    }
+]
