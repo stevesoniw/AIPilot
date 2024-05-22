@@ -265,9 +265,13 @@ async def translate_timeline_data(data):
         "You are a highly skilled translator fluent in both English and Korean. "
         "Translate the following json data from English to Korean, "
         "keeping any specific terms related to the US stock market or company names in English."
-        "And you need to translate only the contents of title and result into Korean. Do not translate the keys or property names of the JSON data. The format of the JSON must not be changed at all. (Never attach ```json or ``` signs before or after. make sure 'Key-value' pairs in JSON must be enclosed in double quotation marks)"
+        "You need to translate only the contents of title and result into Korean. Do not translate the keys or property names of the JSON data. "
+        "The format of the JSON must not be changed at all. (Never attach ```json or ``` signs before or after. "
+        "Make sure 'Key-value' pairs in JSON are enclosed in double quotation marks. "
+        "Ensure that all double quotation marks within the translated content are properly escaped with a backslash (\\) before each double quotation mark.) "
+        "Provide only the correctly formatted JSON data as your response."
     )
-    pre_prompt = "Do not provide any other response besides the JSON format. Never attach ```json or ``` signs before or after. translate only the contents of title and result into Korean. and 'Key-value pairs' in JSON must be enclosed in 'double quotation marks'. This is JSON data : "
+    pre_prompt = "Do not provide any other response besides the JSON format. Never attach ```json or ``` signs before or after. Translate only the contents of title and result into Korean, ensuring that 'Key-value pairs' in JSON are enclosed in double quotation marks and that all double quotation marks within the translated content are properly escaped with a backslash (\\) before each double quotation mark. This is JSON data: "
     prompt = f"{pre_prompt}\n\n{data}"
     try:
         completion = client.chat.completions.create(
