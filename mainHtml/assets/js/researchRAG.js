@@ -257,31 +257,6 @@ async function submitFiles() {
 
         if (response.ok) {
             const result = await response.json();
-            if (result.message === "Files uploaded failed") {
-                document.getElementById('loading_bar_ragprompt').style.display = 'none';
-                console.log(result);
-                alert("파일이 유효하지 않습니다. 파일이 손상되었거나 복호화되어있는지 체크해주세요.")
-                function deleteFile(fileName) {
-                    // 모든 .file 요소를 선택
-                    const fileElements = document.querySelectorAll('.file');
-                    fileElements.forEach(fileElement => {
-                        // 현재 요소에서 파일명 요소를 찾음
-                        const fileTitleElement = fileElement.querySelector('.file-tit');
-                        if (fileTitleElement) {
-                            // 파일명 요소의 텍스트를 가져와서 주어진 파일명과 비교
-                            const fileTitle = fileTitleElement.textContent.trim();
-                            if (fileTitle === fileName) {
-                                // 일치하는 경우 해당 파일 요소를 삭제
-                                fileElement.remove();
-                                // 여기에 파일 삭제 로직 추가 (예: 서버에서 파일 삭제 요청 등)
-                            }
-                        }
-                    });
-                }
-                // console.log(result.files_metadata.filename);
-                deleteFile(result.files_metadata.filename);
-                return;
-            }
             createOptions(result.files_metadata.length);
             console.log("Files uploaded successfully:", result);
             const fileElements = document.querySelectorAll('#showfiles .file'); 
@@ -333,28 +308,20 @@ function copyText(button) {
             var textToCopy = answerTxt.textContent.trim();
             var tempTextArea = document.createElement('textarea');
             tempTextArea.value = textToCopy;
-        
             // Make the textarea invisible
             tempTextArea.style.position = 'fixed';
             tempTextArea.style.top = 0;
             tempTextArea.style.left = 0;
             tempTextArea.style.opacity = 0;
-        
             // Append the textarea to the body
             document.body.appendChild(tempTextArea);
-        
             // Select the textarea's content
             tempTextArea.select();
-        
             // Execute the browser's built-in copy command
             document.execCommand('copy');
-        
             // Remove the textarea from the DOM
             document.body.removeChild(tempTextArea);
-        
             alert('텍스트가 복사되었습니다.');
-
-
             // var textToCopy = answerTxt.textContent.trim();
             // navigator.clipboard.writeText(textToCopy)
             //     .then(function() {
@@ -426,7 +393,6 @@ function saveAsImage(button) {
                 // Create download link
                 var downloadLink = document.createElement("a");
                 downloadLink.href = dataUrl;
-                // downloadedImg.crossOrigin = "anonymous";
                 downloadLink.download = "answer_image.png";
 
                 // Click the link to trigger download
@@ -563,7 +529,7 @@ async function getAnswerUsingPrompt(selectedPrompt){
                 tool_used: checkboxValue
             })}
     );
-    console.log(response);
+    //console.log(response);
     textDiv.innerHTML = '';
 
     converter = new showdown.Converter(),
