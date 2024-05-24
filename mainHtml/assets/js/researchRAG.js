@@ -1,6 +1,4 @@
 //******************************** 3RD GNB::  리서치 PDF Starts **********************************************//
-/* 사용자 ID를 저장할 변수 */
-let userId = null;  
 /* 파일 업로드 시작 */
 class DropFile {
     constructor(dropAreaId, fileListId) {
@@ -37,10 +35,6 @@ class DropFile {
                         this.handleFileDeletion(fileId);
                         fileElement.remove(); // This removes the file DOM element
                         console.log("File element removed from DOM.");
-                        // 모든 파일이 삭제되면 userId를 지움
-                        if (this.fileList.childElementCount === 0) {
-                            userId = null;
-                        }                        
                     } else {
                         console.log("No file ID found on the element to delete.");
                     }
@@ -60,7 +54,7 @@ class DropFile {
     }  
 
     handleFileDeletion(fileId) {
-        fetch(`/file/${userId}/${fileId}`, {  
+        fetch(`/file/${fileId}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
@@ -255,9 +249,6 @@ async function submitFiles() {
     const form = document.getElementById('file-upload-form');
     // console.log(form.innerHTML);
     const formData = new FormData(form);
-    if (userId) {
-        formData.append('user_id', userId);  // 기존 사용자 ID를 추가
-    }    
     try {
         const response = await fetch(`/rag/prompt-pdf-upload`, {
             method: 'POST',
@@ -266,10 +257,6 @@ async function submitFiles() {
 
         if (response.ok) {
             const result = await response.json();
-            userId = result.user_id;  
-            //console.log("***************************************");
-            //console.log("userId=",userId);
-            //console.log("***************************************");
             createOptions(result.files_metadata.length);
             console.log("Files uploaded successfully:", result);
             const fileElements = document.querySelectorAll('#showfiles .file'); 
@@ -321,28 +308,20 @@ function copyText(button) {
             var textToCopy = answerTxt.textContent.trim();
             var tempTextArea = document.createElement('textarea');
             tempTextArea.value = textToCopy;
-        
             // Make the textarea invisible
             tempTextArea.style.position = 'fixed';
             tempTextArea.style.top = 0;
             tempTextArea.style.left = 0;
             tempTextArea.style.opacity = 0;
-        
             // Append the textarea to the body
             document.body.appendChild(tempTextArea);
-        
             // Select the textarea's content
             tempTextArea.select();
-        
             // Execute the browser's built-in copy command
             document.execCommand('copy');
-        
             // Remove the textarea from the DOM
             document.body.removeChild(tempTextArea);
-        
             alert('텍스트가 복사되었습니다.');
-
-
             // var textToCopy = answerTxt.textContent.trim();
             // navigator.clipboard.writeText(textToCopy)
             //     .then(function() {
@@ -414,7 +393,6 @@ function saveAsImage(button) {
                 // Create download link
                 var downloadLink = document.createElement("a");
                 downloadLink.href = dataUrl;
-                // downloadedImg.crossOrigin = "anonymous";
                 downloadLink.download = "answer_image.png";
 
                 // Click the link to trigger download
@@ -423,6 +401,20 @@ function saveAsImage(button) {
             .catch(function(error) {
                 console.error("이미지 다운로드 중 오류가 발생하였습니다:", error);
             });
+            // // Use dom-to-image library
+            // domtoimage.toBlob(answerTxt)
+            //     .then(function(blob) {
+            //         // Create download link
+            //         var downloadLink = document.createElement("a");
+            //         downloadLink.href = URL.createObjectURL(blob);
+            //         downloadLink.download = "answer_image.png";
+
+            //         // Click the link to trigger download
+            //         downloadLink.click();
+            //     })
+            //     .catch(function(error) {
+            //         console.error("이미지 다운로드 중 오류가 발생하였습니다:", error);
+            //     });
             } else {
                     console.error(".answer-txt를 찾을 수 없습니다.");
                     }
@@ -432,6 +424,23 @@ function saveAsImage(button) {
     }
 
 }
+// function showSpinner() {
+//     // spinner 영역을 가져옴
+//     const spinnerTarget = document.getElementById('spinner');
+  
+//     // Spin.js를 사용하여 spinner를 생성
+//     const spinner = new Spinner().spin(spinnerTarget);
+//   }
+  
+//   // 요청이 완료되면 spinner를 감추는 함수
+//   function hideSpinner() {
+//     // spinner 영역을 가져옴
+//     const spinnerTarget = document.getElementById('spinner');
+  
+//     // spinner를 감춤
+//     spinnerTarget.innerHTML = '';
+//   }
+
 
 let questionCounter = 0;
 //Prompt Select 창 클릭 시 서버쪽 답변 요청함수 
@@ -515,13 +524,12 @@ async function getAnswerUsingPrompt(selectedPrompt){
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                user_id: userId,  
                 prompt_option: selectedPrompt,
                 file_ids: fileIds,
                 tool_used: checkboxValue
             })}
     );
-    console.log(response);
+    //console.log(response);
     textDiv.innerHTML = '';
 
     converter = new showdown.Converter(),
@@ -550,11 +558,15 @@ async function getAnswerUsingPrompt(selectedPrompt){
             return;}
 
         let token = decoder.decode(result.value);
+        
         textDiv.innerHTML += token 
+
         talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
         return reader.read().then(processResult);
     });
+
+
 }
 
 
@@ -651,7 +663,6 @@ async function sendChatRequest(question) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            user_id: userId,  
             question: question,
             file_ids: fileIds,
             tool_used: checkboxValue
@@ -684,11 +695,39 @@ async function sendChatRequest(question) {
             return;}
 
         let token = decoder.decode(result.value);
+        
         textDiv.innerHTML += token 
+
         talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
         return reader.read().then(processResult);
     });
+    // document.getElementById('loading_bar_ragprompt').style.display = 'block';
 
+    // fetch(`/rag/answer-from-prompt`, {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify({
+    //         question: question,
+    //         file_ids: fileIds,
+    //         tool_used: checkboxValue
+    //     })
+    // })
+    // .then(response => response.json())
+    // .then(data => {
+    //     document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    //     displayAnswer(data);
+    // })
+    // .catch(error => {
+    //     console.error('Error fetching the answer:', error);
+    //     document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    //     displayAnswer('API 서버가 불안정해요. 다시 질문해주세요!');
+    // })
+    // .finally(() => {
+    //     document.getElementById('loading_bar_ragprompt').style.display = 'none';
+    // });
 };
 
 function displayAnswer(answer) {
