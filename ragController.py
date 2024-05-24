@@ -28,6 +28,7 @@ from konlpy.tag import Okt
 from konlpy.tag import Kkma
 import httpx
 import json
+import pypdf.errors
 okt = Okt()
 # 유튜브
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -69,34 +70,44 @@ class FileMetadata(BaseModel):
 @ragController.post("/rag/prompt-pdf-upload/")
 async def prompt_upload_files(files: List[UploadFile] = File(...)):
     global uploaded_files_data, uploaded_files_metadata, file_id_counter
+    
     if not files:
         raise HTTPException(status_code=400, detail="No files provided.")
     
     for uploaded_file in files:
         file_id_counter += 1
         temp_file_path = f"temp_{file_id_counter}_{uploaded_file.filename}"
-                    
-        with open(temp_file_path, "wb") as f:
-            file_data = await uploaded_file.read()
-            f.write(file_data)
-        loader = PyPDFLoader(temp_file_path)
-        loaded_documents = loader.load()
-        print(f"Number of pages loaded: {len(loaded_documents)}")
-        # Store the extracted text content
-        uploaded_files_data[file_id_counter] = {
-            "file_name": uploaded_file.filename,
-            "content": loaded_documents
-        }
-                
-        file_metadata = FileMetadata(file_id=file_id_counter, file_name=uploaded_file.filename)
         
-        uploaded_files_metadata.append(file_metadata.model_dump())
-        os.remove(temp_file_path)
-        #print("************************************")
-        #print(uploaded_files_data)
-        #print("************************************")
+        try:
+            with open(temp_file_path, "wb") as f:
+                file_data = await uploaded_file.read()
+                f.write(file_data)
+                
+            loader = PyPDFLoader(temp_file_path)
+            loaded_documents = loader.load()
+            print(f"Number of pages loaded: {len(loaded_documents)}")
+            print(f"Number of pages loaded: {len(loaded_documents)}")
+            # Store the extracted text content
+            uploaded_files_data[file_id_counter] = {
+                "file_name": uploaded_file.filename,
+                "content": loaded_documents
+            }
+                    
+            file_metadata = FileMetadata(file_id=file_id_counter, file_name=uploaded_file.filename)
+            
+            uploaded_files_metadata.append(file_metadata.model_dump())
+            os.remove(temp_file_path)
+            #print("************************************")
+            #print(uploaded_files_data)
+            #print("************************************")
 
-    return {"message": "Files upload succeeded", "files_metadata": uploaded_files_metadata}
+            return {"message": "Files upload succeeded", "files_metadata": uploaded_files_metadata}
+
+        except pypdf.errors.PdfStreamError as e:
+            print("Error loading PDF file:", e)
+            return {"message": "Files uploaded failed", "files_metadata": uploaded_file}
+        
+        
 
 @ragController.delete("/file/{file_id}/")
 async def delete_file_data(file_id: int):
