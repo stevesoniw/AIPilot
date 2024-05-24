@@ -267,9 +267,9 @@ async function submitFiles() {
         if (response.ok) {
             const result = await response.json();
             userId = result.user_id;  
-            console.log("***************************************");
-            console.log("userId=",userId);
-            console.log("***************************************");
+            //console.log("***************************************");
+            //console.log("userId=",userId);
+            //console.log("***************************************");
             createOptions(result.files_metadata.length);
             console.log("Files uploaded successfully:", result);
             const fileElements = document.querySelectorAll('#showfiles .file'); 
@@ -509,7 +509,6 @@ async function getAnswerUsingPrompt(selectedPrompt){
     //gpt에 프롬프트 날리기
     textDiv.innerHTML = '<p>리포트를 읽고 있습니다... (리포트 개수가 많을수록 시간이 더 걸릴 수 있습니다)</p>'
     talkListWrap.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    alert("userId="+ userId);
     const response = await fetch('/rag/answer-from-prompt',{
             method: 'POST',
             headers: {
