@@ -109,6 +109,7 @@ async def get_main_marketdata():
                 xaxis_title='Date',
                 yaxis_title='Price',
                 template='plotly_dark',
+                font=dict(family='NanumGothic', size=18),  # 네클에서 깨져서 폰트설치후 추가
                 autosize=False,
                 width=800,
                 height=600,
@@ -186,11 +187,12 @@ async def generate_market_summary():
     ######### gpt4 로 요약 정리할 내용 던지기 ###############
     ########## 1. 뉴스요약 ##################
     SYSTEM_PROMPT_1 = '''You are an exceptionally skilled news analyst and financial expert. The following is financial news from the past few hours. You need to summarize and organize this financial news clearly and systematically.
-Summarize whether each news item is a Bull point or Bear point for the overall financial market and display this information in a table.
-Separate the news into positive news, negative news, and other news (news that does not affect the overall financial market) within the HTML table, and list the content of each news item very briefly and clearly. Create a separate row in the HTML table for a summary section, and write your overall opinion on the news and its impact in 1-2 sentences.'''
+Summarize whether each news item is a Bull point, Bear point, or Neutral for the overall financial market and display this information in an HTML table.
+The HTML table should have three categories: Bull, Bear, and Neutral. List the content of each news item briefly and clearly under the appropriate category. Include a separate summary row at the bottom of the table with your overall opinion on the news and its impact in 2-3 sentences.'''
     # (이런형태임)::     너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.이 금융뉴스를 깔끔하고 체계적으로 정리해서 보여줘야해. 해당 뉴스가 전반적인 금융시장에 Bull 포인트 or Bear 포인트가 되는 뉴스인지 아닌지 정리 및 요약해서 표로 보여줘.    html 표 내에서 긍정적인 뉴스, 부정적인 뉴스, 기타 뉴스(=전반적인 금융시장에 영향을 주지 않는 뉴스)로 분리해서  해당 뉴스 내용을 아주 간단하고 
     #                   깔끔하게 나열해줘. 총평 부분을 html 테이블 내에 따로 행을 만들어서 전반적인 뉴스와 그 영향도에 따른 너의 의견도 1~2줄로 작성해줘.  
     news_summary = await gpt4_news_sum({"news data 1": naver_news_data, "news data 2": finnhub_news_data}, SYSTEM_PROMPT_1)
+    news_summary = re.sub(r"```html\s*(.*?)\s*```", r"\1", news_summary)
     news_summary = markdown.markdown(news_summary)
     
     ########## 2. 증시데이터와 엮어서 설명 ############
@@ -206,12 +208,14 @@ Separate the news into positive news, negative news, and other news (news that d
       - OVERALL : 전반적으로 글로벌 상승장이 지속되고 있습니다. 
     '''
     index_summary = await gpt4_news_sum({"market index summary :": summary_talk, "market index total(json data)": google_market_index}, SYSTEM_PROMPT_2)    
+    index_summary = re.sub(r"```html\s*(.*?)\s*```", r"\1", index_summary)
     index_summary = markdown.markdown(index_summary)
     
     ########## 3. 향후 시장분석 ############
     SYSTEM_PROMPT_3 = "You are an exceptional news analyst and financial expert. Here are the financial news and market data from the past few hours. There is no need to summarize or re-explain these news and index data. Based solely on this financial news and index data, analyze the current stock market and provide your in-depth outlook for the future. Think and analyze the various news and changes in index data as a financial expert, offering meaningful insights. Summarize only your deep and insightful opinions. Do not provide any other responses beyond the requested content."
     # (이런형태임)::너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스와 마켓데이터야. 이 뉴스 및 증시 데이터들을 요약하거나 다시 설명해줄 필요는 없어. 오로지 금융뉴스와 지수 데이터를 기반으로해서 현재 주식시장에 대해 분석해주고, 앞으로의 너의 전망에 대해서도 심도있게 고민해서 설명해줘.  여러가지 뉴스와 지수데이터의 변화에 대해서 금융 전문가답게 생각하고 분석해서 의미있는 의견을 제시해줘.  오로지 너의 깊이있고 통찰력있는 의견만을 정리해서 알려줘 
-    opinion_summary = await gpt4_news_sum({"news": naver_news_data, "market_summary": summary_talk}, SYSTEM_PROMPT_3)    
+    opinion_summary = await gpt4_news_sum({"news": naver_news_data, "market_summary": summary_talk}, SYSTEM_PROMPT_3)   
+    opinion_summary = re.sub(r"```html\s*(.*?)\s*```", r"\1", opinion_summary) 
 
     ########## 4. Finnhub 부가뉴스 번역 및 요약 ##########
     SYSTEM_PROMPT_4 = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
