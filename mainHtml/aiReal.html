@@ -534,11 +534,7 @@
                             break;
                         case 'menu_3rd_a':
                             //파일저장한것 서버쪽 메모리 클리어해주기
-                            if (userId) {
-                                navigator.sendBeacon(`/rag/clear_data/${userId}`);
-                            } else {
-                                console.log("User ID is not set. No data to clear.");
-                            }
+                            navigator.sendBeacon('/rag/clear_data');
                             const sendButton = document.getElementById('ragchat_button'); //채팅 버튼
                             const inputField = document.getElementById('ragchat'); //채팅 textArea
                             sendButton.addEventListener('click', processInput);
