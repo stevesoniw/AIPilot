@@ -613,7 +613,8 @@ async function sendChatRequest(question) {
     displayQuestion(question);
  
     
-    const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+    //const fileIds = Array.from(fileElements).map(fileElement => parseInt(fileElement.getAttribute('data-file-id')));
+    const fileIds = Array.from(fileElements).map(fileElement => fileElement.getAttribute('data-file-id'));
     // 체크박스 value 체킹
     let checkboxValue = null;
     if (document.getElementById('researchGPT4').checked) {
