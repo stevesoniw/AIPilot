@@ -23,6 +23,7 @@ import os
 import asyncio
 import tempfile
 import logging
+import uuid
 import multiprocessing
 from konlpy.tag import Okt
 from konlpy.tag import Kkma
@@ -51,30 +52,46 @@ client = OpenAI(api_key = config.OPENAI_API_KEY)
 assistant = ChatPDF()
 askMulti = multiRAG()
 
+
+# 사용자별로 파일 데이터를 저장할 딕셔너리 #############################################
+user_files_data: Dict[str, Dict[int, Dict[str, Any]]] = {}
+user_files_metadata: Dict[str, List[Dict[str, Any]]] = {}
+    
 ############################################[메모리 클리어] ############################################
-@ragController.post("/rag/clear_data")
-async def clear_data():
-    # Clear all data from memory
-    uploaded_files_data.clear()
-    uploaded_files_metadata.clear()
-    return {"message": "Data cleared"}
+@ragController.post("/rag/clear_data/{user_id}")
+async def clear_data(user_id: str):
+    if user_id in user_files_data:
+        del user_files_data[user_id]
+        del user_files_metadata[user_id]
+        return {"message": f"Data for user {user_id} cleared"}
+    else:
+        raise HTTPException(status_code=404, detail="User ID not found")
 
 ############################################[3RD GNB] [1ST LNB] 리서치 REPORT 쉽게읽기 ############################################
-uploaded_files_data = {} #파일 데이터 메모리 적재용
-uploaded_files_metadata = []
-file_id_counter = 0
 class FileMetadata(BaseModel):
-    file_id: int
+    file_id: str  
     file_name: str
 @ragController.post("/rag/prompt-pdf-upload/")
-async def prompt_upload_files(files: List[UploadFile] = File(...)):
-    global uploaded_files_data, uploaded_files_metadata, file_id_counter
+async def prompt_upload_files(request: Request, files: List[UploadFile] = File(...)):
+    data = await request.form()
+    client_user_id = data.get("user_id", None)  # 클라이언트에서 받은 user_id
+    user_id = client_user_id if client_user_id else str(uuid.uuid4())[:8]  # 새 사용자 ID(개인식별자) 생성
+
+    if user_id not in user_files_data:
+        user_files_data[user_id] = {}
+        user_files_metadata[user_id] = []
+
     if not files:
         raise HTTPException(status_code=400, detail="No files provided.")
+
+    temp_dir = "PDF_tempfolder"
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)    
     
     for uploaded_file in files:
-        file_id_counter += 1
-        temp_file_path = f"temp_{file_id_counter}_{uploaded_file.filename}"
+        file_id = str(uuid.uuid4())[:8]  # 고유한 file_id 생성
+        temp_file_path = os.path.join(temp_dir, f"temp_{file_id}_{uploaded_file.filename}")
+          
                     
         with open(temp_file_path, "wb") as f:
             file_data = await uploaded_file.read()
@@ -83,33 +100,36 @@ async def prompt_upload_files(files: List[UploadFile] = File(...)):
         loaded_documents = loader.load()
         print(f"Number of pages loaded: {len(loaded_documents)}")
         # Store the extracted text content
-        uploaded_files_data[file_id_counter] = {
+        #print("file_id====================")
+        print(file_id)
+        #print("file_id====================")
+
+        user_files_data[user_id][file_id] = {
             "file_name": uploaded_file.filename,
             "content": loaded_documents
         }
-                
-        file_metadata = FileMetadata(file_id=file_id_counter, file_name=uploaded_file.filename)
-        
-        uploaded_files_metadata.append(file_metadata.model_dump())
+
+        file_metadata = FileMetadata(file_id=file_id, file_name=uploaded_file.filename)
+        user_files_metadata[user_id].append(file_metadata.model_dump())
         os.remove(temp_file_path)
+
         #print("************************************")
         #print(uploaded_files_data)
         #print("************************************")
 
-    return {"message": "Files upload succeeded", "files_metadata": uploaded_files_metadata}
+    return {"message": "Files upload succeeded", "user_id": user_id, "files_metadata": user_files_metadata[user_id]}
 
-@ragController.delete("/file/{file_id}/")
-async def delete_file_data(file_id: int):
-    global uploaded_files_data, uploaded_files_metadata
-    file_id = int(file_id)  # Ensure file_id is an integer
-    if file_id not in uploaded_files_data:
+
+@ragController.delete("/file/{user_id}/{file_id}/")
+async def delete_file_data(user_id: str, file_id: str):
+    if user_id not in user_files_data or file_id not in user_files_data[user_id]:
         raise HTTPException(status_code=404, detail="File not found")
 
     # Remove data and metadata
-    del uploaded_files_data[file_id]
-    uploaded_files_metadata = [data for data in uploaded_files_metadata if data['file_id'] != file_id]
+    del user_files_data[user_id][file_id]
+    user_files_metadata[user_id] = [data for data in user_files_metadata[user_id] if data['file_id'] != file_id]
 
-    return {"message": "File deleted successfully", "files_metadata": uploaded_files_metadata}
+    return {"message": "File deleted successfully", "files_metadata": user_files_metadata[user_id]}
 
 
 
@@ -119,21 +139,24 @@ async def answer_from_prompt(request: Request):
         data = await request.json()  
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": "Invalid JSON."})
+    user_id = data.get("user_id", None)
     file_ids = data.get("file_ids", [])
     prompt_option = data.get("prompt_option", None)
     question = data.get("question", None)
     tool_used = data.get("tool_used", None) 
+    if not user_id or user_id not in user_files_data:
+        raise HTTPException(status_code=400, detail="Invalid or missing user ID.")
     if not file_ids:
         raise HTTPException(status_code=400, detail="No file IDs provided.")
-    if not isinstance(file_ids, list) or not all(isinstance(x, int) for x in file_ids):
-        raise HTTPException(status_code=422, detail="file_ids must be a list of integers.")
+    if not isinstance(file_ids, list) or not all(isinstance(x, str) for x in file_ids):
+        raise HTTPException(status_code=422, detail="file_ids must be a list of strings.")
 
     documents = []
     for file_id in file_ids:
-        if file_id not in uploaded_files_data:
+        if file_id not in user_files_data[user_id]:
             raise HTTPException(status_code=404, detail=f"File with ID {file_id} not found")
         
-        document = uploaded_files_data[file_id]['content']
+        document = user_files_data[user_id][file_id]['content']
         documents.append(document)
     
     print("****************")
