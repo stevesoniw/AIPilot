@@ -285,7 +285,7 @@ async function submitFiles() {
         } else {
             alert("파일을 읽을 수 없습니다. 파일이 암호화되었는지 확인해주세요.");
             // 암호화된 파일일 경우 pypdf로 읽을 수 없어 500 에러가 남. 
-            // 에러가 났을 시 해당 파일을 화면 단에서 지운다]
+            // 에러가 났을 시 해당 파일을 화면 단에서 지운다
             // 멀티 파일 올리고 하나가 에러 나면 모든 파일을 지움.
             for (let pair of formData.entries()) {
                 // console.log(pair);
