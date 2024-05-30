@@ -283,6 +283,37 @@ async function submitFiles() {
                 }
             });
         } else {
+            alert("파일을 읽을 수 없습니다. 파일이 암호화되었는지 확인해주세요.");
+            // 암호화된 파일일 경우 pypdf로 읽을 수 없어 500 에러가 남. 
+            // 에러가 났을 시 해당 파일을 화면 단에서 지운다]
+            // 멀티 파일 올리고 하나가 에러 나면 모든 파일을 지움.
+            for (let pair of formData.entries()) {
+                // console.log(pair);
+                if (pair[0] === "files") {
+                    // console.log(pair[1]);
+                    const invalidFile = pair[1].name;
+                    // 모든 file 클래스 요소 선택
+                    const fileElements = document.querySelectorAll('.file');
+
+                    // 각 파일 요소에 대해 반복
+                    fileElements.forEach(fileElement => {
+                        // 파일 제목 요소 선택
+                        const fileTitleElement = fileElement.querySelector('.file-tit');
+                        
+                        // 파일 제목 요소가 존재하는지 확인
+                        if (fileTitleElement) {
+                            // 파일 이름을 가져옴
+                            const fileName = fileTitleElement.textContent.trim();
+
+                            // 파일 이름이 "name.pdf"인 경우 파일 요소 삭제
+                            if (fileName === invalidFile) {
+                                fileElement.remove();
+                            }
+                        }
+                    });
+
+                }
+            }
             console.error("Failed to upload files. Status:", response.status);
             document.getElementById('loading_bar_ragprompt').style.display = 'none';
             if (response.headers.get("Content-Type")?.includes("application/json")) {
