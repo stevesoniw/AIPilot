@@ -538,7 +538,7 @@ async def market_data():
                 </h4>
                 <div class="analysis-box-wrap" data-aos="fade-up">
                     <div class="analysis-box">
-                        <h3 class="sub-tit">뉴스로보는 투자 분위기</h3>
+                        <h3 class="sub-tit">뉴스로 보는 투자 분위기</h3>
                         <ul class="analysis-text">     
                             {formatted_news_summary}
                         </ul>            
