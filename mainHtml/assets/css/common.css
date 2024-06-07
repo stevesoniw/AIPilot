@@ -276,3 +276,43 @@ select{height:30px;padding:0px 5px;font-size:13px;color:#555;border:1px solid #c
 textarea{width:100%;padding:5px 10px;font-size:13px;color:#555;border:1px solid #cfcfcf;border-radius:5px;resize:none;}
 textarea::-webkit-scrollbar{width:3px;}
 textarea::-webkit-scrollbar-thumb{background:#cfcfcf;}
+
+/* 2024-05-28 회의 후 수정 */
+/* ui 공통 추가 */
+.mt10{margin-top:10px;}
+.mt15{margin-top:15px;}
+.mt20{margin-top:20px;}
+.mt30{margin-top:30px;}
+.mt50{margin-top:50px;}
+.mb30{margin-bottom:30px;}
+.gap30{gap:30px;}
+.gap40{gap:40px;}
+.flex-center{display:flex;justify-content:center;align-items:center;}
+.flex-between{display:flex;justify-content:space-between;align-items:center;}
+.blind{overflow:hidden;position:absolute;clip:rect(0, 0, 0, 0);width:1px;height:1px;margin:-1px;}
+
+/* 버튼 */
+.btn-wrap{text-align:center;}
+.btn-common{display:inline-block;background:#fff;border:1px solid #888;color:#555;border-radius:5px;font-weight:500;}
+.btn-common.small{padding:5px 15px;font-size:13px;}
+.btn-common.medium{padding:9px 20px;font-size:14px;}
+.btn-common.large{padding:13px 25px;font-size:15px;}
+.btn-common.search{background:url('/static/assets/images/search_ic.png') no-repeat;background-size:14px;}
+.btn-common.medium.search{padding-right:37px;background-position:center right 15px;}
+.btn-common.btn-blue{background:#2970ff;color:#fff;border:1px solid #2970ff;}
+.btn-common.btn-blue02{background:#fff;color:#2970ff;border:1px solid #2970ff;}
+.btn-common.btn-blue02:hover{background:#f7f7ff;}
+
+/* list bullet */
+.list-bullet li{position:relative;padding-left:10px;margin-top:7px !important;}
+.list-bullet li:first-child{margin-top:0;}
+.list-bullet li:before{content:'';position:absolute;left:0;top:7px;width:4px;height:4px;background:#777;border-radius:50%;}
+
+/* 검색창 */
+.search-wrap{border-radius:99px;border-style:solid;border-width:2px;border-image-source:linear-gradient(93deg, #2970ff 14%, #92b5fb 100%);border-image-slice:1;background-image:linear-gradient(to bottom, #fff, #fff), linear-gradient(93deg, #2970ff 14%, #92b5fb 100%);background-origin:border-box;background-clip:content-box, border-box;}
+.flex-between .search-wrap{flex:1;}
+.search-wrap .search-area{display:flex;align-items:center;height:50px;padding:0 40px 0 40px;}
+.search-wrap .search-area .search-ipt-wrap{position:relative;width:100%;}
+.search-wrap .search-area .search-ipt-wrap .search-ipt{width:100%;padding:0;font-size:15px;color:#333;border:0;}
+.search-wrap .search-area .search-ipt-wrap .search-ipt::placeholder{color:#333;}
+/* .search-wrap .search-area .search-ipt-wrap .search-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);width:24px;height:24px;background:red;} */

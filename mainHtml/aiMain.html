@@ -20,10 +20,14 @@
         <link href="/static/assets/css/newFont.css" rel="stylesheet" type="text/css">
         <link href="/static/assets/css/common.css" rel="stylesheet" type="text/css">
         <link href="/static/assets/css/aos.css" rel="stylesheet" type="text/css">
-        <link href="/static/assets/css/aiMain.css" rel="stylesheet" type="text/css" />
+        
+        <!--
         <link href="/static/assets/css/frControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/dmControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/etcControl.css" rel="stylesheet" type="text/css" />
+        -->
+
+        <link href="/static/assets/css/aiMain.css" rel="stylesheet" type="text/css" />
     </head>
     <body class="main" style="display: none;">
         <div class="wrap" id="chartPilot">
@@ -378,9 +382,11 @@
                         var toggleBtn = $(this);
                         var toggleBtnTxt = toggleBtn.text() === '근거자료 Market Major News 보기'?'근거자료 Market Major News 숨기기':'근거자료 Market Major News 보기'
                         
-                        toggleBtn.text(toggleBtnTxt);
+                        toggleBtn.text(toggleBtnTxt);                        
 
-                        $('.main-news-wrap, .sub-news-wrap').fadeToggle();
+                        $('#majorNews').fadeToggle();  
+
+                        // $('.main-news-wrap, .sub-news-wrap').fadeToggle();
                     }); 
                 }                
 

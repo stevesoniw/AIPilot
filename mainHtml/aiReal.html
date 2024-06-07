@@ -179,20 +179,31 @@
             }
             function openAccordionBasedOnMenu(menu) {
                 let index = 0; 
-                if (menu === 'menu2') {
-                    index = 1; 
-                } else if (menu === 'menu3') {
+
+                if (menu.indexOf('menu2') >= 0) {
+                     index = 1; 
+                } else if (menu.indexOf('menu3') >= 0) {
                     index = 2; 
-                } else if (menu === 'menu4') {
-                    index = 3; 
+                } else if (menu.indexOf('menu4') >= 0) {
+                     index = 3; 
                 }
+
+                // if (menu === 'menu2') {
+                //     index = 1; 
+                // } else if (menu === 'menu3') {
+                //     index = 2; 
+                // } else if (menu === 'menu4') {
+                //     index = 3; 
+                // }
 
                 $('#accordion').accordion('option', 'active', index);
                 // Immediately after setting the active panel, load the appropriate content
                 setTimeout(() => {
                     loadContentForActivePanel(menu);
                 }, 10); 
-            }
+            }            
+
+
             function loadContentForActivePanel(menu) {
                 var selectedTab;
                 if (menu === 'menu2') {
@@ -201,6 +212,8 @@
                     selectedTab = $('.left-area .menu03').next().find('.list-dep[data-tab="menu_3rd_a"]'); 
                 } else if (menu === 'menu4') {
                     selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_a"]'); 
+                }else if (menu === 'menu4_c') {
+                    selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_c"]'); 
                 } else {
                     selectedTab = $('.left-area .menu01').next().find('.list-dep[data-tab="menua"]'); 
                 }

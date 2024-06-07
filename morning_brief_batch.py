@@ -23,10 +23,18 @@ import utilTool
 #FAST API 관련
 import logging
 
+from wordcloud import WordCloud
+from wordcloud import STOPWORDS
+
+
+#import httpx
+
 
 # API KEY 설정
 finnhub_client = finnhub.Client(api_key=config.FINNHUB_KEY)
+
 client = OpenAI(api_key = config.OPENAI_API_KEY)
+#client = OpenAI(api_key = config.OPENAI_API_KEY , http_client= httpx.Client(verify=False))
 
 ####################################################################################################################################
 #@@ 기능정의 : AI솔루션 PILOT웹사이트의 메인화면에서 부를 html 을 생성하는 파일 by son (24.03.10)
@@ -230,8 +238,187 @@ The HTML table should have three categories: Bull, Bear, and Neutral. List the c
     formatted_additional_news = re.sub(r"\*\*(.*?)\*\*", r"★<b>\1</b> ", formatted_additional_news)
     formatted_additional_news = re.sub(r"(\d+)\.", r"<br>\1.", formatted_additional_news)    
     print(gpt_additional_news)
-    
+
+    await generate_word_cloud(naverNewsData=naver_news_data, finnhubNewsData=finnhub_news_data)
+
     return formatted_news_summary, formatted_index_summary, formatted_opinion_summary, market_data, images_name, naver_news_data, formatted_additional_news
+
+
+async def generate_word_cloud(naverNewsData, finnhubNewsData):
+
+    SYSTEM_WORD_PROMPT = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
+
+    gpt_naver_word_cloud_message  = await gpt4_new_sum_word_cloud({"news": naverNewsData}, SYSTEM_WORD_PROMPT)
+
+
+    today_date = datetime.now().strftime('%Y%m%d')
+
+    file_path = f"mainHtml/main_word_cloud/news_word_cloud_{today_date}.png"
+
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    await save_word_cloud(wordMessage=str(gpt_naver_word_cloud_message), width=1280, height=800, filePath= file_path)
+
+
+    gpt_finnhub_word_cloud_message  = await gpt4_new_sum_word_cloud({"news": finnhubNewsData}, SYSTEM_WORD_PROMPT)
+
+    file_path = f"mainHtml/main_word_cloud/finnhub_word_cloud_{today_date}.png"
+
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    await save_word_cloud(wordMessage=str(gpt_finnhub_word_cloud_message), width=1280, height=800, filePath= file_path)
+
+
+async def save_word_cloud(wordMessage:str, width:int, height:int, filePath):
+
+    
+    STOPWORDS.add("title'")
+    STOPWORDS.add("summary'")
+    STOPWORDS.add("...")
+    STOPWORDS.add("Title")
+    STOPWORDS.add("Content")
+    STOPWORDS.add("html")   
+    STOPWORDS.add("year")
+    STOPWORDS.add("week")
+    STOPWORDS.add("next")
+    STOPWORDS.add("Opinion")
+    STOPWORDS.add("stock")
+    STOPWORDS.add("News")
+    STOPWORDS.add("https")        
+    STOPWORDS.add("시장")
+    STOPWORDS.add("내용")
+    STOPWORDS.add("의견")
+    STOPWORDS.add("뉴스")
+    STOPWORDS.add("뉴스 제목")
+    STOPWORDS.add("제목")    
+    STOPWORDS.add("주식")
+    STOPWORDS.add("주가")    
+    STOPWORDS.add("경제")
+    STOPWORDS.add("기사")
+    STOPWORDS.add("요약")
+    STOPWORDS.add("견해")    
+    STOPWORDS.add("링크")
+    STOPWORDS.add("원본")
+    STOPWORDS.add("투자")       
+    STOPWORDS.add("투자자")
+    STOPWORDS.add("기업")
+    STOPWORDS.add("가능성")
+    STOPWORDS.add("성장")    
+    STOPWORDS.add("정책")    
+    STOPWORDS.add("결과")    
+    STOPWORDS.add("변동성")    
+    STOPWORDS.add("변동")    
+    STOPWORDS.add("전략")    
+    STOPWORDS.add("상승")    
+    STOPWORDS.add("감소")    
+    STOPWORDS.add("하강")    
+    STOPWORDS.add("회사")    
+    STOPWORDS.add("영향")    
+    STOPWORDS.add("필요")    
+    STOPWORDS.add("마케팅")    
+    STOPWORDS.add("명사")    
+    STOPWORDS.add("조사")    
+    STOPWORDS.add("거래")    
+    STOPWORDS.add("소식")    
+    STOPWORDS.add("목록")        
+    STOPWORDS.add("기능")        
+    STOPWORDS.add("예정")        
+    STOPWORDS.add("한국어로")
+    STOPWORDS.add("더")        
+    STOPWORDS.add("경제적")        
+    STOPWORDS.add("데이터")        
+    STOPWORDS.add("오브")  
+    
+    STOPWORDS.add("글로벌")        
+    STOPWORDS.add("투자은행")        
+    STOPWORDS.add("비즈니스")        
+    STOPWORDS.add("인사")   
+    STOPWORDS.add("S")
+
+    STOPWORDS.add("다음은")
+    STOPWORDS.add("요청하신")
+    STOPWORDS.add("주어진")
+    STOPWORDS.add("문장에서")
+    STOPWORDS.add("고유")
+    STOPWORDS.add("명사")
+    STOPWORDS.add("명사는")
+    STOPWORDS.add("명사의")
+    STOPWORDS.add("명사들을")
+    STOPWORDS.add("한국어로")
+    STOPWORDS.add("번역한")
+    STOPWORDS.add("목록입니다")
+    STOPWORDS.add("목록")
+    STOPWORDS.add("결과는")
+    STOPWORDS.add("결과")
+    STOPWORDS.add("다음과")
+    STOPWORDS.add("같습니다")
+    STOPWORDS.add("번역")
+    STOPWORDS.add("포함")
+    STOPWORDS.add("주식회사")
+    STOPWORDS.add("주식")
+    STOPWORDS.add("해외주식")
+    STOPWORDS.add("주가")
+    STOPWORDS.add("기업")
+    STOPWORDS.add("오브")
+    STOPWORDS.add("증시")
+    STOPWORDS.add("없음")
+    STOPWORDS.add("하락")
+    STOPWORDS.add("급락")
+    STOPWORDS.add("기관투자가들")
+    STOPWORDS.add("명사가")
+    STOPWORDS.add("장중")
+    STOPWORDS.add("환율")
+    STOPWORDS.add("공급")
+    STOPWORDS.add("X")
+    
+
+    wordcloud = WordCloud(width=width, height=height, background_color='white', stopwords=STOPWORDS, font_path="./mainHtml/assets/fonts/GmarketSansTTFMedium.ttf").generate(wordMessage)    
+    
+    wordcloud.to_file(filePath)
+
+    # plt.figure(figsize=(10, 5))
+    # plt.imshow(wordcloud, interpolation='bilinear')   # wordcloud 객체를 넣으면 워드클라우드 형태의 그래프 생성
+    # plt.axis('off')  #눈금 삭제 
+    # #plt.show()
+    # plt.savefig(filePath, format='png', bbox_inches='tight', pad_inches=0)
+    # plt.close()    
+
+async def gpt4_new_sum_word_cloud(newsData, SYSTEM_PROMPT):
+    try:
+
+        prompt = '''This is the "data" mentioned by the system. Execute as instructed by the system prompt. 
+                    However, make sure to respond in Korean.  "data":''' + str(newsData)
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+                ]
+        )
+
+        # return completion.choices[0].message.content
+
+        content = completion.choices[0].message.content
+
+        prompt = '''다음과 같은 문장에서 이름 또는 지명과 같은 고유 명사만 추출해서 응답으로 보여줄래.
+                    다음:''' + str(content)
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[                
+                {"role": "user", "content": prompt}
+                ]
+        )
+
+        return completion.choices[0].message.content    
+    
+    except Exception as e:
+        logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
+        return None
+
 
 def format_text(input_text):
     # 볼드 처리
@@ -329,7 +516,10 @@ async def market_data():
                         <li class="blue-square">는 최근 3개월 동안의 지표 흐름,</li>
                         <li class="red-square">는 현재 가장 유사한 과거 기간의 흐름,</li>
                         <li class="yellow-square">이후의 그래프는 과거 기간 당시 시장 흐름의 변화입니다.</li>
-                    </ul>       
+                    </ul>
+                    <div class="btn-wrap mt10">
+                        <a href="/static/aiReal.html?menu=menu4_c" class="btn-common small btn-blue02">지수와 종목 보러가기 &gt;</a>
+                    </div>       
                 </div>         
             </div>     
             <div class="main-summary-chart" data-aos="fade-up">
@@ -348,53 +538,82 @@ async def market_data():
                 </h4>
                 <div class="analysis-box-wrap" data-aos="fade-up">
                     <div class="analysis-box">
-                        <h3 class="sub-tit">주요 뉴스 요약</h3>
+                        <h3 class="sub-tit">뉴스로보는 투자 분위기</h3>
                         <ul class="analysis-text">     
                             {formatted_news_summary}
                         </ul>            
                     </div>  
                     <div class="analysis-box">
-                        <h3 class="sub-tit">시장 지수 요약</h3>
+                        <h3 class="sub-tit">지수로 보는 마켓 상황</h3>
                         <ul class="analysis-text">
                             {formatted_index_summary}
                         </ul>
                     </div>
                     <div class="analysis-box">
-                        <h3 class="sub-tit">시장 분석 및 예측</h3>
+                        <h3 class="sub-tit">뉴스와 지수로 보는 AI 분석 예측</h3>
                         <p class="analysis-text">
                            <li>{formatted_opinion_summary}</li> 
                         </p>
                     </div>   
                 </div>                                          
                 <div class="news-show-wrap">
-                    <a href="#none" class="news-show-btn">근거자료 Market Major News 보기</a>
+                    <a href="#none" class="news-show-btn">근거자료 Market Major News 숨기기</a>
                 </div>
-            </div>
-            <div class="main-news-wrap" style="display:none;">
-                <ul class="new-list">"""
-    for news in naver_news_data:
-        html_content += f"""                              
-                    <li>
-                        <p>{news['title']}</p>
-                        <p>{news['summary']}</p>
-                    </li>"""
-    html_content += """
-                </ul>
-            </div>                    
-                
+             </div>
         </section>"""
-    html_content += f"""        
-        <section class="general-cont bg-lightpink sub-news-wrap" style="display:none;">
-            <div class="finnhub-wrap">
-                <h4 class="cont-tit" data-aos="fade-left">
-                    <span>Finnhub News</span>
-                </h4>
-                <div class="finnhub-list" data-aos="fade-right">
-                    {gpt_additional_news}
-                </div>
-            </div>
-        </section>
-    </main>"""
+    
+    html_content += f"""<section id="majorNews" class="general-cont bg-lightgrey">
+                            <h4 class="cont-tit">
+                                <span>Market Major News</span>
+                            </h4>
+                            <div class="major-news-wrap">
+                                <div class="national-news-wrap">
+                                    <h3><span>국내뉴스 포털이 뽑은 주요뉴스 키워드</span></h3>
+                                    <div class="mt20">
+                                        <img src= "/static/main_word_cloud/news_word_cloud_{today_date_fixed}.png">
+                                    </div>
+                                </div>
+                                <div class="oversea-news-wrap">
+                                        <h3><span>해외뉴스 포털이 뽑은 주요뉴스 키워드</span></h3>
+                                        
+                                    <div class="mt20">
+                                        <img src= "/static/main_word_cloud/finnhub_word_cloud_{today_date_fixed}.png">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="btn-wrap mt30">
+                                <a href="https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=403" class="btn-common large btn-blue02" target="_blank">해외뉴스 보러가기 &gt;</a>
+                            </div>
+                        </section>                  
+                      """                                     
+    
+    #         <div class="main-news-wrap" style="display:none;">
+    #             <ul class="new-list">"""
+    # for news in naver_news_data:
+    #     html_content += f"""                              
+    #                 <li>
+    #                     <p>{news['title']}</p>
+    #                     <p>{news['summary']}</p>
+    #                 </li>"""
+    # html_content += """
+    #             </ul>
+    #         </div>                    
+                
+    #     </section>"""
+    # html_content += f"""        
+    #     <section class="general-cont bg-lightpink sub-news-wrap" style="display:none;">
+    #         <div class="finnhub-wrap">
+    #             <h4 class="cont-tit" data-aos="fade-left">
+    #                 <span>Finnhub News</span>
+    #             </h4>
+    #             <div class="finnhub-list" data-aos="fade-right">
+    #                 {gpt_additional_news}
+    #             </div>
+    #         </div>
+    #     </section>
+        
+
+    html_content += "</main>"
 
     # Save the HTML content to a file
     file_path = f'mainHtml/main_summary/summary_{datetime.now().strftime("%Y-%m-%d")}.html'
@@ -416,6 +635,8 @@ async def get_foreign_stock_symbols():
     except Exception as e:
         logging.error("An error occurred in making finnhub stock code file: %s", str(e))
         return None
+    
+
     
 async def morning_batch():
     make_morning_batch = await market_data()
