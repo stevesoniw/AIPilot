@@ -55,8 +55,8 @@ async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
     try:
         prompt = '''This is the "data" mentioned by the system. Execute as instructed by the system prompt. 
     However, please make sure to respond in Korean. Your response will be displayed on an HTML screen. 
-    Therefore, include appropriate <br/> tags and useful tags to make it easy for people to read.  
-    If there are important keywords or sentences, wrap them in span tags. (example: <span>'주요문장'</span> or <font color="ff1480">핵심문장</font>)
+    Therefore, include appropriate <br> tags and useful tags to make it easy for people to read.  
+    If there are important keywords or sentences, wrap them in <strong> tags. (example: <strong>'주요문장'</strong>)
     However, do not write the CSS codes directly into the response and do not include the title separately in the response.  "data":''' + str(newsData)
         completion = client.chat.completions.create(
             model="gpt-4o",
@@ -170,7 +170,19 @@ async def naver_global_news_scraping():
 #따로 보여줄 밤사이 글로벌 뉴스. 일단 Finnhub꺼 씀. 
 async def get_finnhub_marketnews() :
     market_news = finnhub_client.general_news('general', min_id=0)
-    return market_news
+    ### 가져오는 내용 중에 headline이랑 summary 만 가져와서 리스트에 저장한다
+    formatted_news_list = []
+    try: 
+        for news in market_news:
+            formatted_news_list.append({
+                'title': news['headline'],
+                'summary': news['summary']
+            })
+        return formatted_news_list
+    except Exception as e:
+        logging.error("An error occurred in get_finnhub_marketnews function: %s", str(e))
+        return None
+    # return market_news
 
 #구글 마켓증시 index 및 trends api  
 async def get_google_market_index() :
@@ -185,7 +197,14 @@ async def get_google_market_index() :
     market_trends = results["market_trends"]
     return market_trends
 
-
+## ```html ``` 코드블럭 제거하는 함수
+def extract_text_from_html_code_block(text):
+    match = re.search(r'```html(.*?)```', text, re.DOTALL)
+    if match: ## gpt에 코드블럭 들어감. 코드블럭 안에 들어간 내용 추출
+        return match.group(1).strip()
+    else: ## 코드 블럭 없음. 그냥 텍스트 리턴
+        return text
+    
 async def generate_market_summary():
     naver_news_data = await naver_global_news_scraping()
     finnhub_news_data = await get_finnhub_marketnews()  
@@ -194,14 +213,21 @@ async def generate_market_summary():
     
     ######### gpt4 로 요약 정리할 내용 던지기 ###############
     ########## 1. 뉴스요약 ##################
+    
+    # '''You are an exceptionally skilled news analyst and financial expert. The following is financial news from the past few hours. You need to summarize and organize this financial news clearly and systematically.
+    # Summarize whether each news item is a Bull point, Bear point, or Neutral for the overall financial market and display this information in an HTML table.
+    # The HTML table should have three categories: Bull, Bear, and Neutral. The header should always be in this order and format: "Bull (긍정)", "Bear (부정)", and "Neutral (중립)". List the content of each news item briefly and clearly under the appropriate category. Before the table, include overall status quo and outlook of the market given the bull, bear, neutral news in 2-3 sentences. In the summary, mention key events happening that would affect the financial market. The answer should start with the summary and end with the table.'''
     SYSTEM_PROMPT_1 = '''You are an exceptionally skilled news analyst and financial expert. The following is financial news from the past few hours. You need to summarize and organize this financial news clearly and systematically.
 Summarize whether each news item is a Bull point, Bear point, or Neutral for the overall financial market and display this information in an HTML table.
-The HTML table should have three categories: Bull, Bear, and Neutral. List the content of each news item briefly and clearly under the appropriate category. Include a separate summary row at the bottom of the table with your overall opinion on the news and its impact in 2-3 sentences.'''
+The HTML table should have three categories: Bull, Bear, and Neutral. The header should always be in this order and format: "Bull (긍정)", "Bear (부정)", and "Neutral (중립)". List the content of each news item briefly and clearly under the appropriate category, and include <br> twice after each content to distinguish each content. Before the table, provide the overall market sentiment given the bull, bear, neutral news in 2-3 sentences. Start the summary with the following phrase: "오늘의 시장 상황: ". In the summary, mention key events happening that would affect the financial market. The answer should start with the summary and end with the table.'''
     # (이런형태임)::     너는 매우 뛰어난 뉴스 분석가이자 금융 전문가야. 다음은 지난 몇시간 동안의 금융 뉴스야.이 금융뉴스를 깔끔하고 체계적으로 정리해서 보여줘야해. 해당 뉴스가 전반적인 금융시장에 Bull 포인트 or Bear 포인트가 되는 뉴스인지 아닌지 정리 및 요약해서 표로 보여줘.    html 표 내에서 긍정적인 뉴스, 부정적인 뉴스, 기타 뉴스(=전반적인 금융시장에 영향을 주지 않는 뉴스)로 분리해서  해당 뉴스 내용을 아주 간단하고 
     #                   깔끔하게 나열해줘. 총평 부분을 html 테이블 내에 따로 행을 만들어서 전반적인 뉴스와 그 영향도에 따른 너의 의견도 1~2줄로 작성해줘.  
     news_summary = await gpt4_news_sum({"news data 1": naver_news_data, "news data 2": finnhub_news_data}, SYSTEM_PROMPT_1)
-    news_summary = re.sub(r"```html\s*(.*?)\s*```", r"\1", news_summary)
-    news_summary = markdown.markdown(news_summary)
+    # news_summary = re.sub(r"```html\s*(.*?)\s*```", r"\1", news_summary)
+    print(news_summary)
+    news_summary = markdown.markdown(extract_text_from_html_code_block(news_summary))
+    print("****after markdown********")
+    print(news_summary)
     
     ########## 2. 증시데이터와 엮어서 설명 ############
     SYSTEM_PROMPT_2 = '''
@@ -243,13 +269,25 @@ The HTML table should have three categories: Bull, Bear, and Neutral. List the c
 
     return formatted_news_summary, formatted_index_summary, formatted_opinion_summary, market_data, images_name, naver_news_data, formatted_additional_news
 
+# Title, Summary 를 한 스트링으로 묶는 함수
+def combine_title_and_summary(data):
+    # Data: [{'title': 'Mirae', 'summary': 'I love Mirae}, ...]
+    combined_text = ""
+    for item in data:
+        title = item.get('title', '')
+        summary = item.get('summary', '')
+        combined_text += "Title: " + title + '\n' + "Content: " + summary + '\n\n'
+    return combined_text.strip()
+
 
 async def generate_word_cloud(naverNewsData, finnhubNewsData):
 
     SYSTEM_WORD_PROMPT = "You are an exceptionally talented news analyst and translator. Please translate the following news into Korean, individually for each piece of news. If the news is related to the financial markets in any way, feel free to share your opinion on it briefly. Also, no matter how much data there is, please try to translate everything and respond to the end. Translate the title and content and respond systematically. respond title, content, and your opinion on them only, nothing else."
-
-    gpt_naver_word_cloud_message  = await gpt4_new_sum_word_cloud({"news": naverNewsData}, SYSTEM_WORD_PROMPT)
-
+    print("*******naver********")
+    print(naverNewsData)
+    # gpt_naver_word_cloud_message  = await gpt4_new_sum_word_cloud({"news": naverNewsData}, SYSTEM_WORD_PROMPT)
+    # print("********************")
+    # print(gpt_naver_word_cloud_message)
 
     today_date = datetime.now().strftime('%Y%m%d')
 
@@ -258,125 +296,95 @@ async def generate_word_cloud(naverNewsData, finnhubNewsData):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+        
+    prompt = '''너는 문단 안에 핵심 키워드를 잘 찾는 전문가야. 너한테 뉴스 목록을 줄 건데, 각 뉴스마다 뉴스의 핵심 키워드를 3개씩 추출해.
+    <Example>
+        Title: 위험선호 속 ‘강달러’…환율, 장중 1370원 후반대로 소폭 상승
+        Content: 원·달러 환율은 장중 1370원 후반대로 상승하고 있다. 위험자산 선호 회복에도 불구하고 달러화 강세에 환율이 상승 압력을 받고 있다. 사진=A...     
 
-    await save_word_cloud(wordMessage=str(gpt_naver_word_cloud_message), width=1280, height=800, filePath= file_path)
+    Your answer: 강달러, 달러화, 환율상승
+    
+    답변은 항상 한국어로 줘. 두 단어여도 키워드면 띄어쓰지 마. 
+    
+    The answer only contains the keywords.
+    
+    뉴스 목록:''' + str(combine_title_and_summary(naverNewsData))
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[                
+            {"role": "user", "content": prompt}
+            ]
+    )
+
+    sample = completion.choices[0].message.content 
+
+    await save_word_cloud(wordMessage=str(sample), width=1280, height=800, filePath= file_path)
 
 
-    gpt_finnhub_word_cloud_message  = await gpt4_new_sum_word_cloud({"news": finnhubNewsData}, SYSTEM_WORD_PROMPT)
-
+    # gpt_finnhub_word_cloud_message  = await gpt4_new_sum_word_cloud({"news": finnhubNewsData}, SYSTEM_WORD_PROMPT)
+    print("*******finnhub********")
+    print(finnhubNewsData)
     file_path = f"mainHtml/main_word_cloud/finnhub_word_cloud_{today_date}.png"
 
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+        
+    prompt = '''I will give you news list. Your role is to extract 3 keywords from each article. 
+    <Example>
+    [Article]
+    Title: Warren Buffett says this public speaking class changed his life—4 tips from the course
+    Content: Warren Buffett cured his fear of public speaking with a Dale Carnegie Training course, which cost $100 at the time. Here are four lessons the class taught him.
+    
+    Your answer: Warren-Buffet, public-speaking
+    
+    If the keyword consists of two words (ex. Warren Buffet), include hyphen to connect the two.
+    
+    Do not include common nouns related to economics: ex. stock, inflation, economy, consumer
+    
+    The answer only contains the keywords.
+    
+    News:''' + str(combine_title_and_summary(finnhubNewsData))
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[                
+            {"role": "user", "content": prompt}
+            ]
+    )
 
-    await save_word_cloud(wordMessage=str(gpt_finnhub_word_cloud_message), width=1280, height=800, filePath= file_path)
+    sample = completion.choices[0].message.content 
+
+    await save_word_cloud(wordMessage=str(sample), width=1280, height=800, filePath= file_path)
 
 
 async def save_word_cloud(wordMessage:str, width:int, height:int, filePath):
-
-    
-    STOPWORDS.add("title'")
-    STOPWORDS.add("summary'")
-    STOPWORDS.add("...")
+    print("*****printing keywords*****")
+    print(wordMessage)
+    ## 불용어 사전 추가
+    # STOPWORDS.add("title'")
+    # STOPWORDS.add("summary'")
+    # STOPWORDS.add("...")
     STOPWORDS.add("Title")
     STOPWORDS.add("Content")
-    STOPWORDS.add("html")   
-    STOPWORDS.add("year")
-    STOPWORDS.add("week")
-    STOPWORDS.add("next")
-    STOPWORDS.add("Opinion")
     STOPWORDS.add("stock")
-    STOPWORDS.add("News")
-    STOPWORDS.add("https")        
-    STOPWORDS.add("시장")
-    STOPWORDS.add("내용")
-    STOPWORDS.add("의견")
-    STOPWORDS.add("뉴스")
-    STOPWORDS.add("뉴스 제목")
-    STOPWORDS.add("제목")    
-    STOPWORDS.add("주식")
-    STOPWORDS.add("주가")    
-    STOPWORDS.add("경제")
-    STOPWORDS.add("기사")
-    STOPWORDS.add("요약")
-    STOPWORDS.add("견해")    
-    STOPWORDS.add("링크")
-    STOPWORDS.add("원본")
-    STOPWORDS.add("투자")       
-    STOPWORDS.add("투자자")
-    STOPWORDS.add("기업")
-    STOPWORDS.add("가능성")
-    STOPWORDS.add("성장")    
-    STOPWORDS.add("정책")    
-    STOPWORDS.add("결과")    
-    STOPWORDS.add("변동성")    
-    STOPWORDS.add("변동")    
-    STOPWORDS.add("전략")    
-    STOPWORDS.add("상승")    
-    STOPWORDS.add("감소")    
-    STOPWORDS.add("하강")    
-    STOPWORDS.add("회사")    
-    STOPWORDS.add("영향")    
-    STOPWORDS.add("필요")    
-    STOPWORDS.add("마케팅")    
-    STOPWORDS.add("명사")    
-    STOPWORDS.add("조사")    
-    STOPWORDS.add("거래")    
-    STOPWORDS.add("소식")    
-    STOPWORDS.add("목록")        
-    STOPWORDS.add("기능")        
-    STOPWORDS.add("예정")        
-    STOPWORDS.add("한국어로")
-    STOPWORDS.add("더")        
-    STOPWORDS.add("경제적")        
-    STOPWORDS.add("데이터")        
-    STOPWORDS.add("오브")  
-    
-    STOPWORDS.add("글로벌")        
-    STOPWORDS.add("투자은행")        
-    STOPWORDS.add("비즈니스")        
-    STOPWORDS.add("인사")   
+    STOPWORDS.add("stocks")
+    STOPWORDS.add("stock-market")
+    STOPWORDS.add("economy")
+    STOPWORDS.add("money")
+    STOPWORDS.add("market")
+    STOPWORDS.add("S&P-500")
     STOPWORDS.add("S")
+    STOPWORDS.add("P")
+    STOPWORDS.add("consumer")
+    STOPWORDS.add("부사장")
+    STOPWORDS.add("rate")
+    STOPWORDS.add("개최")
+    STOPWORDS.add("record")
+    STOPWORDS.add("public")
 
-    STOPWORDS.add("다음은")
-    STOPWORDS.add("요청하신")
-    STOPWORDS.add("주어진")
-    STOPWORDS.add("문장에서")
-    STOPWORDS.add("고유")
-    STOPWORDS.add("명사")
-    STOPWORDS.add("명사는")
-    STOPWORDS.add("명사의")
-    STOPWORDS.add("명사들을")
-    STOPWORDS.add("한국어로")
-    STOPWORDS.add("번역한")
-    STOPWORDS.add("목록입니다")
-    STOPWORDS.add("목록")
-    STOPWORDS.add("결과는")
-    STOPWORDS.add("결과")
-    STOPWORDS.add("다음과")
-    STOPWORDS.add("같습니다")
-    STOPWORDS.add("번역")
-    STOPWORDS.add("포함")
-    STOPWORDS.add("주식회사")
-    STOPWORDS.add("주식")
-    STOPWORDS.add("해외주식")
-    STOPWORDS.add("주가")
-    STOPWORDS.add("기업")
-    STOPWORDS.add("오브")
-    STOPWORDS.add("증시")
-    STOPWORDS.add("없음")
-    STOPWORDS.add("하락")
-    STOPWORDS.add("급락")
-    STOPWORDS.add("기관투자가들")
-    STOPWORDS.add("명사가")
-    STOPWORDS.add("장중")
-    STOPWORDS.add("환율")
-    STOPWORDS.add("공급")
-    STOPWORDS.add("X")
     
 
-    wordcloud = WordCloud(width=width, height=height, background_color='white', stopwords=STOPWORDS, font_path="./mainHtml/assets/fonts/GmarketSansTTFMedium.ttf").generate(wordMessage)    
+    wordcloud = WordCloud(width=width, height=height, background_color='white', stopwords=STOPWORDS, font_path="./mainHtml/assets/fonts/NanumBarunGothic.ttf").generate(wordMessage)    
     
     wordcloud.to_file(filePath)
 
@@ -403,6 +411,8 @@ async def gpt4_new_sum_word_cloud(newsData, SYSTEM_PROMPT):
         # return completion.choices[0].message.content
 
         content = completion.choices[0].message.content
+        print("***************")
+        print(content)
 
         prompt = '''다음과 같은 문장에서 이름 또는 지명과 같은 고유 명사만 추출해서 응답으로 보여줄래.
                     다음:''' + str(content)
@@ -511,14 +521,14 @@ async def market_data():
     html_content += f"""                
             <div class="flex-center">
                 <div class="main-tb-box" data-aos="fade-up">            
-                   <span>아래 차트는 최근 3개월 지표 데이터와 가장 유사했던 과거 3개월의 데이터를 찾아 비교 분석한 내용입니다.</span>
+                   <span>아래 차트는 유사패턴분석 알고리즘으로 최근 3개워 지표의 패턴과 가장 유사했던 과거 패턴을 찾아 비교 분석한 내용입니다.</span>
                     <ul class="main-graph-coment">
-                        <li class="blue-square">는 최근 3개월 동안의 지표 흐름,</li>
-                        <li class="red-square">는 현재 가장 유사한 과거 기간의 흐름,</li>
-                        <li class="yellow-square">이후의 그래프는 과거 기간 당시 시장 흐름의 변화입니다.</li>
+                        <li class="blue-square">: 최근 3개월 패턴,</li>
+                        <li class="red-square">: 유사한 과거 패턴,</li>
+                        <li class="yellow-square"> 이후: 과거 패턴의 이후 흐름</li>
                     </ul>
                     <div class="btn-wrap mt10">
-                        <a href="/static/aiReal.html?menu=menu4_c" class="btn-common small btn-blue02">지수와 종목 보러가기 &gt;</a>
+                        <a href="/static/aiReal.html?menu=menu4_c" class="btn-common small btn-blue02">유사패턴분석 활용하기 &gt;</a>
                     </div>       
                 </div>         
             </div>     
@@ -539,21 +549,21 @@ async def market_data():
                 <div class="analysis-box-wrap" data-aos="fade-up">
                     <div class="analysis-box">
                         <h3 class="sub-tit">뉴스로 보는 투자 분위기</h3>
-                        <ul class="analysis-text">     
+                        <div class="analysis-text">     
                             {formatted_news_summary}
-                        </ul>            
+                        </div>            
                     </div>  
                     <div class="analysis-box">
                         <h3 class="sub-tit">지수로 보는 마켓 상황</h3>
-                        <ul class="analysis-text">
+                        <div class="analysis-text">
                             {formatted_index_summary}
-                        </ul>
+                        </div>
                     </div>
                     <div class="analysis-box">
                         <h3 class="sub-tit">뉴스와 지수로 보는 AI 분석 예측</h3>
-                        <p class="analysis-text">
+                        <div class="analysis-text">
                            <li>{formatted_opinion_summary}</li> 
-                        </p>
+                        </div>
                     </div>   
                 </div>                                          
                 <div class="news-show-wrap">

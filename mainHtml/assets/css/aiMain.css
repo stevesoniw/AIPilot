@@ -271,3 +271,6 @@ main{width:100%;height:100%;}
 #majorNews{font-family:'Spoqa Han Sans Neo';}
 .major-news-wrap{margin-top:40px;}
 .major-news-wrap h3 span{display:inline-block;padding:5px 10px;color:#fff;background:#2970ff;border-radius:20px;}
+
+/* test */
+.analysis-box .analysis-text p + table{margin-top:20px;}
