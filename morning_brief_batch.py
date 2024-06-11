@@ -521,7 +521,7 @@ async def market_data():
     html_content += f"""                
             <div class="flex-center">
                 <div class="main-tb-box" data-aos="fade-up">            
-                   <span>아래 차트는 유사패턴분석 알고리즘으로 최근 3개워 지표의 패턴과 가장 유사했던 과거 패턴을 찾아 비교 분석한 내용입니다.</span>
+                   <span>아래 차트는 유사패턴분석 알고리즘으로 최근 3개월 지표의 패턴과 가장 유사했던 과거 패턴을 찾아 비교 분석한 내용입니다.</span>
                     <ul class="main-graph-coment">
                         <li class="blue-square">: 최근 3개월 패턴,</li>
                         <li class="red-square">: 유사한 과거 패턴,</li>
@@ -592,7 +592,7 @@ async def market_data():
                                 </div>
                             </div>
                             <div class="btn-wrap mt30">
-                                <a href="https://finance.naver.com/news/news_list.naver?mode=LSS3D&section_id=101&section_id2=258&section_id3=403" class="btn-common large btn-blue02" target="_blank">해외뉴스 보러가기 &gt;</a>
+                                <a href="/static/aiReal.html?menu=menuc" class="btn-common large btn-blue02">해외뉴스 보러가기 &gt;</a>
                             </div>
                         </section>                  
                       """                                     

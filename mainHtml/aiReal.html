@@ -213,8 +213,10 @@
                 } else if (menu === 'menu4') {
                     selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_a"]'); 
                 }else if (menu === 'menu4_c') {
-                    selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_c"]'); 
-                } else {
+                    selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_c"]');
+                }else if (menu === 'menuc') {
+                    selectedTab = $('.left-area .menu01').next().find('.list-dep[data-tab="menuc"]'); 
+                }else {
                     selectedTab = $('.left-area .menu01').next().find('.list-dep[data-tab="menua"]'); 
                 }
                 if (selectedTab.length > 0) {
