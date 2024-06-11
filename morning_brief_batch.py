@@ -304,8 +304,9 @@ async def generate_word_cloud(naverNewsData, finnhubNewsData):
 
     Your answer: 강달러, 달러화, 환율상승
     
-    답변은 항상 한국어로 줘. 두 단어여도 키워드면 띄어쓰지 마. 
+    답변은 항상 한국어로 줘. 두 단어여도 키워드면 띄어쓰지 마. 키워드는 명사여야 해. '애플이' (X) '애플' (O) 특파원 이름은 키워드로 넣지마. 2024, 2021년도최고 같은 연도는 키워드로 넣지마. 
     
+    답변은 키워드만 나열해서 줘.
     The answer only contains the keywords.
     
     뉴스 목록:''' + str(combine_title_and_summary(naverNewsData))
@@ -313,7 +314,8 @@ async def generate_word_cloud(naverNewsData, finnhubNewsData):
         model="gpt-4o",
         messages=[                
             {"role": "user", "content": prompt}
-            ]
+            ],
+        temperature=0.1
     )
 
     sample = completion.choices[0].message.content 
@@ -338,9 +340,9 @@ async def generate_word_cloud(naverNewsData, finnhubNewsData):
     
     Your answer: Warren-Buffet, public-speaking
     
-    If the keyword consists of two words (ex. Warren Buffet), include hyphen to connect the two.
+    The keyword should always be proper nouns. If the keyword consists of two words (ex. Warren Buffet), include hyphen to connect the two.
     
-    Do not include common nouns related to economics: ex. stock, inflation, economy, consumer
+    You must not include common nouns (ex. long, pay, earnings) that does not qualify as main keywords of the news. Do not include verbs (spend, pay) in keywords.
     
     The answer only contains the keywords.
     
@@ -381,10 +383,16 @@ async def save_word_cloud(wordMessage:str, width:int, height:int, filePath):
     STOPWORDS.add("개최")
     STOPWORDS.add("record")
     STOPWORDS.add("public")
+    STOPWORDS.add("Keywords")
+    STOPWORDS.add("키워드")
+    STOPWORDS.add("U.S.")
+    STOPWORDS.add("U")
+    STOPWORDS.add("markdown")
+    STOPWORDS.add("html")
 
     
 
-    wordcloud = WordCloud(width=width, height=height, background_color='white', stopwords=STOPWORDS, font_path="./mainHtml/assets/fonts/NanumBarunGothic.ttf").generate(wordMessage)    
+    wordcloud = WordCloud(width=width, height=height, background_color='white', stopwords=STOPWORDS, font_path="./mainHtml/assets/fonts/NanumBarunGothic.ttf", normalize_plurals=True, include_numbers=False).generate(wordMessage)    
     
     wordcloud.to_file(filePath)
 
@@ -549,7 +557,7 @@ async def market_data():
                 <div class="analysis-box-wrap" data-aos="fade-up">
                     <div class="analysis-box">
                         <h3 class="sub-tit">뉴스로 보는 투자 분위기</h3>
-                        <div class="analysis-text">     
+                        <div class="analysis-text vertop-table">     
                             {formatted_news_summary}
                         </div>            
                     </div>  
@@ -567,14 +575,14 @@ async def market_data():
                     </div>   
                 </div>                                          
                 <div class="news-show-wrap">
-                    <a href="#none" class="news-show-btn">근거자료 Market Major News 숨기기</a>
+                    <p class="news-info-p">※ 매일 오전 07:00에 갱신됩니다.</p>
                 </div>
              </div>
         </section>"""
     
     html_content += f"""<section id="majorNews" class="general-cont bg-lightgrey">
                             <h4 class="cont-tit">
-                                <span>Market Major News</span>
+                                <span>News Word Cloud</span>
                             </h4>
                             <div class="major-news-wrap">
                                 <div class="national-news-wrap">
