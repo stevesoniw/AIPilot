@@ -252,15 +252,27 @@ async function fetchIndicatorNews() {
         } else {
 
             indicatorNewsContainer.innerHTML = ''; // 기존 내용을 지우고 새로운 뉴스로 업데이트
+
             indicatorNews.forEach(news => {
+
+                //2024-06-12 추가
+                const newsInstructionDiv = document.createElement('div');
+                newsInstructionDiv.className = 'indicatorNews-instruction';
+
+                const newsDepDiv = document.createElement('div');
+                newsDepDiv.className = 'news-dep';
+
+                const newsParentDiv = document.createElement('div');    
+
+
                 const newsDiv = document.createElement('div');
                 newsDiv.className = 'indicatorNews-container';
     
-                const imageUrl = news.gettyImageUrl || "/static/assets/images/nature.jpg"; // Default image
-                const image = document.createElement('img');
-                image.src = imageUrl;
-                image.alt = "News Image";
-                image.className = 'indicatorNews-image';
+                // const imageUrl = news.gettyImageUrl || "/static/assets/images/nature.jpg"; // Default image
+                // const image = document.createElement('img');
+                // image.src = imageUrl;
+                // image.alt = "News Image";
+                // image.className = 'indicatorNews-image';
     
                 const title = document.createElement('div');
                 title.className = 'indicatorNews-title';
@@ -276,16 +288,23 @@ async function fetchIndicatorNews() {
     
                 const translateButton = document.createElement('button');
                 translateButton.textContent = '한국어로 번역하기';
-                translateButton.className = 'translate-button';
+                translateButton.className = 'btn-common small';
                 translateButton.onclick = () => translateNewsContent(newsDiv); // Function to handle translation
     
-                newsDiv.appendChild(image);
+                //newsDiv.appendChild(image);
                 newsDiv.appendChild(title);
                 newsDiv.appendChild(date);
                 newsDiv.appendChild(content);
                 newsDiv.appendChild(translateButton);
+
+                //2024-06-12 추가
+                newsParentDiv.appendChild(newsDiv);
+                newsDepDiv.appendChild(newsParentDiv);
+                newsInstructionDiv.appendChild(newsDepDiv);
+
+                indicatorNewsContainer.appendChild(newsInstructionDiv);
     
-                indicatorNewsContainer.appendChild(newsDiv);
+                // indicatorNewsContainer.appendChild(newsDiv);
             });
         }
     }catch (error) {

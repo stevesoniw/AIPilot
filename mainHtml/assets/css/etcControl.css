@@ -61,7 +61,7 @@
     /* 툴팁 */
 .ui-tooltip{padding:10px 10px;color:#fff;border:none;background-color:#2970ff;box-shadow:none;}
 .ui-tooltip.ui-widget.ui-widget-content{border-radius:5px; font-size:13px; border:none; color:#fff;}
-.ui-tooltip.arrow::after{content:'';position:absolute;left:10px;bottom:-4px;width:8px;height:8px;transform:rotate(45deg);background:#2970ff;}
+.ui-tooltip .arrow::after{content:'';position:absolute;left:10px;bottom:-4px;width:8px;height:8px;transform:rotate(45deg);background:#2970ff;}
 
 .select-wrap{display:flex;flex-direction:column;gap:15px;}
 .select-wrap label:hover{color:inherit;cursor:auto;}

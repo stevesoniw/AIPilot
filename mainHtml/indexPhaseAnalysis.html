@@ -3,13 +3,13 @@
     <h2 class="s-tit">주요 마켓지수 유사패턴 분석</h2>
     <h3 class="s-tit">다양한 Major Index들에 대한 유사패턴 분석시스템입니다.</p></h3>
     <div class="similarity-container">
-        <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
-            <h4 style="font-size: 16px;margin-bottom: 10px;">주요 마켓지수 유사패턴 분석 프로그램</h4>
+        <div class="info-box01 mb30">
+            <h4 class="sub-tit">주요 마켓지수 유사기간 분석 프로그램</h4>
             <ul>
-                <li>- 유사패턴 차트분석 프로그램은 Historic 데이터를 통해 현재 시장 상황을 해석하고, 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
+                <li>- 유사기간 차트분석 프로그램은 Historic 데이터를 통해 현재 시장 상황을 해석하고, 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
                 <li>- 관심있는 마켓 지수의 차트를 조회하고, 현재와 유사했던 과거 기간을 찾아보세요 </li>
             </ul>
-        </div>  
+        </div>
         <!-- 입력 폼 및 설정 섹션 -->
         <div class="table-wrap02">
             <table>
@@ -23,24 +23,26 @@
                     <tr>
                         <th scope="col">분석대상</th>
                         <td>
-                            <select id="marketindex-selectedData" class="similarity-form-input">
-                                <option value="^DJI">다우지수 (Dow Jones Industrial Average)</option>
-                                <option value="^IXIC">나스닥종합 (NASDAQ Composite)</option>
-                                <option value="^GSPC">S&P 500</option>
-                                <option value="^KS11">KOSPI (Korea Composite Stock Price Index)</option>
-                                <option value="^KQ11">KOSDAQ</option>
-                                <option value="^N225">니케이 225 (Nikkei 225)</option>
-                                <option value="^HSI">항셍지수 (Hang Seng Index)</option>
-                                <option value="^FTSE">FTSE 100</option>
-                                <option value="^GDAXI">DAX (Deutscher Aktienindex)</option>
-                                <option value="^FCHI">CAC 40</option>
-                                <option value="^STOXX50E">Euro Stoxx 50</option>
-                                <option value="^AXJO">S&P/ASX 200</option>
-                                <option value="^AORD">All Ordinaries</option>
-                                <option value="^BSESN">SENSEX (Bombay Stock Exchange Sensitive Index)</option>
-                                <option value="^NSEI">Nifty 50</option>
-                                <option value="^BVSP">Bovespa (Brazilian Stock Exchange Index)</option>
-                            </select>
+                            <div class="select-box-wrap direct">
+                                <select id="marketindex-selectedData" class="select-box h30">
+                                    <option value="^DJI">다우지수 (Dow Jones Industrial Average)</option>
+                                    <option value="^IXIC">나스닥종합 (NASDAQ Composite)</option>
+                                    <option value="^GSPC">S&P 500</option>
+                                    <option value="^KS11">KOSPI (Korea Composite Stock Price Index)</option>
+                                    <option value="^KQ11">KOSDAQ</option>
+                                    <option value="^N225">니케이 225 (Nikkei 225)</option>
+                                    <option value="^HSI">항셍지수 (Hang Seng Index)</option>
+                                    <option value="^FTSE">FTSE 100</option>
+                                    <option value="^GDAXI">DAX (Deutscher Aktienindex)</option>
+                                    <option value="^FCHI">CAC 40</option>
+                                    <option value="^STOXX50E">Euro Stoxx 50</option>
+                                    <option value="^AXJO">S&P/ASX 200</option>
+                                    <option value="^AORD">All Ordinaries</option>
+                                    <option value="^BSESN">SENSEX (Bombay Stock Exchange Sensitive Index)</option>
+                                    <option value="^NSEI">Nifty 50</option>
+                                    <option value="^BVSP">Bovespa (Brazilian Stock Exchange Index)</option>
+                                </select>
+                            </div>
                         </td>
                     </tr>
                     <!-- 타겟 기간 -->
@@ -54,11 +56,16 @@
                             </div>
                         </th>
                         <td>
-                            <div class="input-date-wrap">
+                            <div class="date-selection table-ver">
+                                <input type="text" id="marketindex-targetDateStart" class="date-picker" disabled>
+                                <span class="mlmr5">~</span>
+                                <input type="text" id="marketindex-targetDateEnd" class="date-picker" disabled>
+                            </div>                                                        
+                            <!-- <div class="input-date-wrap">
                                 <input type="date" id="marketindex-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
                                 <span>~</span>
                                 <input type="date" id="marketindex-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
-                            </div>
+                            </div> -->
                         </td>
                     </tr>
                     <!-- 분석 기간 -->
@@ -72,11 +79,16 @@
                             </div>
                         </th>
                         <td>
-                            <div class="input-date-wrap">
+                            <div class="date-selection table-ver">
+                                <input type="text" id="marketindex-compareDateStart" class="date-picker" disabled>
+                                <span class="mlmr5">~</span>
+                                <input type="text" id="marketindex-compareDateEnd" class="date-picker" disabled>
+                            </div>                            
+                            <!-- <div class="input-date-wrap">
                                 <input type="date" id="marketindex-compareDateStart" class="similarity-form-input similarity-range-input" value="2010-01-01">
                                 <span>~</span>
                                 <input type="date" id="marketindex-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-10-31">
-                            </div>
+                            </div> -->
                         </td>
                     </tr>
                     <!-- N-스텝 설정 -->
@@ -111,16 +123,16 @@
                 </ul>
             </div>
         </div>
-        <div style="text-align: center;">
-            <button class="similarity-button" id="similarity-generateButton" onclick="javascript:generateMarketIndexAnalysis();">Generate</button>
+        <div class="btn-wrap mt30">
+            <button class="btn-common medium" id="similarity-generateButton" onclick="javascript:generateMarketIndexAnalysis();">Generate</button>
         </div>
         <div id="loading_bar_marketindex" class="loading_bar" style="margin-left: 0px;">
             <img src="/static/assets/images/LoadingBar_E.gif">
             <p>유사패턴 데이터 서치중입니다.</p>
         </div>    
-        <div id="marketIndexOriginalChartContainer" style="overflow: hidden;width:100%;height:500px;">
+        <div id="marketIndexOriginalChartContainer" class="mt30" style="overflow: hidden;width:100%;height:500px;">
         </div>
-        <div id="marketIndexAlignedChartContainer" style="overflow: hidden;width:100%;height:500px;">
+        <div id="marketIndexAlignedChartContainer" class="mt30" style="overflow: hidden;width:100%;height:500px;">
         </div>                
     </div>
 </div>

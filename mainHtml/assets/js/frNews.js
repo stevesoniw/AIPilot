@@ -39,6 +39,10 @@ async function goNews() {
             // displayNews 함수를 호출하여 뉴스 데이터를 화면에 표시
             document.getElementById('loading_bar_news').style.display = 'none';
             displayNews(seekingNewsData);
+
+            //2024-05-28 추가
+            $('#more-links ul li a').attr('target', '_blank');
+
         } else {
             console.error('could not get the seekingNewsData');
         }
@@ -60,7 +64,9 @@ function displayNews(seekingNewsData) {
             newsItem.className = 'news-item';
             newsItem.innerHTML = `
                 <div class="news-content">
+                    <!--
                     <img src="${imageUrl}" alt="News Image">
+                    -->
                     <div>
                         <div class="news-title">${item.title}</div>
                         <p class="news-body">${item.content}</p>
@@ -68,7 +74,9 @@ function displayNews(seekingNewsData) {
                     </div>
                 </div>
             `;
-            addTranslationButton(newsItem, item.title, item.content, 'lama', '한국어 번역하기(Lama)');
+
+            //addTranslationButton(newsItem, item.title, item.content, 'lama', '한국어 번역하기(Lama)');
+
             addTranslationButton(newsItem, item.title, item.content, 'gpt', '한국어 번역하기(GPT)');
        
 
@@ -81,7 +89,7 @@ function displayNews(seekingNewsData) {
 
 function addTranslationButton(newsItem, title, content, method, buttonText) {
     const translateButton = document.createElement('button');
-    translateButton.className = 'newstrans-button';
+    translateButton.className = 'btn-common small mt10';
     translateButton.textContent = buttonText;
     newsItem.querySelector('.news-content > div').appendChild(translateButton);
 

@@ -11,6 +11,7 @@ from fredapi import Fred
 from openai import OpenAI
 #config 파일
 import config
+import os
 
 
 # API KEY 설정
@@ -19,8 +20,12 @@ fred = Fred(api_key=config.FRED_API_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
 logging.basicConfig(level=logging.DEBUG)
 
+
 # json 파일 저장할 경로 설정
 base_path = Path("batch/fred_indicators")
+
+if not os.path.exists(base_path):
+    os.makedirs(base_path)
 
 ##################################################################################################################
 #@@ 기능정의 : 해외주요경제지표들에 대해 API를 활용하여 미리 차트 json및 AI 의견을 생성해놓는 배치파일 by son (24.03.30)
@@ -95,7 +100,7 @@ async def fetch_and_save_series_data(series_id, series_name, start_date=None):
         file_path = base_path / f"{series_id}.json"
         with file_path.open("w") as f:
             json.dump(formatted_data, f)
-        
+        #batch\fred_indicators\UNRATE1_gpt4.txt
         # 추가적인 분석을 위해 gpt4_chart_talk 함수 사용
         analysis_result = await gpt4_chart_talk(formatted_data, series_name)
         # 분석 결과를 JSON 파일로 저장

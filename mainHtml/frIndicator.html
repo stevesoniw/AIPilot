@@ -3,7 +3,7 @@
 <h2 class="s-tit">글로벌 주요 경제지표</h2>
 <h3 class="s-tit new-sub-tit">핵심지표 데이터 보기</h3>
 <div class="form-container">
-    <p class="form-header">데이터 확인을 원하는 <span>지표들</span>을 선택해주세요.</p>
+    <p class="form-header">분석을 원하는 <span>지표들</span>을 선택해주세요.</p>
     <form id="indicatorForm">
         <div class="checkbox-row">
             <!-- 기존 체크박스 -->
@@ -99,14 +99,21 @@
                 <input type="checkbox" id="aiOpinionCheck" name="aiOpinionCheck">
                 <label for="aiOpinionCheck" class="ai-opinion-label">AI의견 함께보기</label>
             </div> -->
-            <div class="center-button">
+            <div class="btn-wrap">
 
                 <!-- 2024-04-05 new-show-chart-btn 클래스 추가 -->
+                <!--
                 <button type="button" id="indicatorButton" class="indicatorButton new-show-chart-btn" onclick="fetchAndDisplayIndicators();">Show Chart</button>
+                -->
                 <!-- 2024-04-05 수정 끝 -->
+                 <!--
+                <button type="button" id="clearButton" onclick="clearData();">데이터 클리어</button>
+                -->                
+                <a href="#" id="indicatorButton" class="btn-common medium btn-blue02" onclick="fetchAndDisplayIndicators();">차트보기</a>
+                <a href="#" id="" class="btn-common medium" onclick="clearData();">초기화</a>
 
             </div>                        
-            <button type="button" id="clearButton" onclick="clearData();">데이터 클리어</button>
+            
         </div> 
         <!-- <div class="ai-opinion-warning">
             *AI의견 함께보기 체크시 응답 속도가 늦어질수 있습니다.
@@ -141,10 +148,10 @@
         </div>
     </div>
 </div>  
-<h3 class="nth-menu">SPECIAL 지표 분석</h3>
+<h3 class="sub-tit">SPECIAL 지표 분석</h3>
 <div class="indicator-anal-area">
-    <div id="indicator_anal_div">
-        <select class="indicator-custom-select" id="indicator_select" onchange="fetchIndicatorAnal();">
+    <div id="indicator_anal_div" class="select-box-wrap direct">
+        <select class="select-box" id="indicator_select" onchange="fetchIndicatorAnal();">
             <option value="">데이터를 선택해주세요</option>
             <option value="UNRATE1">실업률데이터 기반 투자수익률 분포 #1</option>
             <option value="UNRATE2">실업률데이터 기반 투자수익률 분포 #2</option>
@@ -157,25 +164,36 @@
     <div id="fred_anal_area"></div> 
 </div>
  
-<h3 class="nth-menu">특정시점 경제뉴스 검색하기</h3>
-<div class="indicator-news-area" id="bond-area" style="display:block;">
-    <div class="indicator-date-selection">
+<h3 class="sub-tit">경제뉴스 검색하기</h3>
+<div class="indicator-news-area bond-area" id="bond-area" style="display:block;">    
+    <!-- <div class="indicator-date-selection">
         <p class="indicator-date-instruction">"과거 경제뉴스 검색 기간을 선택해주세요"</p>
         <label for="indicatorFromDate">From</label>
         <input type="text" id="indicatorFromDate" name="indicatorFromDate">
         <label for="indicatorToDate">To</label>
         <input type="text" id="indicatorToDate" name="indicatorToDate"><br/>
         <button id="indicatorNewsSearch" class="indicatorNewsSearch" onclick="fetchIndicatorNews()">검색</button>
-    </div>   
+    </div>    -->
+    <p class="date-instruction mt0">과거 경제뉴스 검색 기간을 선택해주세요</p>
+    <div class="date-selection">
+        <input type="text" id="indicatorFromDate" name="indicatorFromDate" class="date-picker" disabled>
+        <span class="mlmr5">~</span>
+        <input type="text" id="indicatorToDate"  name="indicatorToDate" class="date-picker" disabled>
+        <!-- <button id="stockChartsearch" class="stockChartsearch">검색</button> -->
+        <a href="#" id="stockChartsearch" class="btn-common small ml10"  onclick="fetchIndicatorNews()">검색</a>
+    </div>
     <div id="loading_bar_indicatorNews" class="loading_bar" style="margin-left: 0px;">
         <img src="/static/assets/images/LoadingBar_C.gif">
         <p class="loading-text">데이터 로딩중입니다.</p>
-    </div>                                                   
-    <div class="indicatorNews-instruction">
+    </div>                                  
+    <div id="indicator_news_div">
+        
+    </div>  
+    <!-- <div class="indicatorNews-instruction">
         <ul class="news-dep">
             <div id="indicator_news_div"></div>  
         </ul>
-    </div>   
+    </div>    -->
 </div>                                     
 
 </div>

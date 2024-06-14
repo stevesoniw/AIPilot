@@ -1,10 +1,45 @@
 <!-- [#2-1 메뉴 시작] 국내 뉴스정보 -->             
 <div id="menu_2nd_a" class="menu-cont">
     <h2 class="s-tit">국내 뉴스 Summary</h2>
-    <h3 class="s-tit">주요 시장 뉴스를 확인해보세요</h3>
+    <h3 class="s-tit">주요 시장 뉴스를 확인해보세요</p></h3>
+
+    <div class="input-container">
+        <div class="flex-between gap30 mb30">
+            <div class="search-wrap">
+                <div class="search-area">
+                    <div class="search-ipt-wrap">
+                        <input type="text" class="search-ipt naver-api-input" placeholder="검색할 뉴스 키워드를 입력해주세요.(예: 삼성전자)" />
+                        <a href="#" class="search-btn" onclick="naverSearchAPI()"><span class="blind">검색</span></a>
+                    </div>
+                </div>
+            </div>
+            <a href="#" class="btn-common medium"  onclick="naverGptAskStream()">조회된 기사들에 대한 AI 요약 및 의견 보기(GPT4)</a>
+        </div>
+
+        <ul class="tab-wrap">
+            <li class="tab-list active">
+                <a href="#" data-news-type="주요뉴스" onclick="naverScrapingNews(1)">주요뉴스</a>
+            </li>
+            <li class="tab-list">
+                <a href="#" data-news-type="시황,전망" onclick="naverScrapingNews(2)">시황,전망</a>
+            </li>
+            <li class="tab-list">
+                <a href="#" data-news-type="기업,종목분석" onclick="naverScrapingNews(3)">기업,종목분석</a>
+            </li>
+            <li class="tab-list">
+                <a href="#" data-news-type="채권,선물" onclick="naverScrapingNews(4)">채권,선물</a>
+            </li>
+            <li class="tab-list">
+                <a href="#" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</a>
+            </li>
+            <li class="tab-list">
+                <a href="#" data-news-type="환율" onclick="naverScrapingNews(6)">환율</a>
+            </li>
+        </ul>
+    </div>
 
 
-    <div id="news_selection_area" class="news-selection">
+    <!-- <div id="news_selection_area" class="news-selection">
         <button class="news-btn selected" data-news-type="주요뉴스" onclick="naverScrapingNews(1)">주요뉴스</button>
         <button class="news-btn" data-news-type="시황,전망" onclick="naverScrapingNews(2)">시황,전망</button>
         <button class="news-btn" data-news-type="기업,종목분석" onclick="naverScrapingNews(3)">기업,종목분석</button>
@@ -12,17 +47,17 @@
         <button class="news-btn" data-news-type="공시,메모" onclick="naverScrapingNews(5)">공시,메모</button>
         <button class="news-btn" data-news-type="환율" onclick="naverScrapingNews(6)">환율</button>
         <button class="news-api-btn" data-news-type="네이버 검색" onclick="naverKeyword()">일반 검색</button>
-    </div>
+    </div> -->
             <!-- AI 요약 버튼 추가 -->
-    <div class="ai-summary-button-container">
+    <!-- <div class="ai-summary-button-container">
         <button class="ai-summary-button" onclick="naverGptAskStream()">아래 기사들에 대한 AI 요약 및 의견 보기(GPT4)</button>
         <button class="ai-summary-button" onclick="naverLamaAsk()">(Llama3)</button>
-    </div>
+    </div> -->
     <div class="ai-summary-result" style="display:none;"></div>    
     <div id="loading_bar_navergpt" class="loading_bar" style="margin-left: 0px;">
         <img src="/static/assets/images/LoadingBar_C.gif">
         <p class="loading-text">데이터 로딩중입니다. AI 의견은 속도가 느릴수 있습니다.</p>
     </div>                      
-    <div id="news_show_area" class="news-show"></div> 
+    <div id="news_show_area"></div> 
 </div> 
 <!-- [#2-1 메뉴 끝] 국내 뉴스정보 -->      

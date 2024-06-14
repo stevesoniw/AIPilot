@@ -11,8 +11,8 @@
          <!-- Tab1 유사 국면 분석(단변량)  -->
         <div id="Tab1" class="similarity-tab-content">
             <div class="similarity-container">
-                <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
-                    <h4 style="font-size: 16px;margin-bottom: 10px;">Univariate Time Series Analysis Tool</h4>
+                <div class="info-box01 mb30">
+                    <h4  class="sub-tit">Univariate Time Series Analysis Tool</h4>
                     <ul>
                         <li>- 유사패턴 차트분석 프로그램은 역사적 데이터를 통해 현재 시장 상황을 해석하고 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
                         <li>- 단일지수 유사패턴 분석은 단일 지표를 중심으로 과거의 특정 기간 동안의 데이터 흐름을 분석하여, 그 추이가 사용자가 설정한 타겟 기간의 추이와 가장 유사한 시점을 찾아주는 시스템입니다.</li>
@@ -32,90 +32,92 @@
                             <tr>
                                 <th scope="col">분석대상</th>
                                 <td>
-                                    <select id="similarity-selectedData" class="similarity-form-input">
-                                        <option value="GT2 Govt">미국채 2년 금리</option>
-                                        <option value="GT5 Govt">미국채 5년 금리</option>
-                                        <option value="GT10 Govt">미국채 10년 금리</option>
-                                        <option value="GT30 Govt">미국채 30년 금리</option>
-                                        <option value="USYC2Y10 Index">미국 10/2 커브</option>
-                                        <option value="USYC5Y30 Index">미국 30/5 커브</option>
-                                        <option value="USYC1030 Index">미국 30/10 커브</option>
-                                        <option value="USGGBE10 Index">미국 BEI 10년 스프레드</option>
-                                        <option value="GTII10 Govt">TSY INFL IX N/B</option>
-                                        <option value="GTDEM2Y Govt">독일 국채 2년 금리</option>
-                                        <option value="GTDEM5Y Govt">독일 국채 5년 금리</option>
-                                        <option value="GTDEM10Y Govt">독일 국채 10년 금리</option>
-                                        <option value="GTDEM30Y Govt">독일 국채 30년 금리</option>
-                                        <option value="DEYC2Y10 Index">독일 10/2 커브</option>
-                                        <option value="DEYC5Y30 Index">독일 30/5 커브</option>
-                                        <option value="DEGGBE10 Index">독일 BEI 10년 스프레드</option>
-                                        <option value="GTDEMII10Y Govt">DEUTSCHLAND I/L</option>
-                                        <option value="GTESP10Y Govt">스페인 국채 10년 금리</option>
-                                        <option value="GTITL10Y Govt">이탈리아 국채 10년 금리</option>
-                                        <option value="GTGBP10Y Govt">영국 국채 10년 금리</option>
-                                        <option value="GTCAD10Y Govt">캐나다 국채 10년 금리</option>
-                                        <option value="GTAUD10Y Govt">호주 국채 10년 금리</option>
-                                        <option value="GTJPY10Y Govt">일본 국채 10년 금리</option>
-                                        <option value="CCSWNI5 BGN Curncy">중국 5년 스왑 금리</option>
-                                        <option value="IRSWNI5 BGN Curncy">인도 5년 스왑 금리</option>
-                                        <option value="ODF29 Comdty">브라질 5년 스왑 금리</option>
-                                        <option value="MPSW5E BGN Curncy">멕시코 5년 스왑 금리</option>
-                                        <option value="GVSK3YR Index">한국 국채 3년 금리</option>
-                                        <option value="GVSK10YR Index">한국 국채 10년 금리</option>
-                                        <option value="GT2 Govt - FDTRMID Index">미국채 2년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="GTDEM2Y Govt - EUORDEPO Index">독일 2년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="GVSK3YR Index - KORP7DR Index">한국 3년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="DXY Index">달러 인덱스</option>
-                                        <option value="KRW Curncy">USD/KRW</option>
-                                        <option value="EUR Curncy">USD/EUR</option>
-                                        <option value="JPY Curncy">USD/JPY</option>
-                                        <option value="CNH Curncy">USD/CNH</option>
-                                        <option value="BRL Curncy">USD/BRL</option>
-                                        <option value="INR Curncy">USD/INR</option>
-                                        <option value="MXN Curncy">USD/MXN</option>
-                                        <option value="GBP Curncy">USD/GBP</option>
-                                        <option value="HKD Curncy">USD/HKD</option>
-                                        <option value="CAD Curncy">USD/CAD</option>
-                                        <option value="CHF Curncy">USD/CHF</option>
-                                        <option value="AUD Curncy">USD/AUD</option>
-                                        <option value="IDR Curncy">USD/IDR</option>
-                                        <!--<option value="SPX Index">S&P 500</option>
-                                        <option value="CCMP Index">나스닥</option>-->
-                                        <option value="DAX Index">DAX</option>
-                                        <option value="BCOM Index">원자재인덱스</option>
-                                        <option value="XAU Curncy">금</option>
-                                        <option value="USCRWTIC Index">WTI 원유</option>
-                                        <option value="TSFR3M Index">Term SOFR 3m 금리</option>
-                                        <option value="USGG3M Index">미국 3m 금리</option>
-                                        <option value="US0003M Index">LIBOR 3m 금리</option>
-                                        <option value="UREPTA30 Index">US Tri Party Avg Rt >30 Days</option>
-                                        <option value="LQD US Equity">LQD ETF</option>
-                                        <option value="HYG US Equity">HYG ETF</option>
-                                        <option value="CDX IG CDSI GEN 5Y Corp">CDX IG</option>
-                                        <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY</option>
-                                        <option value="EMLC US Equity">EMLC ETF</option>
-                                        <option value="EMB US Equity">EMB ETF</option>
-                                        <option value="VIX Index">VIX 지수</option>
-                                        <option value="MOVE Index">MOVE 지수</option>
-                                        <option value=".VIXVXN Index">nadaq - spx vol</option>
-                                        <option value="GFSIFLOW Index">BofA Sec GFSIFLOW</option>
-                                        <option value="JLGPUSPH Index">Fed Speeches Hawk-Dove Score</option>
-                                        <option value="JLGPEUPH Index">ECB Speeches Hawk-Dove Score</option>
-                                        <option value="MRIEM Index">EM Macro Risk Index</option>
-                                        <option value="ACMTP10 Index">미국채 10년 금리 기간 프리미엄</option>
-                                        <option value="FWISUS55 Index">USD Inf Swap Fwd 5Y5Y</option>
-                                        <option value="ILM3NAVG Index">Bankrate 30Y Mortgage Rates Na</option>
-                                        <option value="ECRPUS 1Y Index">US Recession Prob Forecast</option>
-                                        <option value="CESIUSD Index">미국 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIUSH Index">CESIUSH</option>
-                                        <option value="CESIUSS Index">CESIUSS</option>
-                                        <option value="CESIEUR Index">유럽 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIEUH Index">CESIEUH</option>
-                                        <option value="CESIEUS Index">CESIEUS</option>
-                                        <option value="CESIEM Index">이머징 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIEMXP Index">CESIEMXP</option>
-                                        <option value="CESIEMFW Index">CESIEMFW</option>
-                                    </select>
+                                    <div class="select-box-wrap direct">
+                                        <select id="similarity-selectedData" class="select-box h30">
+                                            <option value="GT2 Govt">미국채 2년 금리</option>
+                                            <option value="GT5 Govt">미국채 5년 금리</option>
+                                            <option value="GT10 Govt">미국채 10년 금리</option>
+                                            <option value="GT30 Govt">미국채 30년 금리</option>
+                                            <option value="USYC2Y10 Index">미국 10/2 커브</option>
+                                            <option value="USYC5Y30 Index">미국 30/5 커브</option>
+                                            <option value="USYC1030 Index">미국 30/10 커브</option>
+                                            <option value="USGGBE10 Index">미국 BEI 10년 스프레드</option>
+                                            <option value="GTII10 Govt">TSY INFL IX N/B</option>
+                                            <option value="GTDEM2Y Govt">독일 국채 2년 금리</option>
+                                            <option value="GTDEM5Y Govt">독일 국채 5년 금리</option>
+                                            <option value="GTDEM10Y Govt">독일 국채 10년 금리</option>
+                                            <option value="GTDEM30Y Govt">독일 국채 30년 금리</option>
+                                            <option value="DEYC2Y10 Index">독일 10/2 커브</option>
+                                            <option value="DEYC5Y30 Index">독일 30/5 커브</option>
+                                            <option value="DEGGBE10 Index">독일 BEI 10년 스프레드</option>
+                                            <option value="GTDEMII10Y Govt">DEUTSCHLAND I/L</option>
+                                            <option value="GTESP10Y Govt">스페인 국채 10년 금리</option>
+                                            <option value="GTITL10Y Govt">이탈리아 국채 10년 금리</option>
+                                            <option value="GTGBP10Y Govt">영국 국채 10년 금리</option>
+                                            <option value="GTCAD10Y Govt">캐나다 국채 10년 금리</option>
+                                            <option value="GTAUD10Y Govt">호주 국채 10년 금리</option>
+                                            <option value="GTJPY10Y Govt">일본 국채 10년 금리</option>
+                                            <option value="CCSWNI5 BGN Curncy">중국 5년 스왑 금리</option>
+                                            <option value="IRSWNI5 BGN Curncy">인도 5년 스왑 금리</option>
+                                            <option value="ODF29 Comdty">브라질 5년 스왑 금리</option>
+                                            <option value="MPSW5E BGN Curncy">멕시코 5년 스왑 금리</option>
+                                            <option value="GVSK3YR Index">한국 국채 3년 금리</option>
+                                            <option value="GVSK10YR Index">한국 국채 10년 금리</option>
+                                            <option value="GT2 Govt - FDTRMID Index">미국채 2년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="GTDEM2Y Govt - EUORDEPO Index">독일 2년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="GVSK3YR Index - KORP7DR Index">한국 3년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="DXY Index">달러 인덱스</option>
+                                            <option value="KRW Curncy">USD/KRW</option>
+                                            <option value="EUR Curncy">USD/EUR</option>
+                                            <option value="JPY Curncy">USD/JPY</option>
+                                            <option value="CNH Curncy">USD/CNH</option>
+                                            <option value="BRL Curncy">USD/BRL</option>
+                                            <option value="INR Curncy">USD/INR</option>
+                                            <option value="MXN Curncy">USD/MXN</option>
+                                            <option value="GBP Curncy">USD/GBP</option>
+                                            <option value="HKD Curncy">USD/HKD</option>
+                                            <option value="CAD Curncy">USD/CAD</option>
+                                            <option value="CHF Curncy">USD/CHF</option>
+                                            <option value="AUD Curncy">USD/AUD</option>
+                                            <option value="IDR Curncy">USD/IDR</option>
+                                            <!--<option value="SPX Index">S&P 500</option>
+                                            <option value="CCMP Index">나스닥</option>-->
+                                            <option value="DAX Index">DAX</option>
+                                            <option value="BCOM Index">원자재인덱스</option>
+                                            <option value="XAU Curncy">금</option>
+                                            <option value="USCRWTIC Index">WTI 원유</option>
+                                            <option value="TSFR3M Index">Term SOFR 3m 금리</option>
+                                            <option value="USGG3M Index">미국 3m 금리</option>
+                                            <option value="US0003M Index">LIBOR 3m 금리</option>
+                                            <option value="UREPTA30 Index">US Tri Party Avg Rt >30 Days</option>
+                                            <option value="LQD US Equity">LQD ETF</option>
+                                            <option value="HYG US Equity">HYG ETF</option>
+                                            <option value="CDX IG CDSI GEN 5Y Corp">CDX IG</option>
+                                            <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY</option>
+                                            <option value="EMLC US Equity">EMLC ETF</option>
+                                            <option value="EMB US Equity">EMB ETF</option>
+                                            <option value="VIX Index">VIX 지수</option>
+                                            <option value="MOVE Index">MOVE 지수</option>
+                                            <option value=".VIXVXN Index">nadaq - spx vol</option>
+                                            <option value="GFSIFLOW Index">BofA Sec GFSIFLOW</option>
+                                            <option value="JLGPUSPH Index">Fed Speeches Hawk-Dove Score</option>
+                                            <option value="JLGPEUPH Index">ECB Speeches Hawk-Dove Score</option>
+                                            <option value="MRIEM Index">EM Macro Risk Index</option>
+                                            <option value="ACMTP10 Index">미국채 10년 금리 기간 프리미엄</option>
+                                            <option value="FWISUS55 Index">USD Inf Swap Fwd 5Y5Y</option>
+                                            <option value="ILM3NAVG Index">Bankrate 30Y Mortgage Rates Na</option>
+                                            <option value="ECRPUS 1Y Index">US Recession Prob Forecast</option>
+                                            <option value="CESIUSD Index">미국 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIUSH Index">CESIUSH</option>
+                                            <option value="CESIUSS Index">CESIUSS</option>
+                                            <option value="CESIEUR Index">유럽 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIEUH Index">CESIEUH</option>
+                                            <option value="CESIEUS Index">CESIEUS</option>
+                                            <option value="CESIEM Index">이머징 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIEMXP Index">CESIEMXP</option>
+                                            <option value="CESIEMFW Index">CESIEMFW</option>
+                                        </select>
+                                    </div>
                                 </td>
                             </tr>
                             <!-- 타겟 기간 -->
@@ -129,11 +131,17 @@
                                     </div>
                                 </th>
                                 <td>
-                                    <div class="input-date-wrap">
+                                    <div class="date-selection table-ver">
+                                        <input type="text" id="similarity-targetDateStart" class="date-picker" disabled>
+                                        <span class="mlmr5">~</span>
+                                        <input type="text" id="similarity-targetDateEnd" class="date-picker" disabled>
+                                    </div>
+
+                                    <!-- <div class="input-date-wrap">
                                         <input type="date" id="similarity-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
                                         <span>~</span>
                                         <input type="date" id="similarity-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
-                                    </div>
+                                    </div> -->
                                 </td>
                             </tr>
                             <!-- 분석 기간 -->
@@ -147,11 +155,16 @@
                                     </div>
                                 </th>
                                 <td>
-                                    <div class="input-date-wrap">
+                                    <div class="date-selection table-ver">
+                                        <input type="text" id="similarity-compareDateStart" class="date-picker" disabled>
+                                        <span class="mlmr5">~</span>
+                                        <input type="text" id="similarity-compareDateEnd" class="date-picker" disabled>
+                                    </div>
+                                    <!-- <div class="input-date-wrap">
                                         <input type="date" id="similarity-compareDateStart" class="similarity-form-input similarity-range-input" value="2017-01-01">
                                         <span>~</span>
                                         <input type="date" id="similarity-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-10-31">
-                                    </div>
+                                    </div> -->
                                 </td>
                             </tr>
                             <!-- N-스텝 설정 -->
@@ -186,16 +199,16 @@
                         </ul>
                     </div>
                 </div>
-                <div style="text-align: center;">
-                    <button class="similarity-button" id="similarity-generateButton" onclick="javascript:generateSimilarityAnalysis();">Generate</button>
+                <div  class="btn-wrap mt30">
+                    <button class="btn-common medium" id="similarity-generateButton" onclick="javascript:generateSimilarityAnalysis();">Generate</button>
                 </div>
                 <div id="loading_bar_similarity" class="loading_bar" style="margin-left: 0px;">
                     <img src="/static/assets/images/LoadingBar_E.gif">
                     <p>유사패턴 데이터 서치중입니다.</p>
                 </div>    
-                <div id="similarityOriginalChartContainer" style="overflow: hidden;width:100%;height:500px;">
+                <div id="similarityOriginalChartContainer"  class="mt30" style="overflow: hidden;width:100%;height:500px;">
                 </div>
-                <div id="similarityAlignedChartContainer" style="overflow: hidden;width:100%;height:500px;">
+                <div id="similarityAlignedChartContainer"  class="mt30" style="overflow: hidden;width:100%;height:500px;">
                 </div>                
             </div>
         </div>
@@ -203,13 +216,14 @@
          <!-- Tab2 유사 국면 분석(다변량)  -->
         <div id="Tab2" class="similarity-tab-content">  
             <div class="similarity-container">
-                <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
-                    <h4 style="font-size: 16px;margin-bottom: 10px;">Multivariate Time Series Analysis</h4>
+                <div class="info-box01 mb30">
+                    <h4 class="sub-tit">Multivariate Time Series Analysis</h4>
                     <ul>
                         <li>- 유사패턴 차트분석 프로그램은 역사적 데이터를 통해 현재 시장 상황을 해석하고 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
                         <li>- 복수지수 유사패턴 분석은 여러지표들의 특정 기간 데이터를 종합적으로 분석하여, 이들 지표가 타겟 추이와 가장 유사했던 기간을 찾아내줍니다.</li>
                         <li>&nbsp;&nbsp; 다양한 금융지표들을 동시에 분석하여, 시장의 복합적인 움직임을 파악해보세요!</li>
-                   </div>
+                    </ul>
+                </div>
                 <div class="table-wrap02">
                     <table>
                         <caption></caption>
@@ -221,90 +235,92 @@
                             <tr>
                                 <th scope="col">분석대상</th>
                                 <td>
-                                    <select id="multi-selectedData" class="similarity-form-input" onchange="appendSelectedData();">
-                                        <option value="GT2 Govt">미국채 2년 금리</option>
-                                        <option value="GT5 Govt">미국채 5년 금리</option>
-                                        <option value="GT10 Govt">미국채 10년 금리</option>
-                                        <option value="GT30 Govt">미국채 30년 금리</option>
-                                        <option value="USYC2Y10 Index">미국 10/2 커브</option>
-                                        <option value="USYC5Y30 Index">미국 30/5 커브</option>
-                                        <option value="USYC1030 Index">미국 30/10 커브</option>
-                                        <option value="USGGBE10 Index">미국 BEI 10년 스프레드</option>
-                                        <option value="GTII10 Govt">TSY INFL IX N/B</option>
-                                        <option value="GTDEM2Y Govt">독일 국채 2년 금리</option>
-                                        <option value="GTDEM5Y Govt">독일 국채 5년 금리</option>
-                                        <option value="GTDEM10Y Govt">독일 국채 10년 금리</option>
-                                        <option value="GTDEM30Y Govt">독일 국채 30년 금리</option>
-                                        <option value="DEYC2Y10 Index">독일 10/2 커브</option>
-                                        <option value="DEYC5Y30 Index">독일 30/5 커브</option>
-                                        <option value="DEGGBE10 Index">독일 BEI 10년 스프레드</option>
-                                        <option value="GTDEMII10Y Govt">DEUTSCHLAND I/L</option>
-                                        <option value="GTESP10Y Govt">스페인 국채 10년 금리</option>
-                                        <option value="GTITL10Y Govt">이탈리아 국채 10년 금리</option>
-                                        <option value="GTGBP10Y Govt">영국 국채 10년 금리</option>
-                                        <option value="GTCAD10Y Govt">캐나다 국채 10년 금리</option>
-                                        <option value="GTAUD10Y Govt">호주 국채 10년 금리</option>
-                                        <option value="GTJPY10Y Govt">일본 국채 10년 금리</option>
-                                        <option value="CCSWNI5 BGN Curncy">중국 5년 스왑 금리</option>
-                                        <option value="IRSWNI5 BGN Curncy">인도 5년 스왑 금리</option>
-                                        <option value="ODF29 Comdty">브라질 5년 스왑 금리</option>
-                                        <option value="MPSW5E BGN Curncy">멕시코 5년 스왑 금리</option>
-                                        <option value="GVSK3YR Index">한국 국채 3년 금리</option>
-                                        <option value="GVSK10YR Index">한국 국채 10년 금리</option>
-                                        <option value="GT2 Govt - FDTRMID Index">미국채 2년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="GTDEM2Y Govt - EUORDEPO Index">독일 2년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="GVSK3YR Index - KORP7DR Index">한국 3년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="DXY Index">달러 인덱스</option>
-                                        <option value="KRW Curncy">USD/KRW</option>
-                                        <option value="EUR Curncy">USD/EUR</option>
-                                        <option value="JPY Curncy">USD/JPY</option>
-                                        <option value="CNH Curncy">USD/CNH</option>
-                                        <option value="BRL Curncy">USD/BRL</option>
-                                        <option value="INR Curncy">USD/INR</option>
-                                        <option value="MXN Curncy">USD/MXN</option>
-                                        <option value="GBP Curncy">USD/GBP</option>
-                                        <option value="HKD Curncy">USD/HKD</option>
-                                        <option value="CAD Curncy">USD/CAD</option>
-                                        <option value="CHF Curncy">USD/CHF</option>
-                                        <option value="AUD Curncy">USD/AUD</option>
-                                        <option value="IDR Curncy">USD/IDR</option>
-                                        <!--<option value="SPX Index">S&P 500</option>
-                                        <option value="CCMP Index">나스닥</option>-->
-                                        <option value="DAX Index">DAX</option>
-                                        <option value="BCOM Index">원자재인덱스</option>
-                                        <option value="XAU Curncy">금</option>
-                                        <option value="USCRWTIC Index">WTI 원유</option>
-                                        <option value="TSFR3M Index">Term SOFR 3m 금리</option>
-                                        <option value="USGG3M Index">미국 3m 금리</option>
-                                        <option value="US0003M Index">LIBOR 3m 금리</option>
-                                        <option value="UREPTA30 Index">US Tri Party Avg Rt >30 Days</option>
-                                        <option value="LQD US Equity">LQD ETF</option>
-                                        <option value="HYG US Equity">HYG ETF</option>
-                                        <option value="CDX IG CDSI GEN 5Y Corp">CDX IG</option>
-                                        <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY</option>
-                                        <option value="EMLC US Equity">EMLC ETF</option>
-                                        <option value="EMB US Equity">EMB ETF</option>
-                                        <option value="VIX Index">VIX 지수</option>
-                                        <option value="MOVE Index">MOVE 지수</option>
-                                        <option value=".VIXVXN Index">nadaq - spx vol</option>
-                                        <option value="GFSIFLOW Index">BofA Sec GFSIFLOW</option>
-                                        <option value="JLGPUSPH Index">Fed Speeches Hawk-Dove Score</option>
-                                        <option value="JLGPEUPH Index">ECB Speeches Hawk-Dove Score</option>
-                                        <option value="MRIEM Index">EM Macro Risk Index</option>
-                                        <option value="ACMTP10 Index">미국채 10년 금리 기간 프리미엄</option>
-                                        <option value="FWISUS55 Index">USD Inf Swap Fwd 5Y5Y</option>
-                                        <option value="ILM3NAVG Index">Bankrate 30Y Mortgage Rates Na</option>
-                                        <option value="ECRPUS 1Y Index">US Recession Prob Forecast</option>
-                                        <option value="CESIUSD Index">미국 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIUSH Index">CESIUSH</option>
-                                        <option value="CESIUSS Index">CESIUSS</option>
-                                        <option value="CESIEUR Index">유럽 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIEUH Index">CESIEUH</option>
-                                        <option value="CESIEUS Index">CESIEUS</option>
-                                        <option value="CESIEM Index">이머징 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIEMXP Index">CESIEMXP</option>
-                                        <option value="CESIEMFW Index">CESIEMFW</option>
-                                    </select>
+                                    <div class="select-box-wrap direct">
+                                        <select id="multi-selectedData" class="select-box h30" onchange="appendSelectedData();">
+                                            <option value="GT2 Govt">미국채 2년 금리</option>
+                                            <option value="GT5 Govt">미국채 5년 금리</option>
+                                            <option value="GT10 Govt">미국채 10년 금리</option>
+                                            <option value="GT30 Govt">미국채 30년 금리</option>
+                                            <option value="USYC2Y10 Index">미국 10/2 커브</option>
+                                            <option value="USYC5Y30 Index">미국 30/5 커브</option>
+                                            <option value="USYC1030 Index">미국 30/10 커브</option>
+                                            <option value="USGGBE10 Index">미국 BEI 10년 스프레드</option>
+                                            <option value="GTII10 Govt">TSY INFL IX N/B</option>
+                                            <option value="GTDEM2Y Govt">독일 국채 2년 금리</option>
+                                            <option value="GTDEM5Y Govt">독일 국채 5년 금리</option>
+                                            <option value="GTDEM10Y Govt">독일 국채 10년 금리</option>
+                                            <option value="GTDEM30Y Govt">독일 국채 30년 금리</option>
+                                            <option value="DEYC2Y10 Index">독일 10/2 커브</option>
+                                            <option value="DEYC5Y30 Index">독일 30/5 커브</option>
+                                            <option value="DEGGBE10 Index">독일 BEI 10년 스프레드</option>
+                                            <option value="GTDEMII10Y Govt">DEUTSCHLAND I/L</option>
+                                            <option value="GTESP10Y Govt">스페인 국채 10년 금리</option>
+                                            <option value="GTITL10Y Govt">이탈리아 국채 10년 금리</option>
+                                            <option value="GTGBP10Y Govt">영국 국채 10년 금리</option>
+                                            <option value="GTCAD10Y Govt">캐나다 국채 10년 금리</option>
+                                            <option value="GTAUD10Y Govt">호주 국채 10년 금리</option>
+                                            <option value="GTJPY10Y Govt">일본 국채 10년 금리</option>
+                                            <option value="CCSWNI5 BGN Curncy">중국 5년 스왑 금리</option>
+                                            <option value="IRSWNI5 BGN Curncy">인도 5년 스왑 금리</option>
+                                            <option value="ODF29 Comdty">브라질 5년 스왑 금리</option>
+                                            <option value="MPSW5E BGN Curncy">멕시코 5년 스왑 금리</option>
+                                            <option value="GVSK3YR Index">한국 국채 3년 금리</option>
+                                            <option value="GVSK10YR Index">한국 국채 10년 금리</option>
+                                            <option value="GT2 Govt - FDTRMID Index">미국채 2년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="GTDEM2Y Govt - EUORDEPO Index">독일 2년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="GVSK3YR Index - KORP7DR Index">한국 3년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="DXY Index">달러 인덱스</option>
+                                            <option value="KRW Curncy">USD/KRW</option>
+                                            <option value="EUR Curncy">USD/EUR</option>
+                                            <option value="JPY Curncy">USD/JPY</option>
+                                            <option value="CNH Curncy">USD/CNH</option>
+                                            <option value="BRL Curncy">USD/BRL</option>
+                                            <option value="INR Curncy">USD/INR</option>
+                                            <option value="MXN Curncy">USD/MXN</option>
+                                            <option value="GBP Curncy">USD/GBP</option>
+                                            <option value="HKD Curncy">USD/HKD</option>
+                                            <option value="CAD Curncy">USD/CAD</option>
+                                            <option value="CHF Curncy">USD/CHF</option>
+                                            <option value="AUD Curncy">USD/AUD</option>
+                                            <option value="IDR Curncy">USD/IDR</option>
+                                            <!--<option value="SPX Index">S&P 500</option>
+                                            <option value="CCMP Index">나스닥</option>-->
+                                            <option value="DAX Index">DAX</option>
+                                            <option value="BCOM Index">원자재인덱스</option>
+                                            <option value="XAU Curncy">금</option>
+                                            <option value="USCRWTIC Index">WTI 원유</option>
+                                            <option value="TSFR3M Index">Term SOFR 3m 금리</option>
+                                            <option value="USGG3M Index">미국 3m 금리</option>
+                                            <option value="US0003M Index">LIBOR 3m 금리</option>
+                                            <option value="UREPTA30 Index">US Tri Party Avg Rt >30 Days</option>
+                                            <option value="LQD US Equity">LQD ETF</option>
+                                            <option value="HYG US Equity">HYG ETF</option>
+                                            <option value="CDX IG CDSI GEN 5Y Corp">CDX IG</option>
+                                            <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY</option>
+                                            <option value="EMLC US Equity">EMLC ETF</option>
+                                            <option value="EMB US Equity">EMB ETF</option>
+                                            <option value="VIX Index">VIX 지수</option>
+                                            <option value="MOVE Index">MOVE 지수</option>
+                                            <option value=".VIXVXN Index">nadaq - spx vol</option>
+                                            <option value="GFSIFLOW Index">BofA Sec GFSIFLOW</option>
+                                            <option value="JLGPUSPH Index">Fed Speeches Hawk-Dove Score</option>
+                                            <option value="JLGPEUPH Index">ECB Speeches Hawk-Dove Score</option>
+                                            <option value="MRIEM Index">EM Macro Risk Index</option>
+                                            <option value="ACMTP10 Index">미국채 10년 금리 기간 프리미엄</option>
+                                            <option value="FWISUS55 Index">USD Inf Swap Fwd 5Y5Y</option>
+                                            <option value="ILM3NAVG Index">Bankrate 30Y Mortgage Rates Na</option>
+                                            <option value="ECRPUS 1Y Index">US Recession Prob Forecast</option>
+                                            <option value="CESIUSD Index">미국 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIUSH Index">CESIUSH</option>
+                                            <option value="CESIUSS Index">CESIUSS</option>
+                                            <option value="CESIEUR Index">유럽 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIEUH Index">CESIEUH</option>
+                                            <option value="CESIEUS Index">CESIEUS</option>
+                                            <option value="CESIEM Index">이머징 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIEMXP Index">CESIEMXP</option>
+                                            <option value="CESIEMFW Index">CESIEMFW</option>
+                                        </select>
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
@@ -322,13 +338,16 @@
                                     </div>
                                 </th>
                                 <td>
-                                    <div class="input-date-wrap">
-                                        <!-- <span style="margin-right: 5px;">From:</span> -->
-                                        <input type="date" id="multi-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
-                                        <span>~</span>
-                                        <!-- <span style="margin: 0 5px;">To:</span> -->
-                                        <input type="date" id="multi-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
+                                    <div class="date-selection table-ver">
+                                        <input type="text" id="multi-targetDateStart" class="date-picker" disabled>
+                                        <span class="mlmr5">~</span>
+                                        <input type="text" id="multi-targetDateEnd" class="date-picker" disabled>
                                     </div>
+                                    <!-- <div class="input-date-wrap">                                     
+                                        <input type="date" id="multi-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
+                                        <span>~</span>                                     
+                                        <input type="date" id="multi-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
+                                    </div> -->
                                 </td>
                             </tr>
                             <tr>
@@ -341,13 +360,16 @@
                                     </div>
                                 </th>
                                 <td>
-                                    <div class="input-date-wrap">
-                                        <!-- <span style="margin-right: 5px;">From:</span> -->
-                                        <input type="date" id="multi-compareDateStart" class="similarity-form-input similarity-range-input" value="2017-01-01">
-                                        <span>~</span>
-                                        <!-- <span style="margin: 0 5px;">To:</span> -->
-                                        <input type="date" id="multi-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-10-31">
+                                    <div class="date-selection table-ver">
+                                        <input type="text" id="multi-compareDateStart" class="date-picker" disabled>
+                                        <span class="mlmr5">~</span>
+                                        <input type="text" id="multi-compareDateEnd" class="date-picker" disabled>
                                     </div>
+                                    <!-- <div class="input-date-wrap">                                       
+                                        <input type="date" id="multi-compareDateStart" class="similarity-form-input similarity-range-input" value="2017-01-01">
+                                        <span>~</span>                                       
+                                        <input type="date" id="multi-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-10-31">
+                                    </div> -->
                                 </td>
                             </tr>
                             <tr>
@@ -386,8 +408,8 @@
                     <input type="range" id="multi-nWeights" min="0" max="1" value="0" step="0.2" class="similarity-form-input" oninput="updateValue('multi-nWeights', 'nMultiWeightValue');">
                     <span id="nMultiWeightValue" class="similarity-nSteps-value">1</span>
                 </div>                             -->
-                <div style="text-align: center;">
-                    <button class="similarity-button" id="multi-generateButton" onClick="javascript:generateMultiAnalysis();">Generate</button>
+                <div class="btn-wrap mt30">
+                    <button class="btn-common medium" id="multi-generateButton" onClick="javascript:generateMultiAnalysis();">Generate</button>
                 </div>
 
                 <div id="loading_bar_multi" class="loading_bar" style="margin-left: 0px;">
@@ -395,14 +417,14 @@
                     <p>유사국면 데이터 서치중입니다.</p>
                 </div>                          
                         
-                <div id="chartContainerBase" style="overflow: hidden;width:100%;"></div>
+                <div id="chartContainerBase"  class="mt30" style="overflow: hidden;width:100%;"></div>
             </div>      
         </div>
         <!-- Tab3 유사 변동 분석  -->
         <div id="Tab3" class="similarity-tab-content">
             <div class="similarity-container">
-                <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
-                    <h4 style="font-size: 16px;margin-bottom: 10px;">유사변동분석</h4>
+                <div class="info-box01 mb30">
+                    <h4  class="sub-tit">유사변동분석</h4>
                     <ul>
                         <li>- 유사변동 분석은 특정기간 동안의 가격 변동 폭을 계산하고, 그 변동성이 과거에 언제 동일했었는지 찾아내는 분석 툴입니다. </li>
                         <li>- 과거의 유사한 변동성 패턴을 통해 향후 시장의 움직임을 예측해보세요</li>
@@ -419,90 +441,92 @@
                             <tr>
                                 <th scope="col">분석대상</th>
                                 <td>
-                                    <select id="variation-selectedData" class="similarity-form-input">
-                                        <option value="GT2 Govt">미국채 2년 금리</option>
-                                        <option value="GT5 Govt">미국채 5년 금리</option>
-                                        <option value="GT10 Govt">미국채 10년 금리</option>
-                                        <option value="GT30 Govt">미국채 30년 금리</option>
-                                        <option value="USYC2Y10 Index">미국 10/2 커브</option>
-                                        <option value="USYC5Y30 Index">미국 30/5 커브</option>
-                                        <option value="USYC1030 Index">미국 30/10 커브</option>
-                                        <option value="USGGBE10 Index">미국 BEI 10년 스프레드</option>
-                                        <option value="GTII10 Govt">TSY INFL IX N/B</option>
-                                        <option value="GTDEM2Y Govt">독일 국채 2년 금리</option>
-                                        <option value="GTDEM5Y Govt">독일 국채 5년 금리</option>
-                                        <option value="GTDEM10Y Govt">독일 국채 10년 금리</option>
-                                        <option value="GTDEM30Y Govt">독일 국채 30년 금리</option>
-                                        <option value="DEYC2Y10 Index">독일 10/2 커브</option>
-                                        <option value="DEYC5Y30 Index">독일 30/5 커브</option>
-                                        <option value="DEGGBE10 Index">독일 BEI 10년 스프레드</option>
-                                        <option value="GTDEMII10Y Govt">DEUTSCHLAND I/L</option>
-                                        <option value="GTESP10Y Govt">스페인 국채 10년 금리</option>
-                                        <option value="GTITL10Y Govt">이탈리아 국채 10년 금리</option>
-                                        <option value="GTGBP10Y Govt">영국 국채 10년 금리</option>
-                                        <option value="GTCAD10Y Govt">캐나다 국채 10년 금리</option>
-                                        <option value="GTAUD10Y Govt">호주 국채 10년 금리</option>
-                                        <option value="GTJPY10Y Govt">일본 국채 10년 금리</option>
-                                        <option value="CCSWNI5 BGN Curncy">중국 5년 스왑 금리</option>
-                                        <option value="IRSWNI5 BGN Curncy">인도 5년 스왑 금리</option>
-                                        <option value="ODF29 Comdty">브라질 5년 스왑 금리</option>
-                                        <option value="MPSW5E BGN Curncy">멕시코 5년 스왑 금리</option>
-                                        <option value="GVSK3YR Index">한국 국채 3년 금리</option>
-                                        <option value="GVSK10YR Index">한국 국채 10년 금리</option>
-                                        <option value="GT2 Govt - FDTRMID Index">미국채 2년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="GTDEM2Y Govt - EUORDEPO Index">독일 2년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="GVSK3YR Index - KORP7DR Index">한국 3년금리 - 기준금리 (* Subtraction)</option>
-                                        <option value="DXY Index">달러 인덱스</option>
-                                        <option value="KRW Curncy">USD/KRW</option>
-                                        <option value="EUR Curncy">USD/EUR</option>
-                                        <option value="JPY Curncy">USD/JPY</option>
-                                        <option value="CNH Curncy">USD/CNH</option>
-                                        <option value="BRL Curncy">USD/BRL</option>
-                                        <option value="INR Curncy">USD/INR</option>
-                                        <option value="MXN Curncy">USD/MXN</option>
-                                        <option value="GBP Curncy">USD/GBP</option>
-                                        <option value="HKD Curncy">USD/HKD</option>
-                                        <option value="CAD Curncy">USD/CAD</option>
-                                        <option value="CHF Curncy">USD/CHF</option>
-                                        <option value="AUD Curncy">USD/AUD</option>
-                                        <option value="IDR Curncy">USD/IDR</option>
-                                        <!--<option value="SPX Index">S&P 500</option>
-                                        <option value="CCMP Index">나스닥</option>-->
-                                        <option value="DAX Index">DAX</option>
-                                        <option value="BCOM Index">원자재인덱스</option>
-                                        <option value="XAU Curncy">금</option>
-                                        <option value="USCRWTIC Index">WTI 원유</option>
-                                        <option value="TSFR3M Index">Term SOFR 3m 금리</option>
-                                        <option value="USGG3M Index">미국 3m 금리</option>
-                                        <option value="US0003M Index">LIBOR 3m 금리</option>
-                                        <option value="UREPTA30 Index">US Tri Party Avg Rt >30 Days</option>
-                                        <option value="LQD US Equity">LQD ETF</option>
-                                        <option value="HYG US Equity">HYG ETF</option>
-                                        <option value="CDX IG CDSI GEN 5Y Corp">CDX IG</option>
-                                        <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY</option>
-                                        <option value="EMLC US Equity">EMLC ETF</option>
-                                        <option value="EMB US Equity">EMB ETF</option>
-                                        <option value="VIX Index">VIX 지수</option>
-                                        <option value="MOVE Index">MOVE 지수</option>
-                                        <option value=".VIXVXN Index">nadaq - spx vol</option>
-                                        <option value="GFSIFLOW Index">BofA Sec GFSIFLOW</option>
-                                        <option value="JLGPUSPH Index">Fed Speeches Hawk-Dove Score</option>
-                                        <option value="JLGPEUPH Index">ECB Speeches Hawk-Dove Score</option>
-                                        <option value="MRIEM Index">EM Macro Risk Index</option>
-                                        <option value="ACMTP10 Index">미국채 10년 금리 기간 프리미엄</option>
-                                        <option value="FWISUS55 Index">USD Inf Swap Fwd 5Y5Y</option>
-                                        <option value="ILM3NAVG Index">Bankrate 30Y Mortgage Rates Na</option>
-                                        <option value="ECRPUS 1Y Index">US Recession Prob Forecast</option>
-                                        <option value="CESIUSD Index">미국 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIUSH Index">CESIUSH</option>
-                                        <option value="CESIUSS Index">CESIUSS</option>
-                                        <option value="CESIEUR Index">유럽 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIEUH Index">CESIEUH</option>
-                                        <option value="CESIEUS Index">CESIEUS</option>
-                                        <option value="CESIEM Index">이머징 씨티서프라이즈 인덱스 (예상대비)</option>
-                                        <option value="CESIEMXP Index">CESIEMXP</option>
-                                        <option value="CESIEMFW Index">CESIEMFW</option>
-                                    </select>
+                                    <div class="select-box-wrap direct">
+                                        <select id="variation-selectedData" class="select-box h30">
+                                            <option value="GT2 Govt">미국채 2년 금리</option>
+                                            <option value="GT5 Govt">미국채 5년 금리</option>
+                                            <option value="GT10 Govt">미국채 10년 금리</option>
+                                            <option value="GT30 Govt">미국채 30년 금리</option>
+                                            <option value="USYC2Y10 Index">미국 10/2 커브</option>
+                                            <option value="USYC5Y30 Index">미국 30/5 커브</option>
+                                            <option value="USYC1030 Index">미국 30/10 커브</option>
+                                            <option value="USGGBE10 Index">미국 BEI 10년 스프레드</option>
+                                            <option value="GTII10 Govt">TSY INFL IX N/B</option>
+                                            <option value="GTDEM2Y Govt">독일 국채 2년 금리</option>
+                                            <option value="GTDEM5Y Govt">독일 국채 5년 금리</option>
+                                            <option value="GTDEM10Y Govt">독일 국채 10년 금리</option>
+                                            <option value="GTDEM30Y Govt">독일 국채 30년 금리</option>
+                                            <option value="DEYC2Y10 Index">독일 10/2 커브</option>
+                                            <option value="DEYC5Y30 Index">독일 30/5 커브</option>
+                                            <option value="DEGGBE10 Index">독일 BEI 10년 스프레드</option>
+                                            <option value="GTDEMII10Y Govt">DEUTSCHLAND I/L</option>
+                                            <option value="GTESP10Y Govt">스페인 국채 10년 금리</option>
+                                            <option value="GTITL10Y Govt">이탈리아 국채 10년 금리</option>
+                                            <option value="GTGBP10Y Govt">영국 국채 10년 금리</option>
+                                            <option value="GTCAD10Y Govt">캐나다 국채 10년 금리</option>
+                                            <option value="GTAUD10Y Govt">호주 국채 10년 금리</option>
+                                            <option value="GTJPY10Y Govt">일본 국채 10년 금리</option>
+                                            <option value="CCSWNI5 BGN Curncy">중국 5년 스왑 금리</option>
+                                            <option value="IRSWNI5 BGN Curncy">인도 5년 스왑 금리</option>
+                                            <option value="ODF29 Comdty">브라질 5년 스왑 금리</option>
+                                            <option value="MPSW5E BGN Curncy">멕시코 5년 스왑 금리</option>
+                                            <option value="GVSK3YR Index">한국 국채 3년 금리</option>
+                                            <option value="GVSK10YR Index">한국 국채 10년 금리</option>
+                                            <option value="GT2 Govt - FDTRMID Index">미국채 2년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="GTDEM2Y Govt - EUORDEPO Index">독일 2년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="GVSK3YR Index - KORP7DR Index">한국 3년금리 - 기준금리 (* Subtraction)</option>
+                                            <option value="DXY Index">달러 인덱스</option>
+                                            <option value="KRW Curncy">USD/KRW</option>
+                                            <option value="EUR Curncy">USD/EUR</option>
+                                            <option value="JPY Curncy">USD/JPY</option>
+                                            <option value="CNH Curncy">USD/CNH</option>
+                                            <option value="BRL Curncy">USD/BRL</option>
+                                            <option value="INR Curncy">USD/INR</option>
+                                            <option value="MXN Curncy">USD/MXN</option>
+                                            <option value="GBP Curncy">USD/GBP</option>
+                                            <option value="HKD Curncy">USD/HKD</option>
+                                            <option value="CAD Curncy">USD/CAD</option>
+                                            <option value="CHF Curncy">USD/CHF</option>
+                                            <option value="AUD Curncy">USD/AUD</option>
+                                            <option value="IDR Curncy">USD/IDR</option>
+                                            <!--<option value="SPX Index">S&P 500</option>
+                                            <option value="CCMP Index">나스닥</option>-->
+                                            <option value="DAX Index">DAX</option>
+                                            <option value="BCOM Index">원자재인덱스</option>
+                                            <option value="XAU Curncy">금</option>
+                                            <option value="USCRWTIC Index">WTI 원유</option>
+                                            <option value="TSFR3M Index">Term SOFR 3m 금리</option>
+                                            <option value="USGG3M Index">미국 3m 금리</option>
+                                            <option value="US0003M Index">LIBOR 3m 금리</option>
+                                            <option value="UREPTA30 Index">US Tri Party Avg Rt >30 Days</option>
+                                            <option value="LQD US Equity">LQD ETF</option>
+                                            <option value="HYG US Equity">HYG ETF</option>
+                                            <option value="CDX IG CDSI GEN 5Y Corp">CDX IG</option>
+                                            <option value="CDX HY CDSI GEN 5Y SPRD Corp">CDX HY</option>
+                                            <option value="EMLC US Equity">EMLC ETF</option>
+                                            <option value="EMB US Equity">EMB ETF</option>
+                                            <option value="VIX Index">VIX 지수</option>
+                                            <option value="MOVE Index">MOVE 지수</option>
+                                            <option value=".VIXVXN Index">nadaq - spx vol</option>
+                                            <option value="GFSIFLOW Index">BofA Sec GFSIFLOW</option>
+                                            <option value="JLGPUSPH Index">Fed Speeches Hawk-Dove Score</option>
+                                            <option value="JLGPEUPH Index">ECB Speeches Hawk-Dove Score</option>
+                                            <option value="MRIEM Index">EM Macro Risk Index</option>
+                                            <option value="ACMTP10 Index">미국채 10년 금리 기간 프리미엄</option>
+                                            <option value="FWISUS55 Index">USD Inf Swap Fwd 5Y5Y</option>
+                                            <option value="ILM3NAVG Index">Bankrate 30Y Mortgage Rates Na</option>
+                                            <option value="ECRPUS 1Y Index">US Recession Prob Forecast</option>
+                                            <option value="CESIUSD Index">미국 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIUSH Index">CESIUSH</option>
+                                            <option value="CESIUSS Index">CESIUSS</option>
+                                            <option value="CESIEUR Index">유럽 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIEUH Index">CESIEUH</option>
+                                            <option value="CESIEUS Index">CESIEUS</option>
+                                            <option value="CESIEM Index">이머징 씨티서프라이즈 인덱스 (예상대비)</option>
+                                            <option value="CESIEMXP Index">CESIEMXP</option>
+                                            <option value="CESIEMFW Index">CESIEMFW</option>
+                                        </select>
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
@@ -516,11 +540,15 @@
                                 </th>
                                 <td>
                                     <div class="input-date-wrap">
-                                        <!-- <span style="margin-right: 5px;">From:</span> -->
-                                        <input type="date" id="variation-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
-                                        <span>~</span>
-                                        <!-- <span style="margin: 0 5px;">To:</span> -->
-                                        <input type="date" id="variation-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01">
+
+                                        <div class="date-selection table-ver">
+                                            <input type="text" id="variation-targetDateStart" class="date-picker" disabled>
+                                            <span class="mlmr5">~</span>
+                                            <input type="text" id="variation-targetDateEnd" class="date-picker" disabled>
+                                        </div>                                        
+                                        <!-- <input type="date" id="variation-targetDateStart" class="similarity-form-input similarity-range-input" value="2023-11-01">
+                                        <span>~</span>                                        
+                                        <input type="date" id="variation-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-01-01"> -->
                                     </div>                               
                                 </td>
                             </tr>
@@ -535,11 +563,17 @@
                                 </th>
                                 <td>                                   
                                     <div class="input-date-wrap">
-                                        <!-- <span style="margin-right: 5px;">From:</span> -->
-                                        <input type="date" id="variation-compareDateStart" class="similarity-form-input similarity-range-input" value="1970-01-01">
-                                        <span>~</span>
-                                        <!-- <span style="margin: 0 5px;">To:</span> -->
-                                        <input type="date" id="variation-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-10-31">
+
+                                        <div class="date-selection table-ver">
+                                            <input type="text" id="variation-compareDateStart" class="date-picker" disabled>
+                                            <span class="mlmr5">~</span>
+                                            <input type="text" id="variation-compareDateEnd" class="date-picker" disabled>
+                                        </div>                                        
+                                        
+                                        <!-- <input type="date" id="variation-compareDateStart" class="similarity-form-input similarity-range-input" value="1970-01-01">
+                                        <span>~</span>                                        
+                                        <input type="date" id="variation-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-10-31"> -->
+
                                     </div>
                                 </td>
                             </tr>
@@ -574,16 +608,16 @@
                         </ul>
                     </div>
                 </div>
-                <div style="text-align: center;">
-                    <button class="similarity-button" id="similarity-generateButton" onClick="javascript:generateVariationAnalysis();">Generate</button>
+                <div class="btn-wrap mt30">
+                    <button class="btn-common medium" id="similarity-generateButton" onClick="javascript:generateVariationAnalysis();">Generate</button>
                 </div>
                 <div id="loading_bar_variation" class="loading_bar" style="margin-left: 0px;">
                     <img src="/static/assets/images/LoadingBar_E.gif">
                     <p>유사국면 데이터 서치중입니다.</p>
                 </div>                          
                         
-                <div id="variationOriginalChartContainer" style="overflow: hidden;width:100%;height:500px;"></div>
-                <div id="variationAlignedChartContainer" style="overflow: hidden;width:100%;height:500px;""></div>
+                <div id="variationOriginalChartContainer"  class="mt30" style="overflow: hidden;width:100%;height:500px;"></div>
+                <div id="variationAlignedChartContainer"  class="mt30" style="overflow: hidden;width:100%;height:500px;""></div>
             </div>    
         </div> 
     </div>

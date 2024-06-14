@@ -6,7 +6,11 @@ function naverScrapingNews(newsType) {
     if (inputBox) {  //'내가검색하기' 쪽 인풋박스 일단 클리어 
         inputBox.value = '';  
     }
-    document.querySelector('.news-api-btn').classList.remove('selected');
+
+    //2024-06-13 추가
+    //document.querySelector('.tab-list').classList.remove('active');    
+    // document.querySelector('.news-api-btn').classList.remove('selected');
+
     switch (newsType) {
         case 1:
             url = "https://finance.naver.com/news/mainnews.naver";
@@ -41,25 +45,53 @@ function naverScrapingNews(newsType) {
     .then(data => {
         const newsShowArea = document.getElementById('news_show_area');
         newsShowArea.innerHTML = '';
-        data.forEach(item => {
+        data.forEach(item => {        
+
             const div = document.createElement('div');
-            div.className = 'naver-news-item';
-            div.innerHTML = `
-                <img src="${item.thumb_url ? item.thumb_url : '/static/assets/images/defaultNews.jpg'}" alt="" class="naver-news-thumb">
-                <div class="naver-news-content">
-                    <div class="naver-news-title">${item.article_subject}</div>
-                    <div class="naver-news-summary">${item.summary}</div>
-                    <div class="naver-news-info">${item.press} | ${item.wdate}</div>
-                </div>
-            `;
-            const button = document.createElement('button');
-            button.className = 'naver-news-detail-btn';
-            button.textContent = '자세히 보기';
-            button.addEventListener('click', function(event) {
-                fetchDetaildNews(item.article_link, event);
-            });
-            div.appendChild(button);
+
+            const newtsItemDiv = document.createElement('div');
+            newtsItemDiv.className = 'naver-news-item';
+
+            newtsItemDiv.innerHTML = `<div class="flex-start align-top">
+                                    <img src="${item.thumb_url ? item.thumb_url : '/static/assets/images/defaultNews.jpg'}" alt="" class="naver-news-thumb">
+                                    <div>
+                                        <div class="naver-news-content">
+                                            <div class="naver-news-title">${item.article_subject}</div>
+                                            <div class="naver-news-summary">${item.summary}</div>
+                                            <div class="naver-news-info">${item.press} | ${item.wdate}</div>
+                                        </div>
+                                        <button class="btn-common small mt10" onclick="fetchDetaildNews('${item.article_link}', event)">자세히 보기</button>
+                                    </div>
+                                </div>`
+
+
+
+
+
+            // div.className = 'naver-news-item';
+            // div.innerHTML = `
+            //     <img src="${item.thumb_url ? item.thumb_url : '/static/assets/images/defaultNews.jpg'}" alt="" class="naver-news-thumb">
+            //     <div class="naver-news-content">
+            //         <div class="naver-news-title">${item.article_subject}</div>
+            //         <div class="naver-news-summary">${item.summary}</div>
+            //         <div class="naver-news-info">${item.press} | ${item.wdate}</div>
+            //     </div>
+            // `;
+            // const button = document.createElement('button');
+            // button.className = 'naver-news-detail-btn';
+            // button.textContent = '자세히 보기';
+            // button.addEventListener('click', function(event) {
+            //     fetchDetaildNews(item.article_link, event);
+            // });
+            // div.appendChild(button);
+
+            div.appendChild(newtsItemDiv);
             newsShowArea.appendChild(div);
+            
+            
+            
+            
+
         });
     })
     .catch(error => {
@@ -111,22 +143,22 @@ function fetchDetaildNews(url, event) {
 
 // 네이버 키워드 입력란 보이게 하는 함수
 function naverKeyword() {
-    // 'naver-api-search-area' 요소가 이미 있는지 확인
-    let searchArea = document.getElementById('naver-api-search-area');
+    // // 'naver-api-search-area' 요소가 이미 있는지 확인
+    // let searchArea = document.getElementById('naver-api-search-area');
     
-    // 요소가 존재하지 않는 경우에만 생성 및 추가
-    if (!searchArea) {
-        searchArea = document.createElement('div');
-        searchArea.setAttribute('id', 'naver-api-search-area');
-        searchArea.innerHTML = `
-        <span>검색할 뉴스 키워드를 입력해주세요 :</span>
-        <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
-        <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
+    // // 요소가 존재하지 않는 경우에만 생성 및 추가
+    // if (!searchArea) {
+    //     searchArea = document.createElement('div');
+    //     searchArea.setAttribute('id', 'naver-api-search-area');
+    //     searchArea.innerHTML = `
+    //     <span>검색할 뉴스 키워드를 입력해주세요 :</span>
+    //     <input type="text" class="naver-api-input" placeholder="키워드 입력(예: 삼성전자)..." onfocus="this.value=''">
+    //     <button class="naver-api-search-btn" onclick="naverSearchAPI()">검색</button>`;
         
-        const newsSelectionArea = document.getElementById('news_selection_area');
-        // 'news_selection_area'의 바로 다음에 검색 영역을 삽입
-        document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
-    }
+    //     const newsSelectionArea = document.getElementById('news_selection_area');
+    //     // 'news_selection_area'의 바로 다음에 검색 영역을 삽입
+    //     document.getElementById('menu_2nd_a').insertBefore(searchArea, newsSelectionArea.nextSibling);
+    // }
 
     // naver-api-input에 자동으로 focus 설정 및 엔터키 이벤트 핸들러 설정
     const input = document.querySelector('.naver-api-input');
@@ -141,12 +173,20 @@ function naverKeyword() {
 }
 // 네이버 검색 API를 활용해서 뉴스까지 가져오자 
 async function naverSearchAPI() {
+
+    //2024-06-13 추가
+    document.querySelectorAll('.tab-list').forEach(btn => {
+         btn.classList.remove('active');
+     });
+
+
     // 일단 다른 뉴스 버튼들 (news-btn)의 'selected' 클래스 제거
-    document.querySelectorAll('.news-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
+    // document.querySelectorAll('.news-btn').forEach(btn => {
+    //     btn.classList.remove('selected');
+    // });
     // news-api-btn에 'selected' 클래스 추가
-    document.querySelector('.news-api-btn').classList.add('selected');  
+
+    //document.querySelector('.news-api-btn').classList.add('selected');  
 
     const keywordInput = document.querySelector('.naver-api-input');
     if (!keywordInput) return; 
@@ -164,17 +204,32 @@ async function naverSearchAPI() {
             const title = item.title.replace(/<\/?[^>]+(>|$)/g, "");
             const description = item.description.replace(/<\/?[^>]+(>|$)/g, "");
 
+            const parentDiv = document.createElement('div');
+
+            const year = parseInt(item.postdate.substring(0, 4), 10);
+            const month = parseInt(item.postdate.substring(4, 6), 10) - 1;
+            const day = parseInt(item.postdate.substring(6, 8), 10); 
+            
+            const newsDate =  new Date(year, month, day);            
+
             const div = document.createElement('div');
             div.className = 'naver-news-item';
             div.innerHTML = `
-                <div class="naver-news-content">
-                    <div class="naver-news-title">${title}</div>
-                    <div class="naver-news-summary">${description}</div>
-                    <div class="naver-news-info">${item.bloggername} | ${new Date(item.postdate).toLocaleDateString()}</div>
-                </div>
-                <a href="${item.link}" target="_blank" class="naver-news-detail-btn">자세히 보기</a>
+                <div class="flex-start align-top">
+                    <div>
+                        <div class="naver-news-content">
+                            <div class="naver-news-title">${title}</div>
+                            <div class="naver-news-summary">${description}</div>
+                            <div class="naver-news-info">${item.bloggername} | ${newsDate.toLocaleDateString()}</div>
+                        </div>
+                        <a href="${item.link}" target="_blank" class="btn-common small mt10">자세히 보기</a>
+                    </div>
+                <div>
             `;
-            newsShowArea.appendChild(div);
+
+            parentDiv.appendChild(div);
+            newsShowArea.appendChild(parentDiv);
+
         });
     } catch (error) {
         console.error('Error fetching news:', error);

@@ -26,6 +26,7 @@
         <link href="/static/assets/css/frControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/dmControl.css" rel="stylesheet" type="text/css" />
         <link href="/static/assets/css/etcControl.css" rel="stylesheet" type="text/css" />
+        <link href="/static/assets/css/content.css" rel="stylesheet" type="text/css" />
         <!-----------  PRODUCT  CSS       ----------->
         <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' /> 
         <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
@@ -213,7 +214,7 @@
                 } else if (menu === 'menu4') {
                     selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_a"]'); 
                 }else if (menu === 'menu4_c') {
-                    selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_c"]');
+                    selectedTab = $('.left-area .menu04').next().find('.list-dep[data-tab="menu_4th_c"]'); 
                 }else if (menu === 'menuc') {
                     selectedTab = $('.left-area .menu01').next().find('.list-dep[data-tab="menuc"]'); 
                 }else {
@@ -458,14 +459,33 @@
                             addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
                             break;
                         case 'menub': //글로벌 주요 경제지표영역
-                            $('#indicator_select').select2();
+                            // $('#indicator_select').select2();
+                            // $("#indicatorFromDate, #indicatorToDate").datepicker({
+                            //     dateFormat: "yy-mm-dd",
+                            //     changeMonth: true,
+                            //     changeYear: true
+                            // });
+
                             $("#indicatorFromDate, #indicatorToDate").datepicker({
-                                dateFormat: "yy-mm-dd",
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
                                 changeMonth: true,
-                                changeYear: true
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
                             });
-                            $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정
-                            $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                        
+
+                            $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정\                            
+                            $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                            
+
                             break;
                         case 'menuc':  //뉴스 데이터 분석
                             // News영역 컨트롤 ::'All Market News' 체크박스 관련 스크립트
@@ -491,15 +511,29 @@
                                 goCalendar(); 
                             break;
                         case 'menu_2nd_a':
+
+                            //2024-06-13 추가
+                            naverKeyword();
+
                             // 국내 마켓데이터 뉴스 버튼 제어용 (selected 되게)
                             naverScrapingNews(1);
-                            const buttons = document.querySelectorAll('.news-btn');
+
+                            const buttons = document.querySelectorAll('.tab-list');
                             buttons.forEach(button => {
                                 button.addEventListener('click', function() {
-                                    buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
-                                    this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
+                                    buttons.forEach(btn => btn.classList.remove('active')); // 다른 버튼들에서 'selected' 클래스 제거
+                                    this.classList.add('active'); // 현재 클릭된 버튼에 'selected' 클래스 추가
                                 });
-                            });
+                            });                            
+
+                            // const buttons = document.querySelectorAll('.news-btn');
+                            // buttons.forEach(button => {
+                            //     button.addEventListener('click', function() {
+                            //         buttons.forEach(btn => btn.classList.remove('selected')); // 다른 버튼들에서 'selected' 클래스 제거
+                            //         this.classList.add('selected'); // 현재 클릭된 버튼에 'selected' 클래스 추가
+                            //     });
+                            // });                            
+
                             break;
                         case 'menu_2nd_b':
                             /************************************************************/
@@ -696,9 +730,110 @@
                             });  
                             setTimeout(() => {
                                 jTooltip();
-                            }, 100);                            
+                            }, 100);        
+                            
+                            //2024-06-14 추가
+                            $("#similarity-targetDateStart, #similarity-targetDateEnd, #similarity-compareDateStart, #similarity-compareDateEnd").datepicker({
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
+                                changeMonth: true,
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
+                            });
+
+                            $("#similarity-targetDateStart").datepicker("setDate", "2023-11-01");
+                            $("#similarity-targetDateEnd").datepicker("setDate", "2024-01-01");
+							
+							$("#similarity-compareDateStart").datepicker("setDate", "2017-01-01");
+                            $("#similarity-compareDateEnd").datepicker("setDate", "2023-10-31");        
+                            
+                            
+                            $("#multi-targetDateStart, #multi-targetDateEnd, #multi-compareDateStart, #multi-compareDateEnd").datepicker({
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
+                                changeMonth: true,
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
+                            });
+
+                            $("#multi-targetDateStart").datepicker("setDate", "2023-11-01");
+                            $("#multi-targetDateEnd").datepicker("setDate", "2024-01-01");
+							
+							$("#multi-compareDateStart").datepicker("setDate", "2017-01-01");
+                            $("#multi-compareDateEnd").datepicker("setDate", "2023-10-31");
+
+
+                            $("#variation-targetDateStart, #variation-targetDateEnd, #variation-compareDateStart, #variation-compareDateEnd").datepicker({
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
+                                changeMonth: true,
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
+                            });
+
+                            $("#variation-targetDateStart").datepicker("setDate", "2023-11-01");
+                            $("#variation-targetDateEnd").datepicker("setDate", "2024-01-01");
+							
+							$("#variation-compareDateStart").datepicker("setDate", "1970-01-01");
+                            $("#variation-compareDateEnd").datepicker("setDate", "2023-10-31");                                                       
+
+
                             break;  
                         case 'menu_4th_c': //유사국면-주요주가지수
+
+
+                            //2024-06-14 추가
+                            $("#marketindex-targetDateStart, #marketindex-targetDateEnd, #marketindex-compareDateStart, #marketindex-compareDateEnd").datepicker({
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
+                                changeMonth: true,
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
+                            });
+
+                            $("#marketindex-targetDateStart").datepicker("setDate", "2023-11-01");
+                            $("#marketindex-targetDateEnd").datepicker("setDate", "2024-01-01");
+
+                            $("#marketindex-compareDateStart").datepicker("setDate", "2010-01-01");
+                            $("#marketindex-compareDateEnd").datepicker("setDate", "2023-10-31");
+
+                            
                             break;                                
                         case 'menu_4th_d': //유사국면-개별해외주식
                             setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');

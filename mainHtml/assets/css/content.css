@@ -1,0 +1,88 @@
+/* 2024-05-28 회의 후 수정 */
+
+/* [AI가 말해주는 주식 정보 (해외)] */
+/* 실적 데이터 */
+.gpt-chart-area{margin-top:30px;border:1px solid #ccc;}
+.gpt-message-area{margin:30px auto;}
+#analysisResultBox{margin-top:30px;padding:30px;border:1px solid #ccc;}
+.info-header{font-size:16px;}
+.result-box{padding:30px;border:1px solid #ccc;}
+.newsanalysis-list li:first-child{margin-top:20px;}
+.newsanalysis-list li{line-height:20px;}
+.newsanalysis-list li p{color:#555;}
+
+/* 뉴스 데이터 */
+.foreignTickerNews-container{background:#fff;border:1px solid #ccc;}
+.foreignTickerNews-container:first-child{margin-top:30px;}
+.analysisResultContainer{margin-top:20px;padding:30px;border:1px solid #ccc;}
+.analysisTitle{font-size:16px;line-height:24px;}
+.analysisContent{line-height:24px;}
+
+/* 종목 데이터 */
+.textbox-common{padding:30px;background:#fafaff;border:1px solid #ccc;}
+.textbox-common h2{font-size:16px;}
+.textbox-common h3{margin:15px 0 5px;font-size:15px;}
+.stockAnnualFinancialsTable{margin-top:0;}
+
+/* 글로벌 주요 경제지표 */
+.form-container{background:#fafaff;border:1px solid #ccc;}
+#chartPilot .box-instruction.new-chart-analysis-wrap{margin-top:30px;padding:30px;border:1px solid #ccc;}
+.chart-analysis-title{margin-bottom:15px;font-size:16px;color:#333;line-height:24px;}
+#chartAnalysis{margin-top:15px;font-size:15px;line-height:24px;}
+.nth-menu{margin-top:40px;}
+.fred_indicator_img{margin-top:30px;box-shadow:none;}
+.fred_indicator_text{margin-top:20px;padding:30px;font-size:15px;color:#111;line-height:24px;background:#fafaff;border:1px solid #ccc;border-radius:0;box-shadow:none;white-space:pre-wrap;}
+.bond-area{margin-top:0;}
+.indicatorNews-container{position:relative;display:block;width:auto;margin-top:30px;padding:20px;font-size:14px;box-shadow:none;background:#fff;border:1px solid #ccc;border-radius:0;}
+.indicatorNews-image{width:230px;max-height:170px;margin-bottom:20px;border-radius:8px;}
+.indicatorNews-title{margin-bottom:10px;padding-right:120px;font-size:16px;color:#333;font-weight:bold;}
+.indicatorNews-date{position:absolute;top:20px;right:20px;padding:5px 10px;font-size:12px;color:#fff;background:#666;border-radius:4px;}
+.indicatorNews-content{margin-bottom:10px;line-height:24px;}
+.indicatorNews-content p{margin-bottom:14px;}
+#more-links ul li a{color:#2970ff;text-decoration:underline;}
+.indicatorNews-container table{margin:20px 0;font-size:14px;}
+.indicatorNews-container table th, .indicatorNews-container table td{padding:10px;}
+tr:nth-child(even){background:#fff;}
+
+/* 뉴스 데이터 분석 */
+.gpt_t{margin-bottom:15px;font-size:16px;color:#333;line-height:24px;}
+.ai-box{margin-top:30px;padding:30px;font-size:15px;line-height:24px;background:#fafaff;border-radius:0;box-shadow:none;}
+.news-content{font-size:14px;}
+.news-content p{margin-bottom:14px;}
+.news-item{position:relative;margin-top:30px;padding:20px;border:1px solid #ccc;box-shadow:none;}
+.news-title{padding-right:300px;color:#333;font-weight:500;}
+.publish-date{position:absolute;top:20px;right:20px;margin-top:0;font-size:12px;background:#666;border-radius:4px;}
+
+/* economic calendar */
+.calendar_ai_box{margin-bottom:30px;padding:20px;font-size:15px;line-height:24px;background:#fafaff;border:1px solid #ccc;}
+.fc .fc-toolbar.fc-header-toolbar{padding-top:30px;}
+
+/* [국내] 마켓데이터 분석 > 뉴스 데이터 분석 */
+.ai-summary-result{margin:30px 0;padding:30px;font-size:15px;background:#fafaff;line-height:24px;border:1px solid #ccc;border-radius:0;box-shadow:none;}
+.naver-news-item{display:block;margin:30px 0;padding:20px;background:#fff;border:1px solid #ccc;border-radius:0;box-shadow:none;}
+.naver-news-title{margin-bottom:10px;font-size:18px;}
+.naver-news-summary{font-size:14px;color:#555;line-height:1.4;margin-bottom:10px;}
+.naver-news-info{font-size:13px;color:#666;}
+.naver-news-detailed{margin:-10px 0 30px;font-size:15px;line-height:24px;background:#fafaff;border:1px solid #ccc;border-radius:0;box-shadow:none;}
+.naver-news-detailed strong{font-size:16px;}
+
+/* AI 솔루션 툴킷 > FOMC 데이터 분석 */
+.fomc-release-item{background:#fff;border:1px solid #ccc;}
+.fomc-release-item h3{margin-bottom:0;}
+.fomc-release-date-type{gap:15px;}
+.fomc-release-item .fomc-release-date, .fomc-release-item .fomc-release-presstype{padding:0;font-size:13px;color:#666;border:0;border-radius:0;}
+.fomc-detail-content{margin-top:20px;padding:20px;color:#111;background:#fafaff;line-height:24px;border:1px solid #ccc;}
+
+.box-flex-wrap{background:#fff;border:1px solid #ccc;}
+.box-flex-wrap .box-content .box-content-stit{margin-top:0;}
+.box-flex-wrap .box-content .box-content-btn-wrap{margin-top:0;color:#666;}
+.research-dialog.ui-dialog .ui-dialog-content{background:#fff;}
+
+/* AI 솔루션 툴킷 > 유사패턴분석 */
+.table-wrap02 .th-tooltip-wrap{font-weight:500;}
+.news-result{display:flex;gap:15px;margin:20px 0;padding:20px;background:#fff;border:1px solid #ccc;}
+.news-result:first-child{margin-top:30px;}
+.news-result-content{display:flex;flex-direction:column;justify-content:center;gap:10px;}
+.news-result img{width:120px;height:100px;border-radius:4px;}
+.news-result-tit{font-size:18px;color:#333;}
+.news-result-date{font-size:13px;color:#666;}

@@ -1,11 +1,273 @@
 <!-- [#3 메뉴 시작] 뉴스데이터 분석(해외) -->
 <div id="menuc" class="menu-cont">
-<h2 class="s-tit">뉴스 카테고리</h2>
-<h3 class="s-tit">주요 시장뉴스를 확인해보세요!</h3>
-<div class="category-selection">
-    <h3>Choose News Categories</h3>
-    <form id="categoryForm" class="category-form">
-        <!-- Example of a category -->
+    <h2 class="s-tit">뉴스 카테고리</h2>
+    <h3 class="s-tit new-sub-tit">주요 시장 뉴스를 확인해보세요</h3>
+<div class="form-container">
+    <p class="form-header"><span>뉴스 카테고리</span>를 선택해주세요.</p>
+
+    <form id="categoryForm">
+        <div class="checkbox-row">
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="all" name="categories" value="market-news::all" checked="checked">
+                    <label for="all">All Market News</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="ipos" name="categories" value="market-news::ipos">
+                    <label for="ipos">IPO 뉴스</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="financials" name="categories" value="market-news::financials">
+                    <label for="financials">금융 전반</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="reits" name="categories" value="market-news::reits">
+                    <label for="reits">REITs</label>
+                </div>
+            </div>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="top-news" name="categories" value="market-news::top-news">
+                    <label for="top-news">주요 Top News</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="issuance" name="categories" value="market-news::issuance">
+                    <label for="issuance">주식/채권 발행</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="healthcare" name="categories" value="market-news::healthcare">
+                    <label for="healthcare">Healthcare</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="technology" name="categories" value="market-news::technology">
+                    <label for="technology">Technology</label>
+                </div>
+            </div>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="on-the-move" name="categories" value="market-news::on-the-move">
+                    <label for="on-the-move">주가변동</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dividend-stocks" name="categories" value="market-news::dividend-stocks">
+                    <label for="dividend-stocks">배당금 주식뉴스</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="m-a" name="categories" value="market-news::m-a">
+                    <label for="m-a">M&amp;A</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="spacs" name="categories" value="market-news::spacs">
+                    <label for="spacs">SPACs</label>
+                </div>
+            </div>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="market-pulse" name="categories" value="market-news::market-pulse">
+                    <label for="market-pulse">시장 전반</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="earnings" name="categories" value="market-news::earnings">
+                    <label for="earnings">기업 실적발표</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="us-economy" name="categories" value="market-news::us-economy">
+                    <label for="us-economy">US Economy</label>
+                </div>
+            </div>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="notable-calls" name="categories" value="market-news::notable-calls">
+                    <label for="notable-calls">Notable Calls</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="global" name="categories" value="market-news::global">
+                    <label for="global">세계시장 뉴스</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="consumer" name="categories" value="market-news::consumer">
+                    <label for="consumer">소비자 시장</label>
+                </div>
+            </div>
+            
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="buybacks" name="categories" value="market-news::buybacks">
+                    <label for="buybacks">자사주 매입</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="guidance" name="categories" value="market-news::guidance">
+                    <label for="guidance">장래실적예측</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="energy" name="categories" value="market-news::energy">
+                    <label for="energy">에너지 시장</label>
+                </div>
+            </div>
+
+            <div class="checkbox-column">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="commodities" name="categories" value="market-news::commodities">
+                    <label for="commodities">Commodities</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="politics" name="categories" value="market-news::politics">
+                    <label for="politics">정치적 뉴스</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="mlps" name="categories" value="market-news::mlps">
+                    <label for="mlps">에너지 인프라</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <!--
+                2024-05-28 회의 후 수정
+                1. 기존 버튼 태그 삭제 후 공통 버튼 마크업으로 변경.
+                2. "Show Chart" 버튼명 "차트보기"로 변경.
+            -->
+            <div class="btn-wrap">
+                <a href="#" class="btn-common medium btn-blue02" onclick="javascript:goNews()">뉴스보기</a>
+            </div>
+            <!--2024-05-28 회의 후 수정 끝-->
+        </div> 
+    </form>
+
+        <!-- <form id="indicatorForm">
+            <div class="checkbox-row">
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="all" name="categories" value="market-news::all" checked="checked">
+                        <label for="all">All Market News</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="ipos" name="categories" value="market-news::ipos">
+                        <label for="ipos">IPO 뉴스</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="financials" name="categories" value="market-news::financials">
+                        <label for="financials">금융 전반</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="reits" name="categories" value="market-news::reits">
+                        <label for="reits">REITs</label>
+                    </div>
+                </div>
+
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="top-news" name="categories" value="market-news::top-news">
+                        <label for="top-news">주요 Top News</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="issuance" name="categories" value="market-news::issuance">
+                        <label for="issuance">주식/채권 발행</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="healthcare" name="categories" value="market-news::healthcare">
+                        <label for="healthcare">Healthcare</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="technology" name="categories" value="market-news::technology">
+                        <label for="technology">Technology</label>
+                    </div>
+                </div>
+
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="on-the-move" name="categories" value="market-news::on-the-move">
+                        <label for="on-the-move">주가변동</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="dividend-stocks" name="categories" value="market-news::dividend-stocks">
+                        <label for="dividend-stocks">배당금 주식뉴스</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="m-a" name="categories" value="market-news::m-a">
+                        <label for="m-a">M&amp;A</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="spacs" name="categories" value="market-news::spacs">
+                        <label for="spacs">SPACs</label>
+                    </div>
+                </div>
+
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="market-pulse" name="categories" value="market-news::market-pulse">
+                        <label for="market-pulse">시장 전반</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="earnings" name="categories" value="market-news::earnings">
+                        <label for="earnings">기업 실적발표</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="us-economy" name="categories" value="market-news::us-economy">
+                        <label for="us-economy">US Economy</label>
+                    </div>
+                </div>
+
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="notable-calls" name="categories" value="market-news::notable-calls">
+                        <label for="notable-calls">Notable Calls</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="global" name="categories" value="market-news::global">
+                        <label for="global">세계시장 뉴스</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="consumer" name="categories" value="market-news::consumer">
+                        <label for="consumer">소비자 시장</label>
+                    </div>
+                </div>
+                
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="buybacks" name="categories" value="market-news::buybacks">
+                        <label for="buybacks">자사주 매입</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="guidance" name="categories" value="market-news::guidance">
+                        <label for="guidance">장래실적예측</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="energy" name="categories" value="market-news::energy">
+                        <label for="energy">에너지 시장</label>
+                    </div>
+                </div>
+
+                <div class="checkbox-column">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="commodities" name="categories" value="market-news::commodities">
+                        <label for="commodities">Commodities</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="politics" name="categories" value="market-news::politics">
+                        <label for="politics">정치적 뉴스</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="mlps" name="categories" value="market-news::mlps">
+                        <label for="mlps">에너지 인프라</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">                
+                <div class="btn-wrap">
+                    <a href="#" class="btn-common medium btn-blue02" onclick="javascript:goNews()">뉴스보기</a>
+                </div>                
+            </div> 
+        </form> -->
+    </div>
+
+
+    
+    <!-- <form id="categoryForm">       
         <div class="category" title="주식 시장 전반에 걸친 모든 소식이 여기에 속합니다.">
             <input type="checkbox" id="all" name="categories" value="market-news::all" checked>
             <label for="all">All Market News</label>
@@ -102,39 +364,47 @@
             <input type="checkbox" id="spacs" name="categories" value="market-news::spacs">
             <label for="spacs">SPACs</label>
         </div>     
-    </form>
-    <div class="form-action">
+    </form> -->
+    <!-- <div class="form-action">
         <button type="button" class="load-news-btn" onclick="javascript:goNews()">News Call</button>
-    </div>                            
-</div>
-    <div class="buttons-container">
+    </div>                             -->
+<!-- </div> -->
+<div class="btn-wrap">
     <!--<button class="btn" onclick="javascript:gptRequest('translate')">한국어로 번역하기</button>-->
-    <button class="fr-news-btn-alt" onclick="javascript:gptRequest('opinions', 'lama')">AI 의견 [Lama3]</button>
-    <button class="fr-news-btn" onclick="javascript:gptRequest('opinions', 'gpt')">AI 의견 [GPT4]</button>
-    <button class="fr-news-btn-alt" onclick="javascript:gptRequest('summarize', 'lama')">내용 요약 [Lama3]</button>
-    <button class="fr-news-btn" onclick="javascript:gptRequest('summarize', 'gpt')">내용 요약 [GPT4]</button>
-   
-
+    <!-- <button class="fr-news-btn-alt" onclick="javascript:gptRequest('opinions', 'lama')">AI 의견 [Lama3]</button> -->
+    <button class="btn-common medium" onclick="javascript:gptRequest('opinions', 'gpt')">AI 의견 [GPT4]</button>
+    <!-- <button class="fr-news-btn-alt" onclick="javascript:gptRequest('summarize', 'lama')">내용 요약 [Lama3]</button> -->
+    <button class="btn-common medium" onclick="javascript:gptRequest('summarize', 'gpt')">내용 요약 [GPT4]</button>
 </div>
 <div id="gpt-thoughts-container" style="display:none;">
-    <h3 class="gpt_t">GPT Thoughts</h3>
+    <div class="ai-box">
+        <h3 class="gpt_t">AI 의견(GPT4)</h3>
+        <div id="gpt_opinion"></div></li>
+    </div>
+    <!-- <h3 class="gpt_t">GPT Thoughts</h3>
     <div class="ai-box">
         <ul class="list-dep">
             <li><div id="gpt_opinion"></div></li>
         </ul>
-    </div>
+    </div> -->
 </div>
 <div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
     <img src="/static/assets/images/LoadingBar_B.gif">
     <p class="loading-text">데이터 로딩중입니다.</p>
 </div>                    
 <div id="gpt-summary-container" style="display:none;">
-    <h3 class="gpt_t">GPT Summary</h3>     
+
+    <div class="ai-box">
+        <h3 class="gpt_t">내용 요약(GPT4)</h3>     
+        <div id="gpt_summary"></div></li>
+    </div>
+    
+    <!-- <h3 class="gpt_t">GPT Summary</h3>     
     <div class="ai-box">
         <ul class="list-dep">
             <li><div id="gpt_summary"></div></li>
         </ul>
-    </div>
+    </div> -->
 </div>                       
 <div id="loading_bar_gpt" class="loading_bar" style="margin-left: 0px;">
     <img src="/static/assets/images/LoadingBar_B.gif">
