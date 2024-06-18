@@ -25,9 +25,9 @@ client = OpenAI(api_key = config.OPENAI_API_KEY)
 logging.basicConfig(level=logging.DEBUG)
 
 sns.set_theme(style="whitegrid") 
-path = 'mainHtml/assets/fonts/KoPubMedium.ttf' 
-font_prop = fm.FontProperties(fname=path, size=12).get_name()
-plt.rc('font', family=font_prop)
+#path = 'mainHtml/assets/fonts/KoPubMedium.ttf' 
+#font_prop = fm.FontProperties(fname=path, size=12).get_name()
+plt.rc('font', family='NanumGothic')
 plt.rc('axes', unicode_minus=False) 
 
 ##################################################################################################################
