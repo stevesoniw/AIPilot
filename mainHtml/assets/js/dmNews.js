@@ -11,6 +11,10 @@ function naverScrapingNews(newsType) {
     //document.querySelector('.tab-list').classList.remove('active');    
     // document.querySelector('.news-api-btn').classList.remove('selected');
 
+
+    $(".ai-summary-result").hide();
+    $(".ai-summary-result").html("");
+
     switch (newsType) {
         case 1:
             url = "https://finance.naver.com/news/mainnews.naver";
@@ -173,6 +177,10 @@ function naverKeyword() {
 }
 // 네이버 검색 API를 활용해서 뉴스까지 가져오자 
 async function naverSearchAPI() {
+    
+    $(".ai-summary-result").hide();
+    $(".ai-summary-result").html("");
+    
 
     //2024-06-13 추가
     document.querySelectorAll('.tab-list').forEach(btn => {
@@ -373,6 +381,8 @@ async function naverLamaAsk() {
         alert('데이터를 가져오는 중 오류가 발생했습니다. 오류 메시지: ' + error.message);
     }
 }
+
+
 
 
 //******************************** 2nd GNB:: 국내 뉴스 Showing 영역 Ends *************************************//

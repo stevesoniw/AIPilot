@@ -79,6 +79,7 @@ tr:nth-child(even){background:#fff;}
 .research-dialog.ui-dialog .ui-dialog-content{background:#fff;}
 
 /* AI 솔루션 툴킷 > 유사패턴분석 */
+.similarity-tab-link:hover, .similarity-tab-link.active{background-color:#fafaff;}
 .table-wrap02 .th-tooltip-wrap{font-weight:500;}
 .news-result{display:flex;gap:15px;margin:20px 0;padding:20px;background:#fff;border:1px solid #ccc;}
 .news-result:first-child{margin-top:30px;}

@@ -8,8 +8,8 @@
         </div>   
     </div>
     <div class="similarity-container">
-        <div style="margin-bottom: 30px;line-height: 30px;background: #f5f5ff;padding: 20PX;font-size: 14px;">
-            <h4 style="font-size: 16px;margin-bottom: 10px;">해외주식 유사패턴 분석 프로그램</h4>
+        <div class="info-box01 mb30">
+            <h4 class="sub-tit">해외주식 유사패턴 분석 프로그램</h4>
             <ul>
                 <li>- 유사패턴 차트분석 프로그램은 Historic 데이터를 통해 현재 시장 상황을 해석하고, 앞으로의 시장 동향에 대한 인사이트를 얻고자 설계한 도구입니다.</li>
                 <li>- 관심있는 해외 주식의 차트를 조회하고, 현재와 유사했던 과거 국면을 찾아보세요 </li>
@@ -34,11 +34,18 @@
                             </div>
                         </th>
                         <td>
-                            <div class="input-date-wrap">
+                            <div class="date-selection table-ver">
+                                <input type="text" id="frst-targetDateStart" class="date-picker" disabled>
+                                <span class="mlmr5">~</span>
+                                <input type="text" id="frst-targetDateEnd" class="date-picker" disabled>
+                            </div>
+
+                            <!-- <div class="input-date-wrap">
                                 <input type="date" id="frst-targetDateStart" class="similarity-form-input similarity-range-input" value="2024-03-01">
                                 <span>~</span>
                                 <input type="date" id="frst-targetDateEnd" class="similarity-form-input similarity-range-input" value="2024-04-20">
-                            </div>
+                            </div> -->
+
                         </td>
                     </tr>
                     <!-- 분석 기간 -->
@@ -52,11 +59,18 @@
                             </div>
                         </th>
                         <td>
-                            <div class="input-date-wrap">
+
+                            <div class="date-selection table-ver">
+                                <input type="text" id="frst-compareDateStart" class="date-picker" disabled>
+                                <span class="mlmr5">~</span>
+                                <input type="text" id="frst-compareDateEnd" class="date-picker" disabled>
+                            </div>
+
+                            <!-- <div class="input-date-wrap">
                                 <input type="date" id="frst-compareDateStart" class="similarity-form-input similarity-range-input" value="2020-01-01">
                                 <span>~</span>
                                 <input type="date" id="frst-compareDateEnd" class="similarity-form-input similarity-range-input" value="2023-12-31">
-                            </div>
+                            </div> -->
                         </td>
                     </tr>
                     <!-- N-스텝 설정 -->
@@ -105,32 +119,37 @@
                 </ul>
             </div>   
         </div>        
-        <div style="text-align: center;">
-            <button class="similarity-button" id="frst-generateButton" onClick="javascript:generateFsSimilarityAnalysis();">Generate</button>
+        <div class="btn-wrap mt30">
+            <button class="btn-common medium" id="frst-generateButton" onClick="javascript:generateFsSimilarityAnalysis();">Generate</button>
         </div>
         <div id="loading_bar_frst" class="loading_bar" style="margin-left: 0px;">
             <img src="/static/assets/images/LoadingBar_E.gif">
             <p>유사패턴 데이터 서치중입니다.</p>
         </div>                          
 
-        <div id="frstOriginalChartContainer" style="overflow: hidden;width:100%;height:500px; margin-top:50px;"></div>
+        <div id="frstOriginalChartContainer"  class="mt30" style="overflow: hidden;width:100%;height:500px; margin-top:50px;"></div>
 
-        <div id="frstAlignedChartContainer" style="overflow: hidden;width:100%;height:500px; margin-top:50px;"></div>
+        <div id="frstAlignedChartContainer"  class="mt30" style="overflow: hidden;width:100%;height:500px; margin-top:50px;"></div>
 
         <div id="loading_bar_frst_news" class="loading_bar" style="margin-left: 0px;">
             <img src="/static/assets/images/LoadingBar_C.gif">
             <p>과거 News Data 서치중입니다.</p>
         </div>         
         <div id="frstNewsSearch" class="frst-news-container">
-            <h2 class="frst-news-main-title">뉴스 검색</h2>
-            <h3 class="frst-news-sub-title">과거 유사패턴의 뉴스를 검색해보세요</h3>
-            <div class="frst-news-date-inputs">
+            <h3 class="sub-tit">뉴스 검색</h3>
+            <p class="date-instruction mt0">과거 유사패턴의 뉴스를 검색해보세요</p>           
+            <div class="date-selection">
+                <input type="text" id="frst-news-from-date" class="date-picker" disabled>
+                <span class="mlmr5">~</span>
+                <input type="text" id="frst-news-to-date" class="date-picker" disabled>
+                <button class="btn-common small ml10" onclick="frstPastNews();">Search</button>
+            </div>
+            <!-- <div class="frst-news-date-inputs">
                 <input type="date" id="frst-news-from-date" class="frst-news-date-input" value="2020-01-01">
                 <span> - </span>
                 <input type="date" id="frst-news-to-date" class="frst-news-date-input" value="2020-01-30">
-            </div>
-            <button class="frst-news-search-btn" onclick="frstPastNews();">Search</button>
-            <div id="frstNewsResults" class="frst-news-results"></div> 
+            </div> -->            
+            <div id="frstNewsResults" class="news-result-wrap"></div> 
         </div>
     </div>    
 </div>

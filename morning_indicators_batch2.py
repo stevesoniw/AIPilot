@@ -66,7 +66,7 @@ async def gpt4_chart_talk(response_data, series_name):
         SYSTEM_PROMPT = "You are an outstanding economist and chart data analyst. I'm going to show you chart data for specific economic indicators. Please explain in as much detail as possible and share your opinion on the chart trends. It would be even better if you could explain the future market outlook based on facts. And analyze the patterns of the data and its impact on society or the market, and share your opinion on it. Please mark the part you think is the most important with a red tag so that it appears in red."
         prompt = "다음이 system 이 이야기한 json형식의 " + str(series_name)+" 차트 데이터야. system prompt가 말한대로 분석해줘. 단 답변을 꼭 한국어로 해줘. 시계열 차트데이터 : " + str(response_data)
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}

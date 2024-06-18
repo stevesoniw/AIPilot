@@ -3,16 +3,27 @@
 // 버튼 on, off 컨트롤
 function addButtonOn(buttonId) {
     const button = document.getElementById(buttonId);
-    if (!button.classList.contains('on')) {
-        button.classList.add('on');
-    }
+
+    if (!button.classList.contains('active')) {
+         button.classList.add('active');
+     }
+
+
+    // if (!button.classList.contains('on')) {
+    //     button.classList.add('on');
+    // }
 }
 
 function removeButtonOn(buttonId) {
     const button = document.getElementById(buttonId);
-    if (button.classList.contains('on')) {
-        button.classList.remove('on');
+
+    if (button.classList.contains('active')) {
+         button.classList.remove('active');
     }
+
+    // if (button.classList.contains('on')) {
+    //     button.classList.remove('on');
+    // }
 }
 
 //종목검색 한글로 했을때 구글 검색해와서 맞는종목 세팅해주기
@@ -340,8 +351,8 @@ async function loadForeignStockNews() {
                         </div>
                         <p class="foreignTickerNews-summary">${news.summary}</p>
                         <div class="foreignTickerNews-buttons-container">
-                            <a class="foreignTickerNews-link" href="${news.url}" target="_blank">read more</a>
-                            <button class="foreignTickerNews-analysis" onclick="analyzeStockArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석 보기</button>
+                            <a class="btn-common small" href="${news.url}" target="_blank">read more</a>
+                            <button class="btn-common small" onclick="analyzeStockArticle('${news.url.replace(/'/g, "\\'")}', '${news.id}');">AI 기사분석 보기</button>
                         </div>
                     </div>
                 </div>

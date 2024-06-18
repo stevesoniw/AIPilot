@@ -1,17 +1,24 @@
 
 <div id="menu_4th_a" class="menu-cont on">
     <h2 class="s-tit">FOMC 연준위원 스피치 요약 및 성향분석</h2>
-    <h3 class="s-tit">
+    <h3 class="s-tit mb0">
+        최근에 발표된 연준위원의 스피치의 내용을 생성형AI로 요약하고 스피치를 기반으로한 연준위원의 성향 변화 추이를 보여드립니다.
+        <br />
+        아래 참고사이트도 확인해보세요.        
+    </h3>
+    <ul class="list-bullet small mb30">
+        <li><span>한국자본시장연구원</span> : <a href="https://www.kcmi.re.kr" class="site-link" target="_blank">https://www.kcmi.re.kr</a></li>
+        <li><span>금융위원회 (영문)</span> : <a href="https://fsc.go.kr/eng/index" class="site-link" target="_blank">https://fsc.go.kr/eng/index</a></li>
+    </ul>
+    <!-- <h3 class="s-tit">
         최근에 발표된 연준위원의 스피치의 내용을 생성형AI로 요약하고 스피치를 기반으로한 연준위원의 성향 변화 추이를 보여드립니다.
         <br />
         아래 참고사이트도 확인해보세요.
         <br />
-        <!--<span class="font-bold">Fed 공식 웹사이트</span> : <a href="https://www.federalreserve.gov" class="site-link" target="_blank">https://www.federalreserve.gov</a>
-        <br />-->
         <span class="font-bold">한국자본시장연구원</span> : <a href="https://www.kcmi.re.kr" class="site-link" target="_blank">https://www.kcmi.re.kr</a>
         <br />
         <span class="font-bold">금융위원회 (영문)</span> : <a href="https://fsc.go.kr/eng/index" class="site-link" target="_blank">https://fsc.go.kr/eng/index </a>
-    </h3>
+    </h3> -->
     <ul class="tab-wrap">
         <li class="tab-list">
             <a href="javascript:fomcMenuChange('press');">프레스릴리스</a>
@@ -73,23 +80,24 @@
             </div>
 
             <div class="form-actions">
-                <div class="center-button">
-                    <button type="button" id="" class="indicatorButton new-show-chart-btn" onclick="filterSpeeches(event)">Apply Filter</button>
-                </div>                        
-                <button type="button" id="clearButton" onclick="clearCheckboxes(event)">초기화</button>
+                <div class="btn-wrap">
+                    <button type="button" id="" class="btn-common medium btn-blue02" onclick="filterSpeeches(event)">필터적용하기</button>
+                    <button type="button" id="clearButton"  class="btn-common medium" onclick="clearCheckboxes(event)">초기화</button>
+                </div>                                        
             </div> 
-        </form>            
+        </form>   
+    </div>         
         
-        <div class="fomc-speach-list">  
+    <div class="fomc-speach-list">  
 
-        </div>
-        <div id="loading_bar_fomc" class="loading_bar" style="margin-left: 0px; position: fixed;">
-            <img src="/static/assets/images/LoadingBar_C.gif">
-            <p class="loading-text">요약하는 중입니다. 잠시만 기다려주세요~</p>
-        </div> 
+    </div>
+    <div id="loading_bar_fomc" class="loading_bar" style="margin-left: 0px; position: fixed;">
+        <img src="/static/assets/images/LoadingBar_C.gif">
+        <p class="loading-text">요약하는 중입니다. 잠시만 기다려주세요~</p>
+    </div>
 
        
-    </div>
+   
     <!-- <div class="view-more">
         <button id="view-more" class="blue-big-btn" onclick="loadMoreData()">더보기</button>
         <br>margin-left: 0px; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;

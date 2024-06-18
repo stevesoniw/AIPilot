@@ -286,7 +286,7 @@ main{width:100%;height:100%;}
 #chartPilot h2.s-tit{margin-bottom:20px;}
 #chartPilot h3.s-tit.new-sub-tit{font-size:18px;}
 
-#analysisResultBox{line-height:24px;}
+#analysisResultBox{line-height:24px !important;}
 #chartPilot h2.s-tit{padding-left:0;}
 #chartPilot h2.s-tit::before{display:none;}
 #chartPilot h2.s-tit{padding-bottom:10px;border-bottom:1px solid #888;}

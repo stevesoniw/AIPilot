@@ -1,12 +1,21 @@
 <!-- [#3-1 메뉴 시작] 리서치 RAG 테스트 -->                             
 <div id="menu_3rd_a" class="menu-cont">
     <h2 class="s-tit">리서치 리포트 분석</h2>
-    <div class="tooltip-wrap">
+    <!-- <div class="tooltip-wrap">
         <h3 class="s-tit mb0">업로드한 리포트에 대해 질문해주세요. 리포트에 대한 단순 질문이나 분석이 가능합니다.</h3>
         <div class="chat-info -right-ver" title="PDF 업로드 할 때 여러 파일을 올리고 싶으신 경우 한번에 여러 개를 선택해 업로드해주세요.">
             도움말
         </div>
-    </div>
+    </div> -->
+    <h3 class="s-tit mb0">
+        종목분석 리포트를 업로드하고 리포트에 대해 분석할 수 있는 도구입니다.
+        <br />
+        분석하고자 하는 리포트를 하나 혹은 여러 개 업로드하고 제공되는 예시 프롬프트로 질문하거나 직접 질문을 입력해주세요.
+    </h3>
+    <ul class="list-bullet small">
+        <li>업로드 문서는 PDF 포맷만 지원되며, 암호화된 파일은 복호화해서 업로드해주세요.</li>
+        <li>AI의 답변이 마음에 드실 경우 답변을 복사하거나 PNG파일로 저장하여 공유가 가능합니다.</li>
+    </ul>
 
     <form id="file-upload-form" enctype="multipart/form-data">    
     <div class="upload-area-wrap">        
@@ -102,7 +111,7 @@
     <div class="chat-ipt-wrap">
         <div class="pr">
             <textarea id="ragchat" class="chat-ipt"></textarea>
-            <label for="ragchat">프롬프트를 직접 입력해주세요.</label>
+            <label for="ragchat">업로드한 리포트에 대해 질문해주세요. 리포트에 대한 단순 질문이나 분석이 가능합니다.</label>
             <button type="button" class="send-btn" id="ragchat_button">보내기</button>
         </div>
     </div>

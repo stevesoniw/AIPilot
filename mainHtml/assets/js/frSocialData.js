@@ -47,15 +47,30 @@ function displayFomcData(data) {
         const div = document.createElement('div');
         // Updated class name to match new naming convention
         div.className = 'fomc-release-item'; 
-        div.innerHTML = `
-            <h3 data-link="${item.link}">${item.title}</h3>
-            <div class="dis-flex">
-                <p>Date: ${item.datetime}</p>
-                <p>Press Type: ${item.press_type}</p>
-            </div>
-            <button class="fomc-release-summary-btn" onclick="fetchFomcReleaseDetail('${item.link}', this.parentElement.querySelector('.fomc-release-detail'))">Press Release AI 요약내용 보기</button>
-            <div class="fomc-release-detail"></div>
-        `;
+
+
+        //2024-06-17 추가
+        div.innerHTML = `<div class="foreignTickerNews-header">
+                            <h3 data-link="${item.link}" class="foreignTickerNews-headline">${item.title}</h3>
+                            <div class="dis-flex fomc-release-date-type">
+                                <p class="fomc-release-date">Date: ${item.datetime}</p>
+                                <p class="fomc-release-presstype">Press Type: ${item.press_type}</p>
+                            </div>
+                        </div>
+                        <button class="btn-common small mt10" onclick="fetchFomcReleaseDetail('${item.link}', this.parentElement.querySelector('.fomc-release-detail'))">Press Release AI 요약내용 보기</button>       
+                        <div class="fomc-release-detail"></div>
+                        `;
+
+
+        // div.innerHTML = `
+        //     <h3 data-link="${item.link}">${item.title}</h3>
+        //     <div class="dis-flex">
+        //         <p>Date: ${item.datetime}</p>
+        //         <p>Press Type: ${item.press_type}</p>
+        //     </div>
+        //     <button class="fomc-release-summary-btn" onclick="fetchFomcReleaseDetail('${item.link}', this.parentElement.querySelector('.fomc-release-detail'))">Press Release AI 요약내용 보기</button>
+        //     <div class="fomc-release-detail"></div>
+        // `;
         container.appendChild(div);
         document.getElementById('fomc_press_releases').style.display = 'block';   
     });
@@ -196,8 +211,8 @@ async function displayFomcSpeech(datas) {
                     <h4 class="box-content-tit">${item.title}</h4>
                     <p class="box-content-stit">${item.author}</p>
                     <div class="box-content-btn-wrap">
-                        <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop">AI 요약하기</button>
+                        <a href="${item.link}" class="btn-common small speech-summary" target="_blank">원문보기</a>
+                        <button class="btn-common small ai-summary-pop">AI 요약하기</button>
                     </div>
                 </div>
             </div>
@@ -220,8 +235,8 @@ async function displayFomcSpeech(datas) {
                     <h4 class="box-content-tit">${item.title}</h4>
                     <p class="box-content-stit">${item.author}</p>
                     <div class="box-content-btn-wrap">
-                        <a href="${item.link}" class="box-content-btn green" target="_blank">원문보기</a>
-                        <button class="box-content-btn orange ai-summary-pop" onClick='dialogPop(this)';>AI 요약하기</button>
+                        <a href="${item.link}" class="btn-common small speech-summary" target="_blank">원문보기</a>
+                        <button class="btn-common small ai-summary-pop" onClick='dialogPop(this)';>AI 요약하기</button>
                     </div>
                 </div>
             </div>
@@ -236,7 +251,10 @@ function dialogPop(button){
 
     if (boxWrapElement) {
         var speechTitle = boxWrapElement.querySelector('.box-content-tit').textContent;
-        var speechLink = boxWrapElement.querySelector('.box-content-btn.green').getAttribute('href');
+
+        var speechLink = boxWrapElement.querySelector('.btn-common.speech-summary').getAttribute('href');
+
+        //var speechLink = boxWrapElement.querySelector('.box-content-btn.green').getAttribute('href');
 
         var filename = speechLink.split('/').pop().split('.')[0];  
         var filePath = `/batch/fomc/fomc_speech_ai_sum_${filename}.json`;  

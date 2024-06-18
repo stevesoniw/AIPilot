@@ -301,6 +301,7 @@ input[type="text"]{box-sizing:border-box;}
 pre{font-family:'Spoqa Han Sans Neo', 'Helvetica Neue', arial, helvetica, helve, sans-serif;}
 
 /* 버튼 */
+button{font-family:'Spoqa Han Sans Neo', 'Helvetica Neue', arial, helvetica, helve, sans-serif;}
 .btn-wrap{text-align:center;}
 .btn-common{display:inline-block;background:#fff;border:1px solid #888;color:#333;border-radius:5px;font-weight:500;font-family:'Spoqa Han Sans Neo', 'Helvetica Neue', arial, helvetica, helve, sans-serif;}
 .btn-common + .btn-common{margin-left:5px;}
@@ -314,9 +315,12 @@ pre{font-family:'Spoqa Han Sans Neo', 'Helvetica Neue', arial, helvetica, helve,
 /* .btn-common.btn-blue02:hover{background:#f7f7ff;} */
 
 /* list bullet */
-.list-bullet li{position:relative;padding-left:10px;margin-top:7px !important;}
+.list-bullet li{position:relative;padding-left:10px;margin-top:7px !important;font-size:14px;}
 .list-bullet li:first-child{margin-top:0;}
 .list-bullet li:before{content:'';position:absolute;left:0;top:7px;width:4px;height:4px;background:#777;border-radius:50%;}
+.list-bullet.small li{font-size:13px;margin-top:4px !important;}
+.list-bullet.small li:first-child{margin-top:7px !important;}
+.list-bullet.small li:before{width:3px;height:3px;}
 
 /* 검색창 */
 .search-wrap{border-radius:99px;border-style:solid;border-width:2px;border-image-source:linear-gradient(93deg, #2970ff 14%, #92b5fb 100%);border-image-slice:1;background-image:linear-gradient(to bottom, #fff, #fff), linear-gradient(93deg, #2970ff 14%, #92b5fb 100%);background-origin:border-box;background-clip:content-box, border-box;}

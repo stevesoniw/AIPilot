@@ -457,6 +457,18 @@
                             addServerMessage("질문을 해주세요!^^");
                             addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
                             addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
+
+
+                            //2024-06-17 추가
+                            $('#aiAnalysisBtn').click(function(){
+                                var toggleBtn = $(this);
+                                var toggleBtnTxt = toggleBtn.text() === 'AI 분석의 근거정보 보기'?'AI 분석의 근거정보 숨기기':'AI 분석의 근거정보 보기'
+                            
+                                toggleBtn.text(toggleBtnTxt);
+                            $('#newsAnalysisBox').fadeToggle();
+                            });
+                                                        
+
                             break;
                         case 'menub': //글로벌 주요 경제지표영역
                             // $('#indicator_select').select2();
@@ -483,8 +495,15 @@
                                 // maxDate: '0m'
                             });
 
-                            $("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정\                            
-                            $("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                            
+                            let toDay = new Date();
+                            let lastMonth = new Date();
+                            lastMonth.setMonth(toDay.getMonth() - 1);                                                       
+
+                            $("#indicatorFromDate").datepicker("setDate", lastMonth); 
+                            $("#indicatorToDate").datepicker("setDate", toDay); 
+
+                            //$("#indicatorFromDate").datepicker("setDate", "2024-01-01"); // fromDate 기본값 설정\                            
+                            //$("#indicatorToDate").datepicker("setDate", "2024-01-02"); // toDate를 오늘 날짜로 설정                            
 
                             break;
                         case 'menuc':  //뉴스 데이터 분석
@@ -840,6 +859,34 @@
                             setTimeout(() => {
                                 jTooltip();
                             }, 100);   
+                            
+                            //2024-06-14 추가
+                            $("#frst-targetDateStart, #frst-targetDateEnd, #frst-compareDateStart, #frst-compareDateEnd, #frst-news-from-date, #frst-news-to-date").datepicker({
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
+                                changeMonth: true,
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
+                            });
+
+                            $("#frst-targetDateStart").datepicker("setDate", "2024-03-01");
+                            $("#frst-targetDateEnd").datepicker("setDate", "2024-04-20");
+							
+							$("#frst-compareDateStart").datepicker("setDate", "2020-01-01");
+                            $("#frst-compareDateEnd").datepicker("setDate", "2023-12-31");
+							
+							$("#frst-news-from-date").datepicker("setDate", "2020-01-01");
+                            $("#frst-news-to-date").datepicker("setDate", "2020-01-30");
+
                             break;                                           
                         default:
                             console.log('No specific script for this tab');

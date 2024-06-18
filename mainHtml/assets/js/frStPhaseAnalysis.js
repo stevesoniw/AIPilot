@@ -80,7 +80,7 @@ function generateFrstHighCharts(chartDataArray, containerId) {
     } else if (containerId === 'frstAlignedChartContainer') {
         chartTitle = 'Aligned Comparison';
     }
-    document.getElementById('frstNewsSearch').style.display = 'flex';
+    document.getElementById('frstNewsSearch').style.display = 'block';
     const nStepsValue = parseInt(document.getElementById('nFrstStepValue').textContent, 10);
     const categories = chartDataArray.xAxis.categories;
     const maxXValue = chartDataArray.xAxis.categories.length - 1;
@@ -219,19 +219,33 @@ function displayFrstNews(news_data) {
     news_data.forEach(item => {
         const imageUrl = item.gettyImageUrl || `/static/assets/images/defaultNews${Math.floor(Math.random() * 25) + 1}.jpg`;
         const newsDiv = document.createElement('div');
-        newsDiv.className = 'frst-flex-wrap';  // Changed class name to match the styling
-        newsDiv.innerHTML = `
-        <span class="frst-date-label">${new Date(item.publishOn).toLocaleDateString()}</span>
-        <div class="frst-left-img-wrap">
-            <img src="${imageUrl}" alt="News Image" class="frst-news-image">
-        </div>
-        <div class="frst-content">
-            <h4 class="frst-content-tit">${item.title}</h4>
-            <div class="frst-content-btn-wrap">
-                <a href="${item.link}" class="frst-content-btn blue" target="_blank">원문보기</a>
-            </div>
-        </div>
-        `;
+
+        //2024-06-14 추가
+        newsDiv.className = 'news-result-wrap';  // Changed class name to match the styling
+        newsDiv.innerHTML = `<div class="news-result">
+                                <img src="${imageUrl}" alt="News Image" class="frst-news-image">
+                                <div class="news-result-content">
+                                    <h4 class="news-result-tit">${item.title}</h4>
+                                    <span class="news-result-date">${new Date(item.publishOn).toLocaleDateString()}</span>
+                                    <div>
+                                        <a href="${item.link}" class="btn-common small" target="_blank">원문보기</a>
+                                    </div>
+                                </div>
+                            </div>`;
+
+        // newsDiv.className = 'frst-flex-wrap';  // Changed class name to match the styling
+        // newsDiv.innerHTML = `
+        // <span class="frst-date-label">${new Date(item.publishOn).toLocaleDateString()}</span>
+        // <div class="frst-left-img-wrap">
+        //     <img src="${imageUrl}" alt="News Image" class="frst-news-image">
+        // </div>
+        // <div class="frst-content">
+        //     <h4 class="frst-content-tit">${item.title}</h4>
+        //     <div class="frst-content-btn-wrap">
+        //         <a href="${item.link}" class="frst-content-btn blue" target="_blank">원문보기</a>
+        //     </div>
+        // </div>
+        // `;
     
         resultsContainer.appendChild(newsDiv);
     });
