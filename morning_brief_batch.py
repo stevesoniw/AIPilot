@@ -389,6 +389,7 @@ async def save_word_cloud(wordMessage:str, width:int, height:int, filePath):
     STOPWORDS.add("U")
     STOPWORDS.add("markdown")
     STOPWORDS.add("html")
+    STOPWORDS.add("say")
 
     wordcloud = WordCloud(width=width, height=height, background_color='white', stopwords=STOPWORDS, font_path="./mainHtml/assets/fonts/NanumBarunGothic.ttf", normalize_plurals=True, include_numbers=False, regexp=r"\b\w[\w&']*\b").generate(wordMessage)    
     
