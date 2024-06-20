@@ -15,11 +15,12 @@ from openai import OpenAI
 from groq import Groq
 import config
 
+
 # API KEY 설정
 
-clientstream = OpenAI(api_key = config.OPENAI_API_KEY, http_client= httpx.Client(verify=False))
+clientstream = OpenAI(api_key = config.OPENAI_API_KEY)
 client = OpenAI(api_key = config.OPENAI_API_KEY)
-groq_clientstream = Groq(api_key=config.GROQ_CLOUD_API_KEY, http_client= httpx.Client(verify=False))
+groq_clientstream = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 groq_client = Groq(api_key=config.GROQ_CLOUD_API_KEY)
 
 # 현재날짜 계산
@@ -94,7 +95,8 @@ async def gpt4_news_sum(newsData, SYSTEM_PROMPT):
 #GPT4 스트리밍방식    
 async def gpt4_news_sum_stream(newsData, SYSTEM_PROMPT):
     try:
-        prompt = "다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 red color로 보이도록 태그를 달아서 줘. 뉴스 데이터 : " + str(newsData)
+        prompt = """다음이 system 이 이야기한 뉴스 데이터야. system prompt가 말한대로 실행해줘. 단 답변을 꼭 한국어로 해줘. 너의 전망에 대해서는 <span style="color:#f58220"> 로 표시해줘. 대답은 항상 '-입니다, -습니다' 체로 존댓말로 해. 답변은 <p> 태그 안에 넣어서 줘. 예시: <p> 전체답변 </p>
+        뉴스 데이터 : """ + str(newsData)        
         completion = clientstream.chat.completions.create(
             #model="gpt-4-0125-preview",
             model="gpt-4o",

@@ -87,3 +87,14 @@ tr:nth-child(even){background:#fff;}
 .news-result img{width:120px;height:100px;border-radius:4px;}
 .news-result-tit{font-size:18px;color:#333;}
 .news-result-date{font-size:13px;color:#666;}
+
+.transfer-wrap{margin-top:20px;padding:20px;color:#111;background:#fafaff;border:1px solid #ccc;}
+
+/* test */
+/* #gpt-thoughts-container .ai-box li,
+#gpt-thoughts-container .ai-box p,
+#gpt-thoughts-container .ai-box h2,
+#gpt-thoughts-container .ai-box h3
+{margin:inherit;padding:inherit;list-style:inherit;} */
+/*#gpt-thoughts-container .ai-box h2, #gpt-thoughts-container .ai-box h3{margin:15px 0 5px;font-size:16px;}
+#gpt-thoughts-container .ai-box h2 + #gpt-thoughts-container .ai-box h3{margin:0px 0 5px;}*/

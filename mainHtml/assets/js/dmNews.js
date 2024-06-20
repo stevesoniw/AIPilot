@@ -325,10 +325,23 @@ async function naverGptAskStream() {
         while (true) {
             const res = await reader?.read();           
             if (res?.done) {
-                //console.log("fullSumMessage:" + fullSumMessage)    
-                fullSumMessage = fullSumMessage.replace(/\*\*(.*?)\*\*/g, '<br/><br/><span style="color: #ff1480; text-transform: uppercase;">$1</span><br/>');
-                fullSumMessage = fullSumMessage.replace(/(?:^|\s)\*(.*?)(?=\s|$)/g, '<br>*$1');
-                $(".summary-content").html(fullSumMessage);                  
+
+                console.log("fullSumMessage>>");
+                console.log(fullSumMessage);
+                
+                let converter = new showdown.Converter();                
+                let convertedHtml = '';
+
+                //let formattedText = fullSumMessage.replace(/\n/g, '<br>');                                     
+
+                convertedHtml = converter.makeHtml(fullSumMessage);   
+                $(".summary-content").html(convertedHtml);               
+
+                //fullSumMessage = fullSumMessage.replace(/\*\*(.*?)\*\*/g, '<br/><br/><span style="color: #ff1480; text-transform: uppercase;">$1</span><br/>');
+                //fullSumMessage = fullSumMessage.replace(/(?:^|\s)\*(.*?)(?=\s|$)/g, '<br>*$1');
+                //$(".summary-content").html(fullSumMessage);                  
+
+
                 break;
             }
             let resValue = res?.value
