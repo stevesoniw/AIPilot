@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.DEBUG)
 async def gpt4_chart_talk(system_prompt, prompt):
     try:
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
@@ -122,10 +122,13 @@ async def summarize_this_month_calendar(data):
             logging.error(f"날짜 파싱 오류: {e} - 이벤트 '{event['start']}' 는 무시됩니다.")
             continue
         
-    SYSTEM_PROMPT = "You are an expert in summarizing economic data. To make the data readable on the screen, add appropriate <br> tags or color tags."
+    SYSTEM_PROMPT = "You are an expert in summarizing economic data. To make the data readable on the screen, add a <br> tag."
     prompt = (
         "You are an expert in summarizing economic data. Please provide a concise summary in Korean "
         "of the following key economic events for this month, highlighting their potential impact on the market. "
+        "List up to 7 events max in chronological order. For each event, explain what it is about and why it is important. "
+        "The answer should start with 'AI가 정리한 이번 달 주요 경제 이벤트: ' "
+        "When you list events, always list the English name of the event. "
         "Keep specific US stock market or company names in English.\n\n"
         f"{json.dumps(filtered_data, ensure_ascii=False)}"
     )
@@ -180,8 +183,8 @@ async def main():
         print("**********")
         print(summary)
         # 데이터 가공: "-"를 "<br>"로, "**내용**"을 스타일이 적용된 "<b style='color: darkgray;'>내용</b>"으로
-        formatted_summary = summary.replace("-", "<br>")
-        formatted_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b style='color:#181818;'>\1</b> ", formatted_summary)
+        # formatted_summary = summary.replace("-", "<br>")
+        formatted_summary = re.sub(r"\*\*(.*?)\*\*", r"★<b style='color:#181818;'>\1</b> ", summary)
         formatted_summary = re.sub(r"(\d+)\.", r"<br>\1.", formatted_summary)
         summary_path = base_path / "eco_calendar_aisummary.html" 
         with summary_path.open("w", encoding="utf-8") as file:
