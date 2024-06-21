@@ -79,6 +79,10 @@ async def get_fr_social_data():
     logging.info("======GETTING SOCIAL DATA =======")
     todaydate = datetime.now().strftime("%Y%m%d")
     file_name = f"batch/fomc/all/speech_all_{todaydate}.json"
+    
+    ## 디렉토리 신규 생성 (이미 있으면 넘어가기)
+    os.makedirs('batch/fomc/all/', exist_ok=True)
+    
     with open(file_name, 'w', encoding='utf-8') as file:
         json.dump(data_to_store, file, ensure_ascii=False, indent=4)    
     #print(scraped_data)
@@ -148,8 +152,12 @@ def fetch_reuters_articles(person):
 def query_huggingface_api(inputs, is_speech):
     API_URL = "https://api-inference.huggingface.co/models/gtfintechlab/FOMC-RoBERTa"
     headers = {"Authorization": f"Bearer {API_KEYS['huggingface']}"}
+    # 처음 모델 호출할 때 텀을 기다려주는 파라미터 추가    
+    payload = {"inputs": inputs,
+               "options": {
+                        "wait_for_model": True
+                        }}
     
-    payload = {"inputs": inputs}
     response = requests.post(API_URL, headers=headers, json=payload)
     if response.status_code == 200:
         return response.json()
@@ -206,7 +214,7 @@ def extract_main_sentence(url):
     prompt = PromptTemplate.from_template(prompt_template)
 
     # Define LLM chain
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo", streaming=True,
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4o", streaming=True,
                      api_key=config.OPENAI_API_KEY)
     llm_chain = LLMChain(llm=llm, prompt=prompt)
 
@@ -275,7 +283,7 @@ async def translate_timeline_data(data):
     prompt = f"{pre_prompt}\n\n{data}"
     try:
         completion = client.chat.completions.create(
-            model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
@@ -291,6 +299,10 @@ async def process_member(member, data, is_board_member=True):
     """멤버 데이터 처리 및 파일 저장"""
     today = datetime.now().strftime("%Y%m%d")
     last_name= utilTool.get_last_name(member)
+    
+    if not os.path.exists(BASE_PATH):
+        os.makedirs(BASE_PATH)
+    
     file_path = os.path.join(BASE_PATH, f"senti_timeline_{last_name}_{today}.json")
     file_score_path = os.path.join(BASE_PATH, f"senti_score_{last_name}_{today}.json")
     file_kor_path = os.path.join(BASE_PATH, f"senti_timeline_kor_{last_name}_{today}.json")
@@ -341,3 +353,4 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     #fetch_reuters_articles("Barkin")
+    
