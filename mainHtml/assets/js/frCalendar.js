@@ -82,6 +82,15 @@ async function goCalendar(calendarFile = '/batch/calendar/eco_calendar_eng.json'
 }
 
 function translateCalendar() {
+
+    //2024-06-21 추가
+    $transCalOpt = $("#transCalOpt").parent("li.tab-list");
+    $ipoCalOpt = $("#ipoCalOpt").parent("li.tab-list");
+
+    if(!$transCalOpt.hasClass("active")) $transCalOpt.addClass("active");
+    if($ipoCalOpt.hasClass("active")) $ipoCalOpt.removeClass("active");   
+    
+
     const btn = document.getElementById('transCalOpt');
     if (btn.innerText.includes('한글')) {
         goCalendar('/batch/calendar/eco_calendar_kor.json');
@@ -94,6 +103,14 @@ function translateCalendar() {
 //****************************** [1ST GNB]증시캘린더 함수 Ends *****************************//                
 //****************************** [1ST GNB]IPO캘린더 함수 Starts *****************************//                
 async function ipoCalendar() {
+
+    //2024-06-21 추가
+    $transCalOpt = $("#transCalOpt").parent("li.tab-list");
+    $ipoCalOpt = $("#ipoCalOpt").parent("li.tab-list");
+    
+    if(!$ipoCalOpt.hasClass("active")) $ipoCalOpt.addClass("active");
+    if($transCalOpt.hasClass("active")) $transCalOpt.removeClass("active");       
+
     document.getElementById('loading_bar_calendar').style.display = 'block';
     let ipoCalendarData;
     try {

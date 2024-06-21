@@ -7,9 +7,22 @@
     <div id="loading_bar_calendar" class="loading_bar_calendar" style="margin-left: 0px;">
         <img src="/static/assets/images/LoadingBar_C.gif">
         <p>데이터 로딩중입니다.</p>
-    </div>     
-    <button class="calendar-opt-btn" id="transCalOpt" onclick="translateCalendar();">Economic Calendar(한글)</button>     
-    <button class="calendar-opt-btn" id="ipoCalOpt" onclick="ipoCalendar();">IPO Calendar</button>
+    </div>    
+    <div class="tab-right-button-wrap">
+        <ul class="tab-wrap two flex-start mt0">
+            <li class="tab-list active">
+                <a href="#" id="transCalOpt" onclick="translateCalendar();">Economic Calendar(한글)</a>
+            </li>
+            <li class="tab-list">
+                <a href="#" id="ipoCalOpt" onclick="ipoCalendar();">IPO Calendar</a>
+            </li>
+        </ul>        
+        <!-- <button type="button" class="btn-common small">엑셀 다운로드</button> -->
+    </div>
+
+    <!-- <button class="calendar-opt-btn" id="transCalOpt" onclick="translateCalendar();">Economic Calendar(한글)</button>     
+    <button class="calendar-opt-btn" id="ipoCalOpt" onclick="ipoCalendar();">IPO Calendar</button> -->
+
     <div id="calendar"></div>    
     <div id="popupEventCon" class="popupHidden"></div>
     <div id="fancyCalendarDetails"></div> 

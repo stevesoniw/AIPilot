@@ -98,3 +98,33 @@ tr:nth-child(even){background:#fff;}
 {margin:inherit;padding:inherit;list-style:inherit;} */
 /*#gpt-thoughts-container .ai-box h2, #gpt-thoughts-container .ai-box h3{margin:15px 0 5px;font-size:16px;}
 #gpt-thoughts-container .ai-box h2 + #gpt-thoughts-container .ai-box h3{margin:0px 0 5px;}*/
+#gpt_opinion p, #gpt_summary p, .summary-content p {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#gpt_opinion h3, #gpt_summary h3, .summary-content h3 {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/* #gpt_opinion ol, #gpt_opinion ul {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-left: 40px; /* 왼쪽 여백 설정 */
+/* }
+
+#gpt_opinion ol {
+    list-style-type: decimal !important; /* 숫자로 순서를 표시 */
+/* }
+
+#gpt_opinion ul {
+    list-style-type: disc !important; /* 원형 마커로 순서 없는 목록 표시 */
+/* } */
+
+#gpt_opinion li, #gpt_summar li, .summary-content li {
+    margin-bottom: 8px; /* 각 리스트 아이템 사이의 간격 설정 */
+    padding-left: 20px;
+    /* list-style: inherit; */
+}
+ 
