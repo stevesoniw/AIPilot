@@ -202,10 +202,19 @@ async function gptStockWave(ticker) {
         // 최신 날짜(데이터의 마지막 날짜) 계산
         const maxDate = new Date(data.dates[data.dates.length - 1]).getTime();
 
-        var selectedData = $('#foreign_ticker').select2('data');
-        if (selectedData.length > 0) {
-            var description = selectedData[0].text; 
-        }
+
+
+        //2024-06-24 추가
+        const filteredStocks = g_stockCodes.filter(stock => stock.id.toLowerCase().includes(ticker.toLowerCase())); 
+        let description = "";                       
+        if( filteredStocks.length > 0){
+            description = filteredStocks[0].text;                        
+        }   
+
+        // var selectedData = $('#foreign_ticker').select2('data');
+        // if (selectedData.length > 0) {
+        //     var description = selectedData[0].text; 
+        // }
 
         Highcharts.stockChart('gptStockwaveArea', {
             chart: {
@@ -830,8 +839,9 @@ function displayFinancialData(data) {
             'Net Income': '순이익',
             'EPS': '주당순이익'
         };
-        const formatCurrency = (num) => `${(num / 100000000).toFixed(2)} 억 달러`;
-        const formatEPS = (num) => `${num.toFixed(3)} 달러`;
+
+        //const formatCurrency = (num) => `${(num / 100000000).toFixed(2)} 억 달러`;
+        //const formatEPS = (num) => `${num.toFixed(3)} 달러`;
 
         const titleElement = document.querySelector('.financial-title h2');
         titleElement.textContent = "연간 재무 데이터";
@@ -843,19 +853,47 @@ function displayFinancialData(data) {
 
         Object.keys(incomeStatement['Total Revenue']).sort().reverse().forEach(date => {
             const year = new Date(date).getFullYear();
-            htmlContent += `<tr><td>${year}</td>`;
-            Object.keys(keyMapping).forEach(key => {
-                let value = incomeStatement[key][date];
-                if (['Total Revenue', 'Operating Income', 'Net Income'].includes(key)) {
-                    value = formatCurrency(value);
-                } else if (key === 'Operating Margin') {
-                    value = `${(value * 100).toFixed(2)}%`;
-                } else if (key === 'EPS') {
-                    value = formatEPS(value);
-                }
-                htmlContent += `<td>${value !== null ? value : '-'}</td>`;
-            });
-            htmlContent += `</tr>`;
+
+            //2024-06-24 추가
+            let trHtml = ""
+
+            try{
+
+                trHtml += `<tr><td>${year}</td>`;
+                Object.keys(keyMapping).forEach(key => {
+                    let value = incomeStatement[key][date];
+                    if (['Total Revenue', 'Operating Income', 'Net Income'].includes(key)) {
+                        value = `${(value / 100000000).toFixed(2)} 억 달러`;
+                    } else if (key === 'Operating Margin') {
+                        value = `${(value * 100).toFixed(2)}%`;
+                    } else if (key === 'EPS') {
+                        value = `${value.toFixed(3)} 달러`;
+                    }
+                    trHtml += `<td>${value !== null ? value : '-'}</td>`;
+                });
+                trHtml += `</tr>`;         
+            }catch(error){
+                trHtml = "";
+            }
+
+            // htmlContent += `<tr><td>${year}</td>`;
+            // Object.keys(keyMapping).forEach(key => {
+            //     let value = incomeStatement[key][date];
+            //     if (['Total Revenue', 'Operating Income', 'Net Income'].includes(key)) {
+            //         value = formatCurrency(value);
+            //     } else if (key === 'Operating Margin') {
+            //         value = `${(value * 100).toFixed(2)}%`;
+            //     } else if (key === 'EPS') {
+
+            //         value = formatEPS(value);
+            //     }
+            //     htmlContent += `<td>${value !== null ? value : '-'}</td>`;
+            // });
+            // htmlContent += `</tr>`;            
+            
+
+            htmlContent += trHtml;
+
         });
 
         htmlContent += `</tbody></table>`;
@@ -1303,4 +1341,14 @@ function handleWebBasedQuery(webUrl) {
         clearInterval(loadingInterval);
         console.error('Error:', error);
     });
+}
+
+
+//2024-06-추가
+function processStockInfoActiveTabList()
+{
+    console.log("processStockInfoActiveTabList>>>");
+
+    $("ul.tab-wrap li.active a").click();
+
 }

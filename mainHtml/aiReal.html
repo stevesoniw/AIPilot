@@ -31,6 +31,10 @@
         <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.8.0/main.min.css' rel='stylesheet' /> 
         <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"><!--토글용-->
+
+        <script src="/static/assets/js/xlsx.full.min.js"></script>
+        <script src="/static/assets/js/common.js"></script>
+
         <!-----------  PERSONAL JS       ------------>
         <script src="/static/assets/js/frStockInfo.js"></script>
         <script src="/static/assets/js/frIndicator.js"></script>
@@ -43,7 +47,8 @@
         <script src="/static/assets/js/dmNews.js"></script>
         <script src="/static/assets/js/dmPhaseAnalysis.js"></script>
         <script src="/static/assets/js/researchRAG.js"></script>
-        <script src="/static/assets/js/researchAISummarize.js"></script>
+        <script src="/static/assets/js/researchAISummarize.js"></script>        
+
         <!-- fullcalendar Lib-->  
         <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -331,7 +336,7 @@
                     },
                     placeholder: '원하시는 종목을 검색해주세요!',
                     minimumInputLength: 1,
-                    allowClear: true,
+                    allowClear: true,                    
                     language: {
                         noResults: function () {
                             return isSearchingKorean ? "한글로 검색어를 찾고 있습니다. 잠시만 기다려주세요..." : "검색 결과가 없습니다.";
@@ -392,8 +397,15 @@
             function executeScriptsByTabId(tabId) {
                 setTimeout(function() {
                     switch (tabId) {
-                        case 'menua':
-                        setupSelect2('#foreign_ticker', '/api/get_foreign_stock_symbols');
+                        case 'menua':                        
+
+                        //2024-06-24 추가
+                        initStockCodeData("foreign_ticker");
+                        initStockCodeSearch("foreign_ticker", "stockCodeAreas");
+
+                        //setupSelect2('#foreign_ticker', '/api/get_foreign_stock_symbols');
+
+
                             /** FILE READ 가 속도가 더 느려서 일단 보류
                             function fetchDataAndInitialize() {
                                 var data = localStorage.getItem('us_symbols');
@@ -456,7 +468,7 @@
                             }
                             addServerMessage("질문을 해주세요!^^");
                             addServerMessage("금융관련 질문은 '우측 상단의 설정창'을 클릭하셔서, 설정 후 사용해주세요!");
-                            addServerMessage("현재는 GPT4 와의 대화창입니다.");                                         
+                            addServerMessage("현재는 GPT4 와의 대화창입니다.");                                                                    
 
 
                             //2024-06-17 추가
@@ -555,6 +567,11 @@
 
                             break;
                         case 'menu_2nd_b':
+
+                            
+
+
+
                             /************************************************************/
                             function formatPickDate(date) {
                                 return date.toISOString().split('T')[0];
@@ -566,10 +583,21 @@
                             console.log($("#toDate_2").length);   // 요소가 있는지 확인
                                                         
                             //국내 유사국면 분석 date 세팅
-                            $("#fromDate, #toDate, #fromDate_2, #toDate_2").datepicker({
-                                dateFormat: "yy-mm-dd",
+                            $("#fromDate, #toDate, #fromDate_2, #toDate_2").datepicker({                                
+                                dateFormat: 'yy-mm-dd',
+                                // showOtherMonths: true,
+                                showMonthAfterYear:true,
                                 changeMonth: true,
-                                changeYear: true
+                                changeYear: true,
+                                showOn: 'button',
+                                buttonImage:'/static/assets/images/calendar_ic.png',
+                                buttonImageOnly: true,
+                                buttonText: '조회기간 선택',
+                                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                                dayNames: ['일', '월', '화', '수', '목', '금', '토']
+                                // maxDate: '0m'
                             });                            
                     
                             let today = new Date();
@@ -597,8 +625,13 @@
 
                             /*******************************************************************************/      
                             //국내 유사국면 분석에서 종목코드 검색 모듈 컨트롤
-                            fetchStockCodes();
-                            initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");                  
+                            //fetchStockCodes();
+                            //initializeSelect2('#stockCodeSelect', "Code Loading 중이에요");                  
+
+                            //2024-06-24 추가
+                            initStockCodeData("stockCodeSelect", false);
+                            initStockCodeSearch("stockCodeSelect", "stockCodeAreas", false);                            
+
                             break;
                         case 'menu_3rd_a':
                             //파일저장한것 서버쪽 메모리 클리어해주기
@@ -855,7 +888,8 @@
                             
                             break;                                
                         case 'menu_4th_d': //유사국면-개별해외주식
-                            setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');
+                            //setupSelect2('#frst_phase_ticker', '/api/get_foreign_stock_symbols');                            
+
                             setTimeout(() => {
                                 jTooltip();
                             }, 100);   
@@ -887,12 +921,27 @@
 							$("#frst-news-from-date").datepicker("setDate", "2020-01-01");
                             $("#frst-news-to-date").datepicker("setDate", "2020-01-30");
 
+                            //2024-06-24 추가
+                            initStockCodeData("frst_phase_ticker", true);
+                            initStockCodeSearch("frst_phase_ticker", "stockCodeAreas", true);
+
                             break;                                           
                         default:
                             console.log('No specific script for this tab');
                     }
                 }, 100);                     
             }
+
+            
+
+
+
+
+
+
+
+                 
+
         </script>        
     </body>
 </html>

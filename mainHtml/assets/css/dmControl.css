@@ -58,8 +58,8 @@
 .input-container .stock-search-box{width:100%;max-width:inherit;}
 .date-instruction{margin-top:30px;font-size:16px;color:#333;}
 .date-selection{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:15px;background:#fafaff;border:1px solid #d8d8d8;}
-#fromDate, #toDate, #fromDate_2, #toDate_2{margin:0;padding:5px 35px 5px 5px;color:#555;background:url('/static/assets/images/calendar_ic.png') no-repeat right;background-color:#fff;text-align:center;border:1px solid #d8d8d8;border-right:0;border-radius:0;cursor:pointer;}
-#fromDate, #toDate, #fromDate_2, #toDate_2:focus{border-color:inherit !important;}
+/* #fromDate, #toDate, #fromDate_2, #toDate_2{margin:0;padding:5px 35px 5px 5px;color:#555;background:url('/static/assets/images/calendar_ic.png') no-repeat right;background-color:#fff;text-align:center;border:1px solid #d8d8d8;border-right:0;border-radius:0;cursor:pointer;}
+#fromDate, #toDate, #fromDate_2, #toDate_2:focus{border-color:inherit !important;} */
 .stockChartsearch{margin:20px 0;padding:5px 15px;color:#333;font-size:14px;background:#fff;font-weight:500;border:1px solid #d8d8d8;}
 .stockChartsearch:hover{color:#fff;background:#2970ff;border:1px solid #2970ff;}
 .stockChartContainer{max-width:inherit;margin-top:30px;}

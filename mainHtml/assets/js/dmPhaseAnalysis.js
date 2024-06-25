@@ -91,7 +91,9 @@ function drawChart(chartData, num) {
         chartData.datasets[3].data[index]  // close
     ]);
 
-    document.getElementById('date-select-2').style.display = 'block';
+    //2024-06-25 추가
+    $("#date-select-2").css("display", "flex");
+    //document.getElementById('date-select-2').style.display = 'block';
 
     // Highstock 사용하여 차트 생성
     Highcharts.stockChart(container, {

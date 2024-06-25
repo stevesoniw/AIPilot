@@ -2,19 +2,39 @@
 <div id="menu_2nd_b" class="menu-cont">
     <h2 class="s-tit">국내 주식 유사기간 찾기</h2>
     <h3 class="s-tit">특정 주식을 골라 유사기간을 검색해보세요</h3>
-
+    <div class="flex-between gap30 mb30">
+        <div class="search-wrap">
+            <div class="search-area">
+                <div class="search-ipt-wrap">
+                    <input type="text" id="stockCodeSelect" class="search-ipt" placeholder="원하시는 종목을 검색해주세요." autocomplete="off" />
+                    <div class="loader-small" style="display: none;"></div>
+                    <div id="stockCodeAreas" class="stock-code-areas" style="display:none;"></div>
+                    <a href="#" class="search-btn" onClick="fetchChartData();" ><span class="blind">검색</span></a>
+                </div>
+            </div>
+        </div>        
+        <a href="#" class="btn-common medium download" onclick="downloadExcelForStockCode(false);">종목코드 다운로드</a>        
+    </div>
+    <!-- 
     <div class="input-container">
         <div class="stock-search-box">
             <select id="stockCodeSelect" style="width: 100%"></select>
         </div>
     </div>        
+    -->
     <p class="date-instruction">해당 종목의 차트데이터 확인을 위해 하단 날짜를 선택해주세요</p>
     <div class="date-selection">
+        <input type="text" id="fromDate" class="date-picker" disabled>
+        <span class="mlmr5">~</span>
+        <input type="text" id="toDate" class="date-picker" disabled>
+        <a href="#" id="stockChartsearch" class="btn-common small ml10" onclick="fetchChartData()">검색</a>
+    </div>
+    <!-- <div class="date-selection">
         <input type="text" id="fromDate" name="fromDate">
         ~
         <input type="text" id="toDate" name="toDate">
         <button id="stockChartsearch" class="stockChartsearch" onclick="fetchChartData()">검색</button>
-    </div>   
+    </div>    -->
     <!-- 처음 차트가 실제 그려지는 영역임-->
     <div id="loading_bar_firstStock" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">
@@ -24,12 +44,18 @@
 
     <div>
         <p class="date-instruction2">현재 조회된 차트데이터와 유사한 과거 기록을 찾을 구간을 선택해주세요</p>
-        <div id="date-select-2" class="date-selection">
+        <div class="date-selection"  id="date-select-2" >
+            <input type="text" id="fromDate_2" class="date-picker" disabled>
+            <span class="mlmr5">~</span>
+            <input type="text" id="toDate_2" class="date-picker" disabled>
+            <a href="#" id="similarTimeSearch" class="btn-common small ml10" onclick="similarTimeSearch()">유사기간 찾기</a>
+        </div>
+        <!-- <div id="date-select-2" class="date-selection">
             <input type="text" id="fromDate_2" name="fromDate_2">
             ~
             <input type="text" id="toDate_2" name="toDate_2">
             <button id="similarTimeSearch" class="stockChartsearch" onclick="similarTimeSearch()">유사기간 찾기</button>
-        </div>
+        </div> -->
     </div>
     <div id="loading_bar_secondStock" class="loading_bar">
         <img src="/static/assets/images/LoadingBar_C.gif">
