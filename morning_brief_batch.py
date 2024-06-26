@@ -646,7 +646,13 @@ async def get_foreign_stock_symbols():
         if not os.path.exists(code_dir):
             os.makedirs(code_dir)
         filename = f"{code_dir}/{exchange}_symbols.json"
-        symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+        # symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+        # 나스닥, 뉴욕증권소 두 개 에서만 종목명과 종목코드 불러오기 
+        nasdaq_symbol = finnhub_client.stock_symbols('US', mic='XNAS')
+        nyse_symbol = finnhub_client.stock_symbols('US', mic='XNYS')
+        result = nasdaq_symbol+nyse_symbol
+        # type = Common Stock 으로 REIT나 ETF 등은 제거함
+        symbols = [stock for stock in result if stock['type'] == 'Common Stock']
         symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
         utilTool.save_data_to_file(symbols_filtered, filename)
     except Exception as e:

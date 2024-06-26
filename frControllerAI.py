@@ -328,13 +328,20 @@ def read_data_from_file(filename):
         return json.load(f)
 
 @lru_cache(maxsize=100)
-def cached_stock_symbols(exchange: str, mic: str):
-    filename = f"{exchange}_{mic}_symbols.json"
+def cached_stock_symbols(exchange: str, mic: str): 
+    filename = f"batch/stockcode/{exchange}_symbols.json"
     # 파일이 존재하면, 파일에서 데이터 읽기
     if os.path.exists(filename):
+        logging.info(filename)
         return read_data_from_file(filename)
     # 파일이 없으면 API 호출
-    symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+    logging.info("====couldn't find file. creating one====")
+    # symbols = finnhub_client.stock_symbols(exchange, mic=mic)
+    nasdaq_symbol = finnhub_client.stock_symbols('US', mic='XNAS')
+    nyse_symbol = finnhub_client.stock_symbols('US', mic='XNYS')
+    result = nasdaq_symbol+nyse_symbol
+    # type = Common Stock 으로 REIT나 ETF 등은 제거함
+    symbols = [stock for stock in result if stock['type'] == 'Common Stock']
     symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
     # 데이터를 파일에 저장
     save_data_to_file(symbols_filtered, filename)
@@ -344,6 +351,7 @@ def cached_stock_symbols(exchange: str, mic: str):
 @frControllerAI.get("/api/get_foreign_stock_symbols")
 def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str = Query(default="", description="Market Identifier Code")):
     try:
+        logging.info("======getting stock symbol=======")
         symbols_filtered = cached_stock_symbols('US', mic)
         if q:
             symbols_filtered = [sym for sym in symbols_filtered if q.lower() in sym['description'].lower() or q.lower() in sym['symbol'].lower()]

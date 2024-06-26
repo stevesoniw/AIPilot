@@ -42,14 +42,26 @@ async function initStockCodeData(searchField, isEng=true)
         });     
         
         if(isEng)
-            g_stockCodes = data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})` }))
+            g_stockCodes = data.map(stock => ({ id: stock.symbol, text: `${stock.symbol} (${stock.description})`, name: stock.description}))
         else
-            g_stockCodes = data.map(stock => ({ id: stock[1], text: `${stock[0]} (${stock[1]})` }))
+            g_stockCodes = data.map(stock => ({ id: stock[1], text: `${stock[0]} (${stock[1]})`, name:stock[0]}))
     
         $searchField.prop('disabled', false);
         $(".search-ipt-wrap .loader-small").hide();       
 
         $searchField.attr("placeholder" , "원하시는 종목을 검색해주세요.")
+
+        if(!isEng){
+
+            $("#downloadExcel").on("click", function(e){
+                console.log("downloadExcelForStockCode>>>");
+                downloadExcelForStockCode(false);
+    
+            });
+
+        }
+
+        
 
     } catch (error) {
         console.error('Error:', error);
@@ -176,8 +188,11 @@ function initStockCodeSearch(searchField, stockCodeArea, isKorean = true)
 
         }                  
 
-    });              
-    
+    });
+
+
+
+
 
 }
 
@@ -238,31 +253,67 @@ function ExcelDownLoad(dataArray, sheetName, headerNames, fileName)
 
 async function downloadExcelForStockCode(isEng=true)
 { 
-    let confirmYn = confirm("종목코드를 다운로드 하시겠습니까?");
-    if (!confirmYn) {
-        return true;
-    }                               
+    // let confirmYn = confirm("종목코드를 다운로드 하시겠습니까?");
+    // if (!confirmYn) {
+    //     return true;
+    // }                               
 
-    const stockCodeUrl =  isEng === true ?  '/api/get_foreign_stock_symbols' : '/stock-codes/'              
+    // const stockCodeUrl =  isEng === true ?  '/api/get_foreign_stock_symbols' : '/stock-codes/'              
 
     let stockCodes  = [];     
     
     try
     {
-        const response =  await fetch(stockCodeUrl, {
-            method: 'GET',
-            headers: {'Content-Type': 'application/json'}                                                
-        });
+    //     const response =  await fetch(stockCodeUrl, {
+    //         method: 'GET',
+    //         headers: {'Content-Type': 'application/json'}                                                
+    //     });
 
-        if (!response.ok) throw new Error('Network response was not ok.');
+    //     if (!response.ok) throw new Error('Network response was not ok.');
 
-        const data = await response.json();                    
+    //     const data = await response.json();                    
        
-        if(isEng)
-            stockCodes = data.map(stock => ({ code: stock.symbol, name: stock.description }))
-        else
-            stockCodes = data.map(stock => ({ code: stock[1], name: stock[0] })) 
+    //     if(isEng)
+    //         stockCodes = data.map(stock => ({ code: stock.symbol, name: stock.description }))
+    //     else
+    //         stockCodes = data.map(stock => ({ code: stock[1], name: stock[0] })) 
 
+    //     stockCodes.sort((a, b) => {
+
+    //         if(isEng){
+
+    //             if (a.code < b.code) {
+    //                 return -1;
+    //             }
+    //             else if (a.code > b.code) {
+    //                 return 1;
+    //             }else if (a.name < b.name) {
+    //                 return -1;
+    //             }
+    //             else if (a.name > b.name) {
+    //                 return 1;
+    //             }
+    //         }
+    //         else{
+
+    //             if (a.name < b.name) {
+    //                 return -1;
+    //             }
+    //             else if (a.name > b.name) {
+    //                 return 1;
+    //             }else if (a.code < b.code) {
+    //                 return -1;
+    //             }
+    //             else if (a.code > b.code) {
+    //                 return 1;
+    //             }
+
+    //         }
+
+    //         return 0;
+    //     });  
+        
+        stockCodes = g_stockCodes.map(stock => ({ code: stock.id, name:stock.name}))       
         stockCodes.sort((a, b) => {
 
             if(isEng){
@@ -296,9 +347,8 @@ async function downloadExcelForStockCode(isEng=true)
             }
 
             return 0;
-        });     
+        });  
 
-        
         const headerNames = ["코드","이름"];	
         const fileName  =  isEng === true ?  'aipilot_stock_codes_eng' : 'aipilot_stock_codes_kor' ;                        
 

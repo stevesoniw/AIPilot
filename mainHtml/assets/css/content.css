@@ -127,4 +127,8 @@ tr:nth-child(even){background:#fff;}
     padding-left: 20px;
     /* list-style: inherit; */
 }
+
+/* 리서치 리포트 분석 lama3 제거 */
+.upload-file-wrap{margin:30px 0;}
+.upload-check-area{display:none;}
  
