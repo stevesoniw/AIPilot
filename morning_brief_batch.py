@@ -652,7 +652,7 @@ async def get_foreign_stock_symbols():
         nyse_symbol = finnhub_client.stock_symbols('US', mic='XNYS')
         result = nasdaq_symbol+nyse_symbol
         # type = Common Stock 으로 REIT나 ETF 등은 제거함
-        symbols = [stock for stock in result if stock['type'] == 'Common Stock']
+        symbols = [stock for stock in result if stock['type'] == 'Common Stock' or stock['type'] == 'ADR']
         symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
         utilTool.save_data_to_file(symbols_filtered, filename)
     except Exception as e:

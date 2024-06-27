@@ -341,7 +341,7 @@ def cached_stock_symbols(exchange: str, mic: str):
     nyse_symbol = finnhub_client.stock_symbols('US', mic='XNYS')
     result = nasdaq_symbol+nyse_symbol
     # type = Common Stock 으로 REIT나 ETF 등은 제거함
-    symbols = [stock for stock in result if stock['type'] == 'Common Stock']
+    symbols = [stock for stock in result if stock['type'] == 'Common Stock' or stock['type'] == 'ADR']
     symbols_filtered = [{'symbol': sym['symbol'], 'description': sym['description']} for sym in symbols]
     # 데이터를 파일에 저장
     save_data_to_file(symbols_filtered, filename)
@@ -731,6 +731,7 @@ async def get_analysis(ticker: str):
 @frControllerAI.get("/api/stockwave/{ticker}")
 async def get_stockwave(ticker: str):
     data = await get_stock_data_daily(ticker)
+    logging.info(f"종목코드: {ticker}")
     print("******************************")
     print(data)
     # 날짜, 가격, 거래량을 각각 리스트로 변환
