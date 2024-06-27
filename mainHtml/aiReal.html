@@ -33,6 +33,7 @@
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"><!--토글용-->
 
         <script src="/static/assets/js/xlsx.full.min.js"></script>
+
         <script src="/static/assets/js/common.js"></script>
 
         <!-----------  PERSONAL JS       ------------>
@@ -73,7 +74,7 @@
         <!-- <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script> -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
         <!-- 스피너 -->
-        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.js"></script> -->
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.js"></script> -->        
     </head>
     <body>
         <div class="wrap" id="chartPilot">
@@ -401,7 +402,7 @@
 
                         //2024-06-24 추가
                         initStockCodeData("foreign_ticker");
-                        initStockCodeSearch("foreign_ticker", "stockCodeAreas");
+                        initStockCodeSearch("foreign_ticker", "stockCodeAreas", true, processStockInfoActiveTabList);
 
                         //setupSelect2('#foreign_ticker', '/api/get_foreign_stock_symbols');
 
@@ -630,7 +631,7 @@
 
                             //2024-06-24 추가
                             initStockCodeData("stockCodeSelect", false);
-                            initStockCodeSearch("stockCodeSelect", "stockCodeAreas", false);                            
+                            initStockCodeSearch("stockCodeSelect", "stockCodeAreas", false, fetchChartData);                            
 
                             break;
                         case 'menu_3rd_a':
@@ -923,7 +924,7 @@
 
                             //2024-06-24 추가
                             initStockCodeData("frst_phase_ticker", true);
-                            initStockCodeSearch("frst_phase_ticker", "stockCodeAreas", true);
+                            initStockCodeSearch("frst_phase_ticker", "stockCodeAreas", true, generateFsSimilarityAnalysis);
 
                             break;                                           
                         default:

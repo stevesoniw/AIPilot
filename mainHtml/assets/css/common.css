@@ -336,6 +336,7 @@ button{font-family:'Spoqa Han Sans Neo', 'Helvetica Neue', arial, helvetica, hel
 .stock-code-areas{position: absolute;top:40px;width:100%;border:1px solid #ccc;border-top:none;background-color:#fff;z-index:1000;max-height:300px;overflow:auto}
 .stock-code-area{padding:10px 15px;cursor: pointer;}
 .stock-code-area:hover{background:#f5f5ff;}
+.stock-code-area.selected{background:#f5f5ff;}
 
 /* 서브 타이틀 */
 h3.sub-tit{font-size:18px;margin:40px 0 12px;color:#333;}

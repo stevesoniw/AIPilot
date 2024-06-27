@@ -66,13 +66,14 @@ async function initStockCodeData(searchField, isEng=true)
     } catch (error) {
         console.error('Error:', error);
         $searchField.prop('disabled', false);
+        $searchField.focus();
     } 
 
 
 }
 
 //2024-06-24 추가
-function initStockCodeSearch(searchField, stockCodeArea, isKorean = true)
+function initStockCodeSearch(searchField, stockCodeArea, isKorean = true, callback=null)
 {                                              
     const $stockCodeAreas =  $("#" + stockCodeArea);              
     const $searchField = $("#" + searchField);
@@ -81,33 +82,46 @@ function initStockCodeSearch(searchField, stockCodeArea, isKorean = true)
 
         const filteredStocks = g_stockCodes.filter(stock => stock.text.toLowerCase().includes(input.toLowerCase()));                        
 
-        if( filteredStocks.length > 0)
+        if( filteredStocks.length > 0){
             $stockCodeAreas.show();
-        else
+            $stockCodeAreas.scrollTop()
+        }
+        else{
+            $stockCodeAreas.html("");
             $stockCodeAreas.hide();
+        }
 
         filteredStocks.forEach(stock => {
+
             const div = document.createElement('div');
             div.classList.add('stock-code-area');
-            div.textContent = stock.text;                                                       
+            div.textContent = stock.text;   
+
+            div.dataset.stockCode = stock.id;                           
 
             div.addEventListener('click', () => {
 
-                $searchField.val(stock.id);                                
+                $searchField.val(stock.id);                     
+                
             
                 $stockCodeAreas.html("");
-
                 $stockCodeAreas.hide();
+                
+                if(callback != null)
+                    callback();
 
             });
 
-            $stockCodeAreas.append($(div))
+            $stockCodeAreas.append($(div))        
+
+            
         });
 
     };
     
 
     if(isKorean){      
+
         $searchField.on('keypress', function(e) { 
 
             if (e.key === 'Enter' && this.value.trim() !== '') {
@@ -118,44 +132,49 @@ function initStockCodeSearch(searchField, stockCodeArea, isKorean = true)
 
                     if (term.length >= 2) {
 
-                        let debounceTimer = setTimeout(function() {
+                        //let debounceTimer = setTimeout(function() {
 
-                                $searchField.prop('disabled', true);
+                        $searchField.prop('disabled', true);
 
-                                $(".search-ipt-wrap .loader-small").show();       
+                        $(".search-ipt-wrap .loader-small").show();       
 
-                                $searchField.val(term + " (종목 코드를 불러오는중입니다. 잠시만 기다려주세요...)"); 
+                        $searchField.val(term + " (종목 코드를 불러오는중입니다. 잠시만 기다려주세요...)"); 
 
-                                getEngNameFromGoogle(term).then(stockCode => {                                      
+                        getEngNameFromGoogle(term).then(stockCode => {                                      
 
-                                if (stockCode) {                                                                                            
+                            if (stockCode) {                                                                                            
 
 
-                                    console.log(`dislayMetchedCode>>>${stockCode}`)                                             
+                                console.log(`dislayMetchedCode>>>${stockCode}`)                                             
 
-                                    $searchField.prop('disabled', false);
+                                $searchField.prop('disabled', false);
+                                $searchField.focus();
 
-                                    $(".search-ipt-wrap .loader-small").hide();       
+                                $(".search-ipt-wrap .loader-small").hide();       
 
-                                    $searchField.val(term); 
-                                    
-                                    dislayMatchedCode(stockCode);                                           
-                                    
-                                }
-                            
-                            });
+                                $searchField.val(term); 
+                                
+                                dislayMatchedCode(stockCode);     
+                                
+                                
 
-                        }, 3000);
+                            }
+                    
+                        });
+
+                        //}, 3000);
                     }
                 }
 
             }
         });
 
+
     }
 
 
-    $searchField.on('input', function() {
+    $searchField.on('input', function(event) {
+      
         
         const term = $(this).val();   
         
@@ -170,31 +189,152 @@ function initStockCodeSearch(searchField, stockCodeArea, isKorean = true)
                     dislayMatchedCode(term);                        
                 }
                 else{
+                    $stockCodeAreas.html("");
                     $stockCodeAreas.hide();
                 }
 
-            } 
+            }           
+
+        
         }else{
 
             $stockCodeAreas.html("");                    
 
             if (term) {
 
-                dislayMatchedCode(term);                        
+                dislayMatchedCode(term);       
+                
+               
             }
-            else{
+            else{                
                 $stockCodeAreas.hide();
             }
 
-        }                  
+        }
+
 
     });
 
 
+    
+    $('div.search-ipt-wrap').keydown(function(event) {    
 
+        if($stockCodeAreas.is(':visible')) {                            
+
+            if (event.key === 'ArrowUp') {         
+                
+                //event.preventDefault(); 
+
+                console.log('stockCodeAreas::ArrowUp>>>')
+
+                let $items = $('div.stock-code-areas  div.stock-code-area');                     
+                let $selectedItems = $('div.stock-code-areas  div.stock-code-area.selected');                
+
+                if($selectedItems.length <= 0){              
+
+                    $stockCodeAreas.hide();
+
+                }else{
+
+                    if($selectedItems.index() == 0 ){
+                        $selectedItems = $items.last();
+
+                        $items.removeClass('selected')
+                        $selectedItems.addClass('selected')
+                        
+                    }
+                    else{
+
+                        $selectedItems = $selectedItems.prev();                      
+
+                        $items.removeClass('selected')
+                        $selectedItems.addClass('selected')                        
+
+                    }
+
+                }
+
+                if($selectedItems.length > 0){    
+
+                    $stockCodeAreas.scrollTop($selectedItems.offset().top - $stockCodeAreas.offset().top + $stockCodeAreas.scrollTop());
+                }
+
+                
+            } else if (event.key === 'ArrowDown') {
+
+               // event.preventDefault(); 
+
+                console.log("stockCodeAreas::ArrowDown>>>")
+
+                let $items = $('div.stock-code-areas  div.stock-code-area');                         
+                let $selectedItems = $('div.stock-code-areas  div.stock-code-area.selected');                
+
+                if($selectedItems.length <= 0){              
+                    
+                    $selectedItems = $items.eq(0);
+                    $selectedItems.addClass('selected')
+
+                }else{
+
+                    if($selectedItems.index() == ($items.length - 1) ){
+                        $selectedItems = $items.first();
+
+                        $items.removeClass('selected')
+                        $selectedItems.addClass('selected')
+                        
+                    }
+                    else{
+
+                        $selectedItems = $selectedItems.next();                      
+
+                        $items.removeClass('selected')
+                        $selectedItems.addClass('selected')                        
+
+                    }
+
+                }
+
+                if($selectedItems.length > 0){    
+
+                    $stockCodeAreas.scrollTop($selectedItems.offset().top - $stockCodeAreas.offset().top + $stockCodeAreas.scrollTop());
+                }                                   
+                            
+            }else if (event.key === 'Enter') {
+
+                //event.preventDefault(); 
+
+                console.log("stockCodeAreas::Enter>>>")              
+
+                let $selectedItems = $('div.stock-code-areas  div.stock-code-area.selected');                
+
+                if($selectedItems.length > 0){
+                    
+                    console.log("selectedItems>>" + $selectedItems.data("stock-code"))  
+                    
+                    $('div.search-ipt-wrap input').val($selectedItems.data("stock-code"));                                                       
+            
+                    $stockCodeAreas.html("");
+                    $stockCodeAreas.hide();
+
+                    if(callback != null)
+                        callback();
+
+                }                
+                
+            }        
+        }
+
+    });
 
 
 }
+
+
+
+
+
+
+
 
 
 
