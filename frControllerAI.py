@@ -6,6 +6,7 @@ import requests
 import os
 import numpy as np 
 import aiofiles
+import re
 from datetime import datetime, timedelta
 # 상용 Util 함수들
 from pydantic import BaseModel
@@ -422,6 +423,33 @@ async def get_data_from_gpt(prompt):
     except Exception as e:
         logging.error("An error occurred in gpt4_news_sum function: %s", str(e))
         return None
+ 
+def add_target_blank_and_underline(html_string):
+    """뉴스 데이터 markdown에서 html로 바꿀 때 a태그에 target="_blank"와
+    "text-decoration: underline" 추가하는 함수 """
+    
+    # <a> 태그를 찾는 정규 표현식
+    pattern = r'<a\s+(?:[^>]*?\s+)?href="([^"]*)"([^>]*)>(.*?)<\/a>'
+    
+    def replace_link(match):
+        href = match.group(1)
+        attrs = match.group(2)
+        text = match.group(3)
+        
+        # 이미 target="_blank"가 없으면 추가
+        if 'target="_blank"' not in attrs:
+            attrs += ' target="_blank"'
+        
+        # text-decoration: underline 추가
+        if 'text-decoration:' not in attrs:
+            attrs += ' style="text-decoration: underline;"'
+        
+        # 수정된 <a> 태그 반환
+        return f'<a href="{href}"{attrs}>{text}</a>'
+    
+    # 매칭된 모든 <a> 태그에 대해 함수를 적용하여 수정
+    modified_html = re.sub(pattern, replace_link, html_string)
+    return modified_html
 
 @frControllerAI.get("/foreignStock/financials/getTotalInfo/{ticker}")
 async def get_foreign_stock_totalinfo(ticker: str):
@@ -438,6 +466,7 @@ async def get_foreign_stock_totalinfo(ticker: str):
         3. News Data: {news_info}'''
         
         gpt_result = await get_data_from_gpt(prompt)
+        print(gpt_result)
         summary = markdown.markdown(gpt_result)
         
         # 파일 저장
@@ -454,7 +483,7 @@ async def get_foreign_stock_totalinfo(ticker: str):
         except Exception as e:
             print(f"File total stock info failed :: {ticker}: {e}")
         
-        return {"summary": summary}
+        return {"summary": add_target_blank_and_underline(summary)}
     
     except Exception as e:
         print(f"Failed to process {ticker}: {e}")
