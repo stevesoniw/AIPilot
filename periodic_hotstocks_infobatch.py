@@ -8,6 +8,7 @@ import json
 import os
 import numpy as np 
 import markdown
+import re
 #금융관련 APIs
 from openai import OpenAI
 from serpapi import GoogleSearch
@@ -59,7 +60,7 @@ async def load_stocks_from_file():
 async def get_news_info(ticker):
     params = {
     "engine": "google_news",
-    "q": "pizza",
+    "q": ticker,
     "api_key": config.SERPAPI_API_KEY
     }
 
@@ -152,16 +153,44 @@ async def get_data_from_lama(prompt):
         return completion.choices[0].message.content
     except Exception as e:
         logging.error("An error occurred in lama3_news_sum function: %s", str(e))
-        return None   		
+        return None
+       		
+def add_target_blank_and_underline(html_string):
+    """뉴스 데이터 markdown에서 html로 바꿀 때 a태그에 target="_blank"와
+    "text-decoration: underline" 추가하는 함수 """
     
+    # <a> 태그를 찾는 정규 표현식
+    pattern = r'<a\s+(?:[^>]*?\s+)?href="([^"]*)"([^>]*)>(.*?)<\/a>'
+    
+    def replace_link(match):
+        href = match.group(1)
+        attrs = match.group(2)
+        text = match.group(3)
+        
+        # 이미 target="_blank"가 없으면 추가
+        if 'target="_blank"' not in attrs:
+            attrs += ' target="_blank"'
+        
+        # text-decoration: underline 추가
+        if 'text-decoration:' not in attrs:
+            attrs += ' style="text-decoration: underline;"'
+        
+        # 수정된 <a> 태그 반환
+        return f'<a href="{href}"{attrs}>{text}</a>'
+    
+    # 매칭된 모든 <a> 태그에 대해 함수를 적용하여 수정
+    modified_html = re.sub(pattern, replace_link, html_string)
+    return modified_html 
+   
 async def save_summary_to_file(directory, ticker, summary):
+    print(summary)
     summary = markdown.markdown(summary)
     todayDate = datetime.now().strftime("%Y%m%d")
     os.makedirs(directory, exist_ok=True)
     filename = f"{ticker}_basicinfo_{todayDate}.txt"
     filepath = os.path.join(directory, filename)
     async with aiofiles.open(filepath, "w", encoding="utf-8") as f:
-        await f.write(summary)
+        await f.write(add_target_blank_and_underline(summary))
 
 async def process_ticker(ticker):
     try:
