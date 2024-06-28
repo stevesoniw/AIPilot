@@ -324,7 +324,7 @@ def save_data_to_file(data, filename):
 
 def read_data_from_file(filename):
     """종목코드 JSON 파일에서 데이터"""
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 @lru_cache(maxsize=100)
@@ -363,7 +363,7 @@ def get_stock_symbols(q: str = Query(None, description="Search query"), mic: str
 async def get_news_info(ticker):
     params = {
     "engine": "google_news",
-    "q": "pizza",
+    "q": ticker,
     "api_key": config.SERPAPI_API_KEY
     }
     search = GoogleSearch(params)
